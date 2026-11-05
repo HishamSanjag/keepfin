@@ -89,7 +89,7 @@ internal val rules: List<Rule> = listOf(
         ErrorClass.SIGN_IN_REQUIRED,
         "private video|this video is private|is private$WORD_END|private (post|account|playlist)|you need to log in|login required|" +
             "sign[- ]?in required|log in to|requires? (authentication|login|logging in)|" +
-            "cookies? (are|is) (needed|required)|use --cookies|account credentials",
+            "cookies? (are|is) (needed|required)|use --cookies|account credentials|redirect(ed)? to (the )?login page",
         "Sign-in required: this content is private or limited. Add cookies and try again.",
         Action.SIGN_IN,
         RetryKind.PERMANENT,

@@ -38,6 +38,7 @@ export function galleryInfo(data: unknown, url: string, limit = GALLERY_INSPECT_
   let directory: Record<string, unknown> | undefined
   const files: {url: string; meta: Record<string, unknown>}[] = []
   let declared = 0
+  let failure = ''
   for (const message of data) {
     if (!Array.isArray(message)) continue
     if (message[0] === 2 && message[1] && typeof message[1] === 'object') directory ??= message[1] as Record<string, unknown>
@@ -46,8 +47,10 @@ export function galleryInfo(data: unknown, url: string, limit = GALLERY_INSPECT_
       files.push({url: message[1], meta})
       if (typeof meta.count === 'number' && meta.count > declared) declared = meta.count
     }
+    // A failure arrives as [-1, {error, message}] while the engine still exits 0 (Instagram's login redirect).
+    if (message[0] === -1 && message[1] && typeof message[1] === 'object') failure ||= str((message[1] as Record<string, unknown>).message, 500) ?? ''
   }
-  if (!files.length) throw new EngineError('No images were found at this link.', 'tryAnother')
+  if (!files.length) throw failure ? galleryError(`ERROR: ${failure}`) : new EngineError('No images were found at this link.', 'tryAnother')
   const first = files[0].meta
   const category = str(first.category, 60) ?? str(directory?.category, 60) ?? 'gallery'
   const album = (directory?.album ?? first.album) as Record<string, unknown> | undefined

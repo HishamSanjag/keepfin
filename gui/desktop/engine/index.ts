@@ -270,7 +270,9 @@ export class StudioEngine implements Engine {
       if (!suggestsGallery(stderr)) throw error
       try {
         return {type: 'media', media: await inspectGallery(await this.gallery(ctx), url)}
-      } catch {
+      } catch (galleryError) {
+        // A photo post the site shows only to signed-in visitors (Instagram): "sign in" says what to do, "no video" does not.
+        if (galleryError instanceof EngineError && galleryError.action === 'signIn') throw galleryError
         throw error
       }
     }
