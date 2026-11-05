@@ -57,7 +57,7 @@ npm run android:build     # Local optimized APK signed with the debug key, sorte
 npm run releases:organize # After a desktop build: current builds to releases/<version>/, earlier ones to releases/older/
 ```
 
-Android, from `android/`: `gradlew.bat :app:testDebugUnitTest` (JVM tests for formats, args, progress, errors, music parsers and migration) and `gradlew.bat :app:connectedDebugAndroidTest` with a device or emulator (engine tests plus Compose UI tests in `app.keepfin.ui`). On this Windows machine, strip stray double quotes from PATH before unit tests. Report what actually ran; a build alone does not prove device UI or provider behaviour. macOS/Linux packaging is configured locally but not automated.
+Android, from `android/`: `gradlew.bat :app:testDebugUnitTest` (JVM tests for formats, args, progress, errors, music parsers and migration) and `gradlew.bat :app:connectedDebugAndroidTest` with a device or emulator (engine tests plus Compose UI tests in `app.keepfin.ui`). Report what actually ran; a build alone does not prove device UI or provider behaviour. macOS/Linux packaging is configured locally but not automated.
 
 ## Deployment and GitHub Actions
 
@@ -74,7 +74,7 @@ Deployment means distributing desktop executables and APKs through GitHub Releas
 - Android signing secrets: `ANDROID_KEYSTORE_BASE64`, `ANDROID_KEYSTORE_PASSWORD`, `ANDROID_KEY_ALIAS`, `ANDROID_KEY_PASSWORD`. Refer to secret names only; never read, print, commit, or embed their values or key files. Reuse the signing identity and increment Android versionCode for upgrades.
 - Public downloads, and the feed both apps update from, are this repository's Releases.
 
-The user is learning Actions, signing, releases, and updates step by step. Explain workflow changes and provide commands for the user to practice. Do not push release tags or publish on their behalf unless they explicitly ask. Read dev-docs/guides/IN-APP-UPDATES.md for owners, public-feed requirements and publishing steps. Preserve app IDs/profile paths and signing keys. Include latest.yml and the Setup blockmap in every release. Portable copies use manual EXE replacement. Local updater tests do not prove a two-version published upgrade; report that limit until it is tested.
+Never push release tags or publish a release unless the maintainer explicitly asks. Read dev-docs/guides/IN-APP-UPDATES.md for owners, public-feed requirements and publishing steps. Preserve app IDs/profile paths and signing keys. Include latest.yml and the Setup blockmap in every release. Portable copies use manual EXE replacement. Local updater tests do not prove a two-version published upgrade; report that limit until it is tested.
 
 ## Design ownership
 
@@ -82,7 +82,7 @@ The user is learning Actions, signing, releases, and updates step by step. Expla
 
 ## Docs
 
-`docs/` is public and written for people using Keepfin: plain language, no plans or decisions, every Settings path checked against the app. `dev-docs/` (plans, decisions, architecture notes, guides, archives) is gitignored and exists only on the owner's machine; new plans go there, and public pages never link to it (`npm run check` fails if they do). The in-app guide is `content/guide.json`: keep it and `docs/` in step with the Settings pages.
+`docs/` is public and written for people using Keepfin: plain language, no plans or decisions, every Settings path checked against the app. `dev-docs/` (plans, decisions, architecture notes, guides, archives) is gitignored and exists only on the maintainer's machine, so the `dev-docs/` paths these files name are not in this repository; new plans go there, and public pages never link to it (`npm run check` fails if they do). The in-app guide is `content/guide.json`: keep it and `docs/` in step with the Settings pages.
 
 ## Licensing and references
 
