@@ -69,6 +69,31 @@ jobs:
             exit 1
           fi
           echo "Google Drive and Dropbox ids are set."
+      # The PC signs in to Google through the loopback address, which Google allows only for a "Desktop app" client:
+      # 1.0.1 shipped the Android client's id and every sign-in ended in "Error 400: invalid_request". Ask Google before
+      # building: the sign-in page must open for this id, and the token endpoint must accept the id and secret as a
+      # pair (a made-up code then fails as invalid_grant, not invalid_client). Nobody signs in; no tokens are made.
+      - name: Check the Google client with Google
+        env:
+          GOOGLE_ID: ${{ vars.KEEPFIN_GOOGLE_CLIENT_ID }}
+          GOOGLE_SECRET: ${{ vars.KEEPFIN_GOOGLE_CLIENT_SECRET }}
+        run: |
+          redirect='http://127.0.0.1:53682/callback'
+          challenge='E9Melhoa2OwvFrEMTJguCHaoeK1t8URWbuGJSstw-cM'
+          landed=$(curl -s -o /dev/null -w '%{url_effective}' -L -G 'https://accounts.google.com/o/oauth2/v2/auth' \
+            --data-urlencode "client_id=$GOOGLE_ID" --data-urlencode 'response_type=code' --data-urlencode "redirect_uri=$redirect" \
+            --data-urlencode 'scope=https://www.googleapis.com/auth/drive.file' --data-urlencode 'state=release-check' \
+            --data-urlencode "code_challenge=$challenge" --data-urlencode 'code_challenge_method=S256')
+          case "$landed" in
+            *"/signin/oauth/error"*) echo "::error::Google refuses desktop sign-in for KEEPFIN_GOOGLE_CLIENT_ID. Use the Client ID of the 'Desktop app' client (Keepfin Windows)."; exit 1 ;;
+          esac
+          answer=$(curl -s https://oauth2.googleapis.com/token --data-urlencode "client_id=$GOOGLE_ID" --data-urlencode "client_secret=$GOOGLE_SECRET" \
+            --data-urlencode 'code=release-check' --data-urlencode 'grant_type=authorization_code' --data-urlencode "redirect_uri=$redirect" \
+            --data-urlencode 'code_verifier=dBjftJeZ4CVP-mB92K27uhbUJU1p1r_wW1gFWFOEjXk')
+          case "$answer" in
+            *'"invalid_grant"'*) echo "Google accepts the desktop client and its secret." ;;
+            *) echo "::error::Google did not accept KEEPFIN_GOOGLE_CLIENT_ID with KEEPFIN_GOOGLE_CLIENT_SECRET (they must come from the same Desktop app client): $answer"; exit 1 ;;
+          esac
       # Checks runs the unit tests and checks on every push. When it already passed on this exact commit, the builds
       # below skip those tests and only package (the UI suites still run). Tag before Checks finishes and they run here.
       - name: Did Checks already pass on this commit?

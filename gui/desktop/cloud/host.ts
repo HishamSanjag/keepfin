@@ -93,7 +93,9 @@ export class CloudHost {
   /** Signs in through the browser. With [accountId] the account gets new tokens (Sign in again); else a new account is made. */
   async signIn(provider: CloudProviderId, accountId?: string): Promise<AccountView> {
     if (provider === 'webdav') throw new Error('WebDAV uses an address and an app password.')
-    if (this.signing) throw new Error('A sign-in is already open. Finish it in your browser, or cancel it first.')
+    // A new sign-in replaces one still waiting: its browser tab may show a provider error that never calls back, and the
+    // window that started it may be closed, so nobody else can finish or cancel it.
+    this.signing?.abort()
     const abort = new AbortController()
     this.signing = abort
     try {

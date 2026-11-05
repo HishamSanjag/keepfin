@@ -52,6 +52,25 @@ jobs:
         if: ${{ !inputs.tested }}
         run: npm run check
 
+      # The download and gallery engines are kept between runs. A busy download server (a 504 on 2026-11-05 failed a
+      # release) then means "use the verified copy from the last run" instead of a failed build. The fetch still
+      # updates them when a newer verified version is out; the smoke test and the packages use this copy.
+      - name: Restore the engine tools from the last run
+        uses: actions/cache/restore@v6
+        with:
+          path: build/tools
+          key: engine-tools-${{ github.run_id }}
+          restore-keys: engine-tools-
+
+      - name: Fetch the engine tools
+        run: npm run tools:fetch
+
+      - name: Keep the engine tools for the next run
+        uses: actions/cache/save@v6
+        with:
+          path: build/tools
+          key: engine-tools-${{ github.run_id }}
+
       - name: Run engine smoke test
         run: npm run engine:test
 
