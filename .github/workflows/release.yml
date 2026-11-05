@@ -51,6 +51,24 @@ jobs:
           fs.appendFileSync(process.env.GITHUB_OUTPUT, `version=${version}\nprerelease=${version.includes('-')}\n`);
           console.log(`Validated Keepfin v${version}`);
           JS
+      # The cloud accounts' public ids are repository Variables (Settings > Secrets and variables > Actions > Variables),
+      # not Secrets. An empty one builds without that provider ("Not available in this build"), which 1.0.0 shipped with.
+      # OneDrive (KEEPFIN_MS_CLIENT_ID) is not required yet.
+      - name: Check the cloud account ids
+        env:
+          GOOGLE_ID: ${{ vars.KEEPFIN_GOOGLE_CLIENT_ID }}
+          GOOGLE_SECRET: ${{ vars.KEEPFIN_GOOGLE_CLIENT_SECRET }}
+          DROPBOX_KEY: ${{ vars.KEEPFIN_DROPBOX_APP_KEY }}
+        run: |
+          missing=""
+          [ -n "$GOOGLE_ID" ] || missing="$missing KEEPFIN_GOOGLE_CLIENT_ID"
+          [ -n "$GOOGLE_SECRET" ] || missing="$missing KEEPFIN_GOOGLE_CLIENT_SECRET"
+          [ -n "$DROPBOX_KEY" ] || missing="$missing KEEPFIN_DROPBOX_APP_KEY"
+          if [ -n "$missing" ]; then
+            echo "::error::Missing repository Variables:$missing (Settings > Secrets and variables > Actions > Variables)"
+            exit 1
+          fi
+          echo "Google Drive and Dropbox ids are set."
       # Checks runs the unit tests and checks on every push. When it already passed on this exact commit, the builds
       # below skip those tests and only package (the UI suites still run). Tag before Checks finishes and they run here.
       - name: Did Checks already pass on this commit?
