@@ -35,7 +35,9 @@ const lyricLines = [
   {time: 95, text: 'Glass harbour, all of it is mine'},
   {time: 102, text: 'Turn the tide and bring it home'},
 ]
-const V2 = {libraryScenario: 'v2', simulate: false, lyricLines, songSeconds: SONG_SECONDS}
+// The pictures go on the website, so the app shows the version being released.
+const APP_VERSION = JSON.parse(fs.readFileSync('package.json', 'utf8')).version.replace(/-.*$/, '')
+const V2 = {libraryScenario: 'v2', simulate: false, lyricLines, songSeconds: SONG_SECONDS, appVersion: APP_VERSION}
 
 // Generated artwork: album covers for songs, landscapes for videos. Deterministic per id.
 const palettes = [
@@ -150,21 +152,23 @@ Object.assign(scenes, {
   // A YouTube Music song: audio formats with the matched cover.
   async 'desktop-review-audio'(page) {
     await page.locator('textarea').first().fill('https://music.youtube.com/watch?v=tidal88')
-    await page.getByRole('radiogroup', {name: 'Audio quality preset'}).waitFor()
+    await page.getByRole('radiogroup', {name: 'Audio quality'}).waitFor()
   },
   // Downloads with a playlist kept together, expanded to show its songs.
   async 'desktop-downloads'(page) {
-    await page.getByRole('button', {name: /^Show \d+ items in Road Trip Mix/}).click()
+    await page.getByRole('button', {name: /^(Show|Hide) \d+ items? in Road Trip Mix/}).first().waitFor()
+    const show = page.getByRole('button', {name: /^Show \d+ items? in Road Trip Mix/})
+    if (await show.count()) await show.first().click() // a running playlist is already open
     await page.waitForTimeout(500)
     // Expanding scrolls the group into view; start from the top so the link box and filters show too.
     await page.evaluate(() => document.querySelectorAll('*').forEach((el) => { if (el.scrollTop > 0) el.scrollTop = 0 }))
   },
 })
 const fakeFor = {
-  'desktop-activity': {scenario: 'groups', libraryScenario: 'v2', activity: 'seed', simulate: false},
-  'desktop-review-video': {libraryScenario: 'v2', simulate: true},
-  'desktop-review-audio': {libraryScenario: 'v2', simulate: true},
-  'desktop-downloads': {scenario: 'groups', libraryScenario: 'v2', simulate: true},
+  'desktop-activity': {scenario: 'groups', libraryScenario: 'v2', activity: 'seed', simulate: false, appVersion: APP_VERSION},
+  'desktop-review-video': {libraryScenario: 'v2', simulate: true, appVersion: APP_VERSION},
+  'desktop-review-audio': {libraryScenario: 'v2', simulate: true, appVersion: APP_VERSION},
+  'desktop-downloads': {scenario: 'groups', libraryScenario: 'v2', simulate: true, appVersion: APP_VERSION},
 }
 
 const only = process.argv.slice(2)

@@ -1398,10 +1398,10 @@
       {id: 'act-found', kind: 'sync-found', at: activityAt(40 * min), title: 'Road Trip Mix got 3 new songs', detail: 'All 3 saved', read: false, target: {collectionId: 'grp-drive', groupId: 'grp-road'}, count: 3},
       {id: 'act-failed', kind: 'failed', at: activityAt(65 * min), title: '1 item from Road Trip Mix 2026 failed', detail: 'Sign in required: this video is private.', read: false, target: {groupId: 'grp-road', jobIds: failedJob ? [failedJob.id] : []}, count: 1},
       {id: 'act-signin', kind: 'sign-in', at: activityAt(2 * hour), title: 'Sign in to YouTube again', detail: 'Private or members-only downloads need it', read: false, target: {provider: 'YouTube'}},
-      {id: 'act-ready', kind: 'update-ready', at: activityAt(5 * hour), title: 'Keepfin 0.4.1 is ready to install', read: true, target: {version: '0.4.1'}},
+      ...(options.appVersion ? [] : [{id: 'act-ready', kind: 'update-ready', at: activityAt(5 * hour), title: 'Keepfin 0.4.1 is ready to install', read: true, target: {version: '0.4.1'}}]),
       {id: 'act-batch', kind: 'batch-done', at: activityAt(30 * hour), title: 'Northbound Films: Season One finished', detail: '4 of 4 items saved to Downloads', read: true, target: {groupId: 'grp-season'}, count: 4},
       {id: 'act-gone', kind: 'sync-found', at: activityAt(3 * day), title: 'Evening Radio got 2 new songs', detail: 'All 2 saved', read: true, target: {collectionId: 'col-removed'}, count: 2},
-      {id: 'act-updated', kind: 'app-updated', at: activityAt(9 * day), title: 'Keepfin updated to 0.4.0', detail: 'See what changed in this version', read: true, target: {version: '0.4.0'}},
+      {id: 'act-updated', kind: 'app-updated', at: activityAt(9 * day), title: `Keepfin updated to ${options.appVersion || '0.4.0'}`, detail: 'See what changed in this version', read: true, target: {version: options.appVersion || '0.4.0'}},
     ]
     if (options.activity === 'many')
       for (let n = 0; n < 40; n++)
@@ -2730,7 +2730,8 @@
   }
   const updateScenario = options.update || 'current'
   let update = {
-    current: updateScenario === 'beta' ? '0.5.0-beta.1' : '0.4.0',
+    // options.appVersion: the version screenshots show; tests keep 0.4.0, with 0.4.1 as the next one.
+    current: options.appVersion || (updateScenario === 'beta' ? '0.5.0-beta.1' : '0.4.0'),
     channel: 'stable',
     mode: updateScenario === 'portable' ? 'portable' : 'installed',
     phase: 'current',
