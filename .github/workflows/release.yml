@@ -1,4 +1,6 @@
 name: Release Keepfin
+# The run list shows the version being released instead of the tagged commit's message.
+run-name: ${{ github.ref_type == 'tag' && format('Release {0}', github.ref_name) || format('Release build check ({0})', github.ref_name) }}
 
 on:
   workflow_dispatch:
