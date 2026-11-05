@@ -36,19 +36,29 @@ const srv = await startServer()
 const browser = await launch()
 let failed = 0
 const results = []
+// A slow CI runner can miss an 8 s wait: a timeout gets one fresh attempt in a new page, like the layout suite.
+// Failed assertions and page errors never retry.
 async function test(name, fn, opts = {}) {
   if (only && !name.includes(only)) return
-  const page = await openApp(browser, srv.url, opts)
-  try {
-    await fn(page)
-    if (page.errors.length) throw new Error('console errors: ' + page.errors.join(' | '))
-    results.push(`ok   ${name}`)
-  } catch (error) {
-    failed++
-    results.push(`FAIL ${name}\n     ${String(error.stack || error).split('\n').slice(0, 5).join('\n     ')}`)
-    if (process.env.SHOT_FAIL) await page.screenshot({path: `${process.env.SHOT_FAIL}/${name.replace(/\W+/g, '-')}.png`}).catch(() => {})
-  } finally {
-    await page.context().close()
+  for (let attempt = 1; attempt <= 2; attempt++) {
+    const page = await openApp(browser, srv.url, opts)
+    try {
+      await fn(page)
+      if (page.errors.length) throw new Error('console errors: ' + page.errors.join(' | '))
+      results.push(`ok   ${name}`)
+      return
+    } catch (error) {
+      if (attempt === 1 && error?.name === 'TimeoutError') {
+        console.log(`retry ${name}: ${String(error.message).split('\n')[0]}`)
+        continue
+      }
+      failed++
+      results.push(`FAIL ${name}\n     ${String(error.stack || error).split('\n').slice(0, 5).join('\n     ')}`)
+      if (process.env.SHOT_FAIL) await page.screenshot({path: `${process.env.SHOT_FAIL}/${name.replace(/\W+/g, '-')}.png`}).catch(() => {})
+      return
+    } finally {
+      await page.context().close()
+    }
   }
 }
 const calls = (page, op) => page.evaluate((op) => window.__calls.filter((c) => !op || c.op === op), op)

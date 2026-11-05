@@ -1098,7 +1098,7 @@ async function accessibility(page) {
 }
 
 const srv = await startServer()
-const browser = await launch()
+let browser = await launch()
 const failures = []
 let checks = 0
 // Every check gets its own browser context, so checks run side by side: LAYOUT_WORKERS at a time (default 4).
@@ -1144,15 +1144,42 @@ async function check({theme, viewport, screen}) {
       if (shots && page) await page.screenshot({path: `${shots}/FAIL-${label.replace(/\W+/g, '-')}.png`}).catch(() => {})
       return
     } finally {
-      if (page) await page.context().close()
+      if (page) await withLimit(page.context().close(), 15_000).catch(() => {})
     }
+  }
+}
+
+/** Rejects when `promise` takes longer than `ms`. */
+function withLimit(promise, ms) {
+  let timer
+  return Promise.race([promise, new Promise((_, reject) => (timer = setTimeout(() => reject(new Error(`stuck for ${ms / 1000} s`)), ms)))]).finally(() => clearTimeout(timer))
+}
+
+// A browser that stops answering (seen on GitHub's Windows runners) would otherwise hang the whole run: a check that
+// takes over 2 minutes fails, and the browser is replaced so the checks after it still run.
+const CHECK_LIMIT = 120_000
+let relaunching = null
+async function guarded(task) {
+  const used = browser
+  try {
+    await withLimit(check(task), CHECK_LIMIT)
+  } catch (error) {
+    failures.push(`FAIL ${task.screen.name} ${task.theme} ${task.viewport.w}px @${task.viewport.scale}%: ${error.message}`)
+    if (browser === used) {
+      relaunching ||= (async () => {
+        console.log('browser stopped answering; starting a new one')
+        await withLimit(used.close(), 15_000).catch(() => {})
+        browser = await launch()
+      })().finally(() => (relaunching = null))
+    }
+    await relaunching
   }
 }
 
 const workers = Math.max(1, Number(process.env.LAYOUT_WORKERS) || 4)
 let next = 0
 await Promise.all(Array.from({length: Math.min(workers, tasks.length)}, async () => {
-  while (next < tasks.length) await check(tasks[next++])
+  while (next < tasks.length) await guarded(tasks[next++])
 }))
 // ---- One page structure (dev-docs/plans/PAGE-LAYOUT.md): every page has one app bar, one h1 and the same place for it ----
 const settingsCategories = ['Downloads', 'Library & playback', 'Storage & copies', 'Devices', 'Appearance', 'Notifications', 'Help', 'Support Keepfin', 'About Keepfin']
