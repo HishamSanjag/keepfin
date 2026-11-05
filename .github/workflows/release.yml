@@ -16,9 +16,13 @@ jobs:
   validate:
     runs-on: ubuntu-latest
     timeout-minutes: 5
+    permissions:
+      contents: read
+      actions: read # to see whether Checks already passed on this commit
     outputs:
       version: ${{ steps.version.outputs.version }}
       prerelease: ${{ steps.version.outputs.prerelease }}
+      tested: ${{ steps.checks.outputs.tested }}
     steps:
       - uses: actions/checkout@v7
       - uses: actions/setup-node@v7
@@ -45,18 +49,31 @@ jobs:
           fs.appendFileSync(process.env.GITHUB_OUTPUT, `version=${version}\nprerelease=${version.includes('-')}\n`);
           console.log(`Validated Keepfin v${version}`);
           JS
+      # Checks runs the unit tests and checks on every push. When it already passed on this exact commit, the builds
+      # below skip those tests and only package (the UI suites still run). Tag before Checks finishes and they run here.
+      - name: Did Checks already pass on this commit?
+        id: checks
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          passed=$(gh api "repos/${{ github.repository }}/actions/workflows/checks.yml/runs?head_sha=${{ github.sha }}&status=success" --jq '.total_count')
+          if [ "${passed:-0}" -gt 0 ]; then tested=true; else tested=false; fi
+          echo "tested=$tested" >> "$GITHUB_OUTPUT"
+          echo "Checks passed on ${{ github.sha }}: $tested"
 
   windows:
     needs: validate
     uses: ./.github/workflows/build-windows.yml
     with:
       handoff: cache
+      tested: ${{ needs.validate.outputs.tested == 'true' }}
 
   android:
     needs: validate
     uses: ./.github/workflows/build-android.yml
     with:
       handoff: cache
+      tested: ${{ needs.validate.outputs.tested == 'true' }}
     secrets: inherit
 
   publish:

@@ -8,6 +8,10 @@ on:
         # 'cache' hands the APK to the release job through the Actions cache (not billed storage).
         type: string
         default: artifact
+      tested:
+        # true when the Checks workflow already passed on this exact commit: its tests are not run again here.
+        type: boolean
+        default: false
     secrets:
       ANDROID_KEYSTORE_BASE64:
         required: true
@@ -66,13 +70,16 @@ jobs:
 
       # JVM unit tests, including the shared engine fixtures in fixtures/engine (the same files desktop tests run).
       # The shared core (core/) is also used by the app through includeBuild; test it on both of its targets.
+      # Both are skipped when Checks, which runs the same tests, already passed on this commit.
       - name: Test the shared core (JVM and JavaScript)
+        if: ${{ !inputs.tested }}
         working-directory: core
         run: |
           chmod +x gradlew
           ./gradlew jvmTest jsNodeTest --console=plain
 
       - name: Run unit tests
+        if: ${{ !inputs.tested }}
         working-directory: android
         run: |
           chmod +x gradlew
@@ -86,6 +93,7 @@ jobs:
           KEEPFIN_MS_CLIENT_ID: ${{ vars.KEEPFIN_MS_CLIENT_ID }}
           KEEPFIN_DROPBOX_APP_KEY: ${{ vars.KEEPFIN_DROPBOX_APP_KEY }}
         run: |
+          chmod +x gradlew
           ./gradlew :app:assembleRelease --console=plain
 
       - name: Sign and verify APK

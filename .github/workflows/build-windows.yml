@@ -9,6 +9,10 @@ on:
         # manual builds keep a downloadable artifact.
         type: string
         default: artifact
+      tested:
+        # true when the Checks workflow already passed on this exact commit: its tests are not run again here.
+        type: boolean
+        default: false
 
 permissions:
   contents: read
@@ -16,8 +20,9 @@ permissions:
 jobs:
   windows:
     runs-on: windows-latest
-    # Checks, ~600 layout checks, UI flows, the engine smoke and packaging take ~35-45 min on a hosted runner.
-    timeout-minutes: 60
+    # Checks (unless Checks already passed on this commit), the engine smoke and packaging; the UI suites run in
+    # the ui job beside it, so the two no longer wait for each other.
+    timeout-minutes: 45
 
     steps:
       - name: Checkout source
@@ -29,7 +34,8 @@ jobs:
           node-version: '24'
           cache: npm
 
-      # The shared core (core/, Kotlin Multiplatform) is built by Gradle: npm run check compiles it to JavaScript first.
+      # The shared core (core/, Kotlin Multiplatform) is built by Gradle into JavaScript before the desktop app uses it.
+      # Its own tests run once, on Linux, in Checks and in the Android build.
       - name: Set up Java
         uses: actions/setup-java@v6
         with:
@@ -42,20 +48,9 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Test the shared core (JVM and JavaScript)
-        working-directory: core
-        run: .\gradlew.bat jvmTest jsNodeTest --console=plain
-
       - name: Run checks
+        if: ${{ !inputs.tested }}
         run: npm run check
-
-      - name: Run UI regression suites
-        # The bundled production build loads far faster than the dev server's hundreds of modules, and it is what ships.
-        env:
-          KEEPFIN_UI_BUILD: '1'
-        run: |
-          npx playwright install chromium
-          npm run gui:ui-test
 
       - name: Run engine smoke test
         run: npm run engine:test
@@ -101,3 +96,39 @@ jobs:
           path: handoff/windows
           key: keepfin-windows-${{ github.run_id }}
           enableCrossOsArchive: true
+
+  ui:
+    runs-on: windows-latest
+    # ~550 layout checks, the UI flows and progress isolation in a real browser, beside the packaging job.
+    timeout-minutes: 40
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v7
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version: '24'
+          cache: npm
+
+      # The renderer imports the shared core's JavaScript build, which Gradle makes.
+      - name: Set up Java
+        uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v6
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run UI regression suites
+        # The bundled production build loads far faster than the dev server's hundreds of modules, and it is what ships.
+        env:
+          KEEPFIN_UI_BUILD: '1'
+        run: |
+          npx playwright install chromium
+          npm run core:build
+          npm run gui:ui-test

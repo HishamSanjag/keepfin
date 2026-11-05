@@ -56,6 +56,12 @@ jobs:
       - run: |
           npm ci
           npm run icons:build
+      # The shared core is platform-neutral: its JVM and JavaScript tests run here once, not again on Windows.
+      - name: Shared core tests (JVM and JavaScript)
+        working-directory: core
+        run: |
+          chmod +x gradlew
+          ./gradlew jvmTest jsNodeTest --console=plain
       - name: Android unit tests
         working-directory: android
         run: |
