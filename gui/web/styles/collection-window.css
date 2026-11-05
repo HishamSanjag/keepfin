@@ -1,0 +1,54 @@
+/* A collection in Downloads opens in the download preview's window (.dialog.preview); only its contents are styled here. */
+.collection-window .preview-scroll {
+  padding-top: 4px;
+}
+.collection-summary,
+.collection-items {
+  padding: 0;
+  margin: 0;
+  list-style: none;
+}
+.collection-window .collection-header {
+  grid-template-columns: 96px minmax(0, 1fr);
+  padding: 0 0 16px;
+}
+.collection-header > .group-toggle,
+.collection-header .job-head {
+  display: none;
+}
+.collection-header > .group-art {
+  display: block;
+}
+.collection-header .thumb-job {
+  width: 96px;
+}
+.collection-header > .job-actions {
+  grid-column: 1 / -1;
+  flex-wrap: wrap;
+  justify-content: flex-start;
+  margin: 0;
+}
+.collection-items > .job {
+  grid-template-columns: 72px minmax(0, 1fr);
+  padding: 12px 0;
+}
+.collection-items .thumb-job {
+  width: 72px;
+}
+.collection-items .job-actions {
+  grid-column: 2;
+  min-width: 0;
+  justify-content: flex-start;
+  flex-wrap: wrap;
+  margin: 0;
+}
+.collection-items .job-title {
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+.collection-items .job-stats {
+  overflow-wrap: anywhere;
+}
+.collection-items .job-stats > span {
+  white-space: normal;
+}

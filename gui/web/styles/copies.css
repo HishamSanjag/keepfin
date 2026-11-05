@@ -1,0 +1,659 @@
+/* Settings → Storage › Your library: the places, a copy's dialog, Add a copy, the comparison and Needs a decision. Tokens only. */
+
+.copy-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  padding: 14px 0 6px;
+}
+
+/* the head of a cloud account's card */
+.copy-card-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+.copy-card-head h4 {
+  font-family: var(--font-display);
+  font-size: 15px;
+  font-weight: 650;
+  overflow-wrap: anywhere;
+}
+.copy-facts {
+  display: grid;
+  gap: 6px;
+  margin: 0;
+  font-size: 13px;
+}
+.copy-facts > div {
+  display: grid;
+  grid-template-columns: 7.5em minmax(0, 1fr);
+  gap: 10px;
+}
+.copy-facts dt {
+  color: var(--text-3);
+}
+.copy-facts dd {
+  margin: 0;
+  color: var(--text);
+  overflow-wrap: anywhere;
+}
+.copy-progress {
+  display: grid;
+  gap: 6px;
+}
+.copy-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  padding-top: 4px;
+}
+.copy-versions {
+  display: grid;
+  gap: 10px;
+  padding: 12px;
+  border-radius: var(--r-md);
+  background: var(--surface);
+  box-shadow: inset 0 0 0 1px var(--line);
+}
+.copy-versions ul {
+  display: grid;
+  gap: 6px;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  max-height: 260px;
+  overflow-y: auto;
+}
+.copy-versions li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  font-size: 13px;
+}
+.copy-version-name {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+/* ---------- What a copy holds (wizard step and card editor) ---------- */
+.copy-holds {
+  display: grid;
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  min-width: 0;
+}
+.copy-choice {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 14px;
+  border-radius: var(--r-lg);
+  background: var(--surface);
+  box-shadow: inset 0 0 0 1px var(--line-strong);
+  cursor: pointer;
+}
+.copy-choice:has(input:checked) {
+  background: var(--selected);
+  box-shadow: inset 0 0 0 1px var(--selected-line);
+}
+.copy-choice:has(input:focus-visible) {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+}
+.copy-choice input {
+  margin-top: 3px;
+  accent-color: var(--accent);
+}
+.copy-choice span {
+  display: grid;
+  gap: 3px;
+}
+.copy-choice small {
+  color: var(--text-2);
+  font-size: 13px;
+  line-height: 1.4;
+}
+.copy-pick {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 14px;
+  padding: 4px 4px 0 30px;
+}
+.copy-pick h5 {
+  font-size: 12px;
+  font-weight: 650;
+  color: var(--text-3);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin-bottom: 6px;
+}
+.copy-pick ul {
+  display: grid;
+  gap: 2px;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.copy-check {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 30px;
+  font-size: 13.5px;
+  cursor: pointer;
+}
+.copy-check input {
+  accent-color: var(--accent);
+}
+
+/* ---------- Matrix ---------- */
+.copy-matrix-wrap {
+  display: grid;
+  gap: 8px;
+  padding: 10px 0 14px;
+  overflow-x: auto;
+}
+.copy-matrix {
+  border-collapse: separate;
+  border-spacing: 0;
+  min-width: 100%;
+  font-size: 13px;
+}
+.copy-matrix th,
+.copy-matrix td {
+  padding: 6px 8px;
+  text-align: left;
+  vertical-align: middle;
+  border-bottom: 1px solid var(--line);
+}
+.copy-matrix thead th {
+  position: sticky;
+  top: 0;
+  background: var(--surface);
+  font-weight: 650;
+  min-width: 120px;
+}
+.copy-matrix tbody th {
+  font-weight: 600;
+  min-width: 150px;
+}
+.copy-matrix th small {
+  display: block;
+  font-weight: 400;
+  font-size: 12px;
+}
+.copy-cell {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 32px;
+  min-width: 96px;
+  padding: 0 10px;
+  border-radius: var(--r-md);
+  font-size: 12.5px;
+  font-weight: 600;
+  background: var(--surface-2);
+  box-shadow: inset 0 0 0 1px var(--line);
+  color: var(--text-2);
+}
+.copy-cell:hover:not(:disabled) {
+  background: var(--hover);
+  color: var(--text);
+}
+.copy-cell:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+}
+.copy-cell-kept {
+  background: var(--success-soft);
+  color: var(--success);
+  box-shadow: none;
+}
+.copy-cell-waiting {
+  background: var(--accent-soft);
+  color: var(--accent-text);
+  box-shadow: none;
+}
+.copy-cell-review {
+  background: var(--warning-soft);
+  color: var(--warning);
+  box-shadow: none;
+}
+.copy-cell-notHeld {
+  color: var(--text-3);
+}
+
+/* ---------- Wizard ---------- */
+/* Storage › Your library: the sentence on whether every file has a second copy, then the places. */
+.safety {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: 14px 16px;
+  padding: 18px 20px;
+  margin-bottom: 12px;
+  border-radius: var(--r-lg);
+  background: var(--surface-2);
+  box-shadow: inset 0 0 0 1px var(--line-strong);
+}
+.safety-icon {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  flex: none;
+  border-radius: var(--r-md);
+  background: var(--success-soft);
+  color: var(--success);
+}
+.safety[data-tone='warn'] .safety-icon {
+  background: var(--warning-soft);
+  color: var(--warning);
+}
+.safety[data-tone='quiet'] .safety-icon {
+  background: var(--accent-soft);
+  color: var(--accent-text);
+}
+.safety-text {
+  flex: 1 1 260px;
+  min-width: 0;
+  display: grid;
+  gap: 4px;
+}
+.safety-text h3 {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 18px;
+  font-weight: 700;
+}
+.safety-text p {
+  margin: 0;
+  color: var(--text-2);
+}
+
+/* "53 files need a decision · Review…": one line on the page and in a copy's dialog. */
+.copy-review-link {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  margin-top: 8px;
+  padding: 10px 14px;
+  border: 0;
+  border-radius: var(--r-md);
+  background: var(--warning-soft);
+  color: var(--text);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.copy-review-link > svg {
+  color: var(--warning);
+  flex: none;
+}
+.copy-review-link > span:nth-last-child(2) {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+.copy-review-link-action {
+  color: var(--accent-text);
+  font-weight: 500;
+  white-space: nowrap;
+}
+.copy-review-link:hover {
+  background: color-mix(in srgb, var(--warning-soft), var(--hover));
+}
+.copy-review-link:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+}
+
+/* The dialogs Storage opens: a copy, Add/Keep a copy, the review, the comparison. */
+.dialog.copy-dialog,
+.dialog.copy-wizard,
+.dialog.review-dialog {
+  width: min(var(--dialog-m), calc(100vw / var(--zoom) - 32px));
+}
+.dialog.compare-dialog {
+  width: min(var(--dialog-l), calc(100vw / var(--zoom) - 32px));
+}
+.copy-dialog .dialog-body,
+.copy-wizard .dialog-body {
+  gap: 14px;
+}
+.copy-dialog-panel {
+  display: grid;
+  gap: 14px;
+  min-height: 220px;
+  align-content: start;
+}
+.copy-dialog .dialog-eyebrow [data-tone='warning'],
+.copy-dialog .dialog-eyebrow [data-tone='danger'] {
+  color: var(--warning);
+}
+.copy-dialog .dialog-eyebrow [data-tone='success'] {
+  color: var(--success);
+}
+.copy-dialog-space {
+  flex: 1 1 auto;
+}
+.copy-dialog .dialog-foot,
+.copy-wizard .dialog-foot {
+  justify-content: flex-start;
+}
+
+.review-groups {
+  display: grid;
+  gap: 10px;
+}
+.review-place {
+  margin: 8px 0 0;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--text-3);
+}
+.review-group {
+  border-radius: var(--r-lg);
+  box-shadow: inset 0 0 0 1px var(--line-strong);
+  overflow: hidden;
+}
+.review-group-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: 10px 14px;
+  padding: 14px 16px;
+}
+.review-group-text {
+  flex: 1 1 260px;
+  min-width: 0;
+  display: grid;
+  gap: 4px;
+  justify-items: start;
+}
+.review-group-text strong {
+  color: var(--text);
+  overflow-wrap: anywhere;
+}
+.review-group-text p {
+  margin: 0;
+}
+.review-group-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.review-group-files {
+  border-top: 1px solid var(--line);
+  background: var(--surface-2);
+}
+.review-group-files summary {
+  padding: 10px 16px;
+  color: var(--accent-text);
+  cursor: pointer;
+}
+.review-group-files ul {
+  margin: 0;
+  padding: 0 16px 12px 32px;
+  display: grid;
+  gap: 4px;
+  max-height: 220px;
+  overflow: auto;
+  font-size: 13px;
+  overflow-wrap: anywhere;
+}
+
+/* Main storage › what is in it: one line per space inside the folder's card. */
+.storage-spaces {
+  list-style: none;
+  margin: 10px 0 0;
+  padding: 0;
+  display: grid;
+  gap: 2px;
+}
+.storage-spaces li {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 6px 0;
+  border-top: 1px solid var(--line);
+}
+.copy-where {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 12px 14px;
+  border-radius: var(--r-lg);
+  background: var(--surface);
+  box-shadow: inset 0 0 0 1px var(--line-strong);
+}
+.copy-form {
+  display: grid;
+  gap: 14px;
+  max-width: 520px;
+}
+.copy-field {
+  display: grid;
+  gap: 6px;
+  font-size: 13px;
+  color: var(--text-2);
+}
+.copy-preview {
+  display: grid;
+  gap: 12px;
+  padding: 14px;
+  border-radius: var(--r-lg);
+  background: var(--surface);
+  box-shadow: inset 0 0 0 1px var(--line-strong);
+}
+.copy-plan {
+  display: grid;
+  gap: 4px;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.copy-plan li {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 6px 0;
+  border-bottom: 1px solid var(--line);
+}
+.copy-diffs h5 {
+  font-size: 13px;
+  font-weight: 650;
+  margin-bottom: 4px;
+}
+.copy-diffs ul {
+  display: grid;
+  gap: 4px;
+  list-style: none;
+  margin: 0 0 4px;
+  padding: 0;
+  font-size: 13px;
+}
+.copy-diffs li {
+  display: grid;
+  gap: 1px;
+}
+
+/* ---------- Cloud accounts ---------- */
+.cloud-accounts {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 320px), 1fr));
+  gap: 12px;
+  list-style: none;
+  margin: 0;
+  padding: 10px 0 14px;
+}
+.cloud-account {
+  display: grid;
+  gap: 8px;
+  align-content: start;
+  min-width: 0;
+  padding: 16px;
+  border-radius: var(--r-lg);
+  background: var(--surface-2);
+  box-shadow: inset 0 0 0 1px var(--line-strong);
+}
+.cloud-account[data-signin] {
+  box-shadow: inset 0 0 0 1px var(--warning);
+}
+.cloud-account-label {
+  color: var(--text-2);
+  font-size: 13px;
+  overflow-wrap: anywhere;
+}
+.cloud-support {
+  display: grid;
+  gap: 4px;
+  margin: 0;
+  padding-left: 18px;
+}
+.cloud-step {
+  display: grid;
+  gap: 14px;
+}
+.cloud-pick {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  min-width: 0;
+}
+.cloud-pick legend {
+  padding: 0 0 6px;
+  color: var(--text-3);
+  font-size: 12px;
+  font-weight: 650;
+  text-transform: uppercase;
+}
+.cloud-pick .copy-choice[data-needs-signin] {
+  cursor: default;
+  opacity: 0.8;
+}
+.cloud-providers {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 210px), 1fr));
+  gap: 10px;
+}
+.cloud-provider {
+  display: grid;
+  gap: 4px;
+  align-content: start;
+  min-height: 48px;
+  padding: 14px;
+  text-align: left;
+  color: var(--text);
+  font: inherit;
+  border: 0;
+  border-radius: var(--r-lg);
+  background: var(--surface);
+  box-shadow: inset 0 0 0 1px var(--line-strong);
+  cursor: pointer;
+}
+.cloud-provider:hover:not(:disabled) {
+  background: var(--surface-2);
+}
+.cloud-provider:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+}
+.cloud-provider:disabled {
+  opacity: 0.55;
+  cursor: default;
+}
+.cloud-provider small {
+  color: var(--text-2);
+  font-size: 13px;
+  line-height: 1.4;
+}
+.cloud-waiting {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  color: var(--text-2);
+}
+.cloud-folder {
+  display: grid;
+  gap: 8px;
+}
+.cloud-found {
+  display: grid;
+  gap: 8px;
+}
+.cloud-found h5 {
+  font-size: 12px;
+  font-weight: 650;
+  color: var(--text-3);
+  text-transform: uppercase;
+}
+.cloud-found ul {
+  display: grid;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.cloud-found li {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: var(--r-md, 8px);
+  background: var(--surface);
+  box-shadow: inset 0 0 0 1px var(--line-strong);
+}
+.cloud-found li span {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.cloud-webdav {
+  max-width: 34rem;
+}
+@media (prefers-reduced-motion: reduce) {
+  .copy-cell {
+    transition: none;
+  }
+}
+
+/* a place's second line (what it holds, where it is, how much is there) stays on one line */
+.where-text .where-line {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* a copy that could not copy some files: reasons, then the files behind a toggle */
+.copy-problem p {
+  margin: 2px 0;
+}
+.copy-problem-files summary {
+  cursor: pointer;
+  margin-top: 6px;
+}
+.copy-problem-files ul {
+  margin: 6px 0 0;
+  padding: 0 0 0 18px;
+  max-height: 160px;
+  overflow: auto;
+  overflow-wrap: anywhere;
+}

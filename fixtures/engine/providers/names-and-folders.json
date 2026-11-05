@@ -1,0 +1,28 @@
+{
+  "description": "URL -> provider name and platform output folder. Lookalike hosts are never trusted.",
+  "cases": [
+    {"name":"YouTube Music is distinct from YouTube","input":{"op":"name","url":"https://music.youtube.com/watch?v=x"},"expected":"YouTube Music"},
+    {"name":"mobile youtube","input":{"op":"name","url":"https://m.youtube.com/watch?v=x"},"expected":"YouTube"},
+    {"name":"youtu.be","input":{"op":"name","url":"https://youtu.be/x"},"expected":"YouTube"},
+    {"name":"spotify","input":{"op":"name","url":"https://open.spotify.com/track/x"},"expected":"Spotify"},
+    {"name":"apple music","input":{"op":"name","url":"https://music.apple.com/us/album/x/1"},"expected":"Apple Music"},
+    {"name":"deezer","input":{"op":"name","url":"https://www.deezer.com/track/1"},"expected":"Deezer"},
+    {"name":"x.com","input":{"op":"name","url":"https://x.com/a/status/1"},"expected":"X"},
+    {"name":"twitter.com","input":{"op":"name","url":"https://twitter.com/a/status/1"},"expected":"X"},
+    {"name":"tiktok short host","input":{"op":"name","url":"https://vm.tiktok.com/abc"},"expected":"TikTok"},
+    {"name":"tiktok","input":{"op":"name","url":"https://www.tiktok.com/@a/video/1"},"expected":"TikTok"},
+    {"name":"bandcamp subdomain","input":{"op":"name","url":"https://forss.bandcamp.com/track/x"},"expected":"Bandcamp"},
+    {"name":"vimeo player","input":{"op":"name","url":"https://player.vimeo.com/video/1"},"expected":"Vimeo"},
+    {"name":"soundcloud","input":{"op":"name","url":"https://soundcloud.com/a/b"},"expected":"SoundCloud"},
+    {"name":"an unknown site falls back to its host","input":{"op":"name","url":"https://example.org/a.mp4"},"expected":"example.org"},
+    {"name":"the generic extractor does not name the provider","input":{"op":"name","url":"https://example.org/video","extractor":"Generic"},"expected":"example.org"},
+    {"name":"an unknown extractor names the provider","input":{"op":"name","url":"https://streams.example.org/v","extractor":"Wistia"},"expected":"Wistia"},
+    {"name":"folder: YouTube","input":{"op":"folder","url":"https://www.youtube.com/watch?v=x"},"expected":"YouTube"},
+    {"name":"folder: YouTube Music shares the YouTube folder","input":{"op":"folder","url":"https://music.youtube.com/watch?v=x"},"expected":"YouTube"},
+    {"name":"folder: reddit","input":{"op":"folder","url":"https://www.reddit.com/r/x"},"expected":"Reddit"},
+    {"name":"folder: threads","input":{"op":"folder","url":"https://threads.net/@a/post/1"},"expected":"Threads"},
+    {"name":"folder: soundcloud","input":{"op":"folder","url":"https://soundcloud.com/a/b"},"expected":"SoundCloud"},
+    {"name":"folder: a lookalike host is its own folder","input":{"op":"folder","url":"https://youtube.com.evil.test/video"},"expected":"youtube.com.evil.test"},
+    {"name":"folder: an unknown host","input":{"op":"folder","url":"https://example.org/a"},"expected":"example.org"}
+  ]
+}

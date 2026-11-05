@@ -1,0 +1,19 @@
+{
+  "description": "Chapters (starts in seconds, ascending): which one is playing, where previous/next chapter go, and whether a drag crosses into another one.",
+  "cases": [
+    {"name":"inside the second chapter","input":{"op":"chapterAt","starts":[0,135,400],"time":200},"expected":1},
+    {"name":"exactly on a start is that chapter","input":{"op":"chapterAt","starts":[0,135,400],"time":135},"expected":1},
+    {"name":"before the first chapter","input":{"op":"chapterAt","starts":[30,135],"time":10},"expected":-1},
+    {"name":"no chapters","input":{"op":"chapterAt","starts":[],"time":10},"expected":-1},
+    {"name":"next goes to the following start","input":{"op":"chapterTarget","starts":[0,135,400],"time":200,"dir":1},"expected":400},
+    {"name":"next from the last chapter goes nowhere","input":{"op":"chapterTarget","starts":[0,135,400],"time":500,"dir":1},"expected":null},
+    {"name":"previous more than 3 s in restarts the chapter","input":{"op":"chapterTarget","starts":[0,135,400],"time":200,"dir":-1},"expected":135},
+    {"name":"previous within 3 s goes to the chapter before","input":{"op":"chapterTarget","starts":[0,135,400],"time":137,"dir":-1},"expected":0},
+    {"name":"previous in the first seconds of the first chapter goes to 0","input":{"op":"chapterTarget","starts":[0,135],"time":2,"dir":-1},"expected":0},
+    {"name":"before the first chapter, next goes to it","input":{"op":"chapterTarget","starts":[30,135],"time":10,"dir":1},"expected":30},
+    {"name":"no chapters: nowhere to go","input":{"op":"chapterTarget","starts":[],"time":10,"dir":1},"expected":null},
+    {"name":"a drag inside one chapter does not cross","input":{"op":"crossed","starts":[0,135,400],"from":140,"to":390},"expected":false},
+    {"name":"a drag over a start crosses","input":{"op":"crossed","starts":[0,135,400],"from":130,"to":136},"expected":true},
+    {"name":"no chapters never cross","input":{"op":"crossed","starts":[],"from":0,"to":500},"expected":false}
+  ]
+}

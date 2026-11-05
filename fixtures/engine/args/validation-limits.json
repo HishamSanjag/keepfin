@@ -1,0 +1,26 @@
+{
+  "description": "The limits of structured intent: one set of ranges for both apps (ARGS-14).",
+  "cases": [
+    {"name":"the tallest accepted height is 8640","input":{"op":"validateFormat","format":{"type":"video","codec":"auto","container":"mp4","maxHeight":8640}},"expected":{"valid":true}},
+    {"name":"a height above 8640 is rejected","input":{"op":"validateFormat","format":{"type":"video","codec":"auto","container":"mp4","maxHeight":8641}},"expected":{"valid":false}},
+    {"name":"a fractional height is rejected","input":{"op":"validateFormat","format":{"type":"video","codec":"auto","container":"mp4","maxHeight":1.5}},"expected":{"valid":false}},
+    {"name":"240 frames per second is the highest accepted","input":{"op":"validateFormat","format":{"type":"video","codec":"auto","container":"mp4","fps":240}},"expected":{"valid":true}},
+    {"name":"241 frames per second is rejected","input":{"op":"validateFormat","format":{"type":"video","codec":"auto","container":"mp4","fps":241}},"expected":{"valid":false}},
+    {"name":"zero frames per second is rejected","input":{"op":"validateFormat","format":{"type":"video","codec":"auto","container":"mp4","fps":0}},"expected":{"valid":false}},
+    {"name":"an empty format id means none","input":{"op":"validateFormat","format":{"type":"video","codec":"auto","container":"mp4","formatId":""}},"expected":{"valid":true}},
+    {"name":"a format id of 128 characters is valid","input":{"op":"validateFormat","format":{"type":"video","codec":"auto","container":"mp4","formatId":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"}},"expected":{"valid":true}},
+    {"name":"a format id of 129 characters is rejected","input":{"op":"validateFormat","format":{"type":"video","codec":"auto","container":"mp4","formatId":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"}},"expected":{"valid":false}},
+    {"name":"an unknown request kind is rejected","input":{"op":"validateFormat","format":{"type":"shell"}},"expected":{"valid":false}},
+    {"name":"a flac request with a quality is valid","input":{"op":"validateFormat","format":{"type":"audio","target":"flac","quality":"128"}},"expected":{"valid":true}},
+    {"name":"a quality that is a number instead of text is rejected","input":{"op":"validateFormat","format":{"type":"audio","target":"mp3","quality":320}},"expected":{"valid":false},"platforms":["desktop"]},
+    {"name":"blank subtitle languages fall back to the default","input":{"op":"validateOptions","options":{"subtitles":{"enabled":true,"languages":"   ","auto":false,"embed":false}}},"expected":{"valid":true}},
+    {"name":"100 characters of language codes are valid","input":{"op":"validateOptions","options":{"subtitles":{"enabled":true,"languages":"eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee","auto":false,"embed":false}}},"expected":{"valid":true}},
+    {"name":"101 characters of language codes are rejected","input":{"op":"validateOptions","options":{"subtitles":{"enabled":true,"languages":"eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee","auto":false,"embed":false}}},"expected":{"valid":false}},
+    {"name":"an end of zero without a start is rejected","input":{"op":"validateOptions","options":{"section":{"end":0}}},"expected":{"valid":false}},
+    {"name":"an end equal to the start is rejected","input":{"op":"validateOptions","options":{"section":{"start":10,"end":10}}},"expected":{"valid":false}},
+    {"name":"a section of exactly a week is valid","input":{"op":"validateOptions","options":{"section":{"start":0,"end":604800}}},"expected":{"valid":true}},
+    {"name":"a section beyond a week is rejected","input":{"op":"validateOptions","options":{"section":{"start":0,"end":604801}}},"expected":{"valid":false}},
+    {"name":"an unknown option key is dropped, not an error","input":{"op":"validateOptions","options":{"embedMetadata":true,"args":["--exec","calc"]}},"expected":{"valid":true}},
+    {"name":"sponsor mode off is valid","input":{"op":"validateOptions","options":{"sponsorBlock":"off"}},"expected":{"valid":true}}
+  ]
+}

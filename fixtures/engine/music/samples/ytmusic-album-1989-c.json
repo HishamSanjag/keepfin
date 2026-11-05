@@ -1,0 +1,133 @@
+{
+ "contents": {
+  "twoColumnBrowseResultsRenderer": {
+   "secondaryContents": {
+    "sectionListRenderer": {
+     "contents": [
+      {
+       "musicShelfRenderer": {
+        "contents": [
+         {
+          "musicResponsiveListItemRenderer": {
+           "flexColumns": [
+            {
+             "musicResponsiveListItemFlexColumnRenderer": {
+              "text": {
+               "runs": [
+                {
+                 "text": "Taylor Swift 1989 Medley",
+                 "navigationEndpoint": {
+                  "watchEndpoint": {
+                   "videoId": "udi63qj_NUo",
+                   "playlistId": "OLAK5uy_kwC0FIIPLUfyooYXI-57xrUCcGOd_dnm0"
+                  }
+                 }
+                }
+               ]
+              }
+             }
+            },
+            {
+             "musicResponsiveListItemFlexColumnRenderer": {
+              "text": {}
+             }
+            },
+            {
+             "musicResponsiveListItemFlexColumnRenderer": {
+              "text": {
+               "runs": [
+                {
+                 "text": "8.5K plays"
+                }
+               ]
+              }
+             }
+            }
+           ],
+           "fixedColumns": [
+            {
+             "musicResponsiveListItemFixedColumnRenderer": {
+              "text": {
+               "runs": [
+                {
+                 "text": "3:00"
+                }
+               ]
+              }
+             }
+            }
+           ],
+           "playlistItemData": {
+            "videoId": "udi63qj_NUo"
+           },
+           "index": {
+            "runs": [
+             {
+              "text": "1"
+             }
+            ]
+           }
+          }
+         }
+        ]
+       }
+      }
+     ]
+    }
+   },
+   "tabs": [
+    {
+     "tabRenderer": {
+      "content": {
+       "sectionListRenderer": {
+        "contents": [
+         {
+          "musicResponsiveHeaderRenderer": {
+           "title": {
+            "runs": [
+             {
+              "text": "Taylor Swift 1989 Medley"
+             }
+            ]
+           },
+           "subtitle": {
+            "runs": [
+             {
+              "text": "Single"
+             },
+             {
+              "text": " • "
+             },
+             {
+              "text": "2015"
+             }
+            ]
+           },
+           "straplineTextOne": {
+            "runs": [
+             {
+              "text": "Gardiner Sisters",
+              "navigationEndpoint": {
+               "browseEndpoint": {
+                "browseId": "UCpWOW6JVaUhvd1fM9JSIiyg",
+                "browseEndpointContextSupportedConfigs": {
+                 "browseEndpointContextMusicConfig": {
+                  "pageType": "MUSIC_PAGE_TYPE_ARTIST"
+                 }
+                }
+               }
+              }
+             }
+            ]
+           }
+          }
+         }
+        ]
+       }
+      }
+     }
+    }
+   ]
+  }
+ }
+}

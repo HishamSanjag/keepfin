@@ -1,0 +1,24 @@
+{
+  "description": "More folder-safe name cases (whitespace sets, the 80-character cut, device names).",
+  "cases": [
+    {"name":"safeName: a non-breaking space collapses like any space","input":{"op":"safeName","value":"a  b"},"expected":"a b"},
+    {"name":"safeName: a tab and a line break collapse","input":{"op":"safeName","value":"a\t\nb"},"expected":"a__b"},
+    {"name":"safeName: an ideographic space collapses","input":{"op":"safeName","value":"a　b"},"expected":"a b"},
+    {"name":"safeName: control characters become underscores","input":{"op":"safeName","value":"a\u0001b"},"expected":"a_b"},
+    {"name":"safeName: leading and trailing spaces are trimmed","input":{"op":"safeName","value":"  Song  "},"expected":"Song"},
+    {"name":"safeName: a name of exactly 80 characters is kept","input":{"op":"safeName","value":"xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"},"expected":"xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"},
+    {"name":"safeName: a longer name is cut at 80","input":{"op":"safeName","value":"xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"},"expected":"xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"},
+    {"name":"safeName: an emoji is never split at the cut","input":{"op":"safeName","value":"xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx😀y"},"expected":"xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx😀"},
+    {"name":"safeName: dots and spaces at the cut are trimmed","input":{"op":"safeName","value":"xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx. .y"},"expected":"xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"},
+    {"name":"safeName: reserved: com1","input":{"op":"safeName","value":"com1"},"expected":"_com1"},
+    {"name":"safeName: reserved: lpt9.txt","input":{"op":"safeName","value":"LPT9.txt"},"expected":"_LPT9.txt"},
+    {"name":"safeName: reserved: nul with a dot","input":{"op":"safeName","value":"nul.x"},"expected":"_nul.x"},
+    {"name":"safeName: not reserved: console","input":{"op":"safeName","value":"console"},"expected":"console"},
+    {"name":"safeName: not reserved: com0","input":{"op":"safeName","value":"com0"},"expected":"com0"},
+    {"name":"safeName: a quote and a pipe","input":{"op":"safeName","value":"a\"b|c"},"expected":"a_b_c"},
+    {"name":"safeName: an asterisk and a backslash","input":{"op":"safeName","value":"a*b\\c"},"expected":"a_b_c"},
+    {"name":"safeName: an empty name","input":{"op":"safeName","value":""},"expected":"Untitled"},
+    {"name":"safeName: spaces only","input":{"op":"safeName","value":"   "},"expected":"Untitled"},
+    {"name":"safeName: non-Latin names are kept","input":{"op":"safeName","value":"日本語のタイトル"},"expected":"日本語のタイトル"}
+  ]
+}

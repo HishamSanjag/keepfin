@@ -1,0 +1,1142 @@
+{
+ "note": "A library written from nothing: spaces (built-in, custom, linked, smart), routes, items with every field, favourites, tags, plays, placements, playlists and collections.",
+ "cases": [
+  {
+   "name": "a new library with every kind of data (round trip)",
+   "input": {
+    "op": "diff",
+    "actor": "11111111-1111-4111-8111-111111111111",
+    "replicaId": "22222222-2222-4222-8222-222222222222",
+    "before": null,
+    "after": {
+     "items": [
+      {
+       "id": "00000000-0000-4000-8000-000000000001",
+       "space": "music",
+       "kind": "audio",
+       "title": "Song 1",
+       "addedAt": 1700000000001,
+       "favorite": true,
+       "userTags": [
+        "alpha",
+        "zeta"
+       ],
+       "plays": 5,
+       "place": "Music/Artist/Album/song-1.mp3",
+       "artist": "Artist",
+       "album": "Album",
+       "albumArtist": "Various",
+       "track": 3,
+       "disc": 1,
+       "year": 2019,
+       "genre": "Rock",
+       "duration": 215.457,
+       "chapters": [
+        {
+         "start": 0,
+         "title": "Intro"
+        },
+        {
+         "start": 61.5,
+         "title": "Verse"
+        }
+       ],
+       "gain": -7.25,
+       "subtitles": [
+        "en"
+       ],
+       "hasLyrics": true,
+       "sourceUrl": "https://music.example/watch?v=abc",
+       "sourceId": "youtube:abc",
+       "tags": [
+        "rock",
+        "live"
+       ],
+       "lastPlayedAt": 1700000005000,
+       "position": 12.5,
+       "watched": false
+      },
+      {
+       "id": "00000000-0000-4000-8000-000000000002",
+       "space": "videos",
+       "kind": "video",
+       "title": "Clip",
+       "addedAt": 1700000000002,
+       "width": 1920,
+       "height": 1080,
+       "duration": 61,
+       "watched": true,
+       "position": 30,
+       "favorite": false,
+       "userTags": [],
+       "plays": 0,
+       "place": "Videos/clip.mp4"
+      },
+      {
+       "id": "00000000-0000-4000-8000-000000000003",
+       "space": "downloads",
+       "kind": "image",
+       "title": "Picture",
+       "addedAt": 1700000000003,
+       "favorite": false,
+       "userTags": [],
+       "plays": 0,
+       "place": "Downloads/pic.jpg"
+      },
+      {
+       "id": "00000000-0000-4000-8000-000000000004",
+       "space": "music",
+       "kind": "audio",
+       "title": "Song 4",
+       "addedAt": 1700000000004,
+       "favorite": false,
+       "userTags": [],
+       "plays": 0,
+       "place": null
+      },
+      {
+       "id": "00000000-0000-4000-8000-000000000005",
+       "space": "ext",
+       "kind": "audio",
+       "title": "Song 5",
+       "addedAt": 1700000000005,
+       "favorite": false,
+       "userTags": [],
+       "plays": 0,
+       "place": "External/x/y.mp3"
+      },
+      {
+       "id": "00000000-0000-4000-8000-000000000006",
+       "space": "my-space",
+       "kind": "audio",
+       "title": "Song 6",
+       "addedAt": 1700000000006,
+       "favorite": false,
+       "userTags": [
+        "road"
+       ],
+       "plays": 0,
+       "place": "My space/z.mp3"
+      }
+     ],
+     "collections": [
+      {
+       "id": "00000000-0000-4000-8000-000000000101",
+       "name": "Road trip",
+       "kind": "own",
+       "space": "music",
+       "itemIds": [
+        "00000000-0000-4000-8000-000000000001",
+        "00000000-0000-4000-8000-000000000002",
+        "00000000-0000-4000-8000-000000000006"
+       ],
+       "seen": [
+        "u1",
+        "u2"
+       ],
+       "createdAt": 1700000000000,
+       "updatedAt": 1700000000010,
+       "coverItemId": "00000000-0000-4000-8000-000000000001",
+       "newItemIds": [],
+       "removedItemIds": []
+      },
+      {
+       "id": "00000000-0000-4000-8000-000000000102",
+       "name": "Mix",
+       "kind": "playlist",
+       "space": "videos",
+       "itemIds": [
+        "00000000-0000-4000-8000-000000000002",
+        "00000000-0000-4000-8000-000000000001"
+       ],
+       "seen": [
+        "x"
+       ],
+       "createdAt": 1700000000001,
+       "updatedAt": 1700000000011,
+       "source": {
+        "url": "https://video.example/playlist?list=PL1",
+        "provider": "video",
+        "id": "PL1"
+       },
+       "follow": {
+        "mode": "auto",
+        "intervalHours": 6,
+        "wifiOnly": true,
+        "notify": false,
+        "confirmAbove": 20,
+        "pendingCount": 3,
+        "pendingAt": 1700000000012
+       },
+       "newItemIds": [
+        "00000000-0000-4000-8000-000000000002"
+       ],
+       "removedItemIds": [
+        "00000000-0000-4000-8000-000000000001"
+       ]
+      },
+      {
+       "id": "00000000-0000-4000-8000-000000000103",
+       "name": "An album",
+       "kind": "album",
+       "space": "music",
+       "itemIds": [
+        "00000000-0000-4000-8000-000000000001"
+       ],
+       "seen": [],
+       "createdAt": 1700000000002,
+       "updatedAt": 1700000000002,
+       "newItemIds": [],
+       "removedItemIds": []
+      }
+     ],
+     "spaces": [
+      {
+       "id": "downloads",
+       "name": "Downloads",
+       "kind": "mixed",
+       "folder": "Downloads",
+       "layout": "collection",
+       "naming": "title",
+       "skipExisting": false,
+       "type": "folder",
+       "color": "slate",
+       "icon": "folder",
+       "pinned": true
+      },
+      {
+       "id": "music",
+       "name": "Music",
+       "kind": "music",
+       "folder": "Music",
+       "layout": "artist-album",
+       "naming": "artist-title",
+       "skipExisting": true,
+       "type": "folder",
+       "color": "cobalt",
+       "icon": "music",
+       "pinned": true,
+       "ignore": [
+        "Podcasts"
+       ],
+       "scanFolder": true
+      },
+      {
+       "id": "videos",
+       "name": "Videos",
+       "kind": "video",
+       "folder": "Videos",
+       "layout": "platform",
+       "naming": "title-uploader",
+       "skipExisting": false,
+       "type": "folder",
+       "color": "violet",
+       "icon": "video",
+       "pinned": true
+      },
+      {
+       "id": "my-space",
+       "name": "My space",
+       "kind": "music",
+       "folder": "My space",
+       "layout": "flat",
+       "naming": "date-title",
+       "skipExisting": false,
+       "type": "folder"
+      },
+      {
+       "id": "ext",
+       "name": "External",
+       "kind": "mixed",
+       "folder": "External",
+       "linked": true,
+       "layout": "flat",
+       "naming": "title",
+       "skipExisting": false,
+       "type": "folder"
+      },
+      {
+       "id": "smart-1",
+       "name": "Rock",
+       "kind": "mixed",
+       "folder": "",
+       "layout": "flat",
+       "naming": "title",
+       "skipExisting": false,
+       "type": "smart",
+       "icon": "star",
+       "rules": {
+        "match": "any",
+        "rules": [
+         {
+          "field": "tag",
+          "values": [
+           "rock"
+          ]
+         }
+        ],
+        "onlyKind": "audio"
+       }
+      }
+     ],
+     "routes": {
+      "music": "music",
+      "other": "downloads"
+     }
+    },
+    "roundtrip": true,
+    "ids": [
+     "00000000-0000-4000-9000-000000000001",
+     "00000000-0000-4000-9000-000000000002",
+     "00000000-0000-4000-9000-000000000003",
+     "00000000-0000-4000-9000-000000000004",
+     "00000000-0000-4000-9000-000000000005",
+     "00000000-0000-4000-9000-000000000006"
+    ]
+   },
+   "expected": [
+    {
+     "kind": "space.add",
+     "body": {
+      "space": "6b8e1c10-2d3a-4f55-8a01-000000000001",
+      "fields": {
+       "name": "Downloads",
+       "kind": "mixed",
+       "folder": "Downloads",
+       "layout": "collection",
+       "naming": "title",
+       "skipExisting": false,
+       "type": "folder",
+       "color": "slate",
+       "icon": "folder",
+       "pinned": true,
+       "order": 0
+      }
+     }
+    },
+    {
+     "kind": "space.add",
+     "body": {
+      "space": "6b8e1c10-2d3a-4f55-8a01-000000000002",
+      "fields": {
+       "name": "Music",
+       "kind": "music",
+       "folder": "Music",
+       "layout": "artist-album",
+       "naming": "artist-title",
+       "skipExisting": true,
+       "ignore": [
+        "Podcasts"
+       ],
+       "scanFolder": true,
+       "type": "folder",
+       "color": "cobalt",
+       "icon": "music",
+       "pinned": true,
+       "order": 1
+      }
+     }
+    },
+    {
+     "kind": "space.add",
+     "body": {
+      "space": "6b8e1c10-2d3a-4f55-8a01-000000000003",
+      "fields": {
+       "name": "Videos",
+       "kind": "video",
+       "folder": "Videos",
+       "layout": "platform",
+       "naming": "title-uploader",
+       "skipExisting": false,
+       "type": "folder",
+       "color": "violet",
+       "icon": "video",
+       "pinned": true,
+       "order": 2
+      }
+     }
+    },
+    {
+     "kind": "space.add",
+     "body": {
+      "space": "34f5644e-6009-5d7b-865b-e316772e4fa5",
+      "fields": {
+       "name": "My space",
+       "kind": "music",
+       "folder": "My space",
+       "layout": "flat",
+       "naming": "date-title",
+       "skipExisting": false,
+       "type": "folder",
+       "order": 3,
+       "legacyId": "my-space"
+      }
+     }
+    },
+    {
+     "kind": "space.add",
+     "body": {
+      "space": "ecf189c6-2bcf-55ca-8fea-934b0e036095",
+      "fields": {
+       "name": "External",
+       "kind": "mixed",
+       "folder": "External",
+       "layout": "flat",
+       "naming": "title",
+       "skipExisting": false,
+       "type": "folder",
+       "linked": true,
+       "order": 4,
+       "legacyId": "ext"
+      }
+     }
+    },
+    {
+     "kind": "space.add",
+     "body": {
+      "space": "7846e334-d6bf-5812-8687-42516908262c",
+      "fields": {
+       "name": "Rock",
+       "kind": "mixed",
+       "folder": "",
+       "layout": "flat",
+       "naming": "title",
+       "skipExisting": false,
+       "type": "smart",
+       "icon": "star",
+       "rules": {
+        "match": "any",
+        "rules": [
+         {
+          "field": "tag",
+          "values": [
+           "rock"
+          ]
+         }
+        ],
+        "onlyKind": "audio"
+       },
+       "order": 5,
+       "legacyId": "smart-1"
+      }
+     }
+    },
+    {
+     "kind": "profile.set",
+     "body": {
+      "field": "routes",
+      "value": {
+       "music": "6b8e1c10-2d3a-4f55-8a01-000000000002",
+       "other": "6b8e1c10-2d3a-4f55-8a01-000000000001"
+      }
+     }
+    },
+    {
+     "kind": "item.add",
+     "body": {
+      "item": "00000000-0000-4000-8000-000000000001",
+      "fields": {
+       "media": "audio",
+       "space": "6b8e1c10-2d3a-4f55-8a01-000000000002",
+       "title": "Song 1",
+       "artist": "Artist",
+       "album": "Album",
+       "albumArtist": "Various",
+       "track": 3,
+       "disc": 1,
+       "year": 2019,
+       "genre": "Rock",
+       "duration": 215457,
+       "chapters": [
+        {
+         "start": 0,
+         "title": "Intro"
+        },
+        {
+         "start": 61500,
+         "title": "Verse"
+        }
+       ],
+       "gain": -7250,
+       "subtitles": [
+        "en"
+       ],
+       "hasLyrics": true,
+       "sourceUrl": "https://music.example/watch?v=abc",
+       "sourceId": "youtube:abc",
+       "addedAt": 1700000000001,
+       "tags": [
+        "rock",
+        "live"
+       ],
+       "lastPlayedAt": 1700000005000,
+       "position": 12500,
+       "watched": false
+      }
+     }
+    },
+    {
+     "kind": "item.place",
+     "body": {
+      "item": "00000000-0000-4000-8000-000000000001",
+      "place": "22222222-2222-4222-8222-222222222222",
+      "path": "Music/Artist/Album/song-1.mp3"
+     }
+    },
+    {
+     "kind": "item.set",
+     "body": {
+      "item": "00000000-0000-4000-8000-000000000001",
+      "field": "plays@11111111-1111-4111-8111-111111111111",
+      "value": 5
+     }
+    },
+    {
+     "kind": "set.add",
+     "body": {
+      "set": "favourites",
+      "element": "00000000-0000-4000-8000-000000000001"
+     }
+    },
+    {
+     "kind": "set.add",
+     "body": {
+      "set": "tags:00000000-0000-4000-8000-000000000001",
+      "element": "alpha"
+     }
+    },
+    {
+     "kind": "set.add",
+     "body": {
+      "set": "tags:00000000-0000-4000-8000-000000000001",
+      "element": "zeta"
+     }
+    },
+    {
+     "kind": "item.add",
+     "body": {
+      "item": "00000000-0000-4000-8000-000000000002",
+      "fields": {
+       "media": "video",
+       "space": "6b8e1c10-2d3a-4f55-8a01-000000000003",
+       "title": "Clip",
+       "duration": 61000,
+       "width": 1920,
+       "height": 1080,
+       "addedAt": 1700000000002,
+       "position": 30000,
+       "watched": true
+      }
+     }
+    },
+    {
+     "kind": "item.place",
+     "body": {
+      "item": "00000000-0000-4000-8000-000000000002",
+      "place": "22222222-2222-4222-8222-222222222222",
+      "path": "Videos/clip.mp4"
+     }
+    },
+    {
+     "kind": "item.add",
+     "body": {
+      "item": "00000000-0000-4000-8000-000000000003",
+      "fields": {
+       "media": "image",
+       "space": "6b8e1c10-2d3a-4f55-8a01-000000000001",
+       "title": "Picture",
+       "addedAt": 1700000000003
+      }
+     }
+    },
+    {
+     "kind": "item.place",
+     "body": {
+      "item": "00000000-0000-4000-8000-000000000003",
+      "place": "22222222-2222-4222-8222-222222222222",
+      "path": "Downloads/pic.jpg"
+     }
+    },
+    {
+     "kind": "item.add",
+     "body": {
+      "item": "00000000-0000-4000-8000-000000000004",
+      "fields": {
+       "media": "audio",
+       "space": "6b8e1c10-2d3a-4f55-8a01-000000000002",
+       "title": "Song 4",
+       "addedAt": 1700000000004
+      }
+     }
+    },
+    {
+     "kind": "item.add",
+     "body": {
+      "item": "00000000-0000-4000-8000-000000000005",
+      "fields": {
+       "media": "audio",
+       "space": "ecf189c6-2bcf-55ca-8fea-934b0e036095",
+       "title": "Song 5",
+       "addedAt": 1700000000005
+      }
+     }
+    },
+    {
+     "kind": "item.place",
+     "body": {
+      "item": "00000000-0000-4000-8000-000000000005",
+      "place": "22222222-2222-4222-8222-222222222222",
+      "path": "External/x/y.mp3"
+     }
+    },
+    {
+     "kind": "item.add",
+     "body": {
+      "item": "00000000-0000-4000-8000-000000000006",
+      "fields": {
+       "media": "audio",
+       "space": "34f5644e-6009-5d7b-865b-e316772e4fa5",
+       "title": "Song 6",
+       "addedAt": 1700000000006
+      }
+     }
+    },
+    {
+     "kind": "item.place",
+     "body": {
+      "item": "00000000-0000-4000-8000-000000000006",
+      "place": "22222222-2222-4222-8222-222222222222",
+      "path": "My space/z.mp3"
+     }
+    },
+    {
+     "kind": "set.add",
+     "body": {
+      "set": "tags:00000000-0000-4000-8000-000000000006",
+      "element": "road"
+     }
+    },
+    {
+     "kind": "playlist.add",
+     "body": {
+      "playlist": "00000000-0000-4000-8000-000000000101",
+      "fields": {
+       "kind": "playlist",
+       "name": "Road trip",
+       "space": "6b8e1c10-2d3a-4f55-8a01-000000000002",
+       "coverItemId": "00000000-0000-4000-8000-000000000001",
+       "createdAt": 1700000000000,
+       "updatedAt": 1700000000010
+      }
+     }
+    },
+    {
+     "kind": "entry.insert",
+     "body": {
+      "playlist": "00000000-0000-4000-8000-000000000101",
+      "entry": "00000000-0000-4000-9000-000000000001",
+      "item": "00000000-0000-4000-8000-000000000001",
+      "key": "a0"
+     }
+    },
+    {
+     "kind": "entry.insert",
+     "body": {
+      "playlist": "00000000-0000-4000-8000-000000000101",
+      "entry": "00000000-0000-4000-9000-000000000002",
+      "item": "00000000-0000-4000-8000-000000000002",
+      "key": "a1"
+     }
+    },
+    {
+     "kind": "entry.insert",
+     "body": {
+      "playlist": "00000000-0000-4000-8000-000000000101",
+      "entry": "00000000-0000-4000-9000-000000000003",
+      "item": "00000000-0000-4000-8000-000000000006",
+      "key": "a2"
+     }
+    },
+    {
+     "kind": "set.add",
+     "body": {
+      "set": "seen:00000000-0000-4000-8000-000000000101",
+      "element": "u1"
+     }
+    },
+    {
+     "kind": "set.add",
+     "body": {
+      "set": "seen:00000000-0000-4000-8000-000000000101",
+      "element": "u2"
+     }
+    },
+    {
+     "kind": "playlist.add",
+     "body": {
+      "playlist": "00000000-0000-4000-8000-000000000102",
+      "fields": {
+       "kind": "collection",
+       "collectionKind": "playlist",
+       "name": "Mix",
+       "space": "6b8e1c10-2d3a-4f55-8a01-000000000003",
+       "source": {
+        "url": "https://video.example/playlist?list=PL1",
+        "provider": "video",
+        "id": "PL1"
+       },
+       "follow": {
+        "mode": "auto",
+        "intervalHours": 6,
+        "wifiOnly": true,
+        "notify": false,
+        "confirmAbove": 20,
+        "pending": {
+         "count": 3,
+         "at": 1700000000012
+        }
+       },
+       "createdAt": 1700000000001,
+       "updatedAt": 1700000000011
+      }
+     }
+    },
+    {
+     "kind": "entry.insert",
+     "body": {
+      "playlist": "00000000-0000-4000-8000-000000000102",
+      "entry": "00000000-0000-4000-9000-000000000004",
+      "item": "00000000-0000-4000-8000-000000000002",
+      "key": "a0"
+     }
+    },
+    {
+     "kind": "entry.insert",
+     "body": {
+      "playlist": "00000000-0000-4000-8000-000000000102",
+      "entry": "00000000-0000-4000-9000-000000000005",
+      "item": "00000000-0000-4000-8000-000000000001",
+      "key": "a1"
+     }
+    },
+    {
+     "kind": "set.add",
+     "body": {
+      "set": "seen:00000000-0000-4000-8000-000000000102",
+      "element": "x"
+     }
+    },
+    {
+     "kind": "set.add",
+     "body": {
+      "set": "new:00000000-0000-4000-8000-000000000102",
+      "element": "00000000-0000-4000-8000-000000000002"
+     }
+    },
+    {
+     "kind": "set.add",
+     "body": {
+      "set": "removed:00000000-0000-4000-8000-000000000102",
+      "element": "00000000-0000-4000-8000-000000000001"
+     }
+    },
+    {
+     "kind": "playlist.add",
+     "body": {
+      "playlist": "00000000-0000-4000-8000-000000000103",
+      "fields": {
+       "kind": "collection",
+       "collectionKind": "album",
+       "name": "An album",
+       "space": "6b8e1c10-2d3a-4f55-8a01-000000000002",
+       "createdAt": 1700000000002,
+       "updatedAt": 1700000000002
+      }
+     }
+    },
+    {
+     "kind": "entry.insert",
+     "body": {
+      "playlist": "00000000-0000-4000-8000-000000000103",
+      "entry": "00000000-0000-4000-9000-000000000006",
+      "item": "00000000-0000-4000-8000-000000000001",
+      "key": "a0"
+     }
+    }
+   ]
+  },
+  {
+   "name": "messy input is normalised and unusable ids are left out",
+   "input": {
+    "op": "diff",
+    "actor": "11111111-1111-4111-8111-111111111111",
+    "replicaId": "22222222-2222-4222-8222-222222222222",
+    "before": null,
+    "after": {
+     "items": [
+      {
+       "id": "00000000-0000-4000-8000-000000000020",
+       "space": "music",
+       "kind": "weird",
+       "title": "Rounded",
+       "addedAt": 1700000000020.4,
+       "duration": 12.3456,
+       "position": 0.0004,
+       "gain": -0.0004,
+       "track": 2.5,
+       "year": 1999.49,
+       "width": 640.5,
+       "favorite": false,
+       "userTags": [
+        "b",
+        "a",
+        "a",
+        ""
+       ],
+       "plays": 2.6,
+       "place": "Music/a b/c.mp3"
+      },
+      {
+       "id": "content://media/external/audio/media/77",
+       "space": "music",
+       "kind": "audio",
+       "title": "Not a uuid",
+       "place": "Music/n.mp3"
+      },
+      {
+       "id": "00000000-0000-4000-8000-000000000021",
+       "space": "music",
+       "kind": "audio",
+       "title": "Bad placement",
+       "chapters": [
+        {
+         "start": 1,
+         "title": "x"
+        }
+       ],
+       "subtitles": [],
+       "tags": [],
+       "place": "Music/../escape.mp3"
+      },
+      {
+       "id": "00000000-0000-4000-8000-000000000022",
+       "space": "music",
+       "kind": "audio",
+       "title": "Odd chapters",
+       "chapters": [
+        {
+         "start": 1e+300,
+         "title": "huge"
+        }
+       ],
+       "place": "Music/odd.mp3"
+      }
+     ],
+     "collections": [
+      {
+       "id": "00000000-0000-4000-8000-000000000110",
+       "name": "Messy",
+       "kind": "channel",
+       "space": "music",
+       "itemIds": [
+        "00000000-0000-4000-8000-000000000020",
+        "00000000-0000-4000-8000-000000000020",
+        "00000000-0000-4000-8000-000000000099",
+        "content://media/external/audio/media/77",
+        "00000000-0000-4000-8000-000000000021"
+       ],
+       "seen": [
+        "b",
+        "a",
+        "a",
+        ""
+       ],
+       "createdAt": 1700000000000.6,
+       "newItemIds": [
+        "00000000-0000-4000-8000-000000000099",
+        "00000000-0000-4000-8000-000000000021",
+        "00000000-0000-4000-8000-000000000020"
+       ],
+       "removedItemIds": [
+        "00000000-0000-4000-8000-000000000021"
+       ]
+      },
+      {
+       "id": "not-a-uuid",
+       "name": "Skipped",
+       "kind": "own",
+       "space": "music",
+       "itemIds": [],
+       "seen": []
+      }
+     ],
+     "spaces": [
+      {
+       "id": "music",
+       "name": "Music",
+       "kind": "music",
+       "folder": "Music",
+       "layout": "artist-album",
+       "naming": "artist-title",
+       "skipExisting": true,
+       "type": "folder",
+       "color": "cobalt",
+       "icon": "music",
+       "pinned": true,
+       "ignore": [
+        "Podcasts"
+       ],
+       "scanFolder": true
+      },
+      {
+       "id": "6b8e1c10-2d3a-4f55-8a01-0000000000ff",
+       "name": "My space",
+       "kind": "music",
+       "folder": "My space",
+       "layout": "flat",
+       "naming": "date-title",
+       "skipExisting": false,
+       "type": "folder"
+      },
+      {
+       "id": "plain",
+       "name": "Plain",
+       "kind": "weird",
+       "folder": "",
+       "layout": "collection",
+       "naming": "title",
+       "skipExisting": false,
+       "type": "folder"
+      }
+     ],
+     "routes": {
+      "music": "plain",
+      "other": "unknown-space"
+     }
+    },
+    "ids": [
+     "00000000-0000-4000-9000-000000000001",
+     "00000000-0000-4000-9000-000000000002"
+    ]
+   },
+   "expected": [
+    {
+     "kind": "space.add",
+     "body": {
+      "space": "6b8e1c10-2d3a-4f55-8a01-000000000002",
+      "fields": {
+       "name": "Music",
+       "kind": "music",
+       "folder": "Music",
+       "layout": "artist-album",
+       "naming": "artist-title",
+       "skipExisting": true,
+       "ignore": [
+        "Podcasts"
+       ],
+       "scanFolder": true,
+       "type": "folder",
+       "color": "cobalt",
+       "icon": "music",
+       "pinned": true,
+       "order": 0
+      }
+     }
+    },
+    {
+     "kind": "space.add",
+     "body": {
+      "space": "6b8e1c10-2d3a-4f55-8a01-0000000000ff",
+      "fields": {
+       "name": "My space",
+       "kind": "music",
+       "folder": "My space",
+       "layout": "flat",
+       "naming": "date-title",
+       "skipExisting": false,
+       "type": "folder",
+       "order": 1
+      }
+     }
+    },
+    {
+     "kind": "space.add",
+     "body": {
+      "space": "8f68a560-06c8-5741-80ff-815bd9e5312b",
+      "fields": {
+       "name": "Plain",
+       "kind": "weird",
+       "folder": "",
+       "layout": "collection",
+       "naming": "title",
+       "skipExisting": false,
+       "type": "folder",
+       "order": 2,
+       "legacyId": "plain"
+      }
+     }
+    },
+    {
+     "kind": "profile.set",
+     "body": {
+      "field": "routes",
+      "value": {
+       "music": "8f68a560-06c8-5741-80ff-815bd9e5312b",
+       "other": "9900c1b1-383c-5e47-8b3c-04cca12f57f7"
+      }
+     }
+    },
+    {
+     "kind": "item.add",
+     "body": {
+      "item": "00000000-0000-4000-8000-000000000020",
+      "fields": {
+       "media": "other",
+       "space": "6b8e1c10-2d3a-4f55-8a01-000000000002",
+       "title": "Rounded",
+       "track": 3,
+       "year": 1999,
+       "duration": 12346,
+       "width": 641,
+       "gain": 0,
+       "addedAt": 1700000000020,
+       "position": 0
+      }
+     }
+    },
+    {
+     "kind": "item.place",
+     "body": {
+      "item": "00000000-0000-4000-8000-000000000020",
+      "place": "22222222-2222-4222-8222-222222222222",
+      "path": "Music/a b/c.mp3"
+     }
+    },
+    {
+     "kind": "item.set",
+     "body": {
+      "item": "00000000-0000-4000-8000-000000000020",
+      "field": "plays@11111111-1111-4111-8111-111111111111",
+      "value": 3
+     }
+    },
+    {
+     "kind": "set.add",
+     "body": {
+      "set": "tags:00000000-0000-4000-8000-000000000020",
+      "element": "a"
+     }
+    },
+    {
+     "kind": "set.add",
+     "body": {
+      "set": "tags:00000000-0000-4000-8000-000000000020",
+      "element": "b"
+     }
+    },
+    {
+     "kind": "item.add",
+     "body": {
+      "item": "00000000-0000-4000-8000-000000000021",
+      "fields": {
+       "media": "audio",
+       "space": "6b8e1c10-2d3a-4f55-8a01-000000000002",
+       "title": "Bad placement",
+       "chapters": [
+        {
+         "start": 1000,
+         "title": "x"
+        }
+       ]
+      }
+     }
+    },
+    {
+     "kind": "item.add",
+     "body": {
+      "item": "00000000-0000-4000-8000-000000000022",
+      "fields": {
+       "media": "audio",
+       "space": "6b8e1c10-2d3a-4f55-8a01-000000000002",
+       "title": "Odd chapters"
+      }
+     }
+    },
+    {
+     "kind": "item.place",
+     "body": {
+      "item": "00000000-0000-4000-8000-000000000022",
+      "place": "22222222-2222-4222-8222-222222222222",
+      "path": "Music/odd.mp3"
+     }
+    },
+    {
+     "kind": "playlist.add",
+     "body": {
+      "playlist": "00000000-0000-4000-8000-000000000110",
+      "fields": {
+       "kind": "collection",
+       "collectionKind": "channel",
+       "name": "Messy",
+       "space": "6b8e1c10-2d3a-4f55-8a01-000000000002",
+       "createdAt": 1700000000001
+      }
+     }
+    },
+    {
+     "kind": "entry.insert",
+     "body": {
+      "playlist": "00000000-0000-4000-8000-000000000110",
+      "entry": "00000000-0000-4000-9000-000000000001",
+      "item": "00000000-0000-4000-8000-000000000020",
+      "key": "a0"
+     }
+    },
+    {
+     "kind": "entry.insert",
+     "body": {
+      "playlist": "00000000-0000-4000-8000-000000000110",
+      "entry": "00000000-0000-4000-9000-000000000002",
+      "item": "00000000-0000-4000-8000-000000000021",
+      "key": "a1"
+     }
+    },
+    {
+     "kind": "set.add",
+     "body": {
+      "set": "seen:00000000-0000-4000-8000-000000000110",
+      "element": "a"
+     }
+    },
+    {
+     "kind": "set.add",
+     "body": {
+      "set": "seen:00000000-0000-4000-8000-000000000110",
+      "element": "b"
+     }
+    },
+    {
+     "kind": "set.add",
+     "body": {
+      "set": "new:00000000-0000-4000-8000-000000000110",
+      "element": "00000000-0000-4000-8000-000000000020"
+     }
+    },
+    {
+     "kind": "set.add",
+     "body": {
+      "set": "new:00000000-0000-4000-8000-000000000110",
+      "element": "00000000-0000-4000-8000-000000000021"
+     }
+    },
+    {
+     "kind": "set.add",
+     "body": {
+      "set": "removed:00000000-0000-4000-8000-000000000110",
+      "element": "00000000-0000-4000-8000-000000000021"
+     }
+    }
+   ]
+  }
+ ]
+}

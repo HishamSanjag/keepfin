@@ -1,0 +1,535 @@
+{
+ "contents": {
+  "tabbedSearchResultsRenderer": {
+   "tabs": [
+    {
+     "tabRenderer": {
+      "title": "YT Music",
+      "selected": true,
+      "content": {
+       "sectionListRenderer": {
+        "contents": [
+         {
+          "musicShelfRenderer": {
+           "title": {
+            "runs": [
+             {
+              "text": "Albums"
+             }
+            ]
+           },
+           "contents": [
+            {
+             "musicResponsiveListItemRenderer": {
+              "flexColumns": [
+               {
+                "musicResponsiveListItemFlexColumnRenderer": {
+                 "text": {
+                  "runs": [
+                   {
+                    "text": "Random Access Memories"
+                   }
+                  ]
+                 }
+                }
+               },
+               {
+                "musicResponsiveListItemFlexColumnRenderer": {
+                 "text": {
+                  "runs": [
+                   {
+                    "text": "Album"
+                   },
+                   {
+                    "text": " • "
+                   },
+                   {
+                    "text": "Daft Punk",
+                    "navigationEndpoint": {
+                     "browseEndpoint": {
+                      "browseId": "UCRr1xG_2WIDs18a6cIiCxeA",
+                      "browseEndpointContextSupportedConfigs": {
+                       "browseEndpointContextMusicConfig": {
+                        "pageType": "MUSIC_PAGE_TYPE_ARTIST"
+                       }
+                      }
+                     }
+                    }
+                   },
+                   {
+                    "text": " • "
+                   },
+                   {
+                    "text": "2013"
+                   }
+                  ]
+                 }
+                }
+               }
+              ],
+              "flexColumnDisplayStyle": "MUSIC_RESPONSIVE_LIST_ITEM_FLEX_COLUMN_DISPLAY_STYLE_TWO_LINE_STACK",
+              "navigationEndpoint": {
+               "browseEndpoint": {
+                "browseId": "MPREb_K8qWMWVqXGi",
+                "browseEndpointContextSupportedConfigs": {
+                 "browseEndpointContextMusicConfig": {
+                  "pageType": "MUSIC_PAGE_TYPE_ALBUM"
+                 }
+                }
+               }
+              }
+             }
+            },
+            {
+             "musicResponsiveListItemRenderer": {
+              "flexColumns": [
+               {
+                "musicResponsiveListItemFlexColumnRenderer": {
+                 "text": {
+                  "runs": [
+                   {
+                    "text": "Random Access Memories (Drumless Edition)"
+                   }
+                  ]
+                 }
+                }
+               },
+               {
+                "musicResponsiveListItemFlexColumnRenderer": {
+                 "text": {
+                  "runs": [
+                   {
+                    "text": "Album"
+                   },
+                   {
+                    "text": " • "
+                   },
+                   {
+                    "text": "Daft Punk",
+                    "navigationEndpoint": {
+                     "browseEndpoint": {
+                      "browseId": "UCRr1xG_2WIDs18a6cIiCxeA",
+                      "browseEndpointContextSupportedConfigs": {
+                       "browseEndpointContextMusicConfig": {
+                        "pageType": "MUSIC_PAGE_TYPE_ARTIST"
+                       }
+                      }
+                     }
+                    }
+                   },
+                   {
+                    "text": " • "
+                   },
+                   {
+                    "text": "2023"
+                   }
+                  ]
+                 }
+                }
+               }
+              ],
+              "flexColumnDisplayStyle": "MUSIC_RESPONSIVE_LIST_ITEM_FLEX_COLUMN_DISPLAY_STYLE_TWO_LINE_STACK",
+              "navigationEndpoint": {
+               "browseEndpoint": {
+                "browseId": "MPREb_OgeEnoHTsCm",
+                "browseEndpointContextSupportedConfigs": {
+                 "browseEndpointContextMusicConfig": {
+                  "pageType": "MUSIC_PAGE_TYPE_ALBUM"
+                 }
+                }
+               }
+              }
+             }
+            },
+            {
+             "musicResponsiveListItemRenderer": {
+              "flexColumns": [
+               {
+                "musicResponsiveListItemFlexColumnRenderer": {
+                 "text": {
+                  "runs": [
+                   {
+                    "text": "Vitamin String Quartet Performs Daft Punk's Random Access Memories"
+                   }
+                  ]
+                 }
+                }
+               },
+               {
+                "musicResponsiveListItemFlexColumnRenderer": {
+                 "text": {
+                  "runs": [
+                   {
+                    "text": "Album"
+                   },
+                   {
+                    "text": " • "
+                   },
+                   {
+                    "text": "Vitamin String Quartet",
+                    "navigationEndpoint": {
+                     "browseEndpoint": {
+                      "browseId": "UCLEcrRNFiDrhwENdwVI-ZPQ",
+                      "browseEndpointContextSupportedConfigs": {
+                       "browseEndpointContextMusicConfig": {
+                        "pageType": "MUSIC_PAGE_TYPE_ARTIST"
+                       }
+                      }
+                     }
+                    }
+                   },
+                   {
+                    "text": " • "
+                   },
+                   {
+                    "text": "2016"
+                   }
+                  ]
+                 }
+                }
+               }
+              ],
+              "flexColumnDisplayStyle": "MUSIC_RESPONSIVE_LIST_ITEM_FLEX_COLUMN_DISPLAY_STYLE_TWO_LINE_STACK",
+              "navigationEndpoint": {
+               "browseEndpoint": {
+                "browseId": "MPREb_uWqchxQ5Pyu",
+                "browseEndpointContextSupportedConfigs": {
+                 "browseEndpointContextMusicConfig": {
+                  "pageType": "MUSIC_PAGE_TYPE_ALBUM"
+                 }
+                }
+               }
+              }
+             }
+            },
+            {
+             "musicResponsiveListItemRenderer": {
+              "flexColumns": [
+               {
+                "musicResponsiveListItemFlexColumnRenderer": {
+                 "text": {
+                  "runs": [
+                   {
+                    "text": "Random Access Memories"
+                   }
+                  ]
+                 }
+                }
+               },
+               {
+                "musicResponsiveListItemFlexColumnRenderer": {
+                 "text": {
+                  "runs": [
+                   {
+                    "text": "Album"
+                   },
+                   {
+                    "text": " • "
+                   },
+                   {
+                    "text": "Franz Kirmann",
+                    "navigationEndpoint": {
+                     "browseEndpoint": {
+                      "browseId": "UCQU5CKinWRCfWhEY356sYaA",
+                      "browseEndpointContextSupportedConfigs": {
+                       "browseEndpointContextMusicConfig": {
+                        "pageType": "MUSIC_PAGE_TYPE_ARTIST"
+                       }
+                      }
+                     }
+                    }
+                   },
+                   {
+                    "text": " • "
+                   },
+                   {
+                    "text": "2011"
+                   }
+                  ]
+                 }
+                }
+               }
+              ],
+              "flexColumnDisplayStyle": "MUSIC_RESPONSIVE_LIST_ITEM_FLEX_COLUMN_DISPLAY_STYLE_TWO_LINE_STACK",
+              "navigationEndpoint": {
+               "browseEndpoint": {
+                "browseId": "MPREb_uIFH4v2vQ0o",
+                "browseEndpointContextSupportedConfigs": {
+                 "browseEndpointContextMusicConfig": {
+                  "pageType": "MUSIC_PAGE_TYPE_ALBUM"
+                 }
+                }
+               }
+              }
+             }
+            },
+            {
+             "musicResponsiveListItemRenderer": {
+              "flexColumns": [
+               {
+                "musicResponsiveListItemFlexColumnRenderer": {
+                 "text": {
+                  "runs": [
+                   {
+                    "text": "R.A.M (Random Access Memories)"
+                   }
+                  ]
+                 }
+                }
+               },
+               {
+                "musicResponsiveListItemFlexColumnRenderer": {
+                 "text": {
+                  "runs": [
+                   {
+                    "text": "EP"
+                   },
+                   {
+                    "text": " • "
+                   },
+                   {
+                    "text": "lukas london",
+                    "navigationEndpoint": {
+                     "browseEndpoint": {
+                      "browseId": "UCFzCMWW_J790WTJwRUKZhvw",
+                      "browseEndpointContextSupportedConfigs": {
+                       "browseEndpointContextMusicConfig": {
+                        "pageType": "MUSIC_PAGE_TYPE_ARTIST"
+                       }
+                      }
+                     }
+                    }
+                   },
+                   {
+                    "text": " • "
+                   },
+                   {
+                    "text": "2024"
+                   }
+                  ]
+                 }
+                }
+               }
+              ],
+              "flexColumnDisplayStyle": "MUSIC_RESPONSIVE_LIST_ITEM_FLEX_COLUMN_DISPLAY_STYLE_TWO_LINE_STACK",
+              "navigationEndpoint": {
+               "browseEndpoint": {
+                "browseId": "MPREb_NDq4D2uNH7U",
+                "browseEndpointContextSupportedConfigs": {
+                 "browseEndpointContextMusicConfig": {
+                  "pageType": "MUSIC_PAGE_TYPE_ALBUM"
+                 }
+                }
+               }
+              }
+             }
+            },
+            {
+             "musicResponsiveListItemRenderer": {
+              "flexColumns": [
+               {
+                "musicResponsiveListItemFlexColumnRenderer": {
+                 "text": {
+                  "runs": [
+                   {
+                    "text": "Discovery"
+                   }
+                  ]
+                 }
+                }
+               },
+               {
+                "musicResponsiveListItemFlexColumnRenderer": {
+                 "text": {
+                  "runs": [
+                   {
+                    "text": "Album"
+                   },
+                   {
+                    "text": " • "
+                   },
+                   {
+                    "text": "Daft Punk",
+                    "navigationEndpoint": {
+                     "browseEndpoint": {
+                      "browseId": "UCRr1xG_2WIDs18a6cIiCxeA",
+                      "browseEndpointContextSupportedConfigs": {
+                       "browseEndpointContextMusicConfig": {
+                        "pageType": "MUSIC_PAGE_TYPE_ARTIST"
+                       }
+                      }
+                     }
+                    }
+                   },
+                   {
+                    "text": " • "
+                   },
+                   {
+                    "text": "2001"
+                   }
+                  ]
+                 }
+                }
+               }
+              ],
+              "flexColumnDisplayStyle": "MUSIC_RESPONSIVE_LIST_ITEM_FLEX_COLUMN_DISPLAY_STYLE_TWO_LINE_STACK",
+              "navigationEndpoint": {
+               "browseEndpoint": {
+                "browseId": "MPREb_7ltM34kr0mH",
+                "browseEndpointContextSupportedConfigs": {
+                 "browseEndpointContextMusicConfig": {
+                  "pageType": "MUSIC_PAGE_TYPE_ALBUM"
+                 }
+                }
+               }
+              }
+             }
+            }
+           ]
+          }
+         }
+        ],
+        "header": {
+         "chipCloudRenderer": {
+          "chips": [
+           {
+            "chipCloudChipRenderer": {
+             "style": {
+              "styleType": "STYLE_SECONDARY"
+             },
+             "navigationEndpoint": {
+              "searchEndpoint": {
+               "query": "Daft Punk Random Access Memories"
+              }
+             },
+             "icon": {
+              "iconType": "CLOSE"
+             },
+             "isSelected": false,
+             "uniqueId": "Clear filters"
+            }
+           },
+           {
+            "chipCloudChipRenderer": {
+             "style": {
+              "styleType": "STYLE_PRIMARY"
+             },
+             "text": {
+              "runs": [
+               {
+                "text": "Albums"
+               }
+              ]
+             },
+             "navigationEndpoint": {
+              "searchEndpoint": {
+               "query": "Daft Punk Random Access Memories",
+               "params": "EgWKAQIYAWoKEAkQBRAKEAMQBA%3D%3D"
+              }
+             },
+             "isSelected": true,
+             "uniqueId": "Albums"
+            }
+           },
+           {
+            "chipCloudChipRenderer": {
+             "style": {
+              "styleType": "STYLE_DEFAULT"
+             },
+             "text": {
+              "runs": [
+               {
+                "text": "Artists"
+               }
+              ]
+             },
+             "navigationEndpoint": {
+              "searchEndpoint": {
+               "query": "Daft Punk Random Access Memories",
+               "params": "EgWKAQIgAWoKEAkQBRAKEAMQBA%3D%3D"
+              }
+             },
+             "isSelected": false,
+             "uniqueId": "Artists"
+            }
+           },
+           {
+            "chipCloudChipRenderer": {
+             "style": {
+              "styleType": "STYLE_DEFAULT"
+             },
+             "text": {
+              "runs": [
+               {
+                "text": "Community playlists"
+               }
+              ]
+             },
+             "navigationEndpoint": {
+              "searchEndpoint": {
+               "query": "Daft Punk Random Access Memories",
+               "params": "EgeKAQQoAEABagoQCRAFEAoQAxAE"
+              }
+             },
+             "isSelected": false,
+             "uniqueId": "Community playlists"
+            }
+           },
+           {
+            "chipCloudChipRenderer": {
+             "style": {
+              "styleType": "STYLE_DEFAULT"
+             },
+             "text": {
+              "runs": [
+               {
+                "text": "Songs"
+               }
+              ]
+             },
+             "navigationEndpoint": {
+              "searchEndpoint": {
+               "query": "Daft Punk Random Access Memories",
+               "params": "EgWKAQIIAWoKEAkQBRAKEAMQBA%3D%3D"
+              }
+             },
+             "isSelected": false,
+             "uniqueId": "Songs"
+            }
+           },
+           {
+            "chipCloudChipRenderer": {
+             "style": {
+              "styleType": "STYLE_DEFAULT"
+             },
+             "text": {
+              "runs": [
+               {
+                "text": "Videos"
+               }
+              ]
+             },
+             "navigationEndpoint": {
+              "searchEndpoint": {
+               "query": "Daft Punk Random Access Memories",
+               "params": "EgWKAQIQAWoKEAkQBRAKEAMQBA%3D%3D"
+              }
+             },
+             "isSelected": false,
+             "uniqueId": "Videos"
+            }
+           }
+          ],
+          "collapsedRowCount": 1,
+          "horizontalScrollable": true
+         }
+        }
+       }
+      },
+      "tabIdentifier": "music_search_catalog"
+     }
+    }
+   ]
+  }
+ }
+}

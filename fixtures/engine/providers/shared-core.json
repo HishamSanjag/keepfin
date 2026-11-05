@@ -1,0 +1,14 @@
+{
+  "description": "Decisions made when providers moved into the shared core (PRV-7, PRV-8 in DECISIONS.md): where the old desktop and Android code differed and no earlier case covered it.",
+  "cases": [
+    {"name":"audio default: a short spotify link is not expanded yet but is still music, so audio (PRV-7)","input":{"op":"preferAudio","url":"https://spotify.link/abc"},"expected":true},
+    {"name":"audio default: a short spoti.fi link (PRV-7)","input":{"op":"preferAudio","url":"https://spoti.fi/abc"},"expected":true},
+    {"name":"audio default: a short deezer link (PRV-7)","input":{"op":"preferAudio","url":"https://deezer.page.link/abc"},"expected":true},
+    {"name":"audio default: a short link still routes to the music resolver","input":{"op":"musicService","url":"https://spotify.link/abc"},"expected":"spotify"},
+    {"name":"music service: a spotify page that is not a track, album or playlist is not a music link (PRV-8)","input":{"op":"musicService","url":"https://open.spotify.com/show/4rOoJ6Egrf8K2IrywzwOMk"},"expected":null},
+    {"name":"music service: a spotify episode (PRV-8)","input":{"op":"musicService","url":"https://open.spotify.com/episode/4rOoJ6Egrf8K2IrywzwOMk"},"expected":null},
+    {"name":"music service: the spotify home page (PRV-8)","input":{"op":"musicService","url":"https://open.spotify.com/"},"expected":null},
+    {"name":"folder: an IPv6 host is made safe for a file system (PRV-9)","input":{"op":"folder","url":"https://[::1]/video"},"expected":"[__1]"},
+    {"name":"folder: a host with a port keeps the host only","input":{"op":"folder","url":"https://example.org:8080/a"},"expected":"example.org"}
+  ]
+}

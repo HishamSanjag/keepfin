@@ -1,0 +1,97 @@
+{
+ "main": "ink-tide",
+ "accent": "#2855CE",
+ "defaultAlias": ".MainLauncher",
+ "icons": [
+  {
+   "id": "ink-tide",
+   "name": "Ink Tide",
+   "fixedColours": true,
+   "accents": [
+    {
+     "hex": "#2855CE",
+     "alias": ".MainLauncher",
+     "preview": "ic_launcher"
+    }
+   ]
+  },
+  {
+   "id": "classic",
+   "name": "Classic",
+   "fixedColours": true,
+   "accents": [
+    {
+     "hex": "#2855CE",
+     "alias": ".AppIcon_classic_2855ce",
+     "preview": "ic_launcher_classic_2855ce"
+    }
+   ]
+  },
+  {
+   "id": "k-fin",
+   "name": "Keepfin K",
+   "accents": [
+    {
+     "hex": "#2855CE",
+     "alias": ".AppIcon_k_fin_2855ce",
+     "preview": "ic_launcher_k_fin_2855ce"
+    }
+   ]
+  },
+  {
+   "id": "fin",
+   "name": "Fin",
+   "accents": [
+    {
+     "hex": "#2855CE",
+     "alias": ".AppIcon_fin_2855ce",
+     "preview": "ic_launcher_fin_2855ce"
+    }
+   ]
+  },
+  {
+   "id": "keep",
+   "name": "Keep",
+   "accents": [
+    {
+     "hex": "#2855CE",
+     "alias": ".AppIcon_keep_2855ce",
+     "preview": "ic_launcher_keep_2855ce"
+    }
+   ]
+  },
+  {
+   "id": "drop",
+   "name": "Drop",
+   "accents": [
+    {
+     "hex": "#2855CE",
+     "alias": ".AppIcon_drop_2855ce",
+     "preview": "ic_launcher_drop_2855ce"
+    }
+   ]
+  },
+  {
+   "id": "bookmark",
+   "name": "Bookmark",
+   "accents": [
+    {
+     "hex": "#2855CE",
+     "alias": ".AppIcon_bookmark_2855ce",
+     "preview": "ic_launcher_bookmark_2855ce"
+    }
+   ]
+  },
+  {
+   "id": "wave",
+   "name": "Wave",
+   "accents": [
+    {
+     "hex": "#2855CE",
+     "alias": ".AppIcon_wave_2855ce",
+     "preview": "ic_launcher_wave_2855ce"
+    }
+   ]
+  }
+ ]
+}

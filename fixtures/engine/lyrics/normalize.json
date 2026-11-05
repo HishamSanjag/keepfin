@@ -1,0 +1,26 @@
+{
+  "description": "The key a title or artist is compared by: lower case, tags and \"feat.\" removed, only letters, digits, apostrophes and single spaces left (any script).",
+  "cases": [
+    {"name":"tag: official video","input":{"op":"normalize","value":"Midnight City (Official Video)"},"expected":"midnight city"},
+    {"name":"feat in brackets","input":{"op":"normalize","value":"Stay (feat. Justin Bieber)"},"expected":"stay"},
+    {"name":"ft at the end","input":{"op":"normalize","value":"Stay ft. Justin Bieber"},"expected":"stay"},
+    {"name":"topic channel","input":{"op":"normalize","value":"M83 - Topic"},"expected":"m83"},
+    {"name":"curly apostrophe","input":{"op":"normalize","value":"Don’t Stop"},"expected":"don't stop"},
+    {"name":"several tags","input":{"op":"normalize","value":"Song [Lyrics] (HD)"},"expected":"song"},
+    {"name":"remastered with a year","input":{"op":"normalize","value":"Song (Remastered 2011)"},"expected":"song"},
+    {"name":"music video tag","input":{"op":"normalize","value":"Song [Official Music Video]"},"expected":"song"},
+    {"name":"tag in capitals","input":{"op":"normalize","value":"Song [OFFICIAL VIDEO]"},"expected":"song"},
+    {"name":"spaces and punctuation","input":{"op":"normalize","value":"  Many   Spaces!! "},"expected":"many spaces"},
+    {"name":"slash and ampersand","input":{"op":"normalize","value":"AC/DC & Friends"},"expected":"ac dc friends"},
+    {"name":"feat tail stops at a line break","input":{"op":"normalize","value":"Stay feat. A\nB"},"expected":"stay feat a b"},
+    {"name":"line break is a space","input":{"op":"normalize","value":"Line one\nLine two"},"expected":"line one line two"},
+    {"name":"arabic with a tag","input":{"op":"normalize","value":"أنا (Official Video)"},"expected":"أنا"},
+    {"name":"arabic topic channel","input":{"op":"normalize","value":"عمرو دياب - Topic"},"expected":"عمرو دياب"},
+    {"name":"korean with a tag","input":{"op":"normalize","value":"봄날 (Official Video)"},"expected":"봄날"},
+    {"name":"korean feat tail","input":{"op":"normalize","value":"방탄소년단 feat. 아이유"},"expected":"방탄소년단"},
+    {"name":"accented capitals","input":{"op":"normalize","value":"ÉCOUTE Café del Mar (Remastered)"},"expected":"écoute café del mar"},
+    {"name":"accented dash","input":{"op":"normalize","value":"Beyoncé – Déjà Vu"},"expected":"beyoncé déjà vu"},
+    {"name":"japanese","input":{"op":"normalize","value":"夜に駆ける"},"expected":"夜に駆ける"},
+    {"name":"digits kept","input":{"op":"normalize","value":"7 rings (4K)"},"expected":"7 rings"}
+  ]
+}

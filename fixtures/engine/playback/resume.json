@@ -1,0 +1,14 @@
+{
+  "description": "Where playback starts: the saved spot when it is over 10 s, before the last 8 % of the item (any spot when the length is unknown) and the item is not watched.",
+  "cases": [
+    {"name":"a spot in the middle resumes","input":{"op":"resume","position":754,"duration":2400,"watched":false},"expected":754},
+    {"name":"10 s or less starts from the beginning","input":{"op":"resume","position":10,"duration":2400,"watched":false},"expected":null},
+    {"name":"just over 10 s resumes","input":{"op":"resume","position":10.5,"duration":2400,"watched":false},"expected":10.5},
+    {"name":"no saved spot starts from the beginning","input":{"op":"resume","position":null,"duration":2400,"watched":false},"expected":null},
+    {"name":"a watched item starts from the beginning","input":{"op":"resume","position":754,"duration":2400,"watched":true},"expected":null},
+    {"name":"in the last 8 % (the credits) starts from the beginning","input":{"op":"resume","position":2208,"duration":2400,"watched":false},"expected":null},
+    {"name":"just before the last 8 % resumes","input":{"op":"resume","position":2207,"duration":2400,"watched":false},"expected":2207},
+    {"name":"unknown length resumes any spot over 10 s","input":{"op":"resume","position":5000,"duration":null,"watched":false},"expected":5000},
+    {"name":"a zero length counts as unknown","input":{"op":"resume","position":120,"duration":0,"watched":false},"expected":120}
+  ]
+}

@@ -1,0 +1,24 @@
+{
+  "description": "An artist credit line -> its normalised artists, in order: split on commas, ampersands, \"and\", \"x\", \"with\", \"feat.\" and \"ft.\", accents and a Topic or VEVO channel suffix removed.",
+  "cases": [
+    {"name":"an ampersand splits credits","input":{"op":"normalizeArtists","artist":"A & B"},"expected":["a","b"]},
+    {"name":"a Topic channel loses its suffix","input":{"op":"normalizeArtists","artist":"Daft Punk - Topic"},"expected":["daft punk"]},
+    {"name":"a featuring credit is a second artist","input":{"op":"normalizeArtists","artist":"Artist feat. Other"},"expected":["artist","other"]},
+    {"name":"accents fold","input":{"op":"normalizeArtists","artist":"Sigur Rós"},"expected":["sigur ros"]},
+    {"name":"\"x\" between artists","input":{"op":"normalizeArtists","artist":"Simon x Garfunkel"},"expected":["simon","garfunkel"]},
+    {"name":"a VEVO channel","input":{"op":"normalizeArtists","artist":"ArtistVEVO"},"expected":["artist"]},
+    {"name":"commas, semicolons and slashes","input":{"op":"normalizeArtists","artist":"A, B; C / D"},"expected":["a","b","c","d"]},
+    {"name":"\"and\" between artists","input":{"op":"normalizeArtists","artist":"Tom and Jerry"},"expected":["tom","jerry"]},
+    {"name":"\"with\" between artists","input":{"op":"normalizeArtists","artist":"A with B"},"expected":["a","b"]},
+    {"name":"a name with an ampersand","input":{"op":"normalizeArtists","artist":"Mumford & Sons"},"expected":["mumford","sons"]},
+    {"name":"blank","input":{"op":"normalizeArtists","artist":"   "},"expected":[]},
+    {"name":"ft. with a hyphenated name","input":{"op":"normalizeArtists","artist":"Beyoncé ft. Jay-Z"},"expected":["beyonce","jay z"]},
+    {"name":"a plain name","input":{"op":"normalizeArtists","artist":"The Band"},"expected":["the band"]},
+    {"name":"more accents","input":{"op":"normalizeArtists","artist":"Björk"},"expected":["bjork"]},
+    {"name":"a name starting with feat stays whole","input":{"op":"normalizeArtists","artist":"Feather"},"expected":["feather"]},
+    {"name":"a name starting with ft stays whole","input":{"op":"normalizeArtists","artist":"Ftisland & Friends"},"expected":["ftisland","friends"]},
+    {"name":"a whole featuring word splits","input":{"op":"normalizeArtists","artist":"Artist featuring Other"},"expected":["artist","other"]},
+    {"name":"feat without a dot splits","input":{"op":"normalizeArtists","artist":"Artist feat Other"},"expected":["artist","other"]},
+    {"name":"feat. without a space splits","input":{"op":"normalizeArtists","artist":"Artist feat.Other"},"expected":["artist","other"]}
+  ]
+}

@@ -1,0 +1,12 @@
+{
+  "description": "Library items + a probe (source id and/or recording) -> the item skip-existing would flag, and how it matched. Source id wins; items flagged missing never match.",
+  "cases": [
+    {"name":"a missing item never matches by source id","input":{"op":"existing","items":[{"id":"1","space":"music","title":"Song","artist":"A","duration":100,"missing":true,"sourceId":"youtube:x"}],"probe":{"sourceId":"youtube:x"}},"expected":{"itemId":null,"by":null}},
+    {"name":"a source id matches whatever the metadata says","input":{"op":"existing","items":[{"id":"3","space":"music","title":"Other","sourceId":"youtube:y"}],"probe":{"sourceId":"youtube:y"}},"expected":{"itemId":"3","by":"source"}},
+    {"name":"metadata finds a download with no source id","input":{"op":"existing","items":[{"id":"1","space":"music","title":"Song","artist":"A","duration":100,"missing":true,"sourceId":"youtube:x"},{"id":"2","space":"music","title":"Song","artist":"A","duration":100}],"probe":{"recording":{"artist":"A","title":"Song","duration":101}}},"expected":{"itemId":"2","by":"metadata"}},
+    {"name":"the album artist stands in for a missing artist","input":{"op":"existing","items":[{"id":"4","space":"music","title":"Song","albumArtist":"A","duration":100}],"probe":{"recording":{"artist":"A","title":"Song","duration":100}}},"expected":{"itemId":"4","by":"metadata"}},
+    {"name":"a source id match is preferred over an earlier metadata match","input":{"op":"existing","items":[{"id":"5","space":"music","title":"Song","artist":"A","duration":100},{"id":"6","space":"music","title":"Different","sourceId":"youtube:z"}],"probe":{"sourceId":"youtube:z","recording":{"artist":"A","title":"Song","duration":100}}},"expected":{"itemId":"6","by":"source"}},
+    {"name":"a live version of the library song is not flagged","input":{"op":"existing","items":[{"id":"7","space":"music","title":"Song","artist":"A","duration":100}],"probe":{"recording":{"artist":"A","title":"Song (Live)","duration":100}}},"expected":{"itemId":null,"by":null}},
+    {"name":"nothing in the library","input":{"op":"existing","items":[],"probe":{"sourceId":"youtube:z","recording":{"artist":"A","title":"Song","duration":100}}},"expected":{"itemId":null,"by":null}}
+  ]
+}

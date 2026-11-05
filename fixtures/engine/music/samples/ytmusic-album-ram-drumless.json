@@ -1,0 +1,1197 @@
+{
+ "contents": {
+  "twoColumnBrowseResultsRenderer": {
+   "secondaryContents": {
+    "sectionListRenderer": {
+     "contents": [
+      {
+       "musicShelfRenderer": {
+        "contents": [
+         {
+          "musicResponsiveListItemRenderer": {
+           "flexColumns": [
+            {
+             "musicResponsiveListItemFlexColumnRenderer": {
+              "text": {
+               "runs": [
+                {
+                 "text": "Give Life Back to Music (Drumless Edition)",
+                 "navigationEndpoint": {
+                  "watchEndpoint": {
+                   "videoId": "v9j_blPbiUk",
+                   "playlistId": "OLAK5uy_k47QV7r7DblltHRB-1yRp-ZyrKYN4gkt0"
+                  }
+                 }
+                }
+               ]
+              }
+             }
+            },
+            {
+             "musicResponsiveListItemFlexColumnRenderer": {
+              "text": {
+               "runs": [
+                {
+                 "text": "Daft Punk",
+                 "navigationEndpoint": {
+                  "browseEndpoint": {
+                   "browseId": "UCRr1xG_2WIDs18a6cIiCxeA",
+                   "browseEndpointContextSupportedConfigs": {
+                    "browseEndpointContextMusicConfig": {
+                     "pageType": "MUSIC_PAGE_TYPE_ARTIST"
+                    }
+                   }
+                  }
+                 }
+                }
+               ]
+              }
+             }
+            },
+            {
+             "musicResponsiveListItemFlexColumnRenderer": {
+              "text": {
+               "runs": [
+                {
+                 "text": "54M plays"
+                }
+               ]
+              }
+             }
+            }
+           ],
+           "fixedColumns": [
+            {
+             "musicResponsiveListItemFixedColumnRenderer": {
+              "text": {
+               "runs": [
+                {
+                 "text": "4:36"
+                }
+               ]
+              }
+             }
+            }
+           ],
+           "playlistItemData": {
+            "videoId": "v9j_blPbiUk"
+           },
+           "index": {
+            "runs": [
+             {
+              "text": "1"
+             }
+            ]
+           }
+          }
+         },
+         {
+          "musicResponsiveListItemRenderer": {
+           "flexColumns": [
+            {
+             "musicResponsiveListItemFlexColumnRenderer": {
+              "text": {
+               "runs": [
+                {
+                 "text": "The Game of Love (Drumless Edition)",
+                 "navigationEndpoint": {
+                  "watchEndpoint": {
+                   "videoId": "SSM4fCuCeAk",
+                   "playlistId": "OLAK5uy_k47QV7r7DblltHRB-1yRp-ZyrKYN4gkt0"
+                  }
+                 }
+                }
+               ]
+              }
+             }
+            },
+            {
+             "musicResponsiveListItemFlexColumnRenderer": {
+              "text": {
+               "runs": [
+                {
+                 "text": "Daft Punk",
+                 "navigationEndpoint": {
+                  "browseEndpoint": {
+                   "browseId": "UCRr1xG_2WIDs18a6cIiCxeA",
+                   "browseEndpointContextSupportedConfigs": {
+                    "browseEndpointContextMusicConfig": {
+                     "pageType": "MUSIC_PAGE_TYPE_ARTIST"
+                    }
+                   }
+                  }
+                 }
+                }
+               ]
+              }
+             }
+            },
+            {
+             "musicResponsiveListItemFlexColumnRenderer": {
+              "text": {
+               "runs": [
+                {
+                 "text": "28M plays"
+                }
+               ]
+              }
+             }
+            }
+           ],
+           "fixedColumns": [
+            {
+             "musicResponsiveListItemFixedColumnRenderer": {
+              "text": {
+               "runs": [
+                {
+                 "text": "5:23"
+                }
+               ]
+              }
+             }
+            }
+           ],
+           "playlistItemData": {
+            "videoId": "SSM4fCuCeAk"
+           },
+           "index": {
+            "runs": [
+             {
+              "text": "2"
+             }
+            ]
+           }
+          }
+         },
+         {
+          "musicResponsiveListItemRenderer": {
+           "flexColumns": [
+            {
+             "musicResponsiveListItemFlexColumnRenderer": {
+              "text": {
+               "runs": [
+                {
+                 "text": "Giorgio by Moroder (Drumless Edition)",
+                 "navigationEndpoint": {
+                  "watchEndpoint": {
+                   "videoId": "I4QaqpUA4hM",
+                   "playlistId": "OLAK5uy_k47QV7r7DblltHRB-1yRp-ZyrKYN4gkt0"
+                  }
+                 }
+                }
+               ]
+              }
+             }
+            },
+            {
+             "musicResponsiveListItemFlexColumnRenderer": {
+              "text": {
+               "runs": [
+                {
+                 "text": "Daft Punk",
+                 "navigationEndpoint": {
+                  "browseEndpoint": {
+                   "browseId": "UCRr1xG_2WIDs18a6cIiCxeA",
+                   "browseEndpointContextSupportedConfigs": {
+                    "browseEndpointContextMusicConfig": {
+                     "pageType": "MUSIC_PAGE_TYPE_ARTIST"
+                    }
+                   }
+                  }
+                 }
+                }
+               ]
+              }
+             }
+            },
+            {
+             "musicResponsiveListItemFlexColumnRenderer": {
+              "text": {
+               "runs": [
+                {
+                 "text": "95M plays"
+                }
+               ]
+              }
+             }
+            }
+           ],
+           "fixedColumns": [
+            {
+             "musicResponsiveListItemFixedColumnRenderer": {
+              "text": {
+               "runs": [
+                {
+                 "text": "9:06"
+                }
+               ]
+              }
+             }
+            }
+           ],
+           "playlistItemData": {
+            "videoId": "I4QaqpUA4hM"
+           },
+           "index": {
+            "runs": [
+             {
+              "text": "3"
+             }
+            ]
+           }
+          }
+         },
+         {
+          "musicResponsiveListItemRenderer": {
+           "flexColumns": [
+            {
+             "musicResponsiveListItemFlexColumnRenderer": {
+              "text": {
+               "runs": [
+                {
+                 "text": "Within (Drumless Edition)",
+                 "navigationEndpoint": {
+                  "watchEndpoint": {
+                   "videoId": "WLa3JlGANuU",
+                   "playlistId": "OLAK5uy_k47QV7r7DblltHRB-1yRp-ZyrKYN4gkt0"
+                  }
+                 }
+                }
+               ]
+              }
+             }
+            },
+            {
+             "musicResponsiveListItemFlexColumnRenderer": {
+              "text": {
+               "runs": [
+                {
+                 "text": "Daft Punk",
+                 "navigationEndpoint": {
+                  "browseEndpoint": {
+                   "browseId": "UCRr1xG_2WIDs18a6cIiCxeA",
+                   "browseEndpointContextSupportedConfigs": {
+                    "browseEndpointContextMusicConfig": {
+                     "pageType": "MUSIC_PAGE_TYPE_ARTIST"
+                    }
+                   }
+                  }
+                 }
+                }
+               ]
+              }
+             }
+            },
+            {
+             "musicResponsiveListItemFlexColumnRenderer": {
+              "text": {
+               "runs": [
+                {
+                 "text": "41M plays"
+                }
+               ]
+              }
+             }
+            }
+           ],
+           "fixedColumns": [
+            {
+             "musicResponsiveListItemFixedColumnRenderer": {
+              "text": {
+               "runs": [
+                {
+                 "text": "3:49"
+                }
+               ]
+              }
+             }
+            }
+           ],
+           "playlistItemData": {
+            "videoId": "WLa3JlGANuU"
+           },
+           "index": {
+            "runs": [
+             {
+              "text": "4"
+             }
+            ]
+           }
+          }
+         },
+         {
+          "musicResponsiveListItemRenderer": {
+           "flexColumns": [
+            {
+             "musicResponsiveListItemFlexColumnRenderer": {
+              "text": {
+               "runs": [
+                {
+                 "text": "Instant Crush (Drumless Edition) (feat. Julian Casablancas)",
+                 "navigationEndpoint": {
+                  "watchEndpoint": {
+                   "videoId": "a5uQMwRMHcs",
+                   "playlistId": "OLAK5uy_k47QV7r7DblltHRB-1yRp-ZyrKYN4gkt0"
+                  }
+                 }
+                }
+               ]
+              }
+             }
+            },
+            {
+             "musicResponsiveListItemFlexColumnRenderer": {
+              "text": {
+               "runs": [
+                {
+                 "text": "Daft Punk",
+                 "navigationEndpoint": {
+                  "browseEndpoint": {
+                   "browseId": "UCRr1xG_2WIDs18a6cIiCxeA",
+                   "browseEndpointContextSupportedConfigs": {
+                    "browseEndpointContextMusicConfig": {
+                     "pageType": "MUSIC_PAGE_TYPE_ARTIST"
+                    }
+                   }
+                  }
+                 }
+                },
+                {
+                 "text": " & "
+                },
+                {
+                 "text": "Julian Casablancas",
+                 "navigationEndpoint": {
+                  "browseEndpoint": {
+                   "browseId": "UCWhpbdGLnR8XtXLr0yl2nYA",
+                   "browseEndpointContextSupportedConfigs": {
+                    "browseEndpointContextMusicConfig": {
+                     "pageType": "MUSIC_PAGE_TYPE_ARTIST"
+                    }
+                   }
+                  }
+                 }
+                }
+               ]
+              }
+             }
+            },
+            {
+             "musicResponsiveListItemFlexColumnRenderer": {
+              "text": {
+               "runs": [
+                {
+                 "text": "1.2B plays"
+                }
+               ]
+              }
+             }
+            }
+           ],
+           "fixedColumns": [
+            {
+             "musicResponsiveListItemFixedColumnRenderer": {
+              "text": {
+               "runs": [
+                {
+                 "text": "5:38"
+                }
+               ]
+              }
+             }
+            }
+           ],
+           "playlistItemData": {
+            "videoId": "a5uQMwRMHcs"
+           },
+           "index": {
+            "runs": [
+             {
+              "text": "5"
+             }
+            ]
+           }
+          }
+         },
+         {
+          "musicResponsiveListItemRenderer": {
+           "flexColumns": [
+            {
+             "musicResponsiveListItemFlexColumnRenderer": {
+              "text": {
+               "runs": [
+                {
+                 "text": "Lose Yourself to Dance (Drumless Edition) (feat. Pharrell Williams)",
+                 "navigationEndpoint": {
+                  "watchEndpoint": {
+                   "videoId": "RrUa-lm4BMY",
+                   "playlistId": "OLAK5uy_k47QV7r7DblltHRB-1yRp-ZyrKYN4gkt0"
+                  }
+                 }
+                }
+               ]
+              }
+             }
+            },
+            {
+             "musicResponsiveListItemFlexColumnRenderer": {
+              "text": {
+               "runs": [
+                {
+                 "text": "Daft Punk",
+                 "navigationEndpoint": {
+                  "browseEndpoint": {
+                   "browseId": "UCRr1xG_2WIDs18a6cIiCxeA",
+                   "browseEndpointContextSupportedConfigs": {
+                    "browseEndpointContextMusicConfig": {
+                     "pageType": "MUSIC_PAGE_TYPE_ARTIST"
+                    }
+                   }
+                  }
+                 }
+                },
+                {
+                 "text": " & "
+                },
+                {
+                 "text": "Pharrell Williams",
+                 "navigationEndpoint": {
+                  "browseEndpoint": {
+                   "browseId": "UCJw8VyO6e3v6S0327AsgwcQ",
+                   "browseEndpointContextSupportedConfigs": {
+                    "browseEndpointContextMusicConfig": {
+                     "pageType": "MUSIC_PAGE_TYPE_ARTIST"
+                    }
+                   }
+                  }
+                 }
+                }
+               ]
+              }
+             }
+            },
+            {
+             "musicResponsiveListItemFlexColumnRenderer": {
+              "text": {
+               "runs": [
+                {
+                 "text": "734K plays"
+                }
+               ]
+              }
+             }
+            }
+           ],
+           "fixedColumns": [
+            {
+             "musicResponsiveListItemFixedColumnRenderer": {
+              "text": {
+               "runs": [
+                {
+                 "text": "5:55"
+                }
+               ]
+              }
+             }
+            }
+           ],
+           "playlistItemData": {
+            "videoId": "RrUa-lm4BMY"
+           },
+           "index": {
+            "runs": [
+             {
+              "text": "6"
+             }
+            ]
+           }
+          }
+         },
+         {
+          "musicResponsiveListItemRenderer": {
+           "flexColumns": [
+            {
+             "musicResponsiveListItemFlexColumnRenderer": {
+              "text": {
+               "runs": [
+                {
+                 "text": "Touch (Drumless Edition) (feat. Paul Williams)",
+                 "navigationEndpoint": {
+                  "watchEndpoint": {
+                   "videoId": "0Gkhol2Q1og",
+                   "playlistId": "OLAK5uy_k47QV7r7DblltHRB-1yRp-ZyrKYN4gkt0"
+                  }
+                 }
+                }
+               ]
+              }
+             }
+            },
+            {
+             "musicResponsiveListItemFlexColumnRenderer": {
+              "text": {
+               "runs": [
+                {
+                 "text": "Daft Punk",
+                 "navigationEndpoint": {
+                  "browseEndpoint": {
+                   "browseId": "UCRr1xG_2WIDs18a6cIiCxeA",
+                   "browseEndpointContextSupportedConfigs": {
+                    "browseEndpointContextMusicConfig": {
+                     "pageType": "MUSIC_PAGE_TYPE_ARTIST"
+                    }
+                   }
+                  }
+                 }
+                },
+                {
+                 "text": " & "
+                },
+                {
+                 "text": "Paul Williams",
+                 "navigationEndpoint": {
+                  "browseEndpoint": {
+                   "browseId": "UCPtp29kketDMCRawl_lT2oQ",
+                   "browseEndpointContextSupportedConfigs": {
+                    "browseEndpointContextMusicConfig": {
+                     "pageType": "MUSIC_PAGE_TYPE_ARTIST"
+                    }
+                   }
+                  }
+                 }
+                }
+               ]
+              }
+             }
+            },
+            {
+             "musicResponsiveListItemFlexColumnRenderer": {
+              "text": {
+               "runs": [
+                {
+                 "text": "35M plays"
+                }
+               ]
+              }
+             }
+            }
+           ],
+           "fixedColumns": [
+            {
+             "musicResponsiveListItemFixedColumnRenderer": {
+              "text": {
+               "runs": [
+                {
+                 "text": "8:20"
+                }
+               ]
+              }
+             }
+            }
+           ],
+           "playlistItemData": {
+            "videoId": "0Gkhol2Q1og"
+           },
+           "index": {
+            "runs": [
+             {
+              "text": "7"
+             }
+            ]
+           }
+          }
+         },
+         {
+          "musicResponsiveListItemRenderer": {
+           "flexColumns": [
+            {
+             "musicResponsiveListItemFlexColumnRenderer": {
+              "text": {
+               "runs": [
+                {
+                 "text": "Get Lucky (Drumless Edition) (feat. Pharrell Williams and Nile Rodgers)",
+                 "navigationEndpoint": {
+                  "watchEndpoint": {
+                   "videoId": "IT27gX6vbkU",
+                   "playlistId": "OLAK5uy_k47QV7r7DblltHRB-1yRp-ZyrKYN4gkt0"
+                  }
+                 }
+                }
+               ]
+              }
+             }
+            },
+            {
+             "musicResponsiveListItemFlexColumnRenderer": {
+              "text": {
+               "runs": [
+                {
+                 "text": "Daft Punk",
+                 "navigationEndpoint": {
+                  "browseEndpoint": {
+                   "browseId": "UCRr1xG_2WIDs18a6cIiCxeA",
+                   "browseEndpointContextSupportedConfigs": {
+                    "browseEndpointContextMusicConfig": {
+                     "pageType": "MUSIC_PAGE_TYPE_ARTIST"
+                    }
+                   }
+                  }
+                 }
+                },
+                {
+                 "text": ", "
+                },
+                {
+                 "text": "Pharrell Williams",
+                 "navigationEndpoint": {
+                  "browseEndpoint": {
+                   "browseId": "UCJw8VyO6e3v6S0327AsgwcQ",
+                   "browseEndpointContextSupportedConfigs": {
+                    "browseEndpointContextMusicConfig": {
+                     "pageType": "MUSIC_PAGE_TYPE_ARTIST"
+                    }
+                   }
+                  }
+                 }
+                },
+                {
+                 "text": " & "
+                },
+                {
+                 "text": "Nile Rodgers",
+                 "navigationEndpoint": {
+                  "browseEndpoint": {
+                   "browseId": "UCThde8ccpEr6sP8dIHZ-ceQ",
+                   "browseEndpointContextSupportedConfigs": {
+                    "browseEndpointContextMusicConfig": {
+                     "pageType": "MUSIC_PAGE_TYPE_ARTIST"
+                    }
+                   }
+                  }
+                 }
+                }
+               ]
+              }
+             }
+            },
+            {
+             "musicResponsiveListItemFlexColumnRenderer": {
+              "text": {
+               "runs": [
+                {
+                 "text": "1.9B plays"
+                }
+               ]
+              }
+             }
+            }
+           ],
+           "fixedColumns": [
+            {
+             "musicResponsiveListItemFixedColumnRenderer": {
+              "text": {
+               "runs": [
+                {
+                 "text": "6:10"
+                }
+               ]
+              }
+             }
+            }
+           ],
+           "playlistItemData": {
+            "videoId": "IT27gX6vbkU"
+           },
+           "index": {
+            "runs": [
+             {
+              "text": "8"
+             }
+            ]
+           }
+          }
+         },
+         {
+          "musicResponsiveListItemRenderer": {
+           "flexColumns": [
+            {
+             "musicResponsiveListItemFlexColumnRenderer": {
+              "text": {
+               "runs": [
+                {
+                 "text": "Beyond (Drumless Edition)",
+                 "navigationEndpoint": {
+                  "watchEndpoint": {
+                   "videoId": "3T0NqvdUiWI",
+                   "playlistId": "OLAK5uy_k47QV7r7DblltHRB-1yRp-ZyrKYN4gkt0"
+                  }
+                 }
+                }
+               ]
+              }
+             }
+            },
+            {
+             "musicResponsiveListItemFlexColumnRenderer": {
+              "text": {
+               "runs": [
+                {
+                 "text": "Daft Punk",
+                 "navigationEndpoint": {
+                  "browseEndpoint": {
+                   "browseId": "UCRr1xG_2WIDs18a6cIiCxeA",
+                   "browseEndpointContextSupportedConfigs": {
+                    "browseEndpointContextMusicConfig": {
+                     "pageType": "MUSIC_PAGE_TYPE_ARTIST"
+                    }
+                   }
+                  }
+                 }
+                }
+               ]
+              }
+             }
+            },
+            {
+             "musicResponsiveListItemFlexColumnRenderer": {
+              "text": {
+               "runs": [
+                {
+                 "text": "16M plays"
+                }
+               ]
+              }
+             }
+            }
+           ],
+           "fixedColumns": [
+            {
+             "musicResponsiveListItemFixedColumnRenderer": {
+              "text": {
+               "runs": [
+                {
+                 "text": "4:51"
+                }
+               ]
+              }
+             }
+            }
+           ],
+           "playlistItemData": {
+            "videoId": "3T0NqvdUiWI"
+           },
+           "index": {
+            "runs": [
+             {
+              "text": "9"
+             }
+            ]
+           }
+          }
+         },
+         {
+          "musicResponsiveListItemRenderer": {
+           "flexColumns": [
+            {
+             "musicResponsiveListItemFlexColumnRenderer": {
+              "text": {
+               "runs": [
+                {
+                 "text": "Motherboard (Drumless Edition)",
+                 "navigationEndpoint": {
+                  "watchEndpoint": {
+                   "videoId": "Twp55oTHlxQ",
+                   "playlistId": "OLAK5uy_k47QV7r7DblltHRB-1yRp-ZyrKYN4gkt0"
+                  }
+                 }
+                }
+               ]
+              }
+             }
+            },
+            {
+             "musicResponsiveListItemFlexColumnRenderer": {
+              "text": {
+               "runs": [
+                {
+                 "text": "Daft Punk",
+                 "navigationEndpoint": {
+                  "browseEndpoint": {
+                   "browseId": "UCRr1xG_2WIDs18a6cIiCxeA",
+                   "browseEndpointContextSupportedConfigs": {
+                    "browseEndpointContextMusicConfig": {
+                     "pageType": "MUSIC_PAGE_TYPE_ARTIST"
+                    }
+                   }
+                  }
+                 }
+                }
+               ]
+              }
+             }
+            },
+            {
+             "musicResponsiveListItemFlexColumnRenderer": {
+              "text": {
+               "runs": [
+                {
+                 "text": "483K plays"
+                }
+               ]
+              }
+             }
+            }
+           ],
+           "fixedColumns": [
+            {
+             "musicResponsiveListItemFixedColumnRenderer": {
+              "text": {
+               "runs": [
+                {
+                 "text": "5:42"
+                }
+               ]
+              }
+             }
+            }
+           ],
+           "playlistItemData": {
+            "videoId": "Twp55oTHlxQ"
+           },
+           "index": {
+            "runs": [
+             {
+              "text": "10"
+             }
+            ]
+           }
+          }
+         },
+         {
+          "musicResponsiveListItemRenderer": {
+           "flexColumns": [
+            {
+             "musicResponsiveListItemFlexColumnRenderer": {
+              "text": {
+               "runs": [
+                {
+                 "text": "Fragments of Time (Drumless Edition) (feat. Todd Edwards)",
+                 "navigationEndpoint": {
+                  "watchEndpoint": {
+                   "videoId": "Qeyna0Y_VTg",
+                   "playlistId": "OLAK5uy_k47QV7r7DblltHRB-1yRp-ZyrKYN4gkt0"
+                  }
+                 }
+                }
+               ]
+              }
+             }
+            },
+            {
+             "musicResponsiveListItemFlexColumnRenderer": {
+              "text": {
+               "runs": [
+                {
+                 "text": "Daft Punk",
+                 "navigationEndpoint": {
+                  "browseEndpoint": {
+                   "browseId": "UCRr1xG_2WIDs18a6cIiCxeA",
+                   "browseEndpointContextSupportedConfigs": {
+                    "browseEndpointContextMusicConfig": {
+                     "pageType": "MUSIC_PAGE_TYPE_ARTIST"
+                    }
+                   }
+                  }
+                 }
+                },
+                {
+                 "text": " & "
+                },
+                {
+                 "text": "Todd Edwards",
+                 "navigationEndpoint": {
+                  "browseEndpoint": {
+                   "browseId": "UCk_ezssvR9Os0VrMbmA3SWg",
+                   "browseEndpointContextSupportedConfigs": {
+                    "browseEndpointContextMusicConfig": {
+                     "pageType": "MUSIC_PAGE_TYPE_ARTIST"
+                    }
+                   }
+                  }
+                 }
+                }
+               ]
+              }
+             }
+            },
+            {
+             "musicResponsiveListItemFlexColumnRenderer": {
+              "text": {
+               "runs": [
+                {
+                 "text": "20M plays"
+                }
+               ]
+              }
+             }
+            }
+           ],
+           "fixedColumns": [
+            {
+             "musicResponsiveListItemFixedColumnRenderer": {
+              "text": {
+               "runs": [
+                {
+                 "text": "4:40"
+                }
+               ]
+              }
+             }
+            }
+           ],
+           "playlistItemData": {
+            "videoId": "Qeyna0Y_VTg"
+           },
+           "index": {
+            "runs": [
+             {
+              "text": "11"
+             }
+            ]
+           }
+          }
+         },
+         {
+          "musicResponsiveListItemRenderer": {
+           "flexColumns": [
+            {
+             "musicResponsiveListItemFlexColumnRenderer": {
+              "text": {
+               "runs": [
+                {
+                 "text": "Doin' it Right (Drumless Edition) (feat. Panda Bear)",
+                 "navigationEndpoint": {
+                  "watchEndpoint": {
+                   "videoId": "1-V7b70sCzQ",
+                   "playlistId": "OLAK5uy_k47QV7r7DblltHRB-1yRp-ZyrKYN4gkt0"
+                  }
+                 }
+                }
+               ]
+              }
+             }
+            },
+            {
+             "musicResponsiveListItemFlexColumnRenderer": {
+              "text": {
+               "runs": [
+                {
+                 "text": "Daft Punk",
+                 "navigationEndpoint": {
+                  "browseEndpoint": {
+                   "browseId": "UCRr1xG_2WIDs18a6cIiCxeA",
+                   "browseEndpointContextSupportedConfigs": {
+                    "browseEndpointContextMusicConfig": {
+                     "pageType": "MUSIC_PAGE_TYPE_ARTIST"
+                    }
+                   }
+                  }
+                 }
+                },
+                {
+                 "text": " & "
+                },
+                {
+                 "text": "Panda Bear",
+                 "navigationEndpoint": {
+                  "browseEndpoint": {
+                   "browseId": "UCB2qO9T8dkxOhIvZVqVkVcg",
+                   "browseEndpointContextSupportedConfigs": {
+                    "browseEndpointContextMusicConfig": {
+                     "pageType": "MUSIC_PAGE_TYPE_ARTIST"
+                    }
+                   }
+                  }
+                 }
+                }
+               ]
+              }
+             }
+            },
+            {
+             "musicResponsiveListItemFlexColumnRenderer": {
+              "text": {
+               "runs": [
+                {
+                 "text": "297K plays"
+                }
+               ]
+              }
+             }
+            }
+           ],
+           "fixedColumns": [
+            {
+             "musicResponsiveListItemFixedColumnRenderer": {
+              "text": {
+               "runs": [
+                {
+                 "text": "4:12"
+                }
+               ]
+              }
+             }
+            }
+           ],
+           "playlistItemData": {
+            "videoId": "1-V7b70sCzQ"
+           },
+           "index": {
+            "runs": [
+             {
+              "text": "12"
+             }
+            ]
+           }
+          }
+         },
+         {
+          "musicResponsiveListItemRenderer": {
+           "flexColumns": [
+            {
+             "musicResponsiveListItemFlexColumnRenderer": {
+              "text": {
+               "runs": [
+                {
+                 "text": "Contact (Drumless Edition)",
+                 "navigationEndpoint": {
+                  "watchEndpoint": {
+                   "videoId": "eQQubmdYtMY",
+                   "playlistId": "OLAK5uy_k47QV7r7DblltHRB-1yRp-ZyrKYN4gkt0"
+                  }
+                 }
+                }
+               ]
+              }
+             }
+            },
+            {
+             "musicResponsiveListItemFlexColumnRenderer": {
+              "text": {
+               "runs": [
+                {
+                 "text": "Daft Punk",
+                 "navigationEndpoint": {
+                  "browseEndpoint": {
+                   "browseId": "UCRr1xG_2WIDs18a6cIiCxeA",
+                   "browseEndpointContextSupportedConfigs": {
+                    "browseEndpointContextMusicConfig": {
+                     "pageType": "MUSIC_PAGE_TYPE_ARTIST"
+                    }
+                   }
+                  }
+                 }
+                }
+               ]
+              }
+             }
+            },
+            {
+             "musicResponsiveListItemFlexColumnRenderer": {
+              "text": {
+               "runs": [
+                {
+                 "text": "241K plays"
+                }
+               ]
+              }
+             }
+            }
+           ],
+           "fixedColumns": [
+            {
+             "musicResponsiveListItemFixedColumnRenderer": {
+              "text": {
+               "runs": [
+                {
+                 "text": "6:24"
+                }
+               ]
+              }
+             }
+            }
+           ],
+           "playlistItemData": {
+            "videoId": "eQQubmdYtMY"
+           },
+           "index": {
+            "runs": [
+             {
+              "text": "13"
+             }
+            ]
+           }
+          }
+         }
+        ]
+       }
+      }
+     ]
+    }
+   },
+   "tabs": [
+    {
+     "tabRenderer": {
+      "content": {
+       "sectionListRenderer": {
+        "contents": [
+         {
+          "musicResponsiveHeaderRenderer": {
+           "title": {
+            "runs": [
+             {
+              "text": "Random Access Memories (Drumless Edition)"
+             }
+            ]
+           },
+           "subtitle": {
+            "runs": [
+             {
+              "text": "Album"
+             },
+             {
+              "text": " • "
+             },
+             {
+              "text": "2023"
+             }
+            ]
+           },
+           "straplineTextOne": {
+            "runs": [
+             {
+              "text": "Daft Punk",
+              "navigationEndpoint": {
+               "browseEndpoint": {
+                "browseId": "UCRr1xG_2WIDs18a6cIiCxeA",
+                "browseEndpointContextSupportedConfigs": {
+                 "browseEndpointContextMusicConfig": {
+                  "pageType": "MUSIC_PAGE_TYPE_ARTIST"
+                 }
+                }
+               }
+              }
+             }
+            ]
+           }
+          }
+         }
+        ]
+       }
+      }
+     }
+    }
+   ]
+  }
+ }
+}

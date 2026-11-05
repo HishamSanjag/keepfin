@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024">
+  <title>Keepfin</title>
+  <!-- Approved Ink Tide artwork (assets/branding/ink-tide), placed as is on the dark tile: 80% of the tile wide. -->
+  <rect width="1024" height="1024" fill="#08090B"/>
+  <image href="../../branding/ink-tide/keepfin-emblem-transparent.png" x="102" y="169" width="820" height="686"/>
+</svg>

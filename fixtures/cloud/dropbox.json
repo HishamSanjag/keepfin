@@ -1,0 +1,813 @@
+{
+ "description": "Cloud provider cases written from the providers' documentation (dev-docs/plans/KEEPFIN-CLOUD-SPEC.md); expected values were reviewed by hand. Not recordings of live services.",
+ "cases": [
+  {
+   "name": "list root",
+   "provider": "dropbox",
+   "op": "list",
+   "input": {
+    "folder": {
+     "path": ""
+    }
+   },
+   "expected": {
+    "request": {
+     "method": "POST",
+     "url": "https://api.dropboxapi.com/2/files/list_folder",
+     "headers": {
+      "Content-Type": "application/json"
+     },
+     "auth": true,
+     "body": "{\"path\":\"\",\"recursive\":false,\"include_deleted\":false,\"include_non_downloadable_files\":true,\"limit\":2000}"
+    }
+   }
+  },
+  {
+   "name": "list path",
+   "provider": "dropbox",
+   "op": "list",
+   "input": {
+    "folder": {
+     "path": "Keepfin/ops"
+    }
+   },
+   "expected": {
+    "request": {
+     "method": "POST",
+     "url": "https://api.dropboxapi.com/2/files/list_folder",
+     "headers": {
+      "Content-Type": "application/json"
+     },
+     "auth": true,
+     "body": "{\"path\":\"/Keepfin/ops\",\"recursive\":false,\"include_deleted\":false,\"include_non_downloadable_files\":true,\"limit\":2000}"
+    }
+   }
+  },
+  {
+   "name": "list continue",
+   "provider": "dropbox",
+   "op": "list",
+   "input": {
+    "folder": {
+     "path": ""
+    },
+    "cursor": "CUR"
+   },
+   "expected": {
+    "request": {
+     "method": "POST",
+     "url": "https://api.dropboxapi.com/2/files/list_folder/continue",
+     "headers": {
+      "Content-Type": "application/json"
+     },
+     "auth": true,
+     "body": "{\"cursor\":\"CUR\"}"
+    }
+   }
+  },
+  {
+   "name": "parse list has more",
+   "provider": "dropbox",
+   "op": "parseList",
+   "input": {
+    "response": {
+     "status": 200,
+     "headers": {},
+     "body": "{\"entries\":[{\".tag\":\"file\",\"id\":\"id:abc\",\"name\":\"a.mp3\",\"path_display\":\"/Keepfin/a.mp3\",\"rev\":\"0123456789\",\"size\":10,\"server_modified\":\"2026-10-15T12:00:00Z\",\"content_hash\":\"ff\"},{\".tag\":\"folder\",\"id\":\"id:d\",\"name\":\"ops\",\"path_display\":\"/Keepfin/ops\"},{\".tag\":\"deleted\",\"name\":\"x\"}],\"cursor\":\"C1\",\"has_more\":true}"
+    }
+   },
+   "expected": {
+    "ok": true,
+    "entries": [
+     {
+      "id": "id:abc",
+      "name": "a.mp3",
+      "folder": false,
+      "size": 10,
+      "mtimeMs": 1792065600000,
+      "etag": "0123456789",
+      "hashes": {
+       "dropbox": "ff"
+      },
+      "path": "/Keepfin/a.mp3"
+     },
+     {
+      "id": "id:d",
+      "name": "ops",
+      "folder": true,
+      "hashes": {},
+      "path": "/Keepfin/ops"
+     }
+    ],
+    "nextCursor": "C1",
+    "feedCursor": null,
+    "incomplete": false
+   }
+  },
+  {
+   "name": "parse list done",
+   "provider": "dropbox",
+   "op": "parseList",
+   "input": {
+    "response": {
+     "status": 200,
+     "headers": {},
+     "body": "{\"entries\":[],\"cursor\":\"C2\",\"has_more\":false}"
+    }
+   },
+   "expected": {
+    "ok": true,
+    "entries": [],
+    "nextCursor": null,
+    "feedCursor": "C2",
+    "incomplete": false
+   }
+  },
+  {
+   "name": "list cursor reset",
+   "provider": "dropbox",
+   "op": "parseList",
+   "input": {
+    "response": {
+     "status": 409,
+     "headers": {},
+     "body": "{\"error_summary\":\"reset/..\",\"error\":{\".tag\":\"reset\"}}"
+    },
+    "cursor": "old"
+   },
+   "expected": {
+    "ok": false,
+    "error": {
+     "kind": "Fatal",
+     "status": 409,
+     "code": "ResetRequired",
+     "message": "reset/.."
+    }
+   }
+  },
+  {
+   "name": "create folder",
+   "provider": "dropbox",
+   "op": "createFolder",
+   "input": {
+    "parent": {
+     "path": "Keepfin"
+    },
+    "name": "ops"
+   },
+   "expected": {
+    "request": {
+     "method": "POST",
+     "url": "https://api.dropboxapi.com/2/files/create_folder_v2",
+     "headers": {
+      "Content-Type": "application/json"
+     },
+     "auth": true,
+     "body": "{\"path\":\"/Keepfin/ops\",\"autorename\":false}"
+    }
+   }
+  },
+  {
+   "name": "create only (lock)",
+   "provider": "dropbox",
+   "op": "createSmall",
+   "input": {
+    "parent": {
+     "path": "Keepfin/.keepfin"
+    },
+    "name": "lock.json",
+    "content": "{}"
+   },
+   "expected": {
+    "request": {
+     "method": "POST",
+     "url": "https://content.dropboxapi.com/2/files/upload",
+     "headers": {
+      "Dropbox-API-Arg": "{\"path\":\"/Keepfin/.keepfin/lock.json\",\"mode\":\"add\",\"autorename\":false,\"mute\":true,\"strict_conflict\":true}",
+      "Content-Type": "application/octet-stream"
+     },
+     "auth": true,
+     "body": "{}"
+    }
+   }
+  },
+  {
+   "name": "create only non-ASCII name",
+   "provider": "dropbox",
+   "op": "createSmall",
+   "input": {
+    "parent": {
+     "path": "Keepfin"
+    },
+    "name": "Café.json",
+    "content": "{}"
+   },
+   "expected": {
+    "request": {
+     "method": "POST",
+     "url": "https://content.dropboxapi.com/2/files/upload",
+     "headers": {
+      "Dropbox-API-Arg": "{\"path\":\"/Keepfin/Caf\\u00e9.json\",\"mode\":\"add\",\"autorename\":false,\"mute\":true,\"strict_conflict\":true}",
+      "Content-Type": "application/octet-stream"
+     },
+     "auth": true,
+     "body": "{}"
+    }
+   }
+  },
+  {
+   "name": "replace with rev",
+   "provider": "dropbox",
+   "op": "replaceSmall",
+   "input": {
+    "ref": {
+     "id": "id:abc"
+    },
+    "etag": "0123456789",
+    "content": "x"
+   },
+   "expected": {
+    "request": {
+     "method": "POST",
+     "url": "https://content.dropboxapi.com/2/files/upload",
+     "headers": {
+      "Dropbox-API-Arg": "{\"path\":\"id:abc\",\"mode\":{\".tag\":\"update\",\"update\":\"0123456789\"},\"autorename\":false,\"mute\":true,\"strict_conflict\":true}",
+      "Content-Type": "application/octet-stream"
+     },
+     "auth": true,
+     "body": "x"
+    }
+   }
+  },
+  {
+   "name": "delete with parent_rev",
+   "provider": "dropbox",
+   "op": "deleteCas",
+   "input": {
+    "ref": {
+     "id": "id:abc"
+    },
+    "etag": "0123456789"
+   },
+   "expected": {
+    "request": {
+     "method": "POST",
+     "url": "https://api.dropboxapi.com/2/files/delete_v2",
+     "headers": {
+      "Content-Type": "application/json"
+     },
+     "auth": true,
+     "body": "{\"path\":\"id:abc\",\"parent_rev\":\"0123456789\"}"
+    }
+   }
+  },
+  {
+   "name": "move by id",
+   "provider": "dropbox",
+   "op": "move",
+   "input": {
+    "ref": {
+     "id": "id:abc"
+    },
+    "toPath": "/Keepfin/.keepfin/trash/abc-1"
+   },
+   "expected": {
+    "request": {
+     "method": "POST",
+     "url": "https://api.dropboxapi.com/2/files/move_v2",
+     "headers": {
+      "Content-Type": "application/json"
+     },
+     "auth": true,
+     "body": "{\"from_path\":\"id:abc\",\"to_path\":\"/Keepfin/.keepfin/trash/abc-1\",\"allow_shared_folder\":false,\"autorename\":false,\"allow_ownership_transfer\":false}"
+    }
+   }
+  },
+  {
+   "name": "upload start create only",
+   "provider": "dropbox",
+   "op": "uploadStart",
+   "input": {
+    "parent": {
+     "path": "Keepfin/media"
+    },
+    "name": "big.flac",
+    "size": 30000000
+   },
+   "expected": {
+    "request": {
+     "method": "POST",
+     "url": "https://content.dropboxapi.com/2/files/upload_session/start",
+     "headers": {
+      "Dropbox-API-Arg": "{\"close\":false}",
+      "Content-Type": "application/octet-stream"
+     },
+     "auth": true
+    },
+    "commit": {
+     "path": "/Keepfin/media/big.flac",
+     "mode": "add"
+    }
+   }
+  },
+  {
+   "name": "upload start replace",
+   "provider": "dropbox",
+   "op": "uploadStart",
+   "input": {
+    "mode": "replace",
+    "ref": {
+     "id": "id:abc"
+    },
+    "etag": "0123456789",
+    "size": 5
+   },
+   "expected": {
+    "request": {
+     "method": "POST",
+     "url": "https://content.dropboxapi.com/2/files/upload_session/start",
+     "headers": {
+      "Dropbox-API-Arg": "{\"close\":false}",
+      "Content-Type": "application/octet-stream"
+     },
+     "auth": true
+    },
+    "commit": {
+     "path": "id:abc",
+     "mode": "update",
+     "rev": "0123456789"
+    }
+   }
+  },
+  {
+   "name": "parse upload start",
+   "provider": "dropbox",
+   "op": "parseUploadStart",
+   "input": {
+    "response": {
+     "status": 200,
+     "headers": {},
+     "body": "{\"session_id\":\"SID\"}"
+    },
+    "nowMs": 1792065600000,
+    "commit": {
+     "path": "/Keepfin/media/big.flac",
+     "mode": "add"
+    }
+   },
+   "expected": {
+    "ok": true,
+    "session": {
+     "kind": "dropbox",
+     "id": "SID",
+     "commit": {
+      "path": "/Keepfin/media/big.flac",
+      "mode": "add"
+     }
+    },
+    "nextOffset": 0,
+    "expiresAtMs": 1792670400000,
+    "chunk": {
+     "multiple": 4194304,
+     "preferred": 8388608,
+     "max": 157286400
+    }
+   }
+  },
+  {
+   "name": "append",
+   "provider": "dropbox",
+   "op": "uploadAppend",
+   "input": {
+    "session": {
+     "id": "SID",
+     "commit": {
+      "path": "/Keepfin/media/big.flac",
+      "mode": "add"
+     }
+    },
+    "offset": 0,
+    "length": 8388608,
+    "total": 30000000
+   },
+   "expected": {
+    "request": {
+     "method": "POST",
+     "url": "https://content.dropboxapi.com/2/files/upload_session/append_v2",
+     "headers": {
+      "Dropbox-API-Arg": "{\"cursor\":{\"session_id\":\"SID\",\"offset\":0},\"close\":false}",
+      "Content-Type": "application/octet-stream"
+     },
+     "auth": true,
+     "bodyRef": {
+      "offset": 0,
+      "length": 8388608
+     }
+    }
+   }
+  },
+  {
+   "name": "finish with commit",
+   "provider": "dropbox",
+   "op": "uploadAppend",
+   "input": {
+    "session": {
+     "id": "SID",
+     "commit": {
+      "path": "/Keepfin/media/big.flac",
+      "mode": "add"
+     }
+    },
+    "offset": 25165824,
+    "length": 4834176,
+    "total": 30000000
+   },
+   "expected": {
+    "request": {
+     "method": "POST",
+     "url": "https://content.dropboxapi.com/2/files/upload_session/finish",
+     "headers": {
+      "Dropbox-API-Arg": "{\"cursor\":{\"session_id\":\"SID\",\"offset\":25165824},\"commit\":{\"path\":\"/Keepfin/media/big.flac\",\"mode\":\"add\",\"autorename\":false,\"mute\":true,\"strict_conflict\":true}}",
+      "Content-Type": "application/octet-stream"
+     },
+     "auth": true,
+     "bodyRef": {
+      "offset": 25165824,
+      "length": 4834176
+     }
+    }
+   }
+  },
+  {
+   "name": "finish update mode",
+   "provider": "dropbox",
+   "op": "uploadAppend",
+   "input": {
+    "session": {
+     "id": "SID",
+     "commit": {
+      "path": "id:abc",
+      "mode": "update",
+      "rev": "0123456789"
+     }
+    },
+    "offset": 0,
+    "length": 5,
+    "total": 5
+   },
+   "expected": {
+    "request": {
+     "method": "POST",
+     "url": "https://content.dropboxapi.com/2/files/upload_session/finish",
+     "headers": {
+      "Dropbox-API-Arg": "{\"cursor\":{\"session_id\":\"SID\",\"offset\":0},\"commit\":{\"path\":\"id:abc\",\"mode\":{\".tag\":\"update\",\"update\":\"0123456789\"},\"autorename\":false,\"mute\":true,\"strict_conflict\":true}}",
+      "Content-Type": "application/octet-stream"
+     },
+     "auth": true,
+     "bodyRef": {
+      "offset": 0,
+      "length": 5
+     }
+    }
+   }
+  },
+  {
+   "name": "append ok",
+   "provider": "dropbox",
+   "op": "parseUploadAppend",
+   "input": {
+    "response": {
+     "status": 200,
+     "headers": {},
+     "body": "null"
+    },
+    "offset": 0,
+    "length": 8388608,
+    "total": 30000000
+   },
+   "expected": {
+    "ok": true,
+    "done": false,
+    "nextOffset": 8388608
+   }
+  },
+  {
+   "name": "finish ok",
+   "provider": "dropbox",
+   "op": "parseUploadAppend",
+   "input": {
+    "response": {
+     "status": 200,
+     "headers": {},
+     "body": "{\".tag\":\"file\",\"id\":\"id:abc\",\"name\":\"a.mp3\",\"path_display\":\"/Keepfin/a.mp3\",\"rev\":\"0123456789\",\"size\":10,\"server_modified\":\"2026-10-15T12:00:00Z\",\"content_hash\":\"ff\"}"
+    },
+    "offset": 25165824,
+    "length": 4834176,
+    "total": 30000000
+   },
+   "expected": {
+    "ok": true,
+    "done": true,
+    "entry": {
+     "id": "id:abc",
+     "name": "a.mp3",
+     "folder": false,
+     "size": 10,
+     "mtimeMs": 1792065600000,
+     "etag": "0123456789",
+     "hashes": {
+      "dropbox": "ff"
+     },
+     "path": "/Keepfin/a.mp3"
+    }
+   }
+  },
+  {
+   "name": "append wrong offset",
+   "provider": "dropbox",
+   "op": "parseUploadAppend",
+   "input": {
+    "response": {
+     "status": 409,
+     "headers": {},
+     "body": "{\"error_summary\":\"incorrect_offset/..\",\"error\":{\".tag\":\"incorrect_offset\",\"correct_offset\":4194304}}"
+    },
+    "offset": 8388608,
+    "length": 8388608,
+    "total": 30000000
+   },
+   "expected": {
+    "ok": false,
+    "error": {
+     "kind": "Conflict",
+     "status": 409,
+     "code": "incorrect_offset",
+     "message": "incorrect_offset/..",
+     "correctOffset": 4194304
+    }
+   }
+  },
+  {
+   "name": "query resumes at the right offset",
+   "provider": "dropbox",
+   "op": "parseUploadQuery",
+   "input": {
+    "response": {
+     "status": 409,
+     "headers": {},
+     "body": "{\"error_summary\":\"incorrect_offset/..\",\"error\":{\".tag\":\"incorrect_offset\",\"correct_offset\":4194304}}"
+    },
+    "offset": 8388608
+   },
+   "expected": {
+    "ok": true,
+    "done": false,
+    "nextOffset": 4194304
+   }
+  },
+  {
+   "name": "query resumes at the server's offset when it says lookup_failed/incorrect_offset (offset at the top)",
+   "provider": "dropbox",
+   "op": "parseUploadQuery",
+   "input": {
+    "response": {
+     "status": 409,
+     "headers": {},
+     "body": "{\"error_summary\":\"lookup_failed/incorrect_offset/..\",\"error\":{\".tag\":\"incorrect_offset\",\"correct_offset\":12582912}}"
+    },
+    "offset": 8388608
+   },
+   "expected": {
+    "ok": true,
+    "done": false,
+    "nextOffset": 12582912
+   }
+  },
+  {
+   "name": "query resumes at the server's offset when it says lookup_failed/incorrect_offset (offset one level down)",
+   "provider": "dropbox",
+   "op": "parseUploadQuery",
+   "input": {
+    "response": {
+     "status": 409,
+     "headers": {},
+     "body": "{\"error_summary\":\"lookup_failed/incorrect_offset/..\",\"error\":{\".tag\":\"lookup_failed\",\"lookup_failed\":{\".tag\":\"incorrect_offset\",\"correct_offset\":12582912}}}"
+    },
+    "offset": 8388608
+   },
+   "expected": {
+    "ok": true,
+    "done": false,
+    "nextOffset": 12582912
+   }
+  },
+  {
+   "name": "query ok",
+   "provider": "dropbox",
+   "op": "parseUploadQuery",
+   "input": {
+    "response": {
+     "status": 200,
+     "headers": {},
+     "body": "null"
+    },
+    "offset": 8388608
+   },
+   "expected": {
+    "ok": true,
+    "done": false,
+    "nextOffset": 8388608
+   }
+  },
+  {
+   "name": "session lost",
+   "provider": "dropbox",
+   "op": "parseUploadQuery",
+   "input": {
+    "response": {
+     "status": 409,
+     "headers": {},
+     "body": "{\"error_summary\":\"lookup_failed/not_found/..\",\"error\":{\".tag\":\"lookup_failed\"}}"
+    },
+    "offset": 0
+   },
+   "expected": {
+    "ok": false,
+    "error": {
+     "kind": "NotFound",
+     "status": 409,
+     "code": "SessionExpired",
+     "message": "lookup_failed/not_found/.."
+    }
+   }
+  },
+  {
+   "name": "download range",
+   "provider": "dropbox",
+   "op": "download",
+   "input": {
+    "ref": {
+     "id": "id:abc"
+    },
+    "start": 5
+   },
+   "expected": {
+    "request": {
+     "method": "POST",
+     "url": "https://content.dropboxapi.com/2/files/download",
+     "headers": {
+      "Dropbox-API-Arg": "{\"path\":\"id:abc\"}",
+      "Range": "bytes=5-"
+     },
+     "auth": true
+    }
+   }
+  },
+  {
+   "name": "conflict on add",
+   "provider": "dropbox",
+   "op": "parseEntry",
+   "input": {
+    "response": {
+     "status": 409,
+     "headers": {},
+     "body": "{\"error_summary\":\"path/conflict/file/..\",\"error\":{\".tag\":\"path\"}}"
+    }
+   },
+   "expected": {
+    "ok": false,
+    "error": {
+     "kind": "Conflict",
+     "status": 409,
+     "code": "conflict",
+     "message": "path/conflict/file/.."
+    }
+   }
+  },
+  {
+   "name": "strict conflict on update",
+   "provider": "dropbox",
+   "op": "parseEntry",
+   "input": {
+    "response": {
+     "status": 409,
+     "headers": {},
+     "body": "{\"error_summary\":\"path/conflict/file/..\",\"error\":{\".tag\":\"path\"}}"
+    }
+   },
+   "expected": {
+    "ok": false,
+    "error": {
+     "kind": "Conflict",
+     "status": 409,
+     "code": "conflict",
+     "message": "path/conflict/file/.."
+    }
+   }
+  },
+  {
+   "name": "write contention",
+   "provider": "dropbox",
+   "op": "parseDone",
+   "input": {
+    "response": {
+     "status": 409,
+     "headers": {},
+     "body": "{\"error_summary\":\"too_many_write_operations/..\",\"error\":{\".tag\":\"too_many_write_operations\"}}"
+    }
+   },
+   "expected": {
+    "ok": false,
+    "error": {
+     "kind": "RateLimited",
+     "status": 409,
+     "code": "too_many_write_operations",
+     "message": "too_many_write_operations/.."
+    }
+   }
+  },
+  {
+   "name": "rate limit with body retry_after",
+   "provider": "dropbox",
+   "op": "parseDone",
+   "input": {
+    "response": {
+     "status": 429,
+     "headers": {},
+     "body": "{\"error_summary\":\"too_many_requests/..\",\"error\":{\"reason\":{\".tag\":\"too_many_requests\"},\"retry_after\":30}}"
+    }
+   },
+   "expected": {
+    "ok": false,
+    "error": {
+     "kind": "RateLimited",
+     "status": 429,
+     "code": "too_many_requests",
+     "message": "too_many_requests/..",
+     "retryAfterMs": 30000
+    }
+   }
+  },
+  {
+   "name": "expired token",
+   "provider": "dropbox",
+   "op": "parseDone",
+   "input": {
+    "response": {
+     "status": 401,
+     "headers": {},
+     "body": "{\"error_summary\":\"expired_access_token/..\",\"error\":{\".tag\":\"expired_access_token\"}}"
+    }
+   },
+   "expected": {
+    "ok": false,
+    "error": {
+     "kind": "NeedsSignIn",
+     "status": 401,
+     "code": "expired_access_token",
+     "message": "expired_access_token/..",
+     "refresh": true
+    }
+   }
+  },
+  {
+   "name": "insufficient space",
+   "provider": "dropbox",
+   "op": "parseEntry",
+   "input": {
+    "response": {
+     "status": 409,
+     "headers": {},
+     "body": "{\"error_summary\":\"path/insufficient_space/..\",\"error\":{\".tag\":\"path\"}}"
+    }
+   },
+   "expected": {
+    "ok": false,
+    "error": {
+     "kind": "QuotaFull",
+     "status": 409,
+     "code": "path",
+     "message": "path/insufficient_space/.."
+    }
+   }
+  },
+  {
+   "name": "quota",
+   "provider": "dropbox",
+   "op": "parseQuota",
+   "input": {
+    "response": {
+     "status": 200,
+     "headers": {},
+     "body": "{\"used\":100,\"allocation\":{\".tag\":\"individual\",\"allocated\":2147483648}}"
+    }
+   },
+   "expected": {
+    "ok": true,
+    "usedBytes": 100,
+    "totalBytes": 2147483648,
+    "freeBytes": 2147483548
+   }
+  }
+ ]
+}

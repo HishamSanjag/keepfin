@@ -1,0 +1,20 @@
+{
+  "description": "Release version ordering: 0.4.2 < 0.5.0-beta.1 < 0.5.0-beta.2 < 0.5.0-beta.10 < 0.5.0 < 0.5.1. Result is the sign of a - b.",
+  "cases": [
+    {"name":"a stable release is older than the next beta","input":{"op":"compare","a":"0.4.2","b":"0.5.0-beta.1"},"expected":-1},
+    {"name":"beta 1 is older than beta 2","input":{"op":"compare","a":"0.5.0-beta.1","b":"0.5.0-beta.2"},"expected":-1},
+    {"name":"beta numbers compare as numbers (2 < 10)","input":{"op":"compare","a":"0.5.0-beta.2","b":"0.5.0-beta.10"},"expected":-1},
+    {"name":"a beta is older than its final release","input":{"op":"compare","a":"0.5.0-beta.10","b":"0.5.0"},"expected":-1},
+    {"name":"the final release is older than the next patch","input":{"op":"compare","a":"0.5.0","b":"0.5.1"},"expected":-1},
+    {"name":"numbers compare as numbers (10 > 2)","input":{"op":"compare","a":"0.4.10","b":"0.4.2"},"expected":1},
+    {"name":"a final release is newer than its beta","input":{"op":"compare","a":"0.5.0","b":"0.5.0-beta.2"},"expected":1},
+    {"name":"a beta of a later version is newer than an earlier final","input":{"op":"compare","a":"0.5.0-beta.1","b":"0.4.2"},"expected":1},
+    {"name":"the same version","input":{"op":"compare","a":"0.5.0","b":"0.5.0"},"expected":0},
+    {"name":"the same beta","input":{"op":"compare","a":"0.5.0-beta.1","b":"0.5.0-beta.1"},"expected":0},
+    {"name":"major versions dominate","input":{"op":"compare","a":"1.0.0","b":"0.99.99"},"expected":1},
+    {"name":"0.5.5-beta.1 is newer than 0.5.0","input":{"op":"compare","a":"0.5.5-beta.1","b":"0.5.0"},"expected":1},
+    {"name":"0.5.5 is newer than 0.5.5-beta.2","input":{"op":"compare","a":"0.5.5","b":"0.5.5-beta.2"},"expected":1},
+    {"name":"a malformed version sorts below a real one","input":{"op":"compare","a":"not-a-version","b":"0.0.1"},"expected":-1},
+    {"name":"two malformed versions are equal","input":{"op":"compare","a":"x","b":"y"},"expected":0}
+  ]
+}

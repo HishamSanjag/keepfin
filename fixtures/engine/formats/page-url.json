@@ -1,0 +1,8 @@
+{
+  "description": "The page a link is known by: it decides the opening tab, the space and the song's video, so a YouTube Music link must stay one.",
+  "cases": [
+    {"name":"the engine reports a YouTube Music link as plain YouTube: it stays music","input":{"op":"pageUrl","infoFile":"youtube-music-track.json","url":"https://music.youtube.com/watch?v=4D7u5KF7SP8"},"expected":"https://music.youtube.com/watch?v=4D7u5KF7SP8"},
+    {"name":"a shared YouTube link keeps the page the engine reports","input":{"op":"pageUrl","infoFile":"youtube-video-android.json","url":"https://youtu.be/aqz-KE-bpKQ?si=abc"},"expected":"https://www.youtube.com/watch?v=aqz-KE-bpKQ"},
+    {"name":"another site keeps the page the engine reports","input":{"op":"pageUrl","info":{"webpage_url":"https://vimeo.com/1"},"url":"https://player.vimeo.com/video/1"},"expected":"https://vimeo.com/1"}
+  ]
+}

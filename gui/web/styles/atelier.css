@@ -1,0 +1,1649 @@
+/* Cobalt Atelier (dev-docs/plans/MAIN-REDESIGN.md): the presentation layer of the main screens. Loaded after every other sheet, it
+ * restyles shell, Library home, Downloads and the player with the tokens in tokens.css; the structure and behaviour live in the
+ * components. Surfaces separate by tone; hairlines only where rows need them; elevation only for the player bar, menus, dialogs. */
+
+/* ---------- Type: Inter for text, Manrope for headings, tabular figures wherever numbers line up ---------- */
+html {
+  font-family: var(--font);
+  font-size: 13px;
+  line-height: 1.4;
+}
+.tabular,
+.job-stats,
+.seek-time,
+.size-text,
+.nav-count,
+.side-count,
+.queue-count,
+.cw-left,
+.card-time,
+.thumb-duration,
+.activity-text,
+.side-status-text,
+.row-time,
+.row-size,
+.row-date,
+.list-summary,
+.entry-dur,
+.group-counts,
+.selection-count {
+  font-variant-numeric: tabular-nums;
+}
+.shelf-title,
+.section-title,
+.queue-title,
+.cw-title,
+.group-title {
+  font-family: var(--font-display);
+}
+
+/* ---------- Segmented controls and tabs: a quiet track, cobalt only for the selected choice ---------- */
+:root[data-theme='dark'] .segmented button.checked {
+  background: var(--raised);
+  box-shadow:
+    0 1px 2px rgba(0, 0, 0, 0.4),
+    inset 0 0 0 1px var(--line-strong);
+}
+.segmented {
+  border-radius: 8px;
+  box-shadow: none;
+  background: var(--surface);
+}
+.chip {
+  border-radius: 8px;
+  box-shadow: inset 0 0 0 1px var(--line-strong);
+}
+
+/* ---------- Shell: one sidebar ---------- */
+.rail {
+  gap: 12px;
+  padding: 12px 8px 8px;
+  background: var(--rail);
+  border-right: 1px solid var(--line);
+}
+.rail-brand {
+  gap: 8px;
+  padding: 2px 6px;
+}
+/* The logo's own brush lettering: ivory on dark themes, ink on light ones. */
+.wordmark {
+  flex: none;
+  width: 84px;
+  height: auto;
+}
+:root[data-theme='light'] .wordmark-plain,
+:root:not([data-theme='light']) .wordmark-light {
+  display: none;
+}
+.nav-item {
+  height: 34px;
+  gap: 10px;
+  padding: 0 10px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+}
+.nav-item.selected {
+  background: var(--selected);
+  color: var(--text);
+}
+.nav-item.selected::before {
+  content: '';
+  position: absolute;
+  left: -8px;
+  top: 7px;
+  bottom: 7px;
+  width: 3px;
+  border-radius: 0 3px 3px 0;
+  background: var(--accent);
+}
+.app:not([data-rail='collapsed']) .nav-count {
+  right: 10px;
+  min-width: 20px;
+  height: 20px;
+  font-size: 11.5px;
+}
+.side-label {
+  margin: 10px 10px 4px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.09em;
+}
+.your-nav {
+  overflow-y: auto;
+  padding-right: 2px;
+}
+/* The lists keep their full height and the sidebar scrolls; they must never squeeze into each other. */
+.your-nav > .side-label,
+.your-nav > .your-list {
+  flex: none;
+}
+.your-list {
+  overflow: visible;
+  gap: 2px;
+}
+.side-entry {
+  min-height: 32px;
+  padding: 0 10px;
+  gap: 10px;
+  font-size: 13px;
+  font-weight: 500;
+}
+.side-entry.side-item .space-mark {
+  width: 18px;
+  height: 18px;
+  background: none;
+  border-radius: 0;
+}
+.side-entry.side-item .space-mark .icon,
+.side-entry.side-item.selected .space-mark .icon,
+.side-entry.side-item:hover .space-mark .icon {
+  color: var(--sp, var(--text-2));
+}
+.side-cover {
+  width: 20px;
+  height: 20px;
+  border-radius: 5px;
+  background: var(--raised);
+}
+.side-count {
+  font-size: 12px;
+}
+.side-status {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 6px 10px;
+  border-radius: 8px;
+  color: var(--text-2);
+  font-size: 12px;
+  text-align: left;
+}
+.side-status:hover {
+  background: var(--hover);
+  color: var(--text);
+}
+.side-about[aria-current='page'],
+.side-support[aria-current='page'] {
+  color: var(--text);
+  background: var(--selected);
+}
+/* The last row: the version (small, quiet) and Support beside it; stacked as icons in a narrow or collapsed sidebar */
+.side-foot-row {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  min-width: 0;
+}
+/* the version and Support are two small chips of one kind, side by side */
+.side-foot-row .side-about,
+.side-foot-row .side-support {
+  flex: 0 1 auto;
+  width: auto;
+  min-width: 0;
+  gap: 6px;
+  padding: 4px 10px;
+  border: 1px solid var(--line-strong);
+  border-radius: 999px;
+}
+.side-version {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 11px;
+  color: var(--text-3);
+}
+.side-foot-row .side-support {
+  flex: none;
+}
+.side-support svg {
+  color: #e86a9a;
+}
+.app[data-rail='collapsed'] .side-foot-row {
+  flex-direction: column;
+  align-items: stretch;
+}
+.app[data-rail='collapsed'] .rail .side-foot-row .side-about,
+.app[data-rail='collapsed'] .rail .side-foot-row .side-support {
+  width: 100%;
+  border: 0;
+  border-radius: 8px;
+}
+.side-dot {
+  flex: none;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--text-3);
+}
+.side-dot.on {
+  background: var(--success);
+}
+.activity {
+  border-radius: 8px;
+  padding: 8px 10px;
+}
+.rail-foot {
+  gap: 4px;
+}
+.rail-foot-links {
+  border-top: 0;
+  padding-top: 0;
+}
+
+/* ---------- Library home ---------- */
+.library-home {
+  gap: 20px;
+  padding-bottom: 20px;
+}
+.lib-filter-row {
+  gap: 2px;
+}
+.lib-filter-row .chip {
+  height: 28px;
+  padding: 0 10px;
+  font-size: 12.5px;
+  box-shadow: none;
+  color: var(--text-2);
+}
+.lib-filter-row .chip.on {
+  background: var(--selected);
+  color: var(--text);
+  box-shadow: none;
+}
+/* Spaces: a light row of links, not tiles. */
+.hub:not(:has(.space-cards-edit)) {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 8px;
+}
+.hub:not(:has(.space-cards-edit)) > .shelf-head {
+  display: contents;
+}
+.hub:not(:has(.space-cards-edit)) .shelf-title {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+.hub:not(:has(.space-cards-edit)) .shelf-head .btn {
+  order: 3;
+  margin-left: auto;
+}
+.hub .space-cards:not(.space-cards-edit) {
+  order: 1;
+  display: flex;
+  flex: 1;
+  flex-wrap: wrap;
+  gap: 4px 6px;
+  min-width: 0;
+}
+.hub .space-cards:not(.space-cards-edit) .space-card {
+  width: auto;
+  min-height: 32px;
+  padding: 0 10px;
+  gap: 8px;
+  border-radius: 8px;
+  background: none;
+  box-shadow: none;
+}
+.hub .space-cards:not(.space-cards-edit) .space-card:hover {
+  background: var(--hover);
+}
+.hub .space-cards:not(.space-cards-edit) .space-mark {
+  width: 18px;
+  height: 18px;
+  background: none;
+}
+.hub .space-cards:not(.space-cards-edit) .space-mark .icon {
+  color: var(--sp, var(--text-2));
+}
+.hub .space-cards:not(.space-cards-edit) .space-card-text {
+  display: flex;
+  flex: none;
+  align-items: baseline;
+  gap: 8px;
+}
+.hub .space-cards:not(.space-cards-edit) .space-card-text strong {
+  font-size: 13px;
+  font-weight: 600;
+}
+.hub .space-cards:not(.space-cards-edit) .space-card-text span {
+  font-size: 12px;
+  color: var(--text-3);
+}
+.hub .space-card-more .space-card-text span {
+  display: none;
+}
+/* Narrow content: the filters and the spaces stay one row each and scroll sideways instead of wrapping (dev-docs/plans/DESKTOP-WIDTHS.md). */
+@container main (max-width: 640px) {
+  .lib-filter-row,
+  .hub .space-cards:not(.space-cards-edit) {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    scrollbar-width: thin;
+  }
+  .lib-filter-row .chip,
+  .hub .space-cards:not(.space-cards-edit) .space-card {
+    flex: none;
+  }
+  .lib-filter-row,
+  .hub:not(:has(.space-cards-edit)) {
+    flex-wrap: nowrap;
+    /* a grid item that may be narrower than its row of chips, so the row scrolls instead of widening the page */
+    min-width: 0;
+  }
+}
+.lib-section {
+  gap: 10px;
+}
+.shelf-title {
+  font-size: var(--fs-title);
+  line-height: var(--lh-title);
+  font-weight: 700;
+  letter-spacing: -0.015em;
+}
+.shelf-subtitle {
+  margin-bottom: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  color: var(--text-2);
+}
+.shape-shelf + .shape-shelf {
+  margin-top: 10px;
+}
+/* Continue watching: wide 16:9 cards, two to three across, with progress and a play button over the artwork. */
+.cw-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 210px), 1fr));
+  gap: 14px 12px;
+}
+.cw-item {
+  min-width: 0;
+}
+/* The ✕ that takes a card off Continue watching: over the artwork's corner, shown on hover or focus (always on touch screens). */
+.cw-card,
+.shelf-item:has(> .cw-remove) {
+  position: relative;
+}
+.cw-remove.icon-btn {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  z-index: 4; /* above the card's play badge and buttons */
+  color: #fff;
+  background: rgb(0 0 0 / 0.55);
+  opacity: 0;
+}
+.cw-remove.icon-btn:hover {
+  background: rgb(0 0 0 / 0.75);
+}
+.cw-card:hover .cw-remove,
+.shelf-item:hover > .cw-remove,
+.cw-card:focus-within .cw-remove,
+.shelf-item:focus-within > .cw-remove {
+  opacity: 1;
+}
+@media (hover: none) {
+  .cw-remove.icon-btn {
+    opacity: 1;
+  }
+}
+.cw-main {
+  display: grid;
+  gap: 4px;
+  width: 100%;
+  text-align: left;
+  border-radius: var(--r-card);
+}
+.cw-art {
+  position: relative;
+  display: block;
+  aspect-ratio: 16 / 9;
+  border-radius: var(--r-card);
+  overflow: hidden;
+  background: var(--thumb-bg);
+}
+.cw-art > .art {
+  position: absolute;
+  inset: 0;
+}
+.cw-main:focus-visible {
+  outline: none;
+}
+.cw-main:focus-visible .cw-art {
+  box-shadow: 0 0 0 2px var(--canvas), 0 0 0 4px var(--focus);
+}
+.cw-shade {
+  position: absolute;
+  inset: auto 0 0 0;
+  height: 58%;
+  background: linear-gradient(to top, rgba(8, 10, 14, 0.82), transparent);
+  pointer-events: none;
+}
+.cw-play {
+  position: absolute;
+  left: 8px;
+  bottom: 8px;
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  color: #fff;
+  background: rgba(10, 12, 18, 0.62);
+  box-shadow: inset 0 0 0 1.5px rgba(255, 255, 255, 0.92);
+}
+.cw-main:hover .cw-play,
+.cw-main:focus-visible .cw-play {
+  background: var(--accent);
+  color: var(--on-accent);
+  box-shadow: none;
+}
+.cw-left {
+  position: absolute;
+  right: 8px;
+  bottom: 14px;
+  color: #fff;
+  font-size: 11.5px;
+  font-weight: 600;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.6);
+}
+.cw-art .poster-progress {
+  left: 8px;
+  right: 8px;
+  bottom: 0;
+  height: 3px;
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.3);
+  overflow: hidden;
+}
+.cw-title {
+  margin-top: 2px;
+  font-size: 13px;
+  line-height: 18px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.cw-sub {
+  font-size: 12px;
+  color: var(--text-2);
+}
+/* Shelves keep one shape: 16:9 videos or square covers, never both in one row. */
+.shelf.shelf-video {
+  --cols: 2;
+}
+@container main (min-width: 560px) {
+  .shelf.shelf-video {
+    --cols: 3;
+  }
+}
+@container main (min-width: 780px) {
+  .shelf.shelf-video {
+    --cols: 4;
+  }
+}
+@container main (min-width: 1000px) {
+  .shelf.shelf-video {
+    --cols: 5;
+  }
+}
+@container main (min-width: 1260px) {
+  .shelf.shelf-video {
+    --cols: 6;
+  }
+}
+@container main (min-width: 1500px) {
+  .shelf.shelf-video {
+    --cols: 7;
+  }
+}
+@container main (min-width: 1760px) {
+  .shelf.shelf-video {
+    --cols: 8;
+  }
+}
+.shelf.shelf-square {
+  --cols: 3;
+}
+@container main (min-width: 480px) {
+  .shelf.shelf-square {
+    --cols: 4;
+  }
+}
+@container main (min-width: 640px) {
+  .shelf.shelf-square {
+    --cols: 5;
+  }
+}
+@container main (min-width: 800px) {
+  .shelf.shelf-square {
+    --cols: 6;
+  }
+}
+@container main (min-width: 960px) {
+  .shelf.shelf-square {
+    --cols: 7;
+  }
+}
+@container main (min-width: 1120px) {
+  .shelf.shelf-square {
+    --cols: 8;
+  }
+}
+@container main (min-width: 1400px) {
+  .shelf.shelf-square {
+    --cols: 10;
+  }
+}
+@container main (min-width: 1700px) {
+  .shelf.shelf-square {
+    --cols: 12;
+  }
+}
+.card-art {
+  border-radius: var(--r-card);
+}
+.card-title {
+  font-size: 13px;
+  padding-right: 28px;
+}
+.card-sub {
+  font-size: 12px;
+  padding-right: 28px;
+}
+.card-play {
+  background: var(--accent);
+}
+/* Items without artwork get a designed cover: a calm gradient from the space colour, with the title's initials. */
+.art-fallback {
+  container-type: size;
+  background: linear-gradient(150deg, color-mix(in srgb, var(--sp, var(--accent)) 36%, var(--surface)) 0%, color-mix(in srgb, var(--sp, var(--accent)) 12%, var(--canvas)) 100%);
+  color: color-mix(in srgb, var(--sp, var(--text-2)) 82%, var(--text));
+}
+.art-initials {
+  font-family: var(--font-display);
+  font-size: min(36cqmin, 40px);
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  line-height: 1;
+  user-select: none;
+}
+.art-placeholder {
+  background: linear-gradient(150deg, color-mix(in srgb, var(--accent) 16%, var(--surface)), var(--thumb-bg));
+}
+
+/* ---------- Downloads ---------- */
+.downloads {
+  gap: 14px;
+}
+.capture-mark {
+  display: none;
+}
+.capture-field {
+  min-height: 42px;
+  padding: 0 6px 0 12px;
+  border: 0;
+  border-radius: 8px;
+  background: var(--surface);
+  box-shadow: inset 0 0 0 1px var(--field-border);
+}
+.capture-field:hover {
+  box-shadow: inset 0 0 0 1px var(--text-3);
+}
+.capture-field:focus-within {
+  box-shadow:
+    inset 0 0 0 1.5px var(--accent),
+    0 0 0 3px var(--accent-soft);
+}
+.capture-field.has-error {
+  box-shadow: inset 0 0 0 1.5px var(--danger);
+}
+.capture-field textarea {
+  font-size: 14px;
+  line-height: 20px;
+  padding: 11px 6px;
+}
+.capture-actions {
+  height: 42px;
+}
+.capture-actions .btn-sm {
+  height: 32px;
+  padding: 0 12px;
+  border-radius: 8px;
+}
+.capture-help {
+  color: var(--text-3);
+}
+.download-btn {
+  height: 36px;
+  min-width: 160px;
+  padding: 0 16px;
+  border-radius: 8px;
+  font-size: 13.5px;
+}
+@container main (max-width: 640px) {
+  .download-btn {
+    min-width: 0;
+  }
+}
+/* Queue */
+.downloads-list {
+  gap: 0;
+}
+.queue-title {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  font-size: var(--fs-title);
+  line-height: var(--lh-title);
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+.queue-count {
+  font-family: var(--font);
+  font-size: 13px;
+  font-weight: 500;
+  letter-spacing: 0;
+  color: var(--text-2);
+}
+:root[data-theme] .page-toolbar-left > .segmented button.checked {
+  background: var(--accent);
+  color: var(--on-accent);
+  box-shadow: none;
+}
+.queue {
+  gap: 16px;
+  margin-top: 8px;
+}
+.section-head {
+  min-height: 24px;
+  padding: 0 4px 6px;
+  border-bottom: 0;
+}
+.section-title {
+  font-family: var(--font);
+  font-size: 11.5px;
+  font-weight: 700;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: var(--text-2);
+}
+.jobs {
+  overflow: hidden;
+  border-radius: var(--r-xl);
+  background: var(--surface);
+}
+.job {
+  grid-template-columns: 112px minmax(0, 1fr) auto;
+  gap: 2px 12px;
+  padding: 8px 12px 8px 8px;
+}
+.thumb-job {
+  width: 112px;
+  border-radius: 6px;
+}
+.job-title {
+  font-size: 13px;
+  font-weight: 600;
+}
+.job-live .job-meta {
+  display: none;
+}
+.job-body {
+  gap: 3px;
+}
+.job-stats {
+  min-height: 16px;
+  font-size: 12px;
+}
+.job .progress {
+  height: 4px;
+  margin-top: 4px;
+  background: color-mix(in srgb, var(--text) 16%, transparent);
+}
+.job-actions {
+  gap: 6px;
+  min-width: 96px;
+  justify-content: flex-end;
+}
+.job-actions .icon-btn {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  color: var(--text);
+  box-shadow: inset 0 0 0 1px var(--line-strong);
+}
+.job-actions .icon-btn[aria-haspopup] {
+  box-shadow: none;
+  color: var(--text-2);
+}
+.job-actions .icon-btn:hover:not(:disabled) {
+  background: var(--hover);
+}
+@container main (max-width: 640px) {
+  .job {
+    grid-template-columns: 84px minmax(0, 1fr);
+  }
+  .thumb-job {
+    width: 84px;
+  }
+}
+
+/* ---------- Player: direction B (Afterglow) ---------- */
+/* A very soft tint from the current artwork: darkened to a luminance cap (tint.ts) and painted at a low alpha. */
+.transport {
+  gap: 10px;
+}
+.play-btn {
+  width: 34px;
+  height: 34px;
+  background: transparent;
+  color: var(--text);
+  box-shadow: inset 0 0 0 2px var(--text);
+  transition: background-color var(--t-fast) var(--ease);
+}
+.play-btn:hover {
+  background: var(--hover);
+}
+.transport-lg .play-btn {
+  width: 48px;
+  height: 48px;
+}
+.seek {
+  gap: 8px;
+}
+.seek-time {
+  min-width: 36px;
+  font-size: 12px;
+}
+.seek > .seek-time:first-child {
+  text-align: right;
+}
+.seek > .seek-time:last-child {
+  text-align: left;
+}
+.range-volume {
+  width: 88px;
+}
+
+/* Full player and lyrics: an immersive wash of the artwork. The darkening is fixed here (a brightness filter plus an opaque
+   veil), so even a white artwork ends up dark enough for AA text; the controls sit on an opaque layer. */
+.has-wash {
+  isolation: isolate;
+  /* Over the wash the dimmest text is the secondary text colour (4.5:1 or better), never the faint tertiary one. */
+  --text-3: var(--text-2);
+}
+.art-wash {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  overflow: hidden;
+  pointer-events: none;
+}
+/* The wash is a flat gradient from the artwork tint (tint.ts) down to the canvas: no blur filter, so it costs nothing to paint. */
+.art-wash-layer {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgb(var(--tint, 70, 80, 110)) 0%, var(--canvas) 78%);
+}
+.art-wash-layer.is-entering {
+  animation: wash-in 600ms var(--ease) both;
+}
+@keyframes wash-in {
+  from {
+    opacity: 0;
+  }
+}
+.art-wash-layer.is-plain {
+  background: linear-gradient(160deg, color-mix(in srgb, var(--sp, var(--accent)) 28%, var(--canvas)), var(--canvas));
+}
+.art-wash-veil {
+  position: absolute;
+  inset: 0;
+  background: color-mix(in srgb, var(--canvas) 55%, transparent);
+}
+:root[data-theme='light'] .art-wash-veil {
+  background: color-mix(in srgb, var(--canvas) 82%, transparent);
+}
+/* The line being sung is the loudest thing on the page: full-contrast text, heavier and a little larger. Every other line is the same
+   text colour at about two thirds (still above 4.5:1 on the wash), so the current one reads at a glance in both themes. */
+.lyric:not(.plain) {
+  opacity: 1;
+  font-weight: 600;
+  color: color-mix(in srgb, var(--text) 64%, transparent);
+  transform: scale(1);
+  transition:
+    color var(--t) var(--ease),
+    transform var(--spring-smooth-ms) var(--spring-smooth);
+}
+.lyric.past {
+  color: color-mix(in srgb, var(--text) 64%, transparent);
+}
+.lyric.active {
+  color: var(--text);
+  font-weight: 800;
+  transform: scale(1.07);
+}
+.lyrics {
+  position: relative;
+  padding-inline-end: 7%;
+}
+.lyric.plain {
+  color: var(--text-2);
+}
+.lyrics-overlay {
+  position: relative;
+  overflow: hidden;
+  padding: 0;
+  background: var(--canvas);
+}
+.lyrics-overlay-body {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+  padding: 12px var(--gutter) 0;
+  overflow-y: auto;
+}
+.np-panel .np-cover {
+  width: min(100%, 200px);
+  border-radius: var(--r-card);
+}
+
+/* ---------- Video player: the same controls and type ---------- */
+.video-view,
+.image-view {
+  font-family: var(--font);
+}
+.video-title strong {
+  font-family: var(--font-display);
+  font-weight: 700;
+}
+/* player controls: one quiet 6px hover shape everywhere (no circles or pills) */
+.video-controls .vc-btn,
+.video-top .icon-btn {
+  border-radius: 6px;
+}
+.video-controls [aria-label='Play'],
+.video-controls [aria-label='Pause'] {
+  font-variant-numeric: tabular-nums;
+}
+
+/* ==========================================================================================================================
+ * Density pass (owner feedback on the first Atelier build: too big, too much empty space). The tokens carry the scale; the
+ * rules below bring every page back to the compact sizes of the previous build while keeping the Atelier colours and fonts.
+ * ========================================================================================================================== */
+.main {
+  position: relative;
+  padding-bottom: 24px;
+}
+button,
+input,
+textarea,
+select {
+  font-size: inherit;
+}
+
+.main:has(.lib-shell) .lib-shell {
+  gap: 8px;
+}
+.space-view,
+.lib-main {
+  gap: 8px;
+}
+.page-toolbar .btn,
+.page-toolbar .density-trigger,
+.page-toolbar .select select,
+.page-toolbar .input {
+  height: 32px;
+}
+.page-toolbar .search {
+  min-width: 140px;
+}
+.lib-search {
+  flex: 0 1 220px;
+}
+.chip-lg {
+  height: 26px;
+  padding: 0 10px;
+  font-size: 12px;
+}
+.tag-filter {
+  gap: 6px;
+}
+.list-actions {
+  gap: 6px;
+  padding: 2px 0 6px;
+}
+.space-view .tabs [role='tab'] {
+  height: 30px;
+}
+
+/* ==========================================================================================================================
+ * Page structure (dev-docs/plans/PAGE-LAYOUT.md): every page is an app bar, one page header and an optional toolbar. The shell renders
+ * the app bar once; pages render the header (and the toolbar) with the same components, so the title sits in the same place, at the
+ * same size, on every page.
+ * ========================================================================================================================== */
+
+/* Row 1: the app bar. Sticky, same gutters as the content: the global search on the left, updates and Activity on the right. */
+.app-bar {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  height: var(--appbar-h);
+  margin-inline: calc(-1 * var(--gutter));
+  padding-inline: var(--gutter);
+  background: var(--canvas);
+}
+.app-bar-fill {
+  flex: 1;
+}
+.app-bar-end {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-left: auto;
+}
+.app-search {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 0 1 340px;
+  min-width: 0;
+  height: 32px;
+  padding: 0 4px 0 10px;
+  border-radius: var(--r-md);
+  background: var(--surface);
+  color: var(--text-3);
+  box-shadow: inset 0 0 0 1px var(--field-border);
+}
+.app-search:focus-within {
+  color: var(--text-2);
+  box-shadow:
+    inset 0 0 0 1.5px var(--accent),
+    0 0 0 3px var(--accent-soft);
+}
+.app-search-input {
+  flex: 1;
+  min-width: 0;
+  height: 100%;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: var(--text);
+  font-size: var(--fs-body);
+}
+.app-search-input::placeholder {
+  color: var(--text-3);
+}
+.app-search-clear {
+  width: 24px;
+  height: 24px;
+  flex: none;
+}
+
+/* Row 2: the page header. A fixed top padding holds the breadcrumb, so the h1 starts at the same height on every page. */
+.page-header {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  column-gap: 24px;
+  align-content: start;
+  min-width: 0;
+  padding: var(--page-top) 0 0;
+}
+/* 12px between the header and the toolbar (or the content) whatever the container's own gap is. */
+.screen > .page-header,
+.home > .page-header {
+  margin-bottom: -4px;
+}
+.space-view > .page-header {
+  margin-bottom: 4px;
+}
+.main > .page-header {
+  margin-bottom: 16px;
+}
+.page-header.has-art {
+  padding-bottom: 12px;
+}
+.page-crumbs {
+  position: absolute;
+  top: 4px;
+  left: 0;
+  right: 0;
+  height: 20px;
+}
+.page-crumbs {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.crumb-back {
+  display: inline-grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  margin: -2px 0 -2px -4px;
+  border-radius: 6px;
+  color: var(--text-2);
+}
+.crumb-back:hover {
+  color: var(--text);
+  background: var(--hover);
+}
+.crumb-back:focus-visible {
+  outline: 2px solid var(--focus, var(--accent));
+  outline-offset: 1px;
+}
+.page-crumbs ol {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: var(--fs-caption);
+  line-height: var(--lh-caption);
+  color: var(--text-3);
+}
+.page-crumbs li {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  min-width: 0;
+}
+.crumb-link {
+  padding: 2px 4px;
+  border-radius: 5px;
+  color: var(--text-2);
+  font-weight: 600;
+}
+.crumb-link:hover {
+  color: var(--text);
+  background: var(--hover);
+}
+.crumb-sep {
+  color: var(--text-3);
+}
+.page-header-main {
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  min-width: 0;
+}
+.page-titles {
+  flex: 1;
+  min-width: 0;
+}
+.page-title {
+  font-family: var(--font-display);
+  font-size: var(--fs-display);
+  line-height: var(--lh-display);
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  overflow-wrap: anywhere;
+}
+.page-caption {
+  margin-top: 2px;
+  overflow: hidden;
+  font-size: var(--fs-caption);
+  line-height: var(--lh-caption);
+  color: var(--text-2);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.page-caption .scan-note {
+  margin-left: 8px;
+}
+.caption-mark {
+  display: inline-block;
+  margin-right: 6px;
+  vertical-align: -2px;
+}
+.caption-mark .space-mark {
+  width: 16px;
+  height: 16px;
+  border-radius: 5px;
+}
+.page-actions,
+.hero-actions {
+  display: flex;
+  flex: none;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  min-height: 32px;
+}
+.page-header > .follow-card,
+.page-header > .run-strip,
+.page-header > .new-items {
+  grid-column: 1 / -1;
+  margin-top: 12px;
+}
+
+/* Detail pages: the cover sits at the right so the title keeps its place; the actions go under the facts. */
+.page-header.has-art .page-header-main {
+  grid-column: 1;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 12px;
+}
+.page-header.has-art .page-actions {
+  min-width: 0;
+}
+.page-header.has-art .page-titles {
+  flex: none;
+  width: 100%;
+}
+.page-header.has-art .page-title {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
+}
+.page-art {
+  grid-column: 2;
+  grid-row: 1;
+  align-self: start;
+}
+.page-art .hero-art {
+  width: 120px;
+  height: 120px;
+  overflow: hidden;
+  border-radius: var(--r-card);
+  background: var(--thumb-bg);
+  box-shadow: 0 10px 28px -10px rgba(var(--hero-rgb, 0, 0, 0), 0.6);
+}
+.page-art .hero-art.round {
+  border-radius: 50%;
+}
+.play-big {
+  min-width: 84px;
+}
+.follow-note {
+  max-width: 28ch;
+}
+@container main (max-width: 560px) {
+  .page-art .hero-art {
+    width: 80px;
+    height: 80px;
+  }
+  .page-header {
+    column-gap: 14px;
+  }
+}
+
+/* Row 3: the toolbar. One row of 32px controls: tabs and filters on the left; filter, sort, view, select and add on the right. */
+.page-toolbar {
+  display: flex;
+  flex: none;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px 12px;
+  min-height: 32px;
+}
+.page-toolbar-left,
+.page-toolbar-right {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+.page-toolbar-right {
+  margin-left: auto;
+  flex-wrap: nowrap;
+  justify-content: flex-end;
+}
+.page-toolbar .lib-search {
+  flex: 0 1 180px;
+  min-width: 120px;
+}
+.page-toolbar .search {
+  min-width: 120px;
+}
+@container main (max-width: 760px) {
+  .page-toolbar-right {
+    flex-wrap: wrap;
+  }
+}
+.space-view > .page-toolbar {
+  margin-bottom: 8px;
+}
+.page-toolbar .btn[aria-pressed='true'] {
+  background: var(--selected);
+  box-shadow: inset 0 0 0 1px var(--selected-line);
+}
+.page-toolbar-left > .segmented {
+  padding: 2px;
+}
+.page-toolbar-left > .segmented button {
+  height: 28px;
+  padding: 0 14px;
+  border-radius: 6px;
+  font-size: 12.5px;
+}
+.page-toolbar-left > .segmented button.checked {
+  background: var(--accent);
+  color: var(--on-accent);
+  box-shadow: none;
+}
+.page-toolbar-left > .segmented button.checked .seg-count {
+  color: color-mix(in srgb, var(--on-accent) 85%, transparent);
+}
+
+/* Library home and shelves */
+.shelf-head {
+  min-height: 0;
+}
+.shelf {
+  gap: 12px;
+}
+.shelf-block {
+  gap: 8px;
+}
+.cw-art .poster-progress {
+  left: 0;
+  right: 0;
+  border-radius: 0;
+}
+
+.lyric {
+  font-size: 18px;
+}
+.lyrics-overlay .lyric {
+  font-size: 22px;
+}
+.np-title {
+  font-size: 17px;
+}
+.np-panel {
+  gap: 10px;
+}
+
+/* Elevation: one small shadow on raised surfaces; no backdrop filters anywhere. */
+.dialog,
+.menu,
+.upd-pop,
+.act-panel {
+  box-shadow: var(--shadow-md);
+}
+.toasts > * {
+  box-shadow: var(--shadow-md);
+}
+/* Rows and lists only change colour on hover; nothing animates while scrolling. */
+.job,
+.group-row {
+  animation: none;
+}
+@media (prefers-reduced-motion: reduce) {
+  .art-wash-layer.is-entering {
+    animation: none;
+  }
+}
+
+/* ---------- Sidebar: collapse and expand ---------- */
+/* One layout for both states. The icons never move sideways relative to the rail's left edge (they are centred in the 68px rail
+   from the start), so collapsing only narrows the rail and fades the labels: nothing re-wraps or jumps mid-animation. The labels
+   stay on one line and the rail clips what no longer fits. */
+.app {
+  --rail-dur: 200ms;
+}
+/* The grid settles on its final columns at once, so the main column lays out a single time. Only the sidebar animates its own width
+   (it is its own layout island: contain: layout), above the page while it narrows. With reduced motion nothing animates. */
+.rail {
+  contain: layout style;
+}
+@media (prefers-reduced-motion: no-preference) {
+  :root[data-rail-anim] .rail {
+    position: relative;
+    z-index: 25;
+  }
+  :root[data-rail-anim='expand'] .rail {
+    animation: rail-expand var(--rail-dur) var(--ease);
+  }
+  :root[data-rail-anim='collapse'] .rail {
+    animation: rail-collapse var(--rail-dur) var(--ease);
+  }
+}
+@keyframes rail-expand {
+  from {
+    width: 68px;
+  }
+  to {
+    width: 208px;
+  }
+}
+@keyframes rail-collapse {
+  from {
+    width: 208px;
+  }
+  to {
+    width: 68px;
+  }
+}
+.rail {
+  overflow: hidden;
+}
+/* Rows are as wide as the rail, however long their (nowrap) labels are: the rail clips the labels, they never widen the rows. */
+.rail-nav,
+.rail-foot,
+.rail-foot-links {
+  grid-template-columns: minmax(0, 1fr);
+}
+/* ---------- A narrow window's sidebar (below 1100 px): the full sidebar opens over the page as a drawer ---------- */
+/* The grid keeps the icon rail's column, so the page does not move; the sidebar overflows its column above the page. */
+.app[data-rail='drawer'] {
+  --rail-w: 68px;
+}
+.app[data-rail='drawer'] .rail {
+  position: relative;
+  z-index: 30;
+  width: 208px;
+  box-shadow: var(--shadow-lg);
+}
+.rail-scrim {
+  position: fixed;
+  inset: 0;
+  z-index: 29;
+  background: var(--scrim);
+  animation: fade-in var(--rail-dur) var(--ease);
+}
+.rail .wordmark,
+.rail .nav-label,
+.rail .foot-label,
+.rail .side-status-text,
+.rail .activity-text {
+  white-space: nowrap;
+  transition: opacity var(--rail-dur) var(--ease);
+}
+.rail .nav-item,
+.rail .foot-item,
+.rail .side-status,
+.rail .activity,
+.rail .rail-brand {
+  transition:
+    padding-left var(--rail-dur) var(--ease),
+    background-color var(--t-fast) var(--ease),
+    color var(--t-fast) var(--ease);
+}
+.your-lib {
+  transition: opacity var(--rail-dur) var(--ease);
+}
+.brand-mark {
+  position: relative;
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+}
+.rail-brand:not(.is-expander) .brand-mark {
+  width: 58px;
+  height: 47px;
+}
+.brand-emblem {
+  width: 100%;
+}
+.brand-mark > * {
+  grid-area: 1 / 1;
+}
+.brand-mark .mark,
+.brand-expand {
+  transition: opacity var(--t-fast) var(--ease);
+}
+.brand-expand {
+  width: 30px;
+  height: 30px;
+  padding: 6px;
+  border-radius: 8px;
+  color: var(--text);
+  background: var(--selected);
+  opacity: 0;
+}
+.rail-brand.is-expander:hover .brand-expand,
+.rail-brand.is-expander:focus-visible .brand-expand {
+  opacity: 1;
+}
+.rail-brand.is-expander:hover .mark,
+.rail-brand.is-expander:focus-visible .mark {
+  opacity: 0;
+}
+.app[data-rail='collapsed'] .rail {
+  align-items: stretch;
+  padding-inline: 8px;
+}
+.app[data-rail='collapsed'] .rail-top {
+  flex-direction: row;
+}
+.app[data-rail='collapsed'] .rail-brand {
+  padding-left: 10px;
+}
+.app[data-rail='collapsed'] .rail .nav-item {
+  width: 100%;
+  justify-content: flex-start;
+  padding: 0 0 0 16px;
+}
+.app[data-rail='collapsed'] .rail .foot-item {
+  width: 100%;
+  justify-content: flex-start;
+  padding: 0 0 0 17px;
+}
+.app[data-rail='collapsed'] .rail-foot {
+  justify-items: stretch;
+}
+.app[data-rail='collapsed'] .rail .side-status {
+  width: 100%;
+  justify-content: flex-start;
+  padding: 8px 0 8px 17px;
+}
+.app[data-rail='collapsed'] .rail .activity {
+  width: 100%;
+  justify-content: flex-start;
+  padding: 8px 0 8px 19px;
+}
+.app[data-rail='collapsed'] .rail .nav-item.selected::before {
+  left: -8px;
+}
+.app[data-rail='collapsed'] .rail .side-dot {
+  display: none;
+}
+.app[data-rail='collapsed'] .rail :is(.nav-label, .foot-label, .side-status-text, .activity-text) {
+  position: static;
+  width: auto;
+  height: auto;
+  clip-path: none;
+  opacity: 0;
+  pointer-events: none;
+}
+.app[data-rail='collapsed'] .rail .wordmark {
+  opacity: 0;
+  pointer-events: none;
+}
+.app[data-rail='collapsed'] .your-lib {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transition:
+    opacity var(--rail-dur) var(--ease),
+    visibility 0s linear var(--rail-dur);
+}
+
+/* ---------- Lyrics view: the header stays, only the lyrics scroll ---------- */
+.lyrics-overlay-body {
+  overflow: hidden;
+}
+.lyrics-overlay-body > .np-head {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  flex: none;
+  padding-bottom: 8px;
+}
+.lyrics-overlay .lyrics {
+  flex: 1 1 0;
+  min-height: 0;
+  overflow-y: auto;
+  align-content: start;
+  scrollbar-gutter: stable;
+}
+.full-panel > .lyrics {
+  height: 100%;
+  overflow-y: auto;
+  align-content: start;
+}
+
+/* ---------- Cards: the heart and the menu are chips on the artwork corner, never over the text ---------- */
+.card-title,
+.card-sub {
+  padding-right: 0;
+}
+.card-actions {
+  top: 6px;
+  right: 6px;
+  bottom: auto;
+  z-index: 4;
+  gap: 4px;
+  opacity: 1;
+}
+.card-round .card-actions {
+  top: 10%;
+  right: 10%;
+}
+.card-actions .icon-btn {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  color: var(--text);
+  background: color-mix(in srgb, var(--canvas) 90%, transparent);
+  box-shadow:
+    0 0 0 1px color-mix(in srgb, var(--text) 16%, transparent),
+    0 1px 4px rgba(0, 0, 0, 0.3);
+  opacity: 0;
+  transition:
+    opacity var(--t-fast) var(--ease),
+    background-color var(--t-fast) var(--ease),
+    color var(--t-fast) var(--ease);
+}
+.card:hover .card-actions .icon-btn,
+.card:focus-within .card-actions .icon-btn,
+.card-actions .icon-btn[aria-expanded='true'],
+.card-actions .heart.on {
+  opacity: 1;
+}
+.card-actions .icon-btn:hover:not(:disabled),
+.card-actions .icon-btn.is-open {
+  color: var(--text);
+  background: var(--canvas);
+}
+.card-actions .heart.on {
+  color: var(--danger);
+}
+/* ---------- Fields: a visible boundary (3:1) on text fields, selects and segmented controls ---------- */
+.segmented,
+.settings-search-input,
+.density-trigger {
+  box-shadow: inset 0 0 0 1px var(--field-border);
+}
+
+/* ---------- Sidebar: one compact status line (downloads and devices) ---------- */
+.side-status-row {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.side-status-row .activity,
+.side-status-row .side-status {
+  flex: 1 1 auto;
+  width: auto;
+  min-width: 0;
+  padding: 6px 8px;
+  font-size: 12px;
+}
+.side-status-row .activity-text,
+.side-status-row .side-status-text {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.app[data-rail='collapsed'] .side-status-row {
+  flex-direction: column;
+  align-items: stretch;
+}
+
+/* ---------- Settings: the page title is the h1 above; the category is a section title inside the pane ---------- */
+.settings-rail {
+  top: calc(var(--appbar-h) + 8px);
+}
+.settings-title {
+  margin-top: 0;
+  font-size: var(--fs-title);
+  line-height: var(--lh-title);
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+/* ---------- Equalizer (Speed, sleep timer and output › Equalizer…) ---------- */
+.equalizer-dialog {
+  width: min(460px, calc(100vw - 32px));
+}
+.eq-row {
+  display: grid;
+  grid-template-columns: 96px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 12px;
+  min-height: 36px;
+}
+.eq-head {
+  grid-template-columns: minmax(0, 1fr) auto;
+  margin-bottom: 4px;
+}
+.eq-head > span {
+  display: grid;
+  gap: 2px;
+}
+.eq-row select {
+  grid-column: 2 / 4;
+}
+.eq-bands {
+  display: grid;
+  gap: 6px;
+  margin: 10px 0;
+}
+.eq-bands[data-off] {
+  opacity: 0.55;
+}
+.eq-band {
+  display: grid;
+  grid-template-columns: 96px minmax(0, 1fr) 56px;
+  align-items: center;
+  gap: 12px;
+}
+.eq-band-hz,
+.eq-band-db {
+  color: var(--text-2);
+  font-size: 12px;
+}
+.eq-band-db {
+  text-align: right;
+}
+.eq-band input[type='range'],
+.eq-row input[type='range'] {
+  width: 100%;
+  accent-color: var(--accent);
+}

@@ -1,0 +1,1258 @@
+{
+ "cases": [
+  {
+   "name": "default grants, metadata.read",
+   "ctx": {
+    "pairingMode": false,
+    "peer": {
+     "deviceId": "d1",
+     "revoked": false,
+     "libraries": {
+      "lib-1": [
+       "metadata.read",
+       "metadata.write"
+      ]
+     }
+    }
+   },
+   "action": "metadata.read",
+   "library": "lib-1",
+   "expected": {
+    "allow": true,
+    "reason": "ok"
+   }
+  },
+  {
+   "name": "other library, metadata.read",
+   "ctx": {
+    "pairingMode": false,
+    "peer": {
+     "deviceId": "d1",
+     "revoked": false,
+     "libraries": {
+      "lib-1": [
+       "metadata.read",
+       "metadata.write"
+      ]
+     }
+    }
+   },
+   "action": "metadata.read",
+   "library": "lib-2",
+   "expected": {
+    "allow": false,
+    "reason": "library"
+   }
+  },
+  {
+   "name": "no library, metadata.read",
+   "ctx": {
+    "pairingMode": false,
+    "peer": {
+     "deviceId": "d1",
+     "revoked": false,
+     "libraries": {
+      "lib-1": [
+       "metadata.read",
+       "metadata.write"
+      ]
+     }
+    }
+   },
+   "action": "metadata.read",
+   "library": null,
+   "expected": {
+    "allow": false,
+    "reason": "no-library"
+   }
+  },
+  {
+   "name": "unknown peer, metadata.read",
+   "ctx": {
+    "pairingMode": false,
+    "peer": null
+   },
+   "action": "metadata.read",
+   "library": "lib-1",
+   "expected": {
+    "allow": false,
+    "reason": "unknown-peer"
+   }
+  },
+  {
+   "name": "unknown peer in pairing mode, metadata.read",
+   "ctx": {
+    "pairingMode": true,
+    "peer": null
+   },
+   "action": "metadata.read",
+   "library": "lib-1",
+   "expected": {
+    "allow": false,
+    "reason": "unknown-peer"
+   }
+  },
+  {
+   "name": "revoked, metadata.read",
+   "ctx": {
+    "pairingMode": false,
+    "peer": {
+     "deviceId": "d1",
+     "revoked": true,
+     "libraries": {
+      "lib-1": [
+       "metadata.read",
+       "metadata.write",
+       "inventory.read",
+       "media.read",
+       "copy.mutate",
+       "jobs",
+       "membership.admin"
+      ]
+     }
+    }
+   },
+   "action": "metadata.read",
+   "library": "lib-1",
+   "expected": {
+    "allow": false,
+    "reason": "revoked"
+   }
+  },
+  {
+   "name": "everything granted, metadata.read",
+   "ctx": {
+    "pairingMode": false,
+    "peer": {
+     "deviceId": "d1",
+     "revoked": false,
+     "libraries": {
+      "lib-1": [
+       "metadata.read",
+       "metadata.write",
+       "inventory.read",
+       "media.read",
+       "copy.mutate",
+       "jobs",
+       "membership.admin"
+      ]
+     }
+    }
+   },
+   "action": "metadata.read",
+   "library": "lib-1",
+   "expected": {
+    "allow": true,
+    "reason": "ok"
+   }
+  },
+  {
+   "name": "default grants, metadata.write",
+   "ctx": {
+    "pairingMode": false,
+    "peer": {
+     "deviceId": "d1",
+     "revoked": false,
+     "libraries": {
+      "lib-1": [
+       "metadata.read",
+       "metadata.write"
+      ]
+     }
+    }
+   },
+   "action": "metadata.write",
+   "library": "lib-1",
+   "expected": {
+    "allow": true,
+    "reason": "ok"
+   }
+  },
+  {
+   "name": "other library, metadata.write",
+   "ctx": {
+    "pairingMode": false,
+    "peer": {
+     "deviceId": "d1",
+     "revoked": false,
+     "libraries": {
+      "lib-1": [
+       "metadata.read",
+       "metadata.write"
+      ]
+     }
+    }
+   },
+   "action": "metadata.write",
+   "library": "lib-2",
+   "expected": {
+    "allow": false,
+    "reason": "library"
+   }
+  },
+  {
+   "name": "no library, metadata.write",
+   "ctx": {
+    "pairingMode": false,
+    "peer": {
+     "deviceId": "d1",
+     "revoked": false,
+     "libraries": {
+      "lib-1": [
+       "metadata.read",
+       "metadata.write"
+      ]
+     }
+    }
+   },
+   "action": "metadata.write",
+   "library": null,
+   "expected": {
+    "allow": false,
+    "reason": "no-library"
+   }
+  },
+  {
+   "name": "unknown peer, metadata.write",
+   "ctx": {
+    "pairingMode": false,
+    "peer": null
+   },
+   "action": "metadata.write",
+   "library": "lib-1",
+   "expected": {
+    "allow": false,
+    "reason": "unknown-peer"
+   }
+  },
+  {
+   "name": "unknown peer in pairing mode, metadata.write",
+   "ctx": {
+    "pairingMode": true,
+    "peer": null
+   },
+   "action": "metadata.write",
+   "library": "lib-1",
+   "expected": {
+    "allow": false,
+    "reason": "unknown-peer"
+   }
+  },
+  {
+   "name": "revoked, metadata.write",
+   "ctx": {
+    "pairingMode": false,
+    "peer": {
+     "deviceId": "d1",
+     "revoked": true,
+     "libraries": {
+      "lib-1": [
+       "metadata.read",
+       "metadata.write",
+       "inventory.read",
+       "media.read",
+       "copy.mutate",
+       "jobs",
+       "membership.admin"
+      ]
+     }
+    }
+   },
+   "action": "metadata.write",
+   "library": "lib-1",
+   "expected": {
+    "allow": false,
+    "reason": "revoked"
+   }
+  },
+  {
+   "name": "everything granted, metadata.write",
+   "ctx": {
+    "pairingMode": false,
+    "peer": {
+     "deviceId": "d1",
+     "revoked": false,
+     "libraries": {
+      "lib-1": [
+       "metadata.read",
+       "metadata.write",
+       "inventory.read",
+       "media.read",
+       "copy.mutate",
+       "jobs",
+       "membership.admin"
+      ]
+     }
+    }
+   },
+   "action": "metadata.write",
+   "library": "lib-1",
+   "expected": {
+    "allow": true,
+    "reason": "ok"
+   }
+  },
+  {
+   "name": "default grants, inventory.read",
+   "ctx": {
+    "pairingMode": false,
+    "peer": {
+     "deviceId": "d1",
+     "revoked": false,
+     "libraries": {
+      "lib-1": [
+       "metadata.read",
+       "metadata.write"
+      ]
+     }
+    }
+   },
+   "action": "inventory.read",
+   "library": "lib-1",
+   "expected": {
+    "allow": false,
+    "reason": "action"
+   }
+  },
+  {
+   "name": "other library, inventory.read",
+   "ctx": {
+    "pairingMode": false,
+    "peer": {
+     "deviceId": "d1",
+     "revoked": false,
+     "libraries": {
+      "lib-1": [
+       "metadata.read",
+       "metadata.write"
+      ]
+     }
+    }
+   },
+   "action": "inventory.read",
+   "library": "lib-2",
+   "expected": {
+    "allow": false,
+    "reason": "library"
+   }
+  },
+  {
+   "name": "no library, inventory.read",
+   "ctx": {
+    "pairingMode": false,
+    "peer": {
+     "deviceId": "d1",
+     "revoked": false,
+     "libraries": {
+      "lib-1": [
+       "metadata.read",
+       "metadata.write"
+      ]
+     }
+    }
+   },
+   "action": "inventory.read",
+   "library": null,
+   "expected": {
+    "allow": false,
+    "reason": "no-library"
+   }
+  },
+  {
+   "name": "unknown peer, inventory.read",
+   "ctx": {
+    "pairingMode": false,
+    "peer": null
+   },
+   "action": "inventory.read",
+   "library": "lib-1",
+   "expected": {
+    "allow": false,
+    "reason": "unknown-peer"
+   }
+  },
+  {
+   "name": "unknown peer in pairing mode, inventory.read",
+   "ctx": {
+    "pairingMode": true,
+    "peer": null
+   },
+   "action": "inventory.read",
+   "library": "lib-1",
+   "expected": {
+    "allow": false,
+    "reason": "unknown-peer"
+   }
+  },
+  {
+   "name": "revoked, inventory.read",
+   "ctx": {
+    "pairingMode": false,
+    "peer": {
+     "deviceId": "d1",
+     "revoked": true,
+     "libraries": {
+      "lib-1": [
+       "metadata.read",
+       "metadata.write",
+       "inventory.read",
+       "media.read",
+       "copy.mutate",
+       "jobs",
+       "membership.admin"
+      ]
+     }
+    }
+   },
+   "action": "inventory.read",
+   "library": "lib-1",
+   "expected": {
+    "allow": false,
+    "reason": "revoked"
+   }
+  },
+  {
+   "name": "everything granted, inventory.read",
+   "ctx": {
+    "pairingMode": false,
+    "peer": {
+     "deviceId": "d1",
+     "revoked": false,
+     "libraries": {
+      "lib-1": [
+       "metadata.read",
+       "metadata.write",
+       "inventory.read",
+       "media.read",
+       "copy.mutate",
+       "jobs",
+       "membership.admin"
+      ]
+     }
+    }
+   },
+   "action": "inventory.read",
+   "library": "lib-1",
+   "expected": {
+    "allow": true,
+    "reason": "ok"
+   }
+  },
+  {
+   "name": "default grants, media.read",
+   "ctx": {
+    "pairingMode": false,
+    "peer": {
+     "deviceId": "d1",
+     "revoked": false,
+     "libraries": {
+      "lib-1": [
+       "metadata.read",
+       "metadata.write"
+      ]
+     }
+    }
+   },
+   "action": "media.read",
+   "library": "lib-1",
+   "expected": {
+    "allow": false,
+    "reason": "action"
+   }
+  },
+  {
+   "name": "other library, media.read",
+   "ctx": {
+    "pairingMode": false,
+    "peer": {
+     "deviceId": "d1",
+     "revoked": false,
+     "libraries": {
+      "lib-1": [
+       "metadata.read",
+       "metadata.write"
+      ]
+     }
+    }
+   },
+   "action": "media.read",
+   "library": "lib-2",
+   "expected": {
+    "allow": false,
+    "reason": "library"
+   }
+  },
+  {
+   "name": "no library, media.read",
+   "ctx": {
+    "pairingMode": false,
+    "peer": {
+     "deviceId": "d1",
+     "revoked": false,
+     "libraries": {
+      "lib-1": [
+       "metadata.read",
+       "metadata.write"
+      ]
+     }
+    }
+   },
+   "action": "media.read",
+   "library": null,
+   "expected": {
+    "allow": false,
+    "reason": "no-library"
+   }
+  },
+  {
+   "name": "unknown peer, media.read",
+   "ctx": {
+    "pairingMode": false,
+    "peer": null
+   },
+   "action": "media.read",
+   "library": "lib-1",
+   "expected": {
+    "allow": false,
+    "reason": "unknown-peer"
+   }
+  },
+  {
+   "name": "unknown peer in pairing mode, media.read",
+   "ctx": {
+    "pairingMode": true,
+    "peer": null
+   },
+   "action": "media.read",
+   "library": "lib-1",
+   "expected": {
+    "allow": false,
+    "reason": "unknown-peer"
+   }
+  },
+  {
+   "name": "revoked, media.read",
+   "ctx": {
+    "pairingMode": false,
+    "peer": {
+     "deviceId": "d1",
+     "revoked": true,
+     "libraries": {
+      "lib-1": [
+       "metadata.read",
+       "metadata.write",
+       "inventory.read",
+       "media.read",
+       "copy.mutate",
+       "jobs",
+       "membership.admin"
+      ]
+     }
+    }
+   },
+   "action": "media.read",
+   "library": "lib-1",
+   "expected": {
+    "allow": false,
+    "reason": "revoked"
+   }
+  },
+  {
+   "name": "everything granted, media.read",
+   "ctx": {
+    "pairingMode": false,
+    "peer": {
+     "deviceId": "d1",
+     "revoked": false,
+     "libraries": {
+      "lib-1": [
+       "metadata.read",
+       "metadata.write",
+       "inventory.read",
+       "media.read",
+       "copy.mutate",
+       "jobs",
+       "membership.admin"
+      ]
+     }
+    }
+   },
+   "action": "media.read",
+   "library": "lib-1",
+   "expected": {
+    "allow": true,
+    "reason": "ok"
+   }
+  },
+  {
+   "name": "default grants, copy.mutate",
+   "ctx": {
+    "pairingMode": false,
+    "peer": {
+     "deviceId": "d1",
+     "revoked": false,
+     "libraries": {
+      "lib-1": [
+       "metadata.read",
+       "metadata.write"
+      ]
+     }
+    }
+   },
+   "action": "copy.mutate",
+   "library": "lib-1",
+   "expected": {
+    "allow": false,
+    "reason": "action"
+   }
+  },
+  {
+   "name": "other library, copy.mutate",
+   "ctx": {
+    "pairingMode": false,
+    "peer": {
+     "deviceId": "d1",
+     "revoked": false,
+     "libraries": {
+      "lib-1": [
+       "metadata.read",
+       "metadata.write"
+      ]
+     }
+    }
+   },
+   "action": "copy.mutate",
+   "library": "lib-2",
+   "expected": {
+    "allow": false,
+    "reason": "library"
+   }
+  },
+  {
+   "name": "no library, copy.mutate",
+   "ctx": {
+    "pairingMode": false,
+    "peer": {
+     "deviceId": "d1",
+     "revoked": false,
+     "libraries": {
+      "lib-1": [
+       "metadata.read",
+       "metadata.write"
+      ]
+     }
+    }
+   },
+   "action": "copy.mutate",
+   "library": null,
+   "expected": {
+    "allow": false,
+    "reason": "no-library"
+   }
+  },
+  {
+   "name": "unknown peer, copy.mutate",
+   "ctx": {
+    "pairingMode": false,
+    "peer": null
+   },
+   "action": "copy.mutate",
+   "library": "lib-1",
+   "expected": {
+    "allow": false,
+    "reason": "unknown-peer"
+   }
+  },
+  {
+   "name": "unknown peer in pairing mode, copy.mutate",
+   "ctx": {
+    "pairingMode": true,
+    "peer": null
+   },
+   "action": "copy.mutate",
+   "library": "lib-1",
+   "expected": {
+    "allow": false,
+    "reason": "unknown-peer"
+   }
+  },
+  {
+   "name": "revoked, copy.mutate",
+   "ctx": {
+    "pairingMode": false,
+    "peer": {
+     "deviceId": "d1",
+     "revoked": true,
+     "libraries": {
+      "lib-1": [
+       "metadata.read",
+       "metadata.write",
+       "inventory.read",
+       "media.read",
+       "copy.mutate",
+       "jobs",
+       "membership.admin"
+      ]
+     }
+    }
+   },
+   "action": "copy.mutate",
+   "library": "lib-1",
+   "expected": {
+    "allow": false,
+    "reason": "revoked"
+   }
+  },
+  {
+   "name": "everything granted, copy.mutate",
+   "ctx": {
+    "pairingMode": false,
+    "peer": {
+     "deviceId": "d1",
+     "revoked": false,
+     "libraries": {
+      "lib-1": [
+       "metadata.read",
+       "metadata.write",
+       "inventory.read",
+       "media.read",
+       "copy.mutate",
+       "jobs",
+       "membership.admin"
+      ]
+     }
+    }
+   },
+   "action": "copy.mutate",
+   "library": "lib-1",
+   "expected": {
+    "allow": true,
+    "reason": "ok"
+   }
+  },
+  {
+   "name": "default grants, jobs",
+   "ctx": {
+    "pairingMode": false,
+    "peer": {
+     "deviceId": "d1",
+     "revoked": false,
+     "libraries": {
+      "lib-1": [
+       "metadata.read",
+       "metadata.write"
+      ]
+     }
+    }
+   },
+   "action": "jobs",
+   "library": "lib-1",
+   "expected": {
+    "allow": false,
+    "reason": "action"
+   }
+  },
+  {
+   "name": "other library, jobs",
+   "ctx": {
+    "pairingMode": false,
+    "peer": {
+     "deviceId": "d1",
+     "revoked": false,
+     "libraries": {
+      "lib-1": [
+       "metadata.read",
+       "metadata.write"
+      ]
+     }
+    }
+   },
+   "action": "jobs",
+   "library": "lib-2",
+   "expected": {
+    "allow": false,
+    "reason": "library"
+   }
+  },
+  {
+   "name": "no library, jobs",
+   "ctx": {
+    "pairingMode": false,
+    "peer": {
+     "deviceId": "d1",
+     "revoked": false,
+     "libraries": {
+      "lib-1": [
+       "metadata.read",
+       "metadata.write"
+      ]
+     }
+    }
+   },
+   "action": "jobs",
+   "library": null,
+   "expected": {
+    "allow": false,
+    "reason": "no-library"
+   }
+  },
+  {
+   "name": "unknown peer, jobs",
+   "ctx": {
+    "pairingMode": false,
+    "peer": null
+   },
+   "action": "jobs",
+   "library": "lib-1",
+   "expected": {
+    "allow": false,
+    "reason": "unknown-peer"
+   }
+  },
+  {
+   "name": "unknown peer in pairing mode, jobs",
+   "ctx": {
+    "pairingMode": true,
+    "peer": null
+   },
+   "action": "jobs",
+   "library": "lib-1",
+   "expected": {
+    "allow": false,
+    "reason": "unknown-peer"
+   }
+  },
+  {
+   "name": "revoked, jobs",
+   "ctx": {
+    "pairingMode": false,
+    "peer": {
+     "deviceId": "d1",
+     "revoked": true,
+     "libraries": {
+      "lib-1": [
+       "metadata.read",
+       "metadata.write",
+       "inventory.read",
+       "media.read",
+       "copy.mutate",
+       "jobs",
+       "membership.admin"
+      ]
+     }
+    }
+   },
+   "action": "jobs",
+   "library": "lib-1",
+   "expected": {
+    "allow": false,
+    "reason": "revoked"
+   }
+  },
+  {
+   "name": "everything granted, jobs",
+   "ctx": {
+    "pairingMode": false,
+    "peer": {
+     "deviceId": "d1",
+     "revoked": false,
+     "libraries": {
+      "lib-1": [
+       "metadata.read",
+       "metadata.write",
+       "inventory.read",
+       "media.read",
+       "copy.mutate",
+       "jobs",
+       "membership.admin"
+      ]
+     }
+    }
+   },
+   "action": "jobs",
+   "library": "lib-1",
+   "expected": {
+    "allow": true,
+    "reason": "ok"
+   }
+  },
+  {
+   "name": "default grants, membership.admin",
+   "ctx": {
+    "pairingMode": false,
+    "peer": {
+     "deviceId": "d1",
+     "revoked": false,
+     "libraries": {
+      "lib-1": [
+       "metadata.read",
+       "metadata.write"
+      ]
+     }
+    }
+   },
+   "action": "membership.admin",
+   "library": "lib-1",
+   "expected": {
+    "allow": false,
+    "reason": "action"
+   }
+  },
+  {
+   "name": "other library, membership.admin",
+   "ctx": {
+    "pairingMode": false,
+    "peer": {
+     "deviceId": "d1",
+     "revoked": false,
+     "libraries": {
+      "lib-1": [
+       "metadata.read",
+       "metadata.write"
+      ]
+     }
+    }
+   },
+   "action": "membership.admin",
+   "library": "lib-2",
+   "expected": {
+    "allow": false,
+    "reason": "library"
+   }
+  },
+  {
+   "name": "no library, membership.admin",
+   "ctx": {
+    "pairingMode": false,
+    "peer": {
+     "deviceId": "d1",
+     "revoked": false,
+     "libraries": {
+      "lib-1": [
+       "metadata.read",
+       "metadata.write"
+      ]
+     }
+    }
+   },
+   "action": "membership.admin",
+   "library": null,
+   "expected": {
+    "allow": false,
+    "reason": "no-library"
+   }
+  },
+  {
+   "name": "unknown peer, membership.admin",
+   "ctx": {
+    "pairingMode": false,
+    "peer": null
+   },
+   "action": "membership.admin",
+   "library": "lib-1",
+   "expected": {
+    "allow": false,
+    "reason": "unknown-peer"
+   }
+  },
+  {
+   "name": "unknown peer in pairing mode, membership.admin",
+   "ctx": {
+    "pairingMode": true,
+    "peer": null
+   },
+   "action": "membership.admin",
+   "library": "lib-1",
+   "expected": {
+    "allow": false,
+    "reason": "unknown-peer"
+   }
+  },
+  {
+   "name": "revoked, membership.admin",
+   "ctx": {
+    "pairingMode": false,
+    "peer": {
+     "deviceId": "d1",
+     "revoked": true,
+     "libraries": {
+      "lib-1": [
+       "metadata.read",
+       "metadata.write",
+       "inventory.read",
+       "media.read",
+       "copy.mutate",
+       "jobs",
+       "membership.admin"
+      ]
+     }
+    }
+   },
+   "action": "membership.admin",
+   "library": "lib-1",
+   "expected": {
+    "allow": false,
+    "reason": "revoked"
+   }
+  },
+  {
+   "name": "everything granted, membership.admin",
+   "ctx": {
+    "pairingMode": false,
+    "peer": {
+     "deviceId": "d1",
+     "revoked": false,
+     "libraries": {
+      "lib-1": [
+       "metadata.read",
+       "metadata.write",
+       "inventory.read",
+       "media.read",
+       "copy.mutate",
+       "jobs",
+       "membership.admin"
+      ]
+     }
+    }
+   },
+   "action": "membership.admin",
+   "library": "lib-1",
+   "expected": {
+    "allow": true,
+    "reason": "ok"
+   }
+  },
+  {
+   "name": "admin does not imply read",
+   "ctx": {
+    "pairingMode": false,
+    "peer": {
+     "deviceId": "d1",
+     "revoked": false,
+     "libraries": {
+      "lib-1": [
+       "membership.admin"
+      ]
+     }
+    }
+   },
+   "action": "metadata.read",
+   "library": "lib-1",
+   "expected": {
+    "allow": false,
+    "reason": "action"
+   }
+  },
+  {
+   "name": "hello for a paired peer",
+   "ctx": {
+    "pairingMode": false,
+    "peer": {
+     "deviceId": "d1",
+     "revoked": false,
+     "libraries": {}
+    }
+   },
+   "action": "hello",
+   "library": null,
+   "expected": {
+    "allow": true,
+    "reason": "ok"
+   }
+  },
+  {
+   "name": "hello for an unknown peer",
+   "ctx": {
+    "pairingMode": false,
+    "peer": null
+   },
+   "action": "hello",
+   "library": null,
+   "expected": {
+    "allow": false,
+    "reason": "unknown-peer"
+   }
+  },
+  {
+   "name": "hello for a revoked peer",
+   "ctx": {
+    "pairingMode": false,
+    "peer": {
+     "deviceId": "d1",
+     "revoked": true,
+     "libraries": {
+      "lib-1": [
+       "metadata.read",
+       "metadata.write"
+      ]
+     }
+    }
+   },
+   "action": "hello",
+   "library": null,
+   "expected": {
+    "allow": false,
+    "reason": "revoked"
+   }
+  },
+  {
+   "name": "pair outside pairing mode",
+   "ctx": {
+    "pairingMode": false,
+    "peer": null
+   },
+   "action": "pair",
+   "library": null,
+   "expected": {
+    "allow": false,
+    "reason": "not-pairing"
+   }
+  },
+  {
+   "name": "pair inside pairing mode",
+   "ctx": {
+    "pairingMode": true,
+    "peer": null
+   },
+   "action": "pair",
+   "library": null,
+   "expected": {
+    "allow": true,
+    "reason": "ok"
+   }
+  },
+  {
+   "name": "unknown action",
+   "ctx": {
+    "pairingMode": false,
+    "peer": {
+     "deviceId": "d1",
+     "revoked": false,
+     "libraries": {
+      "lib-1": [
+       "metadata.read",
+       "metadata.write"
+      ]
+     }
+    }
+   },
+   "action": "delete.everything",
+   "library": "lib-1",
+   "expected": {
+    "allow": false,
+    "reason": "action"
+   }
+  }
+ ],
+ "events": [
+  {
+   "kind": "segments",
+   "ctx": {
+    "pairingMode": false,
+    "peer": {
+     "deviceId": "d1",
+     "revoked": false,
+     "libraries": {
+      "lib-1": [
+       "metadata.read",
+       "metadata.write"
+      ]
+     }
+    }
+   },
+   "library": "lib-1",
+   "expected": {
+    "allow": true,
+    "reason": "ok"
+   }
+  },
+  {
+   "kind": "segments",
+   "ctx": {
+    "pairingMode": false,
+    "peer": {
+     "deviceId": "d1",
+     "revoked": false,
+     "libraries": {
+      "lib-1": [
+       "metadata.read",
+       "metadata.write"
+      ]
+     }
+    }
+   },
+   "library": "lib-2",
+   "expected": {
+    "allow": false,
+    "reason": "library"
+   }
+  },
+  {
+   "kind": "job",
+   "ctx": {
+    "pairingMode": false,
+    "peer": {
+     "deviceId": "d1",
+     "revoked": false,
+     "libraries": {
+      "lib-1": [
+       "metadata.read",
+       "metadata.write"
+      ]
+     }
+    }
+   },
+   "library": "lib-1",
+   "expected": {
+    "allow": false,
+    "reason": "action"
+   }
+  },
+  {
+   "kind": "job",
+   "ctx": {
+    "pairingMode": false,
+    "peer": {
+     "deviceId": "d1",
+     "revoked": false,
+     "libraries": {
+      "lib-1": [
+       "jobs"
+      ]
+     }
+    }
+   },
+   "library": "lib-1",
+   "expected": {
+    "allow": true,
+    "reason": "ok"
+   }
+  },
+  {
+   "kind": "media",
+   "ctx": {
+    "pairingMode": false,
+    "peer": {
+     "deviceId": "d1",
+     "revoked": false,
+     "libraries": {
+      "lib-1": [
+       "metadata.read",
+       "metadata.write",
+       "inventory.read",
+       "media.read",
+       "copy.mutate",
+       "jobs",
+       "membership.admin"
+      ]
+     }
+    }
+   },
+   "library": "lib-1",
+   "expected": {
+    "allow": false,
+    "reason": "event"
+   }
+  }
+ ]
+}

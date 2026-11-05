@@ -1,0 +1,76 @@
+{
+  "title": "How downloads work",
+  "intro": "Keepfin runs entirely on this device. There is no Keepfin server and no Keepfin account: it reads the link, finds the best way to get that media, and saves a normal file that stays yours.",
+  "steps": [
+    {"title": "Read", "text": "Keepfin opens the link and finds out what it is: a video, a song, a playlist, a channel or a photo post."},
+    {"title": "Choose", "text": "You pick the quality or the audio format. Single videos and songs show their size before anything downloads."},
+    {"title": "Download", "text": "Several downloads run at once. After network trouble they retry by themselves and continue where they stopped."},
+    {"title": "Save", "text": "The file gets its title, artist, cover and details, and is saved in your folder or library space."}
+  ],
+  "kinds": [
+    {
+      "id": "videos",
+      "icon": "video",
+      "title": "Videos",
+      "sites": "YouTube, TikTok, Facebook, Instagram, X, Vimeo, Twitch and 1,000+ more",
+      "what": "Many sites, YouTube included, send high-quality picture and sound as two separate streams. Keepfin downloads the ones you picked and joins them into one file without re-encoding.",
+      "why": "That is how sites deliver 1080p and 4K. Joining instead of re-encoding keeps the original quality and is fast."
+    },
+    {
+      "id": "youtube-music",
+      "icon": "music",
+      "title": "YouTube Music",
+      "sites": "music.youtube.com",
+      "what": "Links open on Audio. Songs are saved with title, artist, album, cover and lyrics. Songs already in the space are marked and skipped.",
+      "why": "Official song uploads are the album version of the song, without music-video intros or extra sounds."
+    },
+    {
+      "id": "music-services",
+      "icon": "disc",
+      "title": "Spotify, Apple Music and Deezer",
+      "sites": "Songs, albums and playlists",
+      "what": "Keepfin reads the song’s public details (title, artists, album, length and cover) and looks for the same recording on YouTube Music. It compares title, artist and length, prefers official songs, and avoids live, remix, sped-up or karaoke versions unless the original is one. Albums are matched as a whole, so every track comes from the same edition.",
+      "why": "These services lock their audio with copy protection, so it can’t be saved from them. Keepfin never takes audio from them and needs no account there. It saves the same recording from YouTube Music and labels it with the original details.",
+      "notes": [
+        "If nothing matches closely enough, Keepfin says so instead of saving the wrong song.",
+        "If the matched upload is blocked in your region, the next closest match is tried."
+      ]
+    },
+    {
+      "id": "collections",
+      "icon": "list",
+      "title": "Playlists, albums and channels",
+      "sites": "YouTube, YouTube Music, SoundCloud, Spotify and more",
+      "what": "Keepfin lists the items 200 at a time and you choose what to save. The formats of each item are read only when its download starts.",
+      "why": "Huge playlists open quickly and nothing is fetched for items you skip. Endless radio mixes stay limited to the pages you load."
+    },
+    {
+      "id": "photos",
+      "icon": "image",
+      "title": "Photo posts",
+      "sites": "Instagram, X, Pinterest, Reddit, Tumblr, Flickr and more",
+      "platforms": ["desktop"],
+      "what": "Posts with photos go to the gallery engine, which saves every image in the post into one folder.",
+      "why": "The download engine is built for video and sound. When a post turns out to be photos, Keepfin switches engines by itself."
+    },
+    {
+      "id": "sign-in",
+      "icon": "key",
+      "title": "Private, age-restricted and members-only",
+      "sites": "Facebook, Instagram, YouTube, X and other sites with accounts",
+      "what": "Some media is visible only while you are signed in. Keepfin can use your sign-in so the site shows it what your account can already see.",
+      "why": "Your sign-in is used only for downloads and never leaves this device. Keepfin can’t open anything your account can’t.",
+      "platformNotes": {
+        "desktop": "Set it up in Settings → Downloads → Website sign-in: use the browser where you are signed in (Firefox, Chrome, Edge…) or import a cookies.txt file.",
+        "android": "Sign in once inside Keepfin; the session stays in the app."
+      },
+      "action": "accounts"
+    }
+  ],
+  "facts": [
+    {"icon": "lock", "title": "Stays on this device", "text": "Keepfin only contacts the sites you download from, YouTube Music to match songs, LRCLIB for lyrics, and its own update feed."},
+    {"icon": "refresh", "title": "The engine keeps up", "text": "Sites change how they serve media all the time, so the download engine checks for updates once a day."},
+    {"icon": "speaker", "title": "Honest audio quality", "text": "Audio on video sites is already compressed. M4A and Opus usually keep that sound as it is, MP3 is converted for older players, and FLAC can’t add back quality that wasn’t there."},
+    {"icon": "clock", "title": "Gentle on your network", "text": "If YouTube starts limiting your connection, Keepfin runs fewer downloads at once for a while, then goes back to your setting."}
+  ]
+}

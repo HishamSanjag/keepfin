@@ -1,0 +1,12 @@
+{
+  "description": "User-facing error text never names an external tool (the download engine, the gallery engine, the media processor, multi-connection transfers). The runner scrubs the text the way the app does before showing it and fails if a tool name is left.",
+  "cases": [
+    {"name":"tool names in an engine log","input":{"op":"scrub","text":"ERROR: [youtube] abc: Something odd with yt-dlp.exe and ffmpeg"},"expected":{"noToolNames":true}},
+    {"name":"gallery and multi-connection tool names","input":{"op":"scrub","text":"gallery-dl: unexpected failure; aria2c exited"},"expected":{"noToolNames":true}},
+    {"name":"an older tool name","input":{"op":"scrub","text":"Unknown thing from youtube-dl"},"expected":{"noToolNames":true}},
+    {"name":"several lines, the tool in the last one","input":{"op":"scrub","text":"WARNING: yt-dlp is old\nERROR: [youtube] abc: ffmpeg exited; see gallery-dl and aria2c\n"},"expected":{"noToolNames":true}},
+    {"name":"the module name of the engine","input":{"op":"scrub","text":"ERROR: yt_dlp.utils.DownloadError: boom"},"expected":{"noToolNames":true}},
+    {"name":"an unclassified failure that quotes the tool","input":{"op":"classify","text":"ERROR: [youtube] abc: odd failure from yt-dlp"},"expected":{"class":"unknown","retry":"engine"}},
+    {"name":"an unclassified failure that quotes the media processor","input":{"op":"classify","text":"ERROR: ffprobe.exe crashed while reading the file"},"expected":{"class":"unknown","retry":"engine"}}
+  ]
+}

@@ -1,0 +1,12 @@
+{
+  "description": "Music service link parsing (desktop only: Android reads the same ids inside its resolver).",
+  "cases": [
+    {"name":"spotify track with an intl prefix and a share id","platforms":["desktop"],"input":{"op":"musicLink","url":"https://open.spotify.com/intl-de/track/69kOkLUCkxIZYexIgSG8rq?si=abc"},"expected":{"service":"spotify","type":"track","id":"69kOkLUCkxIZYexIgSG8rq"}},
+    {"name":"spotify embed playlist","platforms":["desktop"],"input":{"op":"musicLink","url":"https://open.spotify.com/embed/playlist/37i9dQZF1DXcBWIGoYBM5M"},"expected":{"service":"spotify","type":"playlist","id":"37i9dQZF1DXcBWIGoYBM5M"}},
+    {"name":"spotify artist pages are not supported","platforms":["desktop"],"input":{"op":"musicLink","url":"https://open.spotify.com/artist/4tZwfgrHOc3mvqYlEYSvVi"},"expected":null},
+    {"name":"apple music track inside an album","platforms":["desktop"],"input":{"op":"musicLink","url":"https://music.apple.com/us/album/random-access-memories/617154241?i=617154366"},"expected":{"service":"apple-music","type":"track","id":"617154366","storefront":"us"}},
+    {"name":"apple music song","platforms":["desktop"],"input":{"op":"musicLink","url":"https://music.apple.com/gb/song/get-lucky/617154366"},"expected":{"service":"apple-music","type":"track","id":"617154366","storefront":"gb"}},
+    {"name":"apple music playlist","platforms":["desktop"],"input":{"op":"musicLink","url":"https://music.apple.com/us/playlist/todays-hits/pl.f4d106fed2bd41149aaacabb233eb5eb"},"expected":{"service":"apple-music","type":"playlist","id":"pl.f4d106fed2bd41149aaacabb233eb5eb","storefront":"us"}},
+    {"name":"deezer album with a language prefix","platforms":["desktop"],"input":{"op":"musicLink","url":"https://www.deezer.com/fr/album/6575789"},"expected":{"service":"deezer","type":"album","id":"6575789"}}
+  ]
+}

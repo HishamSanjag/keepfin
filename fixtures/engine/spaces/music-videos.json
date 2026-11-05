@@ -1,0 +1,32 @@
+{
+  "description": "A song's music video as a row of its own, and where the other side of Song | Video starts. See SCHEMA.md.",
+  "cases": [
+    {"name":"same second, both long enough","input":{"op":"switchStart","position":83.5,"otherLength":200},"expected":83.5},
+    {"name":"start of the song","input":{"op":"switchStart","position":0,"otherLength":200},"expected":0},
+    {"name":"the other side is shorter: land one second before its end","input":{"op":"switchStart","position":300,"otherLength":240},"expected":239},
+    {"name":"in the last second of the other side","input":{"op":"switchStart","position":239.6,"otherLength":240},"expected":239},
+    {"name":"exactly one second before its end stays","input":{"op":"switchStart","position":239,"otherLength":240},"expected":239},
+    {"name":"unknown length keeps the place","input":{"op":"switchStart","position":90,"otherLength":null},"expected":90},
+    {"name":"zero length counts as unknown","input":{"op":"switchStart","position":90,"otherLength":0},"expected":90},
+    {"name":"a very short other side starts at its beginning","input":{"op":"switchStart","position":5,"otherLength":0.5},"expected":0},
+    {"name":"a negative place starts at 0","input":{"op":"switchStart","position":-4,"otherLength":200},"expected":0},
+    {"name":"an unusable place starts at 0","input":{"op":"switchStart","position":null,"otherLength":200},"expected":0},
+    {"name":"rows: songs with a video, newest first, ties by title","input":{"op":"musicVideoRows","items":[
+      {"id":"a","kind":"audio","title":"Beta","artist":"X","hasVideo":true,"videoDuration":367,"videoSize":52000000,"addedAt":100},
+      {"id":"b","kind":"audio","title":"Alpha","artist":"Y","hasVideo":true,"addedAt":100},
+      {"id":"c","kind":"audio","title":"New","hasVideo":true,"videoDuration":0,"videoSize":0,"addedAt":900},
+      {"id":"d","kind":"audio","title":"No video","hasVideo":false,"addedAt":950},
+      {"id":"e","kind":"video","title":"A film","hasVideo":true,"addedAt":960}
+    ]},"expected":{"rows":[
+      {"id":"c#video","itemId":"c","title":"New","artist":null,"duration":null,"size":null,"addedAt":900},
+      {"id":"b#video","itemId":"b","title":"Alpha","artist":"Y","duration":null,"size":null,"addedAt":100},
+      {"id":"a#video","itemId":"a","title":"Beta","artist":"X","duration":367,"size":52000000,"addedAt":100}
+    ]}},
+    {"name":"no videos, no rows (no shelf)","input":{"op":"musicVideoRows","items":[{"id":"a","kind":"audio","title":"A","hasVideo":false,"addedAt":1}]},"expected":{"rows":[]}},
+    {"name":"row id","input":{"op":"musicVideoRowId","itemId":"abc"},"expected":"abc#video"},
+    {"name":"song behind a row id","input":{"op":"musicVideoItemId","rowId":"abc#video"},"expected":"abc"},
+    {"name":"an item id is not a row id","input":{"op":"musicVideoItemId","rowId":"abc"},"expected":null},
+    {"name":"a bare suffix is not a row id","input":{"op":"musicVideoItemId","rowId":"#video"},"expected":null},
+    {"name":"words","input":{"op":"musicVideoWords"},"expected":["Music video","Music videos","See all","Go to song","Delete video","Delete this music video? The song stays.","You have this song. This video will be added to it.","You have this song and its video.","Also keep this video","This song already has its music video."]}
+  ]
+}

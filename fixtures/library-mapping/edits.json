@@ -1,0 +1,5985 @@
+{
+ "note": "Changes to a library that already exists: only what changed is written; removals carry what the store observed.",
+ "cases": [
+  {
+   "name": "nothing changed writes nothing",
+   "input": {
+    "op": "diff",
+    "actor": "11111111-1111-4111-8111-111111111111",
+    "replicaId": "22222222-2222-4222-8222-222222222222",
+    "before": {
+     "items": [
+      {
+       "id": "00000000-0000-4000-8000-000000000001",
+       "space": "music",
+       "kind": "audio",
+       "title": "Song 1",
+       "addedAt": 1700000000001,
+       "favorite": true,
+       "userTags": [
+        "alpha",
+        "zeta"
+       ],
+       "plays": 5,
+       "place": "Music/Artist/Album/song-1.mp3",
+       "artist": "Artist",
+       "album": "Album",
+       "albumArtist": "Various",
+       "track": 3,
+       "disc": 1,
+       "year": 2019,
+       "genre": "Rock",
+       "duration": 215.457,
+       "chapters": [
+        {
+         "start": 0,
+         "title": "Intro"
+        },
+        {
+         "start": 61.5,
+         "title": "Verse"
+        }
+       ],
+       "gain": -7.25,
+       "subtitles": [
+        "en"
+       ],
+       "hasLyrics": true,
+       "sourceUrl": "https://music.example/watch?v=abc",
+       "sourceId": "youtube:abc",
+       "tags": [
+        "rock",
+        "live"
+       ],
+       "lastPlayedAt": 1700000005000,
+       "position": 12.5,
+       "watched": false
+      },
+      {
+       "id": "00000000-0000-4000-8000-000000000002",
+       "space": "videos",
+       "kind": "video",
+       "title": "Clip",
+       "addedAt": 1700000000002,
+       "width": 1920,
+       "height": 1080,
+       "duration": 61,
+       "watched": true,
+       "position": 30,
+       "favorite": false,
+       "userTags": [],
+       "plays": 0,
+       "place": "Videos/clip.mp4"
+      },
+      {
+       "id": "00000000-0000-4000-8000-000000000003",
+       "space": "downloads",
+       "kind": "image",
+       "title": "Picture",
+       "addedAt": 1700000000003,
+       "favorite": false,
+       "userTags": [],
+       "plays": 0,
+       "place": "Downloads/pic.jpg"
+      },
+      {
+       "id": "00000000-0000-4000-8000-000000000004",
+       "space": "music",
+       "kind": "audio",
+       "title": "Song 4",
+       "addedAt": 1700000000004,
+       "favorite": false,
+       "userTags": [],
+       "plays": 0,
+       "place": null
+      },
+      {
+       "id": "00000000-0000-4000-8000-000000000005",
+       "space": "ext",
+       "kind": "audio",
+       "title": "Song 5",
+       "addedAt": 1700000000005,
+       "favorite": false,
+       "userTags": [],
+       "plays": 0,
+       "place": "External/x/y.mp3"
+      },
+      {
+       "id": "00000000-0000-4000-8000-000000000006",
+       "space": "my-space",
+       "kind": "audio",
+       "title": "Song 6",
+       "addedAt": 1700000000006,
+       "favorite": false,
+       "userTags": [
+        "road"
+       ],
+       "plays": 0,
+       "place": "My space/z.mp3"
+      }
+     ],
+     "collections": [
+      {
+       "id": "00000000-0000-4000-8000-000000000101",
+       "name": "Road trip",
+       "kind": "own",
+       "space": "music",
+       "itemIds": [
+        "00000000-0000-4000-8000-000000000001",
+        "00000000-0000-4000-8000-000000000002",
+        "00000000-0000-4000-8000-000000000006"
+       ],
+       "seen": [
+        "u1",
+        "u2"
+       ],
+       "createdAt": 1700000000000,
+       "updatedAt": 1700000000010,
+       "coverItemId": "00000000-0000-4000-8000-000000000001",
+       "newItemIds": [],
+       "removedItemIds": []
+      },
+      {
+       "id": "00000000-0000-4000-8000-000000000102",
+       "name": "Mix",
+       "kind": "playlist",
+       "space": "videos",
+       "itemIds": [
+        "00000000-0000-4000-8000-000000000002",
+        "00000000-0000-4000-8000-000000000001"
+       ],
+       "seen": [
+        "x"
+       ],
+       "createdAt": 1700000000001,
+       "updatedAt": 1700000000011,
+       "source": {
+        "url": "https://video.example/playlist?list=PL1",
+        "provider": "video",
+        "id": "PL1"
+       },
+       "follow": {
+        "mode": "auto",
+        "intervalHours": 6,
+        "wifiOnly": true,
+        "notify": false,
+        "confirmAbove": 20,
+        "pendingCount": 3,
+        "pendingAt": 1700000000012
+       },
+       "newItemIds": [
+        "00000000-0000-4000-8000-000000000002"
+       ],
+       "removedItemIds": [
+        "00000000-0000-4000-8000-000000000001"
+       ]
+      },
+      {
+       "id": "00000000-0000-4000-8000-000000000103",
+       "name": "An album",
+       "kind": "album",
+       "space": "music",
+       "itemIds": [
+        "00000000-0000-4000-8000-000000000001"
+       ],
+       "seen": [],
+       "createdAt": 1700000000002,
+       "updatedAt": 1700000000002,
+       "newItemIds": [],
+       "removedItemIds": []
+      }
+     ],
+     "spaces": [
+      {
+       "id": "downloads",
+       "name": "Downloads",
+       "kind": "mixed",
+       "folder": "Downloads",
+       "layout": "collection",
+       "naming": "title",
+       "skipExisting": false,
+       "type": "folder",
+       "color": "slate",
+       "icon": "folder",
+       "pinned": true
+      },
+      {
+       "id": "music",
+       "name": "Music",
+       "kind": "music",
+       "folder": "Music",
+       "layout": "artist-album",
+       "naming": "artist-title",
+       "skipExisting": true,
+       "type": "folder",
+       "color": "cobalt",
+       "icon": "music",
+       "pinned": true,
+       "ignore": [
+        "Podcasts"
+       ],
+       "scanFolder": true
+      },
+      {
+       "id": "videos",
+       "name": "Videos",
+       "kind": "video",
+       "folder": "Videos",
+       "layout": "platform",
+       "naming": "title-uploader",
+       "skipExisting": false,
+       "type": "folder",
+       "color": "violet",
+       "icon": "video",
+       "pinned": true
+      },
+      {
+       "id": "my-space",
+       "name": "My space",
+       "kind": "music",
+       "folder": "My space",
+       "layout": "flat",
+       "naming": "date-title",
+       "skipExisting": false,
+       "type": "folder"
+      },
+      {
+       "id": "ext",
+       "name": "External",
+       "kind": "mixed",
+       "folder": "External",
+       "linked": true,
+       "layout": "flat",
+       "naming": "title",
+       "skipExisting": false,
+       "type": "folder"
+      },
+      {
+       "id": "smart-1",
+       "name": "Rock",
+       "kind": "mixed",
+       "folder": "",
+       "layout": "flat",
+       "naming": "title",
+       "skipExisting": false,
+       "type": "smart",
+       "icon": "star",
+       "rules": {
+        "match": "any",
+        "rules": [
+         {
+          "field": "tag",
+          "values": [
+           "rock"
+          ]
+         }
+        ],
+        "onlyKind": "audio"
+       }
+      }
+     ],
+     "routes": {
+      "music": "music",
+      "other": "downloads"
+     }
+    },
+    "after": {
+     "items": [
+      {
+       "id": "00000000-0000-4000-8000-000000000001",
+       "space": "music",
+       "kind": "audio",
+       "title": "Song 1",
+       "addedAt": 1700000000001,
+       "favorite": true,
+       "userTags": [
+        "alpha",
+        "zeta"
+       ],
+       "plays": 5,
+       "place": "Music/Artist/Album/song-1.mp3",
+       "artist": "Artist",
+       "album": "Album",
+       "albumArtist": "Various",
+       "track": 3,
+       "disc": 1,
+       "year": 2019,
+       "genre": "Rock",
+       "duration": 215.457,
+       "chapters": [
+        {
+         "start": 0,
+         "title": "Intro"
+        },
+        {
+         "start": 61.5,
+         "title": "Verse"
+        }
+       ],
+       "gain": -7.25,
+       "subtitles": [
+        "en"
+       ],
+       "hasLyrics": true,
+       "sourceUrl": "https://music.example/watch?v=abc",
+       "sourceId": "youtube:abc",
+       "tags": [
+        "rock",
+        "live"
+       ],
+       "lastPlayedAt": 1700000005000,
+       "position": 12.5,
+       "watched": false
+      },
+      {
+       "id": "00000000-0000-4000-8000-000000000002",
+       "space": "videos",
+       "kind": "video",
+       "title": "Clip",
+       "addedAt": 1700000000002,
+       "width": 1920,
+       "height": 1080,
+       "duration": 61,
+       "watched": true,
+       "position": 30,
+       "favorite": false,
+       "userTags": [],
+       "plays": 0,
+       "place": "Videos/clip.mp4"
+      },
+      {
+       "id": "00000000-0000-4000-8000-000000000003",
+       "space": "downloads",
+       "kind": "image",
+       "title": "Picture",
+       "addedAt": 1700000000003,
+       "favorite": false,
+       "userTags": [],
+       "plays": 0,
+       "place": "Downloads/pic.jpg"
+      },
+      {
+       "id": "00000000-0000-4000-8000-000000000004",
+       "space": "music",
+       "kind": "audio",
+       "title": "Song 4",
+       "addedAt": 1700000000004,
+       "favorite": false,
+       "userTags": [],
+       "plays": 0,
+       "place": null
+      },
+      {
+       "id": "00000000-0000-4000-8000-000000000005",
+       "space": "ext",
+       "kind": "audio",
+       "title": "Song 5",
+       "addedAt": 1700000000005,
+       "favorite": false,
+       "userTags": [],
+       "plays": 0,
+       "place": "External/x/y.mp3"
+      },
+      {
+       "id": "00000000-0000-4000-8000-000000000006",
+       "space": "my-space",
+       "kind": "audio",
+       "title": "Song 6",
+       "addedAt": 1700000000006,
+       "favorite": false,
+       "userTags": [
+        "road"
+       ],
+       "plays": 0,
+       "place": "My space/z.mp3"
+      }
+     ],
+     "collections": [
+      {
+       "id": "00000000-0000-4000-8000-000000000101",
+       "name": "Road trip",
+       "kind": "own",
+       "space": "music",
+       "itemIds": [
+        "00000000-0000-4000-8000-000000000001",
+        "00000000-0000-4000-8000-000000000002",
+        "00000000-0000-4000-8000-000000000006"
+       ],
+       "seen": [
+        "u1",
+        "u2"
+       ],
+       "createdAt": 1700000000000,
+       "updatedAt": 1700000000010,
+       "coverItemId": "00000000-0000-4000-8000-000000000001",
+       "newItemIds": [],
+       "removedItemIds": []
+      },
+      {
+       "id": "00000000-0000-4000-8000-000000000102",
+       "name": "Mix",
+       "kind": "playlist",
+       "space": "videos",
+       "itemIds": [
+        "00000000-0000-4000-8000-000000000002",
+        "00000000-0000-4000-8000-000000000001"
+       ],
+       "seen": [
+        "x"
+       ],
+       "createdAt": 1700000000001,
+       "updatedAt": 1700000000011,
+       "source": {
+        "url": "https://video.example/playlist?list=PL1",
+        "provider": "video",
+        "id": "PL1"
+       },
+       "follow": {
+        "mode": "auto",
+        "intervalHours": 6,
+        "wifiOnly": true,
+        "notify": false,
+        "confirmAbove": 20,
+        "pendingCount": 3,
+        "pendingAt": 1700000000012
+       },
+       "newItemIds": [
+        "00000000-0000-4000-8000-000000000002"
+       ],
+       "removedItemIds": [
+        "00000000-0000-4000-8000-000000000001"
+       ]
+      },
+      {
+       "id": "00000000-0000-4000-8000-000000000103",
+       "name": "An album",
+       "kind": "album",
+       "space": "music",
+       "itemIds": [
+        "00000000-0000-4000-8000-000000000001"
+       ],
+       "seen": [],
+       "createdAt": 1700000000002,
+       "updatedAt": 1700000000002,
+       "newItemIds": [],
+       "removedItemIds": []
+      }
+     ],
+     "spaces": [
+      {
+       "id": "downloads",
+       "name": "Downloads",
+       "kind": "mixed",
+       "folder": "Downloads",
+       "layout": "collection",
+       "naming": "title",
+       "skipExisting": false,
+       "type": "folder",
+       "color": "slate",
+       "icon": "folder",
+       "pinned": true
+      },
+      {
+       "id": "music",
+       "name": "Music",
+       "kind": "music",
+       "folder": "Music",
+       "layout": "artist-album",
+       "naming": "artist-title",
+       "skipExisting": true,
+       "type": "folder",
+       "color": "cobalt",
+       "icon": "music",
+       "pinned": true,
+       "ignore": [
+        "Podcasts"
+       ],
+       "scanFolder": true
+      },
+      {
+       "id": "videos",
+       "name": "Videos",
+       "kind": "video",
+       "folder": "Videos",
+       "layout": "platform",
+       "naming": "title-uploader",
+       "skipExisting": false,
+       "type": "folder",
+       "color": "violet",
+       "icon": "video",
+       "pinned": true
+      },
+      {
+       "id": "my-space",
+       "name": "My space",
+       "kind": "music",
+       "folder": "My space",
+       "layout": "flat",
+       "naming": "date-title",
+       "skipExisting": false,
+       "type": "folder"
+      },
+      {
+       "id": "ext",
+       "name": "External",
+       "kind": "mixed",
+       "folder": "External",
+       "linked": true,
+       "layout": "flat",
+       "naming": "title",
+       "skipExisting": false,
+       "type": "folder"
+      },
+      {
+       "id": "smart-1",
+       "name": "Rock",
+       "kind": "mixed",
+       "folder": "",
+       "layout": "flat",
+       "naming": "title",
+       "skipExisting": false,
+       "type": "smart",
+       "icon": "star",
+       "rules": {
+        "match": "any",
+        "rules": [
+         {
+          "field": "tag",
+          "values": [
+           "rock"
+          ]
+         }
+        ],
+        "onlyKind": "audio"
+       }
+      }
+     ],
+     "routes": {
+      "music": "music",
+      "other": "downloads"
+     }
+    }
+   },
+   "expected": []
+  },
+  {
+   "name": "field edits: set, change and clear fields",
+   "input": {
+    "op": "diff",
+    "actor": "11111111-1111-4111-8111-111111111111",
+    "replicaId": "22222222-2222-4222-8222-222222222222",
+    "before": {
+     "items": [
+      {
+       "id": "00000000-0000-4000-8000-000000000001",
+       "space": "music",
+       "kind": "audio",
+       "title": "Song 1",
+       "addedAt": 1700000000001,
+       "favorite": true,
+       "userTags": [
+        "alpha",
+        "zeta"
+       ],
+       "plays": 5,
+       "place": "Music/Artist/Album/song-1.mp3",
+       "artist": "Artist",
+       "album": "Album",
+       "albumArtist": "Various",
+       "track": 3,
+       "disc": 1,
+       "year": 2019,
+       "genre": "Rock",
+       "duration": 215.457,
+       "chapters": [
+        {
+         "start": 0,
+         "title": "Intro"
+        },
+        {
+         "start": 61.5,
+         "title": "Verse"
+        }
+       ],
+       "gain": -7.25,
+       "subtitles": [
+        "en"
+       ],
+       "hasLyrics": true,
+       "sourceUrl": "https://music.example/watch?v=abc",
+       "sourceId": "youtube:abc",
+       "tags": [
+        "rock",
+        "live"
+       ],
+       "lastPlayedAt": 1700000005000,
+       "position": 12.5,
+       "watched": false
+      },
+      {
+       "id": "00000000-0000-4000-8000-000000000002",
+       "space": "videos",
+       "kind": "video",
+       "title": "Clip",
+       "addedAt": 1700000000002,
+       "width": 1920,
+       "height": 1080,
+       "duration": 61,
+       "watched": true,
+       "position": 30,
+       "favorite": false,
+       "userTags": [],
+       "plays": 0,
+       "place": "Videos/clip.mp4"
+      },
+      {
+       "id": "00000000-0000-4000-8000-000000000003",
+       "space": "downloads",
+       "kind": "image",
+       "title": "Picture",
+       "addedAt": 1700000000003,
+       "favorite": false,
+       "userTags": [],
+       "plays": 0,
+       "place": "Downloads/pic.jpg"
+      },
+      {
+       "id": "00000000-0000-4000-8000-000000000004",
+       "space": "music",
+       "kind": "audio",
+       "title": "Song 4",
+       "addedAt": 1700000000004,
+       "favorite": false,
+       "userTags": [],
+       "plays": 0,
+       "place": null
+      },
+      {
+       "id": "00000000-0000-4000-8000-000000000005",
+       "space": "ext",
+       "kind": "audio",
+       "title": "Song 5",
+       "addedAt": 1700000000005,
+       "favorite": false,
+       "userTags": [],
+       "plays": 0,
+       "place": "External/x/y.mp3"
+      },
+      {
+       "id": "00000000-0000-4000-8000-000000000006",
+       "space": "my-space",
+       "kind": "audio",
+       "title": "Song 6",
+       "addedAt": 1700000000006,
+       "favorite": false,
+       "userTags": [
+        "road"
+       ],
+       "plays": 0,
+       "place": "My space/z.mp3"
+      }
+     ],
+     "collections": [
+      {
+       "id": "00000000-0000-4000-8000-000000000101",
+       "name": "Road trip",
+       "kind": "own",
+       "space": "music",
+       "itemIds": [
+        "00000000-0000-4000-8000-000000000001",
+        "00000000-0000-4000-8000-000000000002",
+        "00000000-0000-4000-8000-000000000006"
+       ],
+       "seen": [
+        "u1",
+        "u2"
+       ],
+       "createdAt": 1700000000000,
+       "updatedAt": 1700000000010,
+       "coverItemId": "00000000-0000-4000-8000-000000000001",
+       "newItemIds": [],
+       "removedItemIds": []
+      },
+      {
+       "id": "00000000-0000-4000-8000-000000000102",
+       "name": "Mix",
+       "kind": "playlist",
+       "space": "videos",
+       "itemIds": [
+        "00000000-0000-4000-8000-000000000002",
+        "00000000-0000-4000-8000-000000000001"
+       ],
+       "seen": [
+        "x"
+       ],
+       "createdAt": 1700000000001,
+       "updatedAt": 1700000000011,
+       "source": {
+        "url": "https://video.example/playlist?list=PL1",
+        "provider": "video",
+        "id": "PL1"
+       },
+       "follow": {
+        "mode": "auto",
+        "intervalHours": 6,
+        "wifiOnly": true,
+        "notify": false,
+        "confirmAbove": 20,
+        "pendingCount": 3,
+        "pendingAt": 1700000000012
+       },
+       "newItemIds": [
+        "00000000-0000-4000-8000-000000000002"
+       ],
+       "removedItemIds": [
+        "00000000-0000-4000-8000-000000000001"
+       ]
+      },
+      {
+       "id": "00000000-0000-4000-8000-000000000103",
+       "name": "An album",
+       "kind": "album",
+       "space": "music",
+       "itemIds": [
+        "00000000-0000-4000-8000-000000000001"
+       ],
+       "seen": [],
+       "createdAt": 1700000000002,
+       "updatedAt": 1700000000002,
+       "newItemIds": [],
+       "removedItemIds": []
+      }
+     ],
+     "spaces": [
+      {
+       "id": "downloads",
+       "name": "Downloads",
+       "kind": "mixed",
+       "folder": "Downloads",
+       "layout": "collection",
+       "naming": "title",
+       "skipExisting": false,
+       "type": "folder",
+       "color": "slate",
+       "icon": "folder",
+       "pinned": true
+      },
+      {
+       "id": "music",
+       "name": "Music",
+       "kind": "music",
+       "folder": "Music",
+       "layout": "artist-album",
+       "naming": "artist-title",
+       "skipExisting": true,
+       "type": "folder",
+       "color": "cobalt",
+       "icon": "music",
+       "pinned": true,
+       "ignore": [
+        "Podcasts"
+       ],
+       "scanFolder": true
+      },
+      {
+       "id": "videos",
+       "name": "Videos",
+       "kind": "video",
+       "folder": "Videos",
+       "layout": "platform",
+       "naming": "title-uploader",
+       "skipExisting": false,
+       "type": "folder",
+       "color": "violet",
+       "icon": "video",
+       "pinned": true
+      },
+      {
+       "id": "my-space",
+       "name": "My space",
+       "kind": "music",
+       "folder": "My space",
+       "layout": "flat",
+       "naming": "date-title",
+       "skipExisting": false,
+       "type": "folder"
+      },
+      {
+       "id": "ext",
+       "name": "External",
+       "kind": "mixed",
+       "folder": "External",
+       "linked": true,
+       "layout": "flat",
+       "naming": "title",
+       "skipExisting": false,
+       "type": "folder"
+      },
+      {
+       "id": "smart-1",
+       "name": "Rock",
+       "kind": "mixed",
+       "folder": "",
+       "layout": "flat",
+       "naming": "title",
+       "skipExisting": false,
+       "type": "smart",
+       "icon": "star",
+       "rules": {
+        "match": "any",
+        "rules": [
+         {
+          "field": "tag",
+          "values": [
+           "rock"
+          ]
+         }
+        ],
+        "onlyKind": "audio"
+       }
+      }
+     ],
+     "routes": {
+      "music": "music",
+      "other": "downloads"
+     }
+    },
+    "after": {
+     "items": [
+      {
+       "id": "00000000-0000-4000-8000-000000000001",
+       "space": "music",
+       "kind": "audio",
+       "title": "Renamed",
+       "addedAt": 1700000000001,
+       "favorite": true,
+       "userTags": [
+        "alpha",
+        "zeta"
+       ],
+       "plays": 5,
+       "place": "Music/Artist/Album/song-1.mp3",
+       "album": "Album",
+       "albumArtist": "Various",
+       "track": 3,
+       "disc": 1,
+       "year": 2020,
+       "genre": "Rock",
+       "duration": 216,
+       "gain": -7.25,
+       "subtitles": [
+        "en"
+       ],
+       "hasLyrics": true,
+       "sourceUrl": "https://music.example/watch?v=abc",
+       "sourceId": "youtube:abc",
+       "tags": [
+        "rock"
+       ],
+       "lastPlayedAt": 1700000005000,
+       "position": 12.5,
+       "watched": true
+      },
+      {
+       "id": "00000000-0000-4000-8000-000000000002",
+       "space": "videos",
+       "kind": "video",
+       "title": "Clip",
+       "addedAt": 1700000000002,
+       "width": 1920,
+       "height": 1080,
+       "duration": 61,
+       "watched": true,
+       "position": 30,
+       "favorite": false,
+       "userTags": [],
+       "plays": 0,
+       "place": "Videos/clip.mp4",
+       "genre": "Documentary",
+       "sourceUrl": "https://video.example/watch?v=1"
+      },
+      {
+       "id": "00000000-0000-4000-8000-000000000003",
+       "space": "downloads",
+       "kind": "image",
+       "title": "Picture",
+       "addedAt": 1700000000003,
+       "favorite": false,
+       "userTags": [],
+       "plays": 0,
+       "place": "Downloads/pic.jpg"
+      },
+      {
+       "id": "00000000-0000-4000-8000-000000000004",
+       "space": "music",
+       "kind": "audio",
+       "title": "Song 4",
+       "addedAt": 1700000000004,
+       "favorite": false,
+       "userTags": [],
+       "plays": 0,
+       "place": null
+      },
+      {
+       "id": "00000000-0000-4000-8000-000000000005",
+       "space": "ext",
+       "kind": "audio",
+       "title": "Song 5",
+       "addedAt": 1700000000005,
+       "favorite": false,
+       "userTags": [],
+       "plays": 0,
+       "place": "External/x/y.mp3"
+      },
+      {
+       "id": "00000000-0000-4000-8000-000000000006",
+       "space": "my-space",
+       "kind": "audio",
+       "title": "Song 6",
+       "addedAt": 1700000000006,
+       "favorite": false,
+       "userTags": [
+        "road"
+       ],
+       "plays": 0,
+       "place": "My space/z.mp3"
+      }
+     ],
+     "collections": [
+      {
+       "id": "00000000-0000-4000-8000-000000000101",
+       "name": "Road trip",
+       "kind": "own",
+       "space": "music",
+       "itemIds": [
+        "00000000-0000-4000-8000-000000000001",
+        "00000000-0000-4000-8000-000000000002",
+        "00000000-0000-4000-8000-000000000006"
+       ],
+       "seen": [
+        "u1",
+        "u2"
+       ],
+       "createdAt": 1700000000000,
+       "updatedAt": 1700000000010,
+       "coverItemId": "00000000-0000-4000-8000-000000000001",
+       "newItemIds": [],
+       "removedItemIds": []
+      },
+      {
+       "id": "00000000-0000-4000-8000-000000000102",
+       "name": "Mix",
+       "kind": "playlist",
+       "space": "videos",
+       "itemIds": [
+        "00000000-0000-4000-8000-000000000002",
+        "00000000-0000-4000-8000-000000000001"
+       ],
+       "seen": [
+        "x"
+       ],
+       "createdAt": 1700000000001,
+       "updatedAt": 1700000000011,
+       "source": {
+        "url": "https://video.example/playlist?list=PL1",
+        "provider": "video",
+        "id": "PL1"
+       },
+       "follow": {
+        "mode": "auto",
+        "intervalHours": 6,
+        "wifiOnly": true,
+        "notify": false,
+        "confirmAbove": 20,
+        "pendingCount": 3,
+        "pendingAt": 1700000000012
+       },
+       "newItemIds": [
+        "00000000-0000-4000-8000-000000000002"
+       ],
+       "removedItemIds": [
+        "00000000-0000-4000-8000-000000000001"
+       ]
+      },
+      {
+       "id": "00000000-0000-4000-8000-000000000103",
+       "name": "An album",
+       "kind": "album",
+       "space": "music",
+       "itemIds": [
+        "00000000-0000-4000-8000-000000000001"
+       ],
+       "seen": [],
+       "createdAt": 1700000000002,
+       "updatedAt": 1700000000002,
+       "newItemIds": [],
+       "removedItemIds": []
+      }
+     ],
+     "spaces": [
+      {
+       "id": "downloads",
+       "name": "Downloads",
+       "kind": "mixed",
+       "folder": "Downloads",
+       "layout": "collection",
+       "naming": "title",
+       "skipExisting": false,
+       "type": "folder",
+       "color": "slate",
+       "icon": "folder",
+       "pinned": true
+      },
+      {
+       "id": "music",
+       "name": "Music",
+       "kind": "music",
+       "folder": "Music",
+       "layout": "artist-album",
+       "naming": "artist-title",
+       "skipExisting": true,
+       "type": "folder",
+       "color": "cobalt",
+       "icon": "music",
+       "pinned": true,
+       "ignore": [
+        "Podcasts"
+       ],
+       "scanFolder": true
+      },
+      {
+       "id": "videos",
+       "name": "Videos",
+       "kind": "video",
+       "folder": "Videos",
+       "layout": "platform",
+       "naming": "title-uploader",
+       "skipExisting": false,
+       "type": "folder",
+       "color": "violet",
+       "icon": "video",
+       "pinned": true
+      },
+      {
+       "id": "my-space",
+       "name": "My space",
+       "kind": "music",
+       "folder": "My space",
+       "layout": "flat",
+       "naming": "date-title",
+       "skipExisting": false,
+       "type": "folder"
+      },
+      {
+       "id": "ext",
+       "name": "External",
+       "kind": "mixed",
+       "folder": "External",
+       "linked": true,
+       "layout": "flat",
+       "naming": "title",
+       "skipExisting": false,
+       "type": "folder"
+      },
+      {
+       "id": "smart-1",
+       "name": "Rock",
+       "kind": "mixed",
+       "folder": "",
+       "layout": "flat",
+       "naming": "title",
+       "skipExisting": false,
+       "type": "smart",
+       "icon": "star",
+       "rules": {
+        "match": "any",
+        "rules": [
+         {
+          "field": "tag",
+          "values": [
+           "rock"
+          ]
+         }
+        ],
+        "onlyKind": "audio"
+       }
+      }
+     ],
+     "routes": {
+      "music": "music",
+      "other": "downloads"
+     }
+    }
+   },
+   "expected": [
+    {
+     "kind": "item.set",
+     "body": {
+      "item": "00000000-0000-4000-8000-000000000001",
+      "field": "title",
+      "value": "Renamed"
+     }
+    },
+    {
+     "kind": "item.set",
+     "body": {
+      "item": "00000000-0000-4000-8000-000000000001",
+      "field": "year",
+      "value": 2020
+     }
+    },
+    {
+     "kind": "item.set",
+     "body": {
+      "item": "00000000-0000-4000-8000-000000000001",
+      "field": "duration",
+      "value": 216000
+     }
+    },
+    {
+     "kind": "item.set",
+     "body": {
+      "item": "00000000-0000-4000-8000-000000000001",
+      "field": "tags",
+      "value": [
+       "rock"
+      ]
+     }
+    },
+    {
+     "kind": "item.set",
+     "body": {
+      "item": "00000000-0000-4000-8000-000000000001",
+      "field": "watched",
+      "value": true
+     }
+    },
+    {
+     "kind": "item.set",
+     "body": {
+      "item": "00000000-0000-4000-8000-000000000001",
+      "field": "artist",
+      "value": null
+     }
+    },
+    {
+     "kind": "item.set",
+     "body": {
+      "item": "00000000-0000-4000-8000-000000000001",
+      "field": "chapters",
+      "value": null
+     }
+    },
+    {
+     "kind": "item.set",
+     "body": {
+      "item": "00000000-0000-4000-8000-000000000002",
+      "field": "genre",
+      "value": "Documentary"
+     }
+    },
+    {
+     "kind": "item.set",
+     "body": {
+      "item": "00000000-0000-4000-8000-000000000002",
+      "field": "sourceUrl",
+      "value": "https://video.example/watch?v=1"
+     }
+    }
+   ]
+  },
+  {
+   "name": "favourite and tags: add and remove",
+   "input": {
+    "op": "diff",
+    "actor": "11111111-1111-4111-8111-111111111111",
+    "replicaId": "22222222-2222-4222-8222-222222222222",
+    "before": {
+     "items": [
+      {
+       "id": "00000000-0000-4000-8000-000000000001",
+       "space": "music",
+       "kind": "audio",
+       "title": "Song 1",
+       "addedAt": 1700000000001,
+       "favorite": true,
+       "userTags": [
+        "alpha",
+        "zeta"
+       ],
+       "plays": 5,
+       "place": "Music/Artist/Album/song-1.mp3",
+       "artist": "Artist",
+       "album": "Album",
+       "albumArtist": "Various",
+       "track": 3,
+       "disc": 1,
+       "year": 2019,
+       "genre": "Rock",
+       "duration": 215.457,
+       "chapters": [
+        {
+         "start": 0,
+         "title": "Intro"
+        },
+        {
+         "start": 61.5,
+         "title": "Verse"
+        }
+       ],
+       "gain": -7.25,
+       "subtitles": [
+        "en"
+       ],
+       "hasLyrics": true,
+       "sourceUrl": "https://music.example/watch?v=abc",
+       "sourceId": "youtube:abc",
+       "tags": [
+        "rock",
+        "live"
+       ],
+       "lastPlayedAt": 1700000005000,
+       "position": 12.5,
+       "watched": false
+      },
+      {
+       "id": "00000000-0000-4000-8000-000000000002",
+       "space": "videos",
+       "kind": "video",
+       "title": "Clip",
+       "addedAt": 1700000000002,
+       "width": 1920,
+       "height": 1080,
+       "duration": 61,
+       "watched": true,
+       "position": 30,
+       "favorite": false,
+       "userTags": [],
+       "plays": 0,
+       "place": "Videos/clip.mp4"
+      },
+      {
+       "id": "00000000-0000-4000-8000-000000000003",
+       "space": "downloads",
+       "kind": "image",
+       "title": "Picture",
+       "addedAt": 1700000000003,
+       "favorite": false,
+       "userTags": [],
+       "plays": 0,
+       "place": "Downloads/pic.jpg"
+      },
+      {
+       "id": "00000000-0000-4000-8000-000000000004",
+       "space": "music",
+       "kind": "audio",
+       "title": "Song 4",
+       "addedAt": 1700000000004,
+       "favorite": false,
+       "userTags": [],
+       "plays": 0,
+       "place": null
+      },
+      {
+       "id": "00000000-0000-4000-8000-000000000005",
+       "space": "ext",
+       "kind": "audio",
+       "title": "Song 5",
+       "addedAt": 1700000000005,
+       "favorite": false,
+       "userTags": [],
+       "plays": 0,
+       "place": "External/x/y.mp3"
+      },
+      {
+       "id": "00000000-0000-4000-8000-000000000006",
+       "space": "my-space",
+       "kind": "audio",
+       "title": "Song 6",
+       "addedAt": 1700000000006,
+       "favorite": false,
+       "userTags": [
+        "road"
+       ],
+       "plays": 0,
+       "place": "My space/z.mp3"
+      }
+     ],
+     "collections": [
+      {
+       "id": "00000000-0000-4000-8000-000000000101",
+       "name": "Road trip",
+       "kind": "own",
+       "space": "music",
+       "itemIds": [
+        "00000000-0000-4000-8000-000000000001",
+        "00000000-0000-4000-8000-000000000002",
+        "00000000-0000-4000-8000-000000000006"
+       ],
+       "seen": [
+        "u1",
+        "u2"
+       ],
+       "createdAt": 1700000000000,
+       "updatedAt": 1700000000010,
+       "coverItemId": "00000000-0000-4000-8000-000000000001",
+       "newItemIds": [],
+       "removedItemIds": []
+      },
+      {
+       "id": "00000000-0000-4000-8000-000000000102",
+       "name": "Mix",
+       "kind": "playlist",
+       "space": "videos",
+       "itemIds": [
+        "00000000-0000-4000-8000-000000000002",
+        "00000000-0000-4000-8000-000000000001"
+       ],
+       "seen": [
+        "x"
+       ],
+       "createdAt": 1700000000001,
+       "updatedAt": 1700000000011,
+       "source": {
+        "url": "https://video.example/playlist?list=PL1",
+        "provider": "video",
+        "id": "PL1"
+       },
+       "follow": {
+        "mode": "auto",
+        "intervalHours": 6,
+        "wifiOnly": true,
+        "notify": false,
+        "confirmAbove": 20,
+        "pendingCount": 3,
+        "pendingAt": 1700000000012
+       },
+       "newItemIds": [
+        "00000000-0000-4000-8000-000000000002"
+       ],
+       "removedItemIds": [
+        "00000000-0000-4000-8000-000000000001"
+       ]
+      },
+      {
+       "id": "00000000-0000-4000-8000-000000000103",
+       "name": "An album",
+       "kind": "album",
+       "space": "music",
+       "itemIds": [
+        "00000000-0000-4000-8000-000000000001"
+       ],
+       "seen": [],
+       "createdAt": 1700000000002,
+       "updatedAt": 1700000000002,
+       "newItemIds": [],
+       "removedItemIds": []
+      }
+     ],
+     "spaces": [
+      {
+       "id": "downloads",
+       "name": "Downloads",
+       "kind": "mixed",
+       "folder": "Downloads",
+       "layout": "collection",
+       "naming": "title",
+       "skipExisting": false,
+       "type": "folder",
+       "color": "slate",
+       "icon": "folder",
+       "pinned": true
+      },
+      {
+       "id": "music",
+       "name": "Music",
+       "kind": "music",
+       "folder": "Music",
+       "layout": "artist-album",
+       "naming": "artist-title",
+       "skipExisting": true,
+       "type": "folder",
+       "color": "cobalt",
+       "icon": "music",
+       "pinned": true,
+       "ignore": [
+        "Podcasts"
+       ],
+       "scanFolder": true
+      },
+      {
+       "id": "videos",
+       "name": "Videos",
+       "kind": "video",
+       "folder": "Videos",
+       "layout": "platform",
+       "naming": "title-uploader",
+       "skipExisting": false,
+       "type": "folder",
+       "color": "violet",
+       "icon": "video",
+       "pinned": true
+      },
+      {
+       "id": "my-space",
+       "name": "My space",
+       "kind": "music",
+       "folder": "My space",
+       "layout": "flat",
+       "naming": "date-title",
+       "skipExisting": false,
+       "type": "folder"
+      },
+      {
+       "id": "ext",
+       "name": "External",
+       "kind": "mixed",
+       "folder": "External",
+       "linked": true,
+       "layout": "flat",
+       "naming": "title",
+       "skipExisting": false,
+       "type": "folder"
+      },
+      {
+       "id": "smart-1",
+       "name": "Rock",
+       "kind": "mixed",
+       "folder": "",
+       "layout": "flat",
+       "naming": "title",
+       "skipExisting": false,
+       "type": "smart",
+       "icon": "star",
+       "rules": {
+        "match": "any",
+        "rules": [
+         {
+          "field": "tag",
+          "values": [
+           "rock"
+          ]
+         }
+        ],
+        "onlyKind": "audio"
+       }
+      }
+     ],
+     "routes": {
+      "music": "music",
+      "other": "downloads"
+     }
+    },
+    "after": {
+     "items": [
+      {
+       "id": "00000000-0000-4000-8000-000000000001",
+       "space": "music",
+       "kind": "audio",
+       "title": "Song 1",
+       "addedAt": 1700000000001,
+       "favorite": false,
+       "userTags": [
+        "alpha",
+        "new"
+       ],
+       "plays": 5,
+       "place": "Music/Artist/Album/song-1.mp3",
+       "artist": "Artist",
+       "album": "Album",
+       "albumArtist": "Various",
+       "track": 3,
+       "disc": 1,
+       "year": 2019,
+       "genre": "Rock",
+       "duration": 215.457,
+       "chapters": [
+        {
+         "start": 0,
+         "title": "Intro"
+        },
+        {
+         "start": 61.5,
+         "title": "Verse"
+        }
+       ],
+       "gain": -7.25,
+       "subtitles": [
+        "en"
+       ],
+       "hasLyrics": true,
+       "sourceUrl": "https://music.example/watch?v=abc",
+       "sourceId": "youtube:abc",
+       "tags": [
+        "rock",
+        "live"
+       ],
+       "lastPlayedAt": 1700000005000,
+       "position": 12.5,
+       "watched": false
+      },
+      {
+       "id": "00000000-0000-4000-8000-000000000002",
+       "space": "videos",
+       "kind": "video",
+       "title": "Clip",
+       "addedAt": 1700000000002,
+       "width": 1920,
+       "height": 1080,
+       "duration": 61,
+       "watched": true,
+       "position": 30,
+       "favorite": true,
+       "userTags": [],
+       "plays": 0,
+       "place": "Videos/clip.mp4"
+      },
+      {
+       "id": "00000000-0000-4000-8000-000000000003",
+       "space": "downloads",
+       "kind": "image",
+       "title": "Picture",
+       "addedAt": 1700000000003,
+       "favorite": false,
+       "userTags": [],
+       "plays": 0,
+       "place": "Downloads/pic.jpg"
+      },
+      {
+       "id": "00000000-0000-4000-8000-000000000004",
+       "space": "music",
+       "kind": "audio",
+       "title": "Song 4",
+       "addedAt": 1700000000004,
+       "favorite": false,
+       "userTags": [],
+       "plays": 0,
+       "place": null
+      },
+      {
+       "id": "00000000-0000-4000-8000-000000000005",
+       "space": "ext",
+       "kind": "audio",
+       "title": "Song 5",
+       "addedAt": 1700000000005,
+       "favorite": false,
+       "userTags": [],
+       "plays": 0,
+       "place": "External/x/y.mp3"
+      },
+      {
+       "id": "00000000-0000-4000-8000-000000000006",
+       "space": "my-space",
+       "kind": "audio",
+       "title": "Song 6",
+       "addedAt": 1700000000006,
+       "favorite": false,
+       "userTags": [],
+       "plays": 0,
+       "place": "My space/z.mp3"
+      }
+     ],
+     "collections": [
+      {
+       "id": "00000000-0000-4000-8000-000000000101",
+       "name": "Road trip",
+       "kind": "own",
+       "space": "music",
+       "itemIds": [
+        "00000000-0000-4000-8000-000000000001",
+        "00000000-0000-4000-8000-000000000002",
+        "00000000-0000-4000-8000-000000000006"
+       ],
+       "seen": [
+        "u1",
+        "u2"
+       ],
+       "createdAt": 1700000000000,
+       "updatedAt": 1700000000010,
+       "coverItemId": "00000000-0000-4000-8000-000000000001",
+       "newItemIds": [],
+       "removedItemIds": []
+      },
+      {
+       "id": "00000000-0000-4000-8000-000000000102",
+       "name": "Mix",
+       "kind": "playlist",
+       "space": "videos",
+       "itemIds": [
+        "00000000-0000-4000-8000-000000000002",
+        "00000000-0000-4000-8000-000000000001"
+       ],
+       "seen": [
+        "x"
+       ],
+       "createdAt": 1700000000001,
+       "updatedAt": 1700000000011,
+       "source": {
+        "url": "https://video.example/playlist?list=PL1",
+        "provider": "video",
+        "id": "PL1"
+       },
+       "follow": {
+        "mode": "auto",
+        "intervalHours": 6,
+        "wifiOnly": true,
+        "notify": false,
+        "confirmAbove": 20,
+        "pendingCount": 3,
+        "pendingAt": 1700000000012
+       },
+       "newItemIds": [
+        "00000000-0000-4000-8000-000000000002"
+       ],
+       "removedItemIds": [
+        "00000000-0000-4000-8000-000000000001"
+       ]
+      },
+      {
+       "id": "00000000-0000-4000-8000-000000000103",
+       "name": "An album",
+       "kind": "album",
+       "space": "music",
+       "itemIds": [
+        "00000000-0000-4000-8000-000000000001"
+       ],
+       "seen": [],
+       "createdAt": 1700000000002,
+       "updatedAt": 1700000000002,
+       "newItemIds": [],
+       "removedItemIds": []
+      }
+     ],
+     "spaces": [
+      {
+       "id": "downloads",
+       "name": "Downloads",
+       "kind": "mixed",
+       "folder": "Downloads",
+       "layout": "collection",
+       "naming": "title",
+       "skipExisting": false,
+       "type": "folder",
+       "color": "slate",
+       "icon": "folder",
+       "pinned": true
+      },
+      {
+       "id": "music",
+       "name": "Music",
+       "kind": "music",
+       "folder": "Music",
+       "layout": "artist-album",
+       "naming": "artist-title",
+       "skipExisting": true,
+       "type": "folder",
+       "color": "cobalt",
+       "icon": "music",
+       "pinned": true,
+       "ignore": [
+        "Podcasts"
+       ],
+       "scanFolder": true
+      },
+      {
+       "id": "videos",
+       "name": "Videos",
+       "kind": "video",
+       "folder": "Videos",
+       "layout": "platform",
+       "naming": "title-uploader",
+       "skipExisting": false,
+       "type": "folder",
+       "color": "violet",
+       "icon": "video",
+       "pinned": true
+      },
+      {
+       "id": "my-space",
+       "name": "My space",
+       "kind": "music",
+       "folder": "My space",
+       "layout": "flat",
+       "naming": "date-title",
+       "skipExisting": false,
+       "type": "folder"
+      },
+      {
+       "id": "ext",
+       "name": "External",
+       "kind": "mixed",
+       "folder": "External",
+       "linked": true,
+       "layout": "flat",
+       "naming": "title",
+       "skipExisting": false,
+       "type": "folder"
+      },
+      {
+       "id": "smart-1",
+       "name": "Rock",
+       "kind": "mixed",
+       "folder": "",
+       "layout": "flat",
+       "naming": "title",
+       "skipExisting": false,
+       "type": "smart",
+       "icon": "star",
+       "rules": {
+        "match": "any",
+        "rules": [
+         {
+          "field": "tag",
+          "values": [
+           "rock"
+          ]
+         }
+        ],
+        "onlyKind": "audio"
+       }
+      }
+     ],
+     "routes": {
+      "music": "music",
+      "other": "downloads"
+     }
+    },
+    "observed": {
+     "items": {},
+     "playlists": {},
+     "spaces": {},
+     "members": {
+      "favourites": {
+       "00000000-0000-4000-8000-000000000001": [
+        "11111111-1111-4111-8111-111111111111:11"
+       ]
+      },
+      "tags:00000000-0000-4000-8000-000000000001": {
+       "zeta": [
+        "11111111-1111-4111-8111-111111111111:13"
+       ]
+      },
+      "tags:00000000-0000-4000-8000-000000000006": {
+       "road": [
+        "11111111-1111-4111-8111-111111111111:23"
+       ]
+      }
+     }
+    }
+   },
+   "expected": [
+    {
+     "kind": "set.remove",
+     "body": {
+      "set": "favourites",
+      "element": "00000000-0000-4000-8000-000000000001",
+      "observedTags": [
+       "11111111-1111-4111-8111-111111111111:11"
+      ]
+     }
+    },
+    {
+     "kind": "set.add",
+     "body": {
+      "set": "tags:00000000-0000-4000-8000-000000000001",
+      "element": "new"
+     }
+    },
+    {
+     "kind": "set.remove",
+     "body": {
+      "set": "tags:00000000-0000-4000-8000-000000000001",
+      "element": "zeta",
+      "observedTags": [
+       "11111111-1111-4111-8111-111111111111:13"
+      ]
+     }
+    },
+    {
+     "kind": "set.add",
+     "body": {
+      "set": "favourites",
+      "element": "00000000-0000-4000-8000-000000000002"
+     }
+    },
+    {
+     "kind": "set.remove",
+     "body": {
+      "set": "tags:00000000-0000-4000-8000-000000000006",
+      "element": "road",
+      "observedTags": [
+       "11111111-1111-4111-8111-111111111111:23"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "name": "plays grow by this device",
+   "input": {
+    "op": "diff",
+    "actor": "11111111-1111-4111-8111-111111111111",
+    "replicaId": "22222222-2222-4222-8222-222222222222",
+    "before": {
+     "items": [
+      {
+       "id": "00000000-0000-4000-8000-000000000001",
+       "space": "music",
+       "kind": "audio",
+       "title": "Song 1",
+       "addedAt": 1700000000001,
+       "favorite": true,
+       "userTags": [
+        "alpha",
+        "zeta"
+       ],
+       "plays": 5,
+       "place": "Music/Artist/Album/song-1.mp3",
+       "artist": "Artist",
+       "album": "Album",
+       "albumArtist": "Various",
+       "track": 3,
+       "disc": 1,
+       "year": 2019,
+       "genre": "Rock",
+       "duration": 215.457,
+       "chapters": [
+        {
+         "start": 0,
+         "title": "Intro"
+        },
+        {
+         "start": 61.5,
+         "title": "Verse"
+        }
+       ],
+       "gain": -7.25,
+       "subtitles": [
+        "en"
+       ],
+       "hasLyrics": true,
+       "sourceUrl": "https://music.example/watch?v=abc",
+       "sourceId": "youtube:abc",
+       "tags": [
+        "rock",
+        "live"
+       ],
+       "lastPlayedAt": 1700000005000,
+       "position": 12.5,
+       "watched": false
+      },
+      {
+       "id": "00000000-0000-4000-8000-000000000002",
+       "space": "videos",
+       "kind": "video",
+       "title": "Clip",
+       "addedAt": 1700000000002,
+       "width": 1920,
+       "height": 1080,
+       "duration": 61,
+       "watched": true,
+       "position": 30,
+       "favorite": false,
+       "userTags": [],
+       "plays": 0,
+       "place": "Videos/clip.mp4"
+      },
+      {
+       "id": "00000000-0000-4000-8000-000000000003",
+       "space": "downloads",
+       "kind": "image",
+       "title": "Picture",
+       "addedAt": 1700000000003,
+       "favorite": false,
+       "userTags": [],
+       "plays": 0,
+       "place": "Downloads/pic.jpg"
+      },
+      {
+       "id": "00000000-0000-4000-8000-000000000004",
+       "space": "music",
+       "kind": "audio",
+       "title": "Song 4",
+       "addedAt": 1700000000004,
+       "favorite": false,
+       "userTags": [],
+       "plays": 0,
+       "place": null
+      },
+      {
+       "id": "00000000-0000-4000-8000-000000000005",
+       "space": "ext",
+       "kind": "audio",
+       "title": "Song 5",
+       "addedAt": 1700000000005,
+       "favorite": false,
+       "userTags": [],
+       "plays": 0,
+       "place": "External/x/y.mp3"
+      },
+      {
+       "id": "00000000-0000-4000-8000-000000000006",
+       "space": "my-space",
+       "kind": "audio",
+       "title": "Song 6",
+       "addedAt": 1700000000006,
+       "favorite": false,
+       "userTags": [
+        "road"
+       ],
+       "plays": 0,
+       "place": "My space/z.mp3"
+      }
+     ],
+     "collections": [
+      {
+       "id": "00000000-0000-4000-8000-000000000101",
+       "name": "Road trip",
+       "kind": "own",
+       "space": "music",
+       "itemIds": [
+        "00000000-0000-4000-8000-000000000001",
+        "00000000-0000-4000-8000-000000000002",
+        "00000000-0000-4000-8000-000000000006"
+       ],
+       "seen": [
+        "u1",
+        "u2"
+       ],
+       "createdAt": 1700000000000,
+       "updatedAt": 1700000000010,
+       "coverItemId": "00000000-0000-4000-8000-000000000001",
+       "newItemIds": [],
+       "removedItemIds": []
+      },
+      {
+       "id": "00000000-0000-4000-8000-000000000102",
+       "name": "Mix",
+       "kind": "playlist",
+       "space": "videos",
+       "itemIds": [
+        "00000000-0000-4000-8000-000000000002",
+        "00000000-0000-4000-8000-000000000001"
+       ],
+       "seen": [
+        "x"
+       ],
+       "createdAt": 1700000000001,
+       "updatedAt": 1700000000011,
+       "source": {
+        "url": "https://video.example/playlist?list=PL1",
+        "provider": "video",
+        "id": "PL1"
+       },
+       "follow": {
+        "mode": "auto",
+        "intervalHours": 6,
+        "wifiOnly": true,
+        "notify": false,
+        "confirmAbove": 20,
+        "pendingCount": 3,
+        "pendingAt": 1700000000012
+       },
+       "newItemIds": [
+        "00000000-0000-4000-8000-000000000002"
+       ],
+       "removedItemIds": [
+        "00000000-0000-4000-8000-000000000001"
+       ]
+      },
+      {
+       "id": "00000000-0000-4000-8000-000000000103",
+       "name": "An album",
+       "kind": "album",
+       "space": "music",
+       "itemIds": [
+        "00000000-0000-4000-8000-000000000001"
+       ],
+       "seen": [],
+       "createdAt": 1700000000002,
+       "updatedAt": 1700000000002,
+       "newItemIds": [],
+       "removedItemIds": []
+      }
+     ],
+     "spaces": [
+      {
+       "id": "downloads",
+       "name": "Downloads",
+       "kind": "mixed",
+       "folder": "Downloads",
+       "layout": "collection",
+       "naming": "title",
+       "skipExisting": false,
+       "type": "folder",
+       "color": "slate",
+       "icon": "folder",
+       "pinned": true
+      },
+      {
+       "id": "music",
+       "name": "Music",
+       "kind": "music",
+       "folder": "Music",
+       "layout": "artist-album",
+       "naming": "artist-title",
+       "skipExisting": true,
+       "type": "folder",
+       "color": "cobalt",
+       "icon": "music",
+       "pinned": true,
+       "ignore": [
+        "Podcasts"
+       ],
+       "scanFolder": true
+      },
+      {
+       "id": "videos",
+       "name": "Videos",
+       "kind": "video",
+       "folder": "Videos",
+       "layout": "platform",
+       "naming": "title-uploader",
+       "skipExisting": false,
+       "type": "folder",
+       "color": "violet",
+       "icon": "video",
+       "pinned": true
+      },
+      {
+       "id": "my-space",
+       "name": "My space",
+       "kind": "music",
+       "folder": "My space",
+       "layout": "flat",
+       "naming": "date-title",
+       "skipExisting": false,
+       "type": "folder"
+      },
+      {
+       "id": "ext",
+       "name": "External",
+       "kind": "mixed",
+       "folder": "External",
+       "linked": true,
+       "layout": "flat",
+       "naming": "title",
+       "skipExisting": false,
+       "type": "folder"
+      },
+      {
+       "id": "smart-1",
+       "name": "Rock",
+       "kind": "mixed",
+       "folder": "",
+       "layout": "flat",
+       "naming": "title",
+       "skipExisting": false,
+       "type": "smart",
+       "icon": "star",
+       "rules": {
+        "match": "any",
+        "rules": [
+         {
+          "field": "tag",
+          "values": [
+           "rock"
+          ]
+         }
+        ],
+        "onlyKind": "audio"
+       }
+      }
+     ],
+     "routes": {
+      "music": "music",
+      "other": "downloads"
+     }
+    },
+    "after": {
+     "items": [
+      {
+       "id": "00000000-0000-4000-8000-000000000001",
+       "space": "music",
+       "kind": "audio",
+       "title": "Song 1",
+       "addedAt": 1700000000001,
+       "favorite": true,
+       "userTags": [
+        "alpha",
+        "zeta"
+       ],
+       "plays": 8,
+       "place": "Music/Artist/Album/song-1.mp3",
+       "artist": "Artist",
+       "album": "Album",
+       "albumArtist": "Various",
+       "track": 3,
+       "disc": 1,
+       "year": 2019,
+       "genre": "Rock",
+       "duration": 215.457,
+       "chapters": [
+        {
+         "start": 0,
+         "title": "Intro"
+        },
+        {
+         "start": 61.5,
+         "title": "Verse"
+        }
+       ],
+       "gain": -7.25,
+       "subtitles": [
+        "en"
+       ],
+       "hasLyrics": true,
+       "sourceUrl": "https://music.example/watch?v=abc",
+       "sourceId": "youtube:abc",
+       "tags": [
+        "rock",
+        "live"
+       ],
+       "lastPlayedAt": 1700000005000,
+       "position": 12.5,
+       "watched": false
+      },
+      {
+       "id": "00000000-0000-4000-8000-000000000002",
+       "space": "videos",
+       "kind": "video",
+       "title": "Clip",
+       "addedAt": 1700000000002,
+       "width": 1920,
+       "height": 1080,
+       "duration": 61,
+       "watched": true,
+       "position": 30,
+       "favorite": false,
+       "userTags": [],
+       "plays": 1,
+       "place": "Videos/clip.mp4"
+      },
+      {
+       "id": "00000000-0000-4000-8000-000000000003",
+       "space": "downloads",
+       "kind": "image",
+       "title": "Picture",
+       "addedAt": 1700000000003,
+       "favorite": false,
+       "userTags": [],
+       "plays": 0,
+       "place": "Downloads/pic.jpg"
+      },
+      {
+       "id": "00000000-0000-4000-8000-000000000004",
+       "space": "music",
+       "kind": "audio",
+       "title": "Song 4",
+       "addedAt": 1700000000004,
+       "favorite": false,
+       "userTags": [],
+       "plays": 0,
+       "place": null
+      },
+      {
+       "id": "00000000-0000-4000-8000-000000000005",
+       "space": "ext",
+       "kind": "audio",
+       "title": "Song 5",
+       "addedAt": 1700000000005,
+       "favorite": false,
+       "userTags": [],
+       "plays": 0,
+       "place": "External/x/y.mp3"
+      },
+      {
+       "id": "00000000-0000-4000-8000-000000000006",
+       "space": "my-space",
+       "kind": "audio",
+       "title": "Song 6",
+       "addedAt": 1700000000006,
+       "favorite": false,
+       "userTags": [
+        "road"
+       ],
+       "plays": 0,
+       "place": "My space/z.mp3"
+      }
+     ],
+     "collections": [
+      {
+       "id": "00000000-0000-4000-8000-000000000101",
+       "name": "Road trip",
+       "kind": "own",
+       "space": "music",
+       "itemIds": [
+        "00000000-0000-4000-8000-000000000001",
+        "00000000-0000-4000-8000-000000000002",
+        "00000000-0000-4000-8000-000000000006"
+       ],
+       "seen": [
+        "u1",
+        "u2"
+       ],
+       "createdAt": 1700000000000,
+       "updatedAt": 1700000000010,
+       "coverItemId": "00000000-0000-4000-8000-000000000001",
+       "newItemIds": [],
+       "removedItemIds": []
+      },
+      {
+       "id": "00000000-0000-4000-8000-000000000102",
+       "name": "Mix",
+       "kind": "playlist",
+       "space": "videos",
+       "itemIds": [
+        "00000000-0000-4000-8000-000000000002",
+        "00000000-0000-4000-8000-000000000001"
+       ],
+       "seen": [
+        "x"
+       ],
+       "createdAt": 1700000000001,
+       "updatedAt": 1700000000011,
+       "source": {
+        "url": "https://video.example/playlist?list=PL1",
+        "provider": "video",
+        "id": "PL1"
+       },
+       "follow": {
+        "mode": "auto",
+        "intervalHours": 6,
+        "wifiOnly": true,
+        "notify": false,
+        "confirmAbove": 20,
+        "pendingCount": 3,
+        "pendingAt": 1700000000012
+       },
+       "newItemIds": [
+        "00000000-0000-4000-8000-000000000002"
+       ],
+       "removedItemIds": [
+        "00000000-0000-4000-8000-000000000001"
+       ]
+      },
+      {
+       "id": "00000000-0000-4000-8000-000000000103",
+       "name": "An album",
+       "kind": "album",
+       "space": "music",
+       "itemIds": [
+        "00000000-0000-4000-8000-000000000001"
+       ],
+       "seen": [],
+       "createdAt": 1700000000002,
+       "updatedAt": 1700000000002,
+       "newItemIds": [],
+       "removedItemIds": []
+      }
+     ],
+     "spaces": [
+      {
+       "id": "downloads",
+       "name": "Downloads",
+       "kind": "mixed",
+       "folder": "Downloads",
+       "layout": "collection",
+       "naming": "title",
+       "skipExisting": false,
+       "type": "folder",
+       "color": "slate",
+       "icon": "folder",
+       "pinned": true
+      },
+      {
+       "id": "music",
+       "name": "Music",
+       "kind": "music",
+       "folder": "Music",
+       "layout": "artist-album",
+       "naming": "artist-title",
+       "skipExisting": true,
+       "type": "folder",
+       "color": "cobalt",
+       "icon": "music",
+       "pinned": true,
+       "ignore": [
+        "Podcasts"
+       ],
+       "scanFolder": true
+      },
+      {
+       "id": "videos",
+       "name": "Videos",
+       "kind": "video",
+       "folder": "Videos",
+       "layout": "platform",
+       "naming": "title-uploader",
+       "skipExisting": false,
+       "type": "folder",
+       "color": "violet",
+       "icon": "video",
+       "pinned": true
+      },
+      {
+       "id": "my-space",
+       "name": "My space",
+       "kind": "music",
+       "folder": "My space",
+       "layout": "flat",
+       "naming": "date-title",
+       "skipExisting": false,
+       "type": "folder"
+      },
+      {
+       "id": "ext",
+       "name": "External",
+       "kind": "mixed",
+       "folder": "External",
+       "linked": true,
+       "layout": "flat",
+       "naming": "title",
+       "skipExisting": false,
+       "type": "folder"
+      },
+      {
+       "id": "smart-1",
+       "name": "Rock",
+       "kind": "mixed",
+       "folder": "",
+       "layout": "flat",
+       "naming": "title",
+       "skipExisting": false,
+       "type": "smart",
+       "icon": "star",
+       "rules": {
+        "match": "any",
+        "rules": [
+         {
+          "field": "tag",
+          "values": [
+           "rock"
+          ]
+         }
+        ],
+        "onlyKind": "audio"
+       }
+      }
+     ],
+     "routes": {
+      "music": "music",
+      "other": "downloads"
+     }
+    },
+    "ownPlays": {
+     "00000000-0000-4000-8000-000000000001": 5,
+     "00000000-0000-4000-8000-000000000002": 0
+    }
+   },
+   "expected": [
+    {
+     "kind": "item.set",
+     "body": {
+      "item": "00000000-0000-4000-8000-000000000001",
+      "field": "plays@11111111-1111-4111-8111-111111111111",
+      "value": 8
+     }
+    },
+    {
+     "kind": "item.set",
+     "body": {
+      "item": "00000000-0000-4000-8000-000000000002",
+      "field": "plays@11111111-1111-4111-8111-111111111111",
+      "value": 1
+     }
+    }
+   ]
+  },
+  {
+   "name": "plays that do not grow write nothing",
+   "input": {
+    "op": "diff",
+    "actor": "11111111-1111-4111-8111-111111111111",
+    "replicaId": "22222222-2222-4222-8222-222222222222",
+    "before": {
+     "items": [
+      {
+       "id": "00000000-0000-4000-8000-000000000001",
+       "space": "music",
+       "kind": "audio",
+       "title": "Song 1",
+       "addedAt": 1700000000001,
+       "favorite": true,
+       "userTags": [
+        "alpha",
+        "zeta"
+       ],
+       "plays": 5,
+       "place": "Music/Artist/Album/song-1.mp3",
+       "artist": "Artist",
+       "album": "Album",
+       "albumArtist": "Various",
+       "track": 3,
+       "disc": 1,
+       "year": 2019,
+       "genre": "Rock",
+       "duration": 215.457,
+       "chapters": [
+        {
+         "start": 0,
+         "title": "Intro"
+        },
+        {
+         "start": 61.5,
+         "title": "Verse"
+        }
+       ],
+       "gain": -7.25,
+       "subtitles": [
+        "en"
+       ],
+       "hasLyrics": true,
+       "sourceUrl": "https://music.example/watch?v=abc",
+       "sourceId": "youtube:abc",
+       "tags": [
+        "rock",
+        "live"
+       ],
+       "lastPlayedAt": 1700000005000,
+       "position": 12.5,
+       "watched": false
+      },
+      {
+       "id": "00000000-0000-4000-8000-000000000002",
+       "space": "videos",
+       "kind": "video",
+       "title": "Clip",
+       "addedAt": 1700000000002,
+       "width": 1920,
+       "height": 1080,
+       "duration": 61,
+       "watched": true,
+       "position": 30,
+       "favorite": false,
+       "userTags": [],
+       "plays": 0,
+       "place": "Videos/clip.mp4"
+      },
+      {
+       "id": "00000000-0000-4000-8000-000000000003",
+       "space": "downloads",
+       "kind": "image",
+       "title": "Picture",
+       "addedAt": 1700000000003,
+       "favorite": false,
+       "userTags": [],
+       "plays": 0,
+       "place": "Downloads/pic.jpg"
+      },
+      {
+       "id": "00000000-0000-4000-8000-000000000004",
+       "space": "music",
+       "kind": "audio",
+       "title": "Song 4",
+       "addedAt": 1700000000004,
+       "favorite": false,
+       "userTags": [],
+       "plays": 0,
+       "place": null
+      },
+      {
+       "id": "00000000-0000-4000-8000-000000000005",
+       "space": "ext",
+       "kind": "audio",
+       "title": "Song 5",
+       "addedAt": 1700000000005,
+       "favorite": false,
+       "userTags": [],
+       "plays": 0,
+       "place": "External/x/y.mp3"
+      },
+      {
+       "id": "00000000-0000-4000-8000-000000000006",
+       "space": "my-space",
+       "kind": "audio",
+       "title": "Song 6",
+       "addedAt": 1700000000006,
+       "favorite": false,
+       "userTags": [
+        "road"
+       ],
+       "plays": 0,
+       "place": "My space/z.mp3"
+      }
+     ],
+     "collections": [
+      {
+       "id": "00000000-0000-4000-8000-000000000101",
+       "name": "Road trip",
+       "kind": "own",
+       "space": "music",
+       "itemIds": [
+        "00000000-0000-4000-8000-000000000001",
+        "00000000-0000-4000-8000-000000000002",
+        "00000000-0000-4000-8000-000000000006"
+       ],
+       "seen": [
+        "u1",
+        "u2"
+       ],
+       "createdAt": 1700000000000,
+       "updatedAt": 1700000000010,
+       "coverItemId": "00000000-0000-4000-8000-000000000001",
+       "newItemIds": [],
+       "removedItemIds": []
+      },
+      {
+       "id": "00000000-0000-4000-8000-000000000102",
+       "name": "Mix",
+       "kind": "playlist",
+       "space": "videos",
+       "itemIds": [
+        "00000000-0000-4000-8000-000000000002",
+        "00000000-0000-4000-8000-000000000001"
+       ],
+       "seen": [
+        "x"
+       ],
+       "createdAt": 1700000000001,
+       "updatedAt": 1700000000011,
+       "source": {
+        "url": "https://video.example/playlist?list=PL1",
+        "provider": "video",
+        "id": "PL1"
+       },
+       "follow": {
+        "mode": "auto",
+        "intervalHours": 6,
+        "wifiOnly": true,
+        "notify": false,
+        "confirmAbove": 20,
+        "pendingCount": 3,
+        "pendingAt": 1700000000012
+       },
+       "newItemIds": [
+        "00000000-0000-4000-8000-000000000002"
+       ],
+       "removedItemIds": [
+        "00000000-0000-4000-8000-000000000001"
+       ]
+      },
+      {
+       "id": "00000000-0000-4000-8000-000000000103",
+       "name": "An album",
+       "kind": "album",
+       "space": "music",
+       "itemIds": [
+        "00000000-0000-4000-8000-000000000001"
+       ],
+       "seen": [],
+       "createdAt": 1700000000002,
+       "updatedAt": 1700000000002,
+       "newItemIds": [],
+       "removedItemIds": []
+      }
+     ],
+     "spaces": [
+      {
+       "id": "downloads",
+       "name": "Downloads",
+       "kind": "mixed",
+       "folder": "Downloads",
+       "layout": "collection",
+       "naming": "title",
+       "skipExisting": false,
+       "type": "folder",
+       "color": "slate",
+       "icon": "folder",
+       "pinned": true
+      },
+      {
+       "id": "music",
+       "name": "Music",
+       "kind": "music",
+       "folder": "Music",
+       "layout": "artist-album",
+       "naming": "artist-title",
+       "skipExisting": true,
+       "type": "folder",
+       "color": "cobalt",
+       "icon": "music",
+       "pinned": true,
+       "ignore": [
+        "Podcasts"
+       ],
+       "scanFolder": true
+      },
+      {
+       "id": "videos",
+       "name": "Videos",
+       "kind": "video",
+       "folder": "Videos",
+       "layout": "platform",
+       "naming": "title-uploader",
+       "skipExisting": false,
+       "type": "folder",
+       "color": "violet",
+       "icon": "video",
+       "pinned": true
+      },
+      {
+       "id": "my-space",
+       "name": "My space",
+       "kind": "music",
+       "folder": "My space",
+       "layout": "flat",
+       "naming": "date-title",
+       "skipExisting": false,
+       "type": "folder"
+      },
+      {
+       "id": "ext",
+       "name": "External",
+       "kind": "mixed",
+       "folder": "External",
+       "linked": true,
+       "layout": "flat",
+       "naming": "title",
+       "skipExisting": false,
+       "type": "folder"
+      },
+      {
+       "id": "smart-1",
+       "name": "Rock",
+       "kind": "mixed",
+       "folder": "",
+       "layout": "flat",
+       "naming": "title",
+       "skipExisting": false,
+       "type": "smart",
+       "icon": "star",
+       "rules": {
+        "match": "any",
+        "rules": [
+         {
+          "field": "tag",
+          "values": [
+           "rock"
+          ]
+         }
+        ],
+        "onlyKind": "audio"
+       }
+      }
+     ],
+     "routes": {
+      "music": "music",
+      "other": "downloads"
+     }
+    },
+    "after": {
+     "items": [
+      {
+       "id": "00000000-0000-4000-8000-000000000001",
+       "space": "music",
+       "kind": "audio",
+       "title": "Song 1",
+       "addedAt": 1700000000001,
+       "favorite": true,
+       "userTags": [
+        "alpha",
+        "zeta"
+       ],
+       "plays": 2,
+       "place": "Music/Artist/Album/song-1.mp3",
+       "artist": "Artist",
+       "album": "Album",
+       "albumArtist": "Various",
+       "track": 3,
+       "disc": 1,
+       "year": 2019,
+       "genre": "Rock",
+       "duration": 215.457,
+       "chapters": [
+        {
+         "start": 0,
+         "title": "Intro"
+        },
+        {
+         "start": 61.5,
+         "title": "Verse"
+        }
+       ],
+       "gain": -7.25,
+       "subtitles": [
+        "en"
+       ],
+       "hasLyrics": true,
+       "sourceUrl": "https://music.example/watch?v=abc",
+       "sourceId": "youtube:abc",
+       "tags": [
+        "rock",
+        "live"
+       ],
+       "lastPlayedAt": 1700000005000,
+       "position": 12.5,
+       "watched": false
+      },
+      {
+       "id": "00000000-0000-4000-8000-000000000002",
+       "space": "videos",
+       "kind": "video",
+       "title": "Clip",
+       "addedAt": 1700000000002,
+       "width": 1920,
+       "height": 1080,
+       "duration": 61,
+       "watched": true,
+       "position": 30,
+       "favorite": false,
+       "userTags": [],
+       "plays": 0,
+       "place": "Videos/clip.mp4"
+      },
+      {
+       "id": "00000000-0000-4000-8000-000000000003",
+       "space": "downloads",
+       "kind": "image",
+       "title": "Picture",
+       "addedAt": 1700000000003,
+       "favorite": false,
+       "userTags": [],
+       "plays": 0,
+       "place": "Downloads/pic.jpg"
+      },
+      {
+       "id": "00000000-0000-4000-8000-000000000004",
+       "space": "music",
+       "kind": "audio",
+       "title": "Song 4",
+       "addedAt": 1700000000004,
+       "favorite": false,
+       "userTags": [],
+       "plays": 0,
+       "place": null
+      },
+      {
+       "id": "00000000-0000-4000-8000-000000000005",
+       "space": "ext",
+       "kind": "audio",
+       "title": "Song 5",
+       "addedAt": 1700000000005,
+       "favorite": false,
+       "userTags": [],
+       "plays": 0,
+       "place": "External/x/y.mp3"
+      },
+      {
+       "id": "00000000-0000-4000-8000-000000000006",
+       "space": "my-space",
+       "kind": "audio",
+       "title": "Song 6",
+       "addedAt": 1700000000006,
+       "favorite": false,
+       "userTags": [
+        "road"
+       ],
+       "plays": 0,
+       "place": "My space/z.mp3"
+      }
+     ],
+     "collections": [
+      {
+       "id": "00000000-0000-4000-8000-000000000101",
+       "name": "Road trip",
+       "kind": "own",
+       "space": "music",
+       "itemIds": [
+        "00000000-0000-4000-8000-000000000001",
+        "00000000-0000-4000-8000-000000000002",
+        "00000000-0000-4000-8000-000000000006"
+       ],
+       "seen": [
+        "u1",
+        "u2"
+       ],
+       "createdAt": 1700000000000,
+       "updatedAt": 1700000000010,
+       "coverItemId": "00000000-0000-4000-8000-000000000001",
+       "newItemIds": [],
+       "removedItemIds": []
+      },
+      {
+       "id": "00000000-0000-4000-8000-000000000102",
+       "name": "Mix",
+       "kind": "playlist",
+       "space": "videos",
+       "itemIds": [
+        "00000000-0000-4000-8000-000000000002",
+        "00000000-0000-4000-8000-000000000001"
+       ],
+       "seen": [
+        "x"
+       ],
+       "createdAt": 1700000000001,
+       "updatedAt": 1700000000011,
+       "source": {
+        "url": "https://video.example/playlist?list=PL1",
+        "provider": "video",
+        "id": "PL1"
+       },
+       "follow": {
+        "mode": "auto",
+        "intervalHours": 6,
+        "wifiOnly": true,
+        "notify": false,
+        "confirmAbove": 20,
+        "pendingCount": 3,
+        "pendingAt": 1700000000012
+       },
+       "newItemIds": [
+        "00000000-0000-4000-8000-000000000002"
+       ],
+       "removedItemIds": [
+        "00000000-0000-4000-8000-000000000001"
+       ]
+      },
+      {
+       "id": "00000000-0000-4000-8000-000000000103",
+       "name": "An album",
+       "kind": "album",
+       "space": "music",
+       "itemIds": [
+        "00000000-0000-4000-8000-000000000001"
+       ],
+       "seen": [],
+       "createdAt": 1700000000002,
+       "updatedAt": 1700000000002,
+       "newItemIds": [],
+       "removedItemIds": []
+      }
+     ],
+     "spaces": [
+      {
+       "id": "downloads",
+       "name": "Downloads",
+       "kind": "mixed",
+       "folder": "Downloads",
+       "layout": "collection",
+       "naming": "title",
+       "skipExisting": false,
+       "type": "folder",
+       "color": "slate",
+       "icon": "folder",
+       "pinned": true
+      },
+      {
+       "id": "music",
+       "name": "Music",
+       "kind": "music",
+       "folder": "Music",
+       "layout": "artist-album",
+       "naming": "artist-title",
+       "skipExisting": true,
+       "type": "folder",
+       "color": "cobalt",
+       "icon": "music",
+       "pinned": true,
+       "ignore": [
+        "Podcasts"
+       ],
+       "scanFolder": true
+      },
+      {
+       "id": "videos",
+       "name": "Videos",
+       "kind": "video",
+       "folder": "Videos",
+       "layout": "platform",
+       "naming": "title-uploader",
+       "skipExisting": false,
+       "type": "folder",
+       "color": "violet",
+       "icon": "video",
+       "pinned": true
+      },
+      {
+       "id": "my-space",
+       "name": "My space",
+       "kind": "music",
+       "folder": "My space",
+       "layout": "flat",
+       "naming": "date-title",
+       "skipExisting": false,
+       "type": "folder"
+      },
+      {
+       "id": "ext",
+       "name": "External",
+       "kind": "mixed",
+       "folder": "External",
+       "linked": true,
+       "layout": "flat",
+       "naming": "title",
+       "skipExisting": false,
+       "type": "folder"
+      },
+      {
+       "id": "smart-1",
+       "name": "Rock",
+       "kind": "mixed",
+       "folder": "",
+       "layout": "flat",
+       "naming": "title",
+       "skipExisting": false,
+       "type": "smart",
+       "icon": "star",
+       "rules": {
+        "match": "any",
+        "rules": [
+         {
+          "field": "tag",
+          "values": [
+           "rock"
+          ]
+         }
+        ],
+        "onlyKind": "audio"
+       }
+      }
+     ],
+     "routes": {
+      "music": "music",
+      "other": "downloads"
+     }
+    }
+   },
+   "expected": []
+  },
+  {
+   "name": "placement moves and clears",
+   "input": {
+    "op": "diff",
+    "actor": "11111111-1111-4111-8111-111111111111",
+    "replicaId": "22222222-2222-4222-8222-222222222222",
+    "before": {
+     "items": [
+      {
+       "id": "00000000-0000-4000-8000-000000000001",
+       "space": "music",
+       "kind": "audio",
+       "title": "Song 1",
+       "addedAt": 1700000000001,
+       "favorite": true,
+       "userTags": [
+        "alpha",
+        "zeta"
+       ],
+       "plays": 5,
+       "place": "Music/Artist/Album/song-1.mp3",
+       "artist": "Artist",
+       "album": "Album",
+       "albumArtist": "Various",
+       "track": 3,
+       "disc": 1,
+       "year": 2019,
+       "genre": "Rock",
+       "duration": 215.457,
+       "chapters": [
+        {
+         "start": 0,
+         "title": "Intro"
+        },
+        {
+         "start": 61.5,
+         "title": "Verse"
+        }
+       ],
+       "gain": -7.25,
+       "subtitles": [
+        "en"
+       ],
+       "hasLyrics": true,
+       "sourceUrl": "https://music.example/watch?v=abc",
+       "sourceId": "youtube:abc",
+       "tags": [
+        "rock",
+        "live"
+       ],
+       "lastPlayedAt": 1700000005000,
+       "position": 12.5,
+       "watched": false
+      },
+      {
+       "id": "00000000-0000-4000-8000-000000000002",
+       "space": "videos",
+       "kind": "video",
+       "title": "Clip",
+       "addedAt": 1700000000002,
+       "width": 1920,
+       "height": 1080,
+       "duration": 61,
+       "watched": true,
+       "position": 30,
+       "favorite": false,
+       "userTags": [],
+       "plays": 0,
+       "place": "Videos/clip.mp4"
+      },
+      {
+       "id": "00000000-0000-4000-8000-000000000003",
+       "space": "downloads",
+       "kind": "image",
+       "title": "Picture",
+       "addedAt": 1700000000003,
+       "favorite": false,
+       "userTags": [],
+       "plays": 0,
+       "place": "Downloads/pic.jpg"
+      },
+      {
+       "id": "00000000-0000-4000-8000-000000000004",
+       "space": "music",
+       "kind": "audio",
+       "title": "Song 4",
+       "addedAt": 1700000000004,
+       "favorite": false,
+       "userTags": [],
+       "plays": 0,
+       "place": null
+      },
+      {
+       "id": "00000000-0000-4000-8000-000000000005",
+       "space": "ext",
+       "kind": "audio",
+       "title": "Song 5",
+       "addedAt": 1700000000005,
+       "favorite": false,
+       "userTags": [],
+       "plays": 0,
+       "place": "External/x/y.mp3"
+      },
+      {
+       "id": "00000000-0000-4000-8000-000000000006",
+       "space": "my-space",
+       "kind": "audio",
+       "title": "Song 6",
+       "addedAt": 1700000000006,
+       "favorite": false,
+       "userTags": [
+        "road"
+       ],
+       "plays": 0,
+       "place": "My space/z.mp3"
+      }
+     ],
+     "collections": [
+      {
+       "id": "00000000-0000-4000-8000-000000000101",
+       "name": "Road trip",
+       "kind": "own",
+       "space": "music",
+       "itemIds": [
+        "00000000-0000-4000-8000-000000000001",
+        "00000000-0000-4000-8000-000000000002",
+        "00000000-0000-4000-8000-000000000006"
+       ],
+       "seen": [
+        "u1",
+        "u2"
+       ],
+       "createdAt": 1700000000000,
+       "updatedAt": 1700000000010,
+       "coverItemId": "00000000-0000-4000-8000-000000000001",
+       "newItemIds": [],
+       "removedItemIds": []
+      },
+      {
+       "id": "00000000-0000-4000-8000-000000000102",
+       "name": "Mix",
+       "kind": "playlist",
+       "space": "videos",
+       "itemIds": [
+        "00000000-0000-4000-8000-000000000002",
+        "00000000-0000-4000-8000-000000000001"
+       ],
+       "seen": [
+        "x"
+       ],
+       "createdAt": 1700000000001,
+       "updatedAt": 1700000000011,
+       "source": {
+        "url": "https://video.example/playlist?list=PL1",
+        "provider": "video",
+        "id": "PL1"
+       },
+       "follow": {
+        "mode": "auto",
+        "intervalHours": 6,
+        "wifiOnly": true,
+        "notify": false,
+        "confirmAbove": 20,
+        "pendingCount": 3,
+        "pendingAt": 1700000000012
+       },
+       "newItemIds": [
+        "00000000-0000-4000-8000-000000000002"
+       ],
+       "removedItemIds": [
+        "00000000-0000-4000-8000-000000000001"
+       ]
+      },
+      {
+       "id": "00000000-0000-4000-8000-000000000103",
+       "name": "An album",
+       "kind": "album",
+       "space": "music",
+       "itemIds": [
+        "00000000-0000-4000-8000-000000000001"
+       ],
+       "seen": [],
+       "createdAt": 1700000000002,
+       "updatedAt": 1700000000002,
+       "newItemIds": [],
+       "removedItemIds": []
+      }
+     ],
+     "spaces": [
+      {
+       "id": "downloads",
+       "name": "Downloads",
+       "kind": "mixed",
+       "folder": "Downloads",
+       "layout": "collection",
+       "naming": "title",
+       "skipExisting": false,
+       "type": "folder",
+       "color": "slate",
+       "icon": "folder",
+       "pinned": true
+      },
+      {
+       "id": "music",
+       "name": "Music",
+       "kind": "music",
+       "folder": "Music",
+       "layout": "artist-album",
+       "naming": "artist-title",
+       "skipExisting": true,
+       "type": "folder",
+       "color": "cobalt",
+       "icon": "music",
+       "pinned": true,
+       "ignore": [
+        "Podcasts"
+       ],
+       "scanFolder": true
+      },
+      {
+       "id": "videos",
+       "name": "Videos",
+       "kind": "video",
+       "folder": "Videos",
+       "layout": "platform",
+       "naming": "title-uploader",
+       "skipExisting": false,
+       "type": "folder",
+       "color": "violet",
+       "icon": "video",
+       "pinned": true
+      },
+      {
+       "id": "my-space",
+       "name": "My space",
+       "kind": "music",
+       "folder": "My space",
+       "layout": "flat",
+       "naming": "date-title",
+       "skipExisting": false,
+       "type": "folder"
+      },
+      {
+       "id": "ext",
+       "name": "External",
+       "kind": "mixed",
+       "folder": "External",
+       "linked": true,
+       "layout": "flat",
+       "naming": "title",
+       "skipExisting": false,
+       "type": "folder"
+      },
+      {
+       "id": "smart-1",
+       "name": "Rock",
+       "kind": "mixed",
+       "folder": "",
+       "layout": "flat",
+       "naming": "title",
+       "skipExisting": false,
+       "type": "smart",
+       "icon": "star",
+       "rules": {
+        "match": "any",
+        "rules": [
+         {
+          "field": "tag",
+          "values": [
+           "rock"
+          ]
+         }
+        ],
+        "onlyKind": "audio"
+       }
+      }
+     ],
+     "routes": {
+      "music": "music",
+      "other": "downloads"
+     }
+    },
+    "after": {
+     "items": [
+      {
+       "id": "00000000-0000-4000-8000-000000000001",
+       "space": "music",
+       "kind": "audio",
+       "title": "Song 1",
+       "addedAt": 1700000000001,
+       "favorite": true,
+       "userTags": [
+        "alpha",
+        "zeta"
+       ],
+       "plays": 5,
+       "place": "Music/Artist/Album/renamed.mp3",
+       "artist": "Artist",
+       "album": "Album",
+       "albumArtist": "Various",
+       "track": 3,
+       "disc": 1,
+       "year": 2019,
+       "genre": "Rock",
+       "duration": 215.457,
+       "chapters": [
+        {
+         "start": 0,
+         "title": "Intro"
+        },
+        {
+         "start": 61.5,
+         "title": "Verse"
+        }
+       ],
+       "gain": -7.25,
+       "subtitles": [
+        "en"
+       ],
+       "hasLyrics": true,
+       "sourceUrl": "https://music.example/watch?v=abc",
+       "sourceId": "youtube:abc",
+       "tags": [
+        "rock",
+        "live"
+       ],
+       "lastPlayedAt": 1700000005000,
+       "position": 12.5,
+       "watched": false
+      },
+      {
+       "id": "00000000-0000-4000-8000-000000000002",
+       "space": "videos",
+       "kind": "video",
+       "title": "Clip",
+       "addedAt": 1700000000002,
+       "width": 1920,
+       "height": 1080,
+       "duration": 61,
+       "watched": true,
+       "position": 30,
+       "favorite": false,
+       "userTags": [],
+       "plays": 0,
+       "place": null
+      },
+      {
+       "id": "00000000-0000-4000-8000-000000000003",
+       "space": "downloads",
+       "kind": "image",
+       "title": "Picture",
+       "addedAt": 1700000000003,
+       "favorite": false,
+       "userTags": [],
+       "plays": 0,
+       "place": "Downloads/pic.jpg"
+      },
+      {
+       "id": "00000000-0000-4000-8000-000000000004",
+       "space": "music",
+       "kind": "audio",
+       "title": "Song 4",
+       "addedAt": 1700000000004,
+       "favorite": false,
+       "userTags": [],
+       "plays": 0,
+       "place": "Music/found.mp3"
+      },
+      {
+       "id": "00000000-0000-4000-8000-000000000005",
+       "space": "ext",
+       "kind": "audio",
+       "title": "Song 5",
+       "addedAt": 1700000000005,
+       "favorite": false,
+       "userTags": [],
+       "plays": 0,
+       "place": "External/other/y.mp3"
+      },
+      {
+       "id": "00000000-0000-4000-8000-000000000006",
+       "space": "my-space",
+       "kind": "audio",
+       "title": "Song 6",
+       "addedAt": 1700000000006,
+       "favorite": false,
+       "userTags": [
+        "road"
+       ],
+       "plays": 0,
+       "place": "My space/z.mp3"
+      }
+     ],
+     "collections": [
+      {
+       "id": "00000000-0000-4000-8000-000000000101",
+       "name": "Road trip",
+       "kind": "own",
+       "space": "music",
+       "itemIds": [
+        "00000000-0000-4000-8000-000000000001",
+        "00000000-0000-4000-8000-000000000002",
+        "00000000-0000-4000-8000-000000000006"
+       ],
+       "seen": [
+        "u1",
+        "u2"
+       ],
+       "createdAt": 1700000000000,
+       "updatedAt": 1700000000010,
+       "coverItemId": "00000000-0000-4000-8000-000000000001",
+       "newItemIds": [],
+       "removedItemIds": []
+      },
+      {
+       "id": "00000000-0000-4000-8000-000000000102",
+       "name": "Mix",
+       "kind": "playlist",
+       "space": "videos",
+       "itemIds": [
+        "00000000-0000-4000-8000-000000000002",
+        "00000000-0000-4000-8000-000000000001"
+       ],
+       "seen": [
+        "x"
+       ],
+       "createdAt": 1700000000001,
+       "updatedAt": 1700000000011,
+       "source": {
+        "url": "https://video.example/playlist?list=PL1",
+        "provider": "video",
+        "id": "PL1"
+       },
+       "follow": {
+        "mode": "auto",
+        "intervalHours": 6,
+        "wifiOnly": true,
+        "notify": false,
+        "confirmAbove": 20,
+        "pendingCount": 3,
+        "pendingAt": 1700000000012
+       },
+       "newItemIds": [
+        "00000000-0000-4000-8000-000000000002"
+       ],
+       "removedItemIds": [
+        "00000000-0000-4000-8000-000000000001"
+       ]
+      },
+      {
+       "id": "00000000-0000-4000-8000-000000000103",
+       "name": "An album",
+       "kind": "album",
+       "space": "music",
+       "itemIds": [
+        "00000000-0000-4000-8000-000000000001"
+       ],
+       "seen": [],
+       "createdAt": 1700000000002,
+       "updatedAt": 1700000000002,
+       "newItemIds": [],
+       "removedItemIds": []
+      }
+     ],
+     "spaces": [
+      {
+       "id": "downloads",
+       "name": "Downloads",
+       "kind": "mixed",
+       "folder": "Downloads",
+       "layout": "collection",
+       "naming": "title",
+       "skipExisting": false,
+       "type": "folder",
+       "color": "slate",
+       "icon": "folder",
+       "pinned": true
+      },
+      {
+       "id": "music",
+       "name": "Music",
+       "kind": "music",
+       "folder": "Music",
+       "layout": "artist-album",
+       "naming": "artist-title",
+       "skipExisting": true,
+       "type": "folder",
+       "color": "cobalt",
+       "icon": "music",
+       "pinned": true,
+       "ignore": [
+        "Podcasts"
+       ],
+       "scanFolder": true
+      },
+      {
+       "id": "videos",
+       "name": "Videos",
+       "kind": "video",
+       "folder": "Videos",
+       "layout": "platform",
+       "naming": "title-uploader",
+       "skipExisting": false,
+       "type": "folder",
+       "color": "violet",
+       "icon": "video",
+       "pinned": true
+      },
+      {
+       "id": "my-space",
+       "name": "My space",
+       "kind": "music",
+       "folder": "My space",
+       "layout": "flat",
+       "naming": "date-title",
+       "skipExisting": false,
+       "type": "folder"
+      },
+      {
+       "id": "ext",
+       "name": "External",
+       "kind": "mixed",
+       "folder": "External",
+       "linked": true,
+       "layout": "flat",
+       "naming": "title",
+       "skipExisting": false,
+       "type": "folder"
+      },
+      {
+       "id": "smart-1",
+       "name": "Rock",
+       "kind": "mixed",
+       "folder": "",
+       "layout": "flat",
+       "naming": "title",
+       "skipExisting": false,
+       "type": "smart",
+       "icon": "star",
+       "rules": {
+        "match": "any",
+        "rules": [
+         {
+          "field": "tag",
+          "values": [
+           "rock"
+          ]
+         }
+        ],
+        "onlyKind": "audio"
+       }
+      }
+     ],
+     "routes": {
+      "music": "music",
+      "other": "downloads"
+     }
+    }
+   },
+   "expected": [
+    {
+     "kind": "item.place",
+     "body": {
+      "item": "00000000-0000-4000-8000-000000000001",
+      "place": "22222222-2222-4222-8222-222222222222",
+      "path": "Music/Artist/Album/renamed.mp3"
+     }
+    },
+    {
+     "kind": "item.place",
+     "body": {
+      "item": "00000000-0000-4000-8000-000000000002",
+      "place": "22222222-2222-4222-8222-222222222222",
+      "path": null
+     }
+    },
+    {
+     "kind": "item.place",
+     "body": {
+      "item": "00000000-0000-4000-8000-000000000004",
+      "place": "22222222-2222-4222-8222-222222222222",
+      "path": "Music/found.mp3"
+     }
+    },
+    {
+     "kind": "item.place",
+     "body": {
+      "item": "00000000-0000-4000-8000-000000000005",
+      "place": "22222222-2222-4222-8222-222222222222",
+      "path": "External/other/y.mp3"
+     }
+    }
+   ]
+  },
+  {
+   "name": "deleting an item observes its tags and heads",
+   "input": {
+    "op": "diff",
+    "actor": "11111111-1111-4111-8111-111111111111",
+    "replicaId": "22222222-2222-4222-8222-222222222222",
+    "before": {
+     "items": [
+      {
+       "id": "00000000-0000-4000-8000-000000000001",
+       "space": "music",
+       "kind": "audio",
+       "title": "Song 1",
+       "addedAt": 1700000000001,
+       "favorite": true,
+       "userTags": [
+        "alpha",
+        "zeta"
+       ],
+       "plays": 5,
+       "place": "Music/Artist/Album/song-1.mp3",
+       "artist": "Artist",
+       "album": "Album",
+       "albumArtist": "Various",
+       "track": 3,
+       "disc": 1,
+       "year": 2019,
+       "genre": "Rock",
+       "duration": 215.457,
+       "chapters": [
+        {
+         "start": 0,
+         "title": "Intro"
+        },
+        {
+         "start": 61.5,
+         "title": "Verse"
+        }
+       ],
+       "gain": -7.25,
+       "subtitles": [
+        "en"
+       ],
+       "hasLyrics": true,
+       "sourceUrl": "https://music.example/watch?v=abc",
+       "sourceId": "youtube:abc",
+       "tags": [
+        "rock",
+        "live"
+       ],
+       "lastPlayedAt": 1700000005000,
+       "position": 12.5,
+       "watched": false
+      },
+      {
+       "id": "00000000-0000-4000-8000-000000000002",
+       "space": "videos",
+       "kind": "video",
+       "title": "Clip",
+       "addedAt": 1700000000002,
+       "width": 1920,
+       "height": 1080,
+       "duration": 61,
+       "watched": true,
+       "position": 30,
+       "favorite": false,
+       "userTags": [],
+       "plays": 0,
+       "place": "Videos/clip.mp4"
+      },
+      {
+       "id": "00000000-0000-4000-8000-000000000003",
+       "space": "downloads",
+       "kind": "image",
+       "title": "Picture",
+       "addedAt": 1700000000003,
+       "favorite": false,
+       "userTags": [],
+       "plays": 0,
+       "place": "Downloads/pic.jpg"
+      },
+      {
+       "id": "00000000-0000-4000-8000-000000000004",
+       "space": "music",
+       "kind": "audio",
+       "title": "Song 4",
+       "addedAt": 1700000000004,
+       "favorite": false,
+       "userTags": [],
+       "plays": 0,
+       "place": null
+      },
+      {
+       "id": "00000000-0000-4000-8000-000000000005",
+       "space": "ext",
+       "kind": "audio",
+       "title": "Song 5",
+       "addedAt": 1700000000005,
+       "favorite": false,
+       "userTags": [],
+       "plays": 0,
+       "place": "External/x/y.mp3"
+      },
+      {
+       "id": "00000000-0000-4000-8000-000000000006",
+       "space": "my-space",
+       "kind": "audio",
+       "title": "Song 6",
+       "addedAt": 1700000000006,
+       "favorite": false,
+       "userTags": [
+        "road"
+       ],
+       "plays": 0,
+       "place": "My space/z.mp3"
+      }
+     ],
+     "collections": [
+      {
+       "id": "00000000-0000-4000-8000-000000000101",
+       "name": "Road trip",
+       "kind": "own",
+       "space": "music",
+       "itemIds": [
+        "00000000-0000-4000-8000-000000000001",
+        "00000000-0000-4000-8000-000000000002",
+        "00000000-0000-4000-8000-000000000006"
+       ],
+       "seen": [
+        "u1",
+        "u2"
+       ],
+       "createdAt": 1700000000000,
+       "updatedAt": 1700000000010,
+       "coverItemId": "00000000-0000-4000-8000-000000000001",
+       "newItemIds": [],
+       "removedItemIds": []
+      },
+      {
+       "id": "00000000-0000-4000-8000-000000000102",
+       "name": "Mix",
+       "kind": "playlist",
+       "space": "videos",
+       "itemIds": [
+        "00000000-0000-4000-8000-000000000002",
+        "00000000-0000-4000-8000-000000000001"
+       ],
+       "seen": [
+        "x"
+       ],
+       "createdAt": 1700000000001,
+       "updatedAt": 1700000000011,
+       "source": {
+        "url": "https://video.example/playlist?list=PL1",
+        "provider": "video",
+        "id": "PL1"
+       },
+       "follow": {
+        "mode": "auto",
+        "intervalHours": 6,
+        "wifiOnly": true,
+        "notify": false,
+        "confirmAbove": 20,
+        "pendingCount": 3,
+        "pendingAt": 1700000000012
+       },
+       "newItemIds": [
+        "00000000-0000-4000-8000-000000000002"
+       ],
+       "removedItemIds": [
+        "00000000-0000-4000-8000-000000000001"
+       ]
+      },
+      {
+       "id": "00000000-0000-4000-8000-000000000103",
+       "name": "An album",
+       "kind": "album",
+       "space": "music",
+       "itemIds": [
+        "00000000-0000-4000-8000-000000000001"
+       ],
+       "seen": [],
+       "createdAt": 1700000000002,
+       "updatedAt": 1700000000002,
+       "newItemIds": [],
+       "removedItemIds": []
+      }
+     ],
+     "spaces": [
+      {
+       "id": "downloads",
+       "name": "Downloads",
+       "kind": "mixed",
+       "folder": "Downloads",
+       "layout": "collection",
+       "naming": "title",
+       "skipExisting": false,
+       "type": "folder",
+       "color": "slate",
+       "icon": "folder",
+       "pinned": true
+      },
+      {
+       "id": "music",
+       "name": "Music",
+       "kind": "music",
+       "folder": "Music",
+       "layout": "artist-album",
+       "naming": "artist-title",
+       "skipExisting": true,
+       "type": "folder",
+       "color": "cobalt",
+       "icon": "music",
+       "pinned": true,
+       "ignore": [
+        "Podcasts"
+       ],
+       "scanFolder": true
+      },
+      {
+       "id": "videos",
+       "name": "Videos",
+       "kind": "video",
+       "folder": "Videos",
+       "layout": "platform",
+       "naming": "title-uploader",
+       "skipExisting": false,
+       "type": "folder",
+       "color": "violet",
+       "icon": "video",
+       "pinned": true
+      },
+      {
+       "id": "my-space",
+       "name": "My space",
+       "kind": "music",
+       "folder": "My space",
+       "layout": "flat",
+       "naming": "date-title",
+       "skipExisting": false,
+       "type": "folder"
+      },
+      {
+       "id": "ext",
+       "name": "External",
+       "kind": "mixed",
+       "folder": "External",
+       "linked": true,
+       "layout": "flat",
+       "naming": "title",
+       "skipExisting": false,
+       "type": "folder"
+      },
+      {
+       "id": "smart-1",
+       "name": "Rock",
+       "kind": "mixed",
+       "folder": "",
+       "layout": "flat",
+       "naming": "title",
+       "skipExisting": false,
+       "type": "smart",
+       "icon": "star",
+       "rules": {
+        "match": "any",
+        "rules": [
+         {
+          "field": "tag",
+          "values": [
+           "rock"
+          ]
+         }
+        ],
+        "onlyKind": "audio"
+       }
+      }
+     ],
+     "routes": {
+      "music": "music",
+      "other": "downloads"
+     }
+    },
+    "after": {
+     "items": [
+      {
+       "id": "00000000-0000-4000-8000-000000000002",
+       "space": "videos",
+       "kind": "video",
+       "title": "Clip",
+       "addedAt": 1700000000002,
+       "width": 1920,
+       "height": 1080,
+       "duration": 61,
+       "watched": true,
+       "position": 30,
+       "favorite": false,
+       "userTags": [],
+       "plays": 0,
+       "place": "Videos/clip.mp4"
+      },
+      {
+       "id": "00000000-0000-4000-8000-000000000004",
+       "space": "music",
+       "kind": "audio",
+       "title": "Song 4",
+       "addedAt": 1700000000004,
+       "favorite": false,
+       "userTags": [],
+       "plays": 0,
+       "place": null
+      },
+      {
+       "id": "00000000-0000-4000-8000-000000000005",
+       "space": "ext",
+       "kind": "audio",
+       "title": "Song 5",
+       "addedAt": 1700000000005,
+       "favorite": false,
+       "userTags": [],
+       "plays": 0,
+       "place": "External/x/y.mp3"
+      },
+      {
+       "id": "00000000-0000-4000-8000-000000000006",
+       "space": "my-space",
+       "kind": "audio",
+       "title": "Song 6",
+       "addedAt": 1700000000006,
+       "favorite": false,
+       "userTags": [
+        "road"
+       ],
+       "plays": 0,
+       "place": "My space/z.mp3"
+      }
+     ],
+     "collections": [
+      {
+       "id": "00000000-0000-4000-8000-000000000101",
+       "name": "Road trip",
+       "kind": "own",
+       "space": "music",
+       "itemIds": [
+        "00000000-0000-4000-8000-000000000001",
+        "00000000-0000-4000-8000-000000000002",
+        "00000000-0000-4000-8000-000000000006"
+       ],
+       "seen": [
+        "u1",
+        "u2"
+       ],
+       "createdAt": 1700000000000,
+       "updatedAt": 1700000000010,
+       "coverItemId": "00000000-0000-4000-8000-000000000001",
+       "newItemIds": [],
+       "removedItemIds": []
+      },
+      {
+       "id": "00000000-0000-4000-8000-000000000102",
+       "name": "Mix",
+       "kind": "playlist",
+       "space": "videos",
+       "itemIds": [
+        "00000000-0000-4000-8000-000000000002",
+        "00000000-0000-4000-8000-000000000001"
+       ],
+       "seen": [
+        "x"
+       ],
+       "createdAt": 1700000000001,
+       "updatedAt": 1700000000011,
+       "source": {
+        "url": "https://video.example/playlist?list=PL1",
+        "provider": "video",
+        "id": "PL1"
+       },
+       "follow": {
+        "mode": "auto",
+        "intervalHours": 6,
+        "wifiOnly": true,
+        "notify": false,
+        "confirmAbove": 20,
+        "pendingCount": 3,
+        "pendingAt": 1700000000012
+       },
+       "newItemIds": [
+        "00000000-0000-4000-8000-000000000002"
+       ],
+       "removedItemIds": [
+        "00000000-0000-4000-8000-000000000001"
+       ]
+      },
+      {
+       "id": "00000000-0000-4000-8000-000000000103",
+       "name": "An album",
+       "kind": "album",
+       "space": "music",
+       "itemIds": [
+        "00000000-0000-4000-8000-000000000001"
+       ],
+       "seen": [],
+       "createdAt": 1700000000002,
+       "updatedAt": 1700000000002,
+       "newItemIds": [],
+       "removedItemIds": []
+      }
+     ],
+     "spaces": [
+      {
+       "id": "downloads",
+       "name": "Downloads",
+       "kind": "mixed",
+       "folder": "Downloads",
+       "layout": "collection",
+       "naming": "title",
+       "skipExisting": false,
+       "type": "folder",
+       "color": "slate",
+       "icon": "folder",
+       "pinned": true
+      },
+      {
+       "id": "music",
+       "name": "Music",
+       "kind": "music",
+       "folder": "Music",
+       "layout": "artist-album",
+       "naming": "artist-title",
+       "skipExisting": true,
+       "type": "folder",
+       "color": "cobalt",
+       "icon": "music",
+       "pinned": true,
+       "ignore": [
+        "Podcasts"
+       ],
+       "scanFolder": true
+      },
+      {
+       "id": "videos",
+       "name": "Videos",
+       "kind": "video",
+       "folder": "Videos",
+       "layout": "platform",
+       "naming": "title-uploader",
+       "skipExisting": false,
+       "type": "folder",
+       "color": "violet",
+       "icon": "video",
+       "pinned": true
+      },
+      {
+       "id": "my-space",
+       "name": "My space",
+       "kind": "music",
+       "folder": "My space",
+       "layout": "flat",
+       "naming": "date-title",
+       "skipExisting": false,
+       "type": "folder"
+      },
+      {
+       "id": "ext",
+       "name": "External",
+       "kind": "mixed",
+       "folder": "External",
+       "linked": true,
+       "layout": "flat",
+       "naming": "title",
+       "skipExisting": false,
+       "type": "folder"
+      },
+      {
+       "id": "smart-1",
+       "name": "Rock",
+       "kind": "mixed",
+       "folder": "",
+       "layout": "flat",
+       "naming": "title",
+       "skipExisting": false,
+       "type": "smart",
+       "icon": "star",
+       "rules": {
+        "match": "any",
+        "rules": [
+         {
+          "field": "tag",
+          "values": [
+           "rock"
+          ]
+         }
+        ],
+        "onlyKind": "audio"
+       }
+      }
+     ],
+     "routes": {
+      "music": "music",
+      "other": "downloads"
+     }
+    },
+    "songs": {
+     "00000000-0000-4000-8000-000000000101": [
+      {
+       "entry": "00000000-0000-4000-9000-000000000001",
+       "item": "00000000-0000-4000-8000-000000000001",
+       "key": "a0"
+      },
+      {
+       "entry": "00000000-0000-4000-9000-000000000002",
+       "item": "00000000-0000-4000-8000-000000000002",
+       "key": "a1"
+      },
+      {
+       "entry": "00000000-0000-4000-9000-000000000003",
+       "item": "00000000-0000-4000-8000-000000000006",
+       "key": "a2"
+      }
+     ],
+     "00000000-0000-4000-8000-000000000102": [
+      {
+       "entry": "00000000-0000-4000-9000-000000000004",
+       "item": "00000000-0000-4000-8000-000000000002",
+       "key": "a0"
+      },
+      {
+       "entry": "00000000-0000-4000-9000-000000000005",
+       "item": "00000000-0000-4000-8000-000000000001",
+       "key": "a1"
+      }
+     ],
+     "00000000-0000-4000-8000-000000000103": [
+      {
+       "entry": "00000000-0000-4000-9000-000000000006",
+       "item": "00000000-0000-4000-8000-000000000001",
+       "key": "a0"
+      }
+     ]
+    },
+    "observed": {
+     "items": {
+      "00000000-0000-4000-8000-000000000001": {
+       "heads": [],
+       "tags": [
+        "11111111-1111-4111-8111-111111111111:8"
+       ]
+      },
+      "00000000-0000-4000-8000-000000000003": {
+       "heads": [],
+       "tags": [
+        "11111111-1111-4111-8111-111111111111:16"
+       ]
+      }
+     },
+     "playlists": {},
+     "spaces": {},
+     "members": {
+      "removed:00000000-0000-4000-8000-000000000102": {
+       "00000000-0000-4000-8000-000000000001": [
+        "11111111-1111-4111-8111-111111111111:35"
+       ]
+      }
+     }
+    }
+   },
+   "expected": [
+    {
+     "kind": "item.delete",
+     "body": {
+      "item": "00000000-0000-4000-8000-000000000001",
+      "observedTags": [
+       "11111111-1111-4111-8111-111111111111:8"
+      ],
+      "observedHeads": []
+     }
+    },
+    {
+     "kind": "item.delete",
+     "body": {
+      "item": "00000000-0000-4000-8000-000000000003",
+      "observedTags": [
+       "11111111-1111-4111-8111-111111111111:16"
+      ],
+      "observedHeads": []
+     }
+    },
+    {
+     "kind": "entry.remove",
+     "body": {
+      "entry": "00000000-0000-4000-9000-000000000001"
+     }
+    },
+    {
+     "kind": "set.remove",
+     "body": {
+      "set": "removed:00000000-0000-4000-8000-000000000102",
+      "element": "00000000-0000-4000-8000-000000000001",
+      "observedTags": [
+       "11111111-1111-4111-8111-111111111111:35"
+      ]
+     }
+    },
+    {
+     "kind": "entry.remove",
+     "body": {
+      "entry": "00000000-0000-4000-9000-000000000005"
+     }
+    },
+    {
+     "kind": "entry.remove",
+     "body": {
+      "entry": "00000000-0000-4000-9000-000000000006"
+     }
+    }
+   ]
+  },
+  {
+   "name": "space edits, a new space and a removed space",
+   "input": {
+    "op": "diff",
+    "actor": "11111111-1111-4111-8111-111111111111",
+    "replicaId": "22222222-2222-4222-8222-222222222222",
+    "before": {
+     "items": [
+      {
+       "id": "00000000-0000-4000-8000-000000000001",
+       "space": "music",
+       "kind": "audio",
+       "title": "Song 1",
+       "addedAt": 1700000000001,
+       "favorite": true,
+       "userTags": [
+        "alpha",
+        "zeta"
+       ],
+       "plays": 5,
+       "place": "Music/Artist/Album/song-1.mp3",
+       "artist": "Artist",
+       "album": "Album",
+       "albumArtist": "Various",
+       "track": 3,
+       "disc": 1,
+       "year": 2019,
+       "genre": "Rock",
+       "duration": 215.457,
+       "chapters": [
+        {
+         "start": 0,
+         "title": "Intro"
+        },
+        {
+         "start": 61.5,
+         "title": "Verse"
+        }
+       ],
+       "gain": -7.25,
+       "subtitles": [
+        "en"
+       ],
+       "hasLyrics": true,
+       "sourceUrl": "https://music.example/watch?v=abc",
+       "sourceId": "youtube:abc",
+       "tags": [
+        "rock",
+        "live"
+       ],
+       "lastPlayedAt": 1700000005000,
+       "position": 12.5,
+       "watched": false
+      },
+      {
+       "id": "00000000-0000-4000-8000-000000000002",
+       "space": "videos",
+       "kind": "video",
+       "title": "Clip",
+       "addedAt": 1700000000002,
+       "width": 1920,
+       "height": 1080,
+       "duration": 61,
+       "watched": true,
+       "position": 30,
+       "favorite": false,
+       "userTags": [],
+       "plays": 0,
+       "place": "Videos/clip.mp4"
+      },
+      {
+       "id": "00000000-0000-4000-8000-000000000003",
+       "space": "downloads",
+       "kind": "image",
+       "title": "Picture",
+       "addedAt": 1700000000003,
+       "favorite": false,
+       "userTags": [],
+       "plays": 0,
+       "place": "Downloads/pic.jpg"
+      },
+      {
+       "id": "00000000-0000-4000-8000-000000000004",
+       "space": "music",
+       "kind": "audio",
+       "title": "Song 4",
+       "addedAt": 1700000000004,
+       "favorite": false,
+       "userTags": [],
+       "plays": 0,
+       "place": null
+      },
+      {
+       "id": "00000000-0000-4000-8000-000000000005",
+       "space": "ext",
+       "kind": "audio",
+       "title": "Song 5",
+       "addedAt": 1700000000005,
+       "favorite": false,
+       "userTags": [],
+       "plays": 0,
+       "place": "External/x/y.mp3"
+      },
+      {
+       "id": "00000000-0000-4000-8000-000000000006",
+       "space": "my-space",
+       "kind": "audio",
+       "title": "Song 6",
+       "addedAt": 1700000000006,
+       "favorite": false,
+       "userTags": [
+        "road"
+       ],
+       "plays": 0,
+       "place": "My space/z.mp3"
+      }
+     ],
+     "collections": [
+      {
+       "id": "00000000-0000-4000-8000-000000000101",
+       "name": "Road trip",
+       "kind": "own",
+       "space": "music",
+       "itemIds": [
+        "00000000-0000-4000-8000-000000000001",
+        "00000000-0000-4000-8000-000000000002",
+        "00000000-0000-4000-8000-000000000006"
+       ],
+       "seen": [
+        "u1",
+        "u2"
+       ],
+       "createdAt": 1700000000000,
+       "updatedAt": 1700000000010,
+       "coverItemId": "00000000-0000-4000-8000-000000000001",
+       "newItemIds": [],
+       "removedItemIds": []
+      },
+      {
+       "id": "00000000-0000-4000-8000-000000000102",
+       "name": "Mix",
+       "kind": "playlist",
+       "space": "videos",
+       "itemIds": [
+        "00000000-0000-4000-8000-000000000002",
+        "00000000-0000-4000-8000-000000000001"
+       ],
+       "seen": [
+        "x"
+       ],
+       "createdAt": 1700000000001,
+       "updatedAt": 1700000000011,
+       "source": {
+        "url": "https://video.example/playlist?list=PL1",
+        "provider": "video",
+        "id": "PL1"
+       },
+       "follow": {
+        "mode": "auto",
+        "intervalHours": 6,
+        "wifiOnly": true,
+        "notify": false,
+        "confirmAbove": 20,
+        "pendingCount": 3,
+        "pendingAt": 1700000000012
+       },
+       "newItemIds": [
+        "00000000-0000-4000-8000-000000000002"
+       ],
+       "removedItemIds": [
+        "00000000-0000-4000-8000-000000000001"
+       ]
+      },
+      {
+       "id": "00000000-0000-4000-8000-000000000103",
+       "name": "An album",
+       "kind": "album",
+       "space": "music",
+       "itemIds": [
+        "00000000-0000-4000-8000-000000000001"
+       ],
+       "seen": [],
+       "createdAt": 1700000000002,
+       "updatedAt": 1700000000002,
+       "newItemIds": [],
+       "removedItemIds": []
+      }
+     ],
+     "spaces": [
+      {
+       "id": "downloads",
+       "name": "Downloads",
+       "kind": "mixed",
+       "folder": "Downloads",
+       "layout": "collection",
+       "naming": "title",
+       "skipExisting": false,
+       "type": "folder",
+       "color": "slate",
+       "icon": "folder",
+       "pinned": true
+      },
+      {
+       "id": "music",
+       "name": "Music",
+       "kind": "music",
+       "folder": "Music",
+       "layout": "artist-album",
+       "naming": "artist-title",
+       "skipExisting": true,
+       "type": "folder",
+       "color": "cobalt",
+       "icon": "music",
+       "pinned": true,
+       "ignore": [
+        "Podcasts"
+       ],
+       "scanFolder": true
+      },
+      {
+       "id": "videos",
+       "name": "Videos",
+       "kind": "video",
+       "folder": "Videos",
+       "layout": "platform",
+       "naming": "title-uploader",
+       "skipExisting": false,
+       "type": "folder",
+       "color": "violet",
+       "icon": "video",
+       "pinned": true
+      },
+      {
+       "id": "my-space",
+       "name": "My space",
+       "kind": "music",
+       "folder": "My space",
+       "layout": "flat",
+       "naming": "date-title",
+       "skipExisting": false,
+       "type": "folder"
+      },
+      {
+       "id": "ext",
+       "name": "External",
+       "kind": "mixed",
+       "folder": "External",
+       "linked": true,
+       "layout": "flat",
+       "naming": "title",
+       "skipExisting": false,
+       "type": "folder"
+      },
+      {
+       "id": "smart-1",
+       "name": "Rock",
+       "kind": "mixed",
+       "folder": "",
+       "layout": "flat",
+       "naming": "title",
+       "skipExisting": false,
+       "type": "smart",
+       "icon": "star",
+       "rules": {
+        "match": "any",
+        "rules": [
+         {
+          "field": "tag",
+          "values": [
+           "rock"
+          ]
+         }
+        ],
+        "onlyKind": "audio"
+       }
+      }
+     ],
+     "routes": {
+      "music": "music",
+      "other": "downloads"
+     }
+    },
+    "after": {
+     "items": [
+      {
+       "id": "00000000-0000-4000-8000-000000000001",
+       "space": "music",
+       "kind": "audio",
+       "title": "Song 1",
+       "addedAt": 1700000000001,
+       "favorite": true,
+       "userTags": [
+        "alpha",
+        "zeta"
+       ],
+       "plays": 5,
+       "place": "Music/Artist/Album/song-1.mp3",
+       "artist": "Artist",
+       "album": "Album",
+       "albumArtist": "Various",
+       "track": 3,
+       "disc": 1,
+       "year": 2019,
+       "genre": "Rock",
+       "duration": 215.457,
+       "chapters": [
+        {
+         "start": 0,
+         "title": "Intro"
+        },
+        {
+         "start": 61.5,
+         "title": "Verse"
+        }
+       ],
+       "gain": -7.25,
+       "subtitles": [
+        "en"
+       ],
+       "hasLyrics": true,
+       "sourceUrl": "https://music.example/watch?v=abc",
+       "sourceId": "youtube:abc",
+       "tags": [
+        "rock",
+        "live"
+       ],
+       "lastPlayedAt": 1700000005000,
+       "position": 12.5,
+       "watched": false
+      },
+      {
+       "id": "00000000-0000-4000-8000-000000000002",
+       "space": "videos",
+       "kind": "video",
+       "title": "Clip",
+       "addedAt": 1700000000002,
+       "width": 1920,
+       "height": 1080,
+       "duration": 61,
+       "watched": true,
+       "position": 30,
+       "favorite": false,
+       "userTags": [],
+       "plays": 0,
+       "place": "Videos/clip.mp4"
+      },
+      {
+       "id": "00000000-0000-4000-8000-000000000003",
+       "space": "downloads",
+       "kind": "image",
+       "title": "Picture",
+       "addedAt": 1700000000003,
+       "favorite": false,
+       "userTags": [],
+       "plays": 0,
+       "place": "Downloads/pic.jpg"
+      },
+      {
+       "id": "00000000-0000-4000-8000-000000000004",
+       "space": "music",
+       "kind": "audio",
+       "title": "Song 4",
+       "addedAt": 1700000000004,
+       "favorite": false,
+       "userTags": [],
+       "plays": 0,
+       "place": null
+      },
+      {
+       "id": "00000000-0000-4000-8000-000000000005",
+       "space": "ext",
+       "kind": "audio",
+       "title": "Song 5",
+       "addedAt": 1700000000005,
+       "favorite": false,
+       "userTags": [],
+       "plays": 0,
+       "place": "External/x/y.mp3"
+      },
+      {
+       "id": "00000000-0000-4000-8000-000000000006",
+       "space": "my-space",
+       "kind": "audio",
+       "title": "Song 6",
+       "addedAt": 1700000000006,
+       "favorite": false,
+       "userTags": [
+        "road"
+       ],
+       "plays": 0,
+       "place": "My space/z.mp3"
+      }
+     ],
+     "collections": [
+      {
+       "id": "00000000-0000-4000-8000-000000000101",
+       "name": "Road trip",
+       "kind": "own",
+       "space": "music",
+       "itemIds": [
+        "00000000-0000-4000-8000-000000000001",
+        "00000000-0000-4000-8000-000000000002",
+        "00000000-0000-4000-8000-000000000006"
+       ],
+       "seen": [
+        "u1",
+        "u2"
+       ],
+       "createdAt": 1700000000000,
+       "updatedAt": 1700000000010,
+       "coverItemId": "00000000-0000-4000-8000-000000000001",
+       "newItemIds": [],
+       "removedItemIds": []
+      },
+      {
+       "id": "00000000-0000-4000-8000-000000000102",
+       "name": "Mix",
+       "kind": "playlist",
+       "space": "videos",
+       "itemIds": [
+        "00000000-0000-4000-8000-000000000002",
+        "00000000-0000-4000-8000-000000000001"
+       ],
+       "seen": [
+        "x"
+       ],
+       "createdAt": 1700000000001,
+       "updatedAt": 1700000000011,
+       "source": {
+        "url": "https://video.example/playlist?list=PL1",
+        "provider": "video",
+        "id": "PL1"
+       },
+       "follow": {
+        "mode": "auto",
+        "intervalHours": 6,
+        "wifiOnly": true,
+        "notify": false,
+        "confirmAbove": 20,
+        "pendingCount": 3,
+        "pendingAt": 1700000000012
+       },
+       "newItemIds": [
+        "00000000-0000-4000-8000-000000000002"
+       ],
+       "removedItemIds": [
+        "00000000-0000-4000-8000-000000000001"
+       ]
+      },
+      {
+       "id": "00000000-0000-4000-8000-000000000103",
+       "name": "An album",
+       "kind": "album",
+       "space": "music",
+       "itemIds": [
+        "00000000-0000-4000-8000-000000000001"
+       ],
+       "seen": [],
+       "createdAt": 1700000000002,
+       "updatedAt": 1700000000002,
+       "newItemIds": [],
+       "removedItemIds": []
+      }
+     ],
+     "spaces": [
+      {
+       "id": "downloads",
+       "name": "Downloads",
+       "kind": "mixed",
+       "folder": "Downloads",
+       "layout": "collection",
+       "naming": "title",
+       "skipExisting": false,
+       "type": "folder",
+       "color": "slate",
+       "icon": "folder",
+       "pinned": true
+      },
+      {
+       "id": "music",
+       "name": "Songs",
+       "kind": "music",
+       "folder": "Music",
+       "layout": "flat",
+       "naming": "artist-title",
+       "skipExisting": true,
+       "type": "folder",
+       "color": "cobalt",
+       "icon": "music",
+       "pinned": false,
+       "scanFolder": true
+      },
+      {
+       "id": "videos",
+       "name": "Videos",
+       "kind": "video",
+       "folder": "Videos",
+       "layout": "platform",
+       "naming": "title-uploader",
+       "skipExisting": false,
+       "type": "folder",
+       "color": "violet",
+       "icon": "video",
+       "pinned": true
+      },
+      {
+       "id": "ext",
+       "name": "External",
+       "kind": "mixed",
+       "folder": "External",
+       "linked": true,
+       "layout": "flat",
+       "naming": "title",
+       "skipExisting": false,
+       "type": "folder"
+      },
+      {
+       "id": "00000000-0000-4000-8000-000000000300",
+       "name": "Podcasts",
+       "kind": "music",
+       "folder": "Podcasts",
+       "layout": "flat",
+       "naming": "title",
+       "skipExisting": true,
+       "type": "folder"
+      }
+     ],
+     "routes": {
+      "music": "music",
+      "other": "downloads"
+     }
+    },
+    "observed": {
+     "items": {},
+     "playlists": {},
+     "spaces": {
+      "34f5644e-6009-5d7b-865b-e316772e4fa5": [
+       "11111111-1111-4111-8111-111111111111:4"
+      ],
+      "7846e334-d6bf-5812-8687-42516908262c": [
+       "11111111-1111-4111-8111-111111111111:6"
+      ]
+     },
+     "members": {}
+    }
+   },
+   "expected": [
+    {
+     "kind": "space.set",
+     "body": {
+      "space": "6b8e1c10-2d3a-4f55-8a01-000000000002",
+      "field": "name",
+      "value": "Songs"
+     }
+    },
+    {
+     "kind": "space.set",
+     "body": {
+      "space": "6b8e1c10-2d3a-4f55-8a01-000000000002",
+      "field": "layout",
+      "value": "flat"
+     }
+    },
+    {
+     "kind": "space.set",
+     "body": {
+      "space": "6b8e1c10-2d3a-4f55-8a01-000000000002",
+      "field": "pinned",
+      "value": false
+     }
+    },
+    {
+     "kind": "space.set",
+     "body": {
+      "space": "6b8e1c10-2d3a-4f55-8a01-000000000002",
+      "field": "ignore",
+      "value": null
+     }
+    },
+    {
+     "kind": "space.set",
+     "body": {
+      "space": "ecf189c6-2bcf-55ca-8fea-934b0e036095",
+      "field": "order",
+      "value": 3
+     }
+    },
+    {
+     "kind": "space.add",
+     "body": {
+      "space": "00000000-0000-4000-8000-000000000300",
+      "fields": {
+       "name": "Podcasts",
+       "kind": "music",
+       "folder": "Podcasts",
+       "layout": "flat",
+       "naming": "title",
+       "skipExisting": true,
+       "type": "folder",
+       "order": 4
+      }
+     }
+    },
+    {
+     "kind": "space.delete",
+     "body": {
+      "space": "34f5644e-6009-5d7b-865b-e316772e4fa5",
+      "observedTags": [
+       "11111111-1111-4111-8111-111111111111:4"
+      ]
+     }
+    },
+    {
+     "kind": "space.delete",
+     "body": {
+      "space": "7846e334-d6bf-5812-8687-42516908262c",
+      "observedTags": [
+       "11111111-1111-4111-8111-111111111111:6"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "name": "routes change",
+   "input": {
+    "op": "diff",
+    "actor": "11111111-1111-4111-8111-111111111111",
+    "replicaId": "22222222-2222-4222-8222-222222222222",
+    "before": {
+     "items": [
+      {
+       "id": "00000000-0000-4000-8000-000000000001",
+       "space": "music",
+       "kind": "audio",
+       "title": "Song 1",
+       "addedAt": 1700000000001,
+       "favorite": true,
+       "userTags": [
+        "alpha",
+        "zeta"
+       ],
+       "plays": 5,
+       "place": "Music/Artist/Album/song-1.mp3",
+       "artist": "Artist",
+       "album": "Album",
+       "albumArtist": "Various",
+       "track": 3,
+       "disc": 1,
+       "year": 2019,
+       "genre": "Rock",
+       "duration": 215.457,
+       "chapters": [
+        {
+         "start": 0,
+         "title": "Intro"
+        },
+        {
+         "start": 61.5,
+         "title": "Verse"
+        }
+       ],
+       "gain": -7.25,
+       "subtitles": [
+        "en"
+       ],
+       "hasLyrics": true,
+       "sourceUrl": "https://music.example/watch?v=abc",
+       "sourceId": "youtube:abc",
+       "tags": [
+        "rock",
+        "live"
+       ],
+       "lastPlayedAt": 1700000005000,
+       "position": 12.5,
+       "watched": false
+      },
+      {
+       "id": "00000000-0000-4000-8000-000000000002",
+       "space": "videos",
+       "kind": "video",
+       "title": "Clip",
+       "addedAt": 1700000000002,
+       "width": 1920,
+       "height": 1080,
+       "duration": 61,
+       "watched": true,
+       "position": 30,
+       "favorite": false,
+       "userTags": [],
+       "plays": 0,
+       "place": "Videos/clip.mp4"
+      },
+      {
+       "id": "00000000-0000-4000-8000-000000000003",
+       "space": "downloads",
+       "kind": "image",
+       "title": "Picture",
+       "addedAt": 1700000000003,
+       "favorite": false,
+       "userTags": [],
+       "plays": 0,
+       "place": "Downloads/pic.jpg"
+      },
+      {
+       "id": "00000000-0000-4000-8000-000000000004",
+       "space": "music",
+       "kind": "audio",
+       "title": "Song 4",
+       "addedAt": 1700000000004,
+       "favorite": false,
+       "userTags": [],
+       "plays": 0,
+       "place": null
+      },
+      {
+       "id": "00000000-0000-4000-8000-000000000005",
+       "space": "ext",
+       "kind": "audio",
+       "title": "Song 5",
+       "addedAt": 1700000000005,
+       "favorite": false,
+       "userTags": [],
+       "plays": 0,
+       "place": "External/x/y.mp3"
+      },
+      {
+       "id": "00000000-0000-4000-8000-000000000006",
+       "space": "my-space",
+       "kind": "audio",
+       "title": "Song 6",
+       "addedAt": 1700000000006,
+       "favorite": false,
+       "userTags": [
+        "road"
+       ],
+       "plays": 0,
+       "place": "My space/z.mp3"
+      }
+     ],
+     "collections": [
+      {
+       "id": "00000000-0000-4000-8000-000000000101",
+       "name": "Road trip",
+       "kind": "own",
+       "space": "music",
+       "itemIds": [
+        "00000000-0000-4000-8000-000000000001",
+        "00000000-0000-4000-8000-000000000002",
+        "00000000-0000-4000-8000-000000000006"
+       ],
+       "seen": [
+        "u1",
+        "u2"
+       ],
+       "createdAt": 1700000000000,
+       "updatedAt": 1700000000010,
+       "coverItemId": "00000000-0000-4000-8000-000000000001",
+       "newItemIds": [],
+       "removedItemIds": []
+      },
+      {
+       "id": "00000000-0000-4000-8000-000000000102",
+       "name": "Mix",
+       "kind": "playlist",
+       "space": "videos",
+       "itemIds": [
+        "00000000-0000-4000-8000-000000000002",
+        "00000000-0000-4000-8000-000000000001"
+       ],
+       "seen": [
+        "x"
+       ],
+       "createdAt": 1700000000001,
+       "updatedAt": 1700000000011,
+       "source": {
+        "url": "https://video.example/playlist?list=PL1",
+        "provider": "video",
+        "id": "PL1"
+       },
+       "follow": {
+        "mode": "auto",
+        "intervalHours": 6,
+        "wifiOnly": true,
+        "notify": false,
+        "confirmAbove": 20,
+        "pendingCount": 3,
+        "pendingAt": 1700000000012
+       },
+       "newItemIds": [
+        "00000000-0000-4000-8000-000000000002"
+       ],
+       "removedItemIds": [
+        "00000000-0000-4000-8000-000000000001"
+       ]
+      },
+      {
+       "id": "00000000-0000-4000-8000-000000000103",
+       "name": "An album",
+       "kind": "album",
+       "space": "music",
+       "itemIds": [
+        "00000000-0000-4000-8000-000000000001"
+       ],
+       "seen": [],
+       "createdAt": 1700000000002,
+       "updatedAt": 1700000000002,
+       "newItemIds": [],
+       "removedItemIds": []
+      }
+     ],
+     "spaces": [
+      {
+       "id": "downloads",
+       "name": "Downloads",
+       "kind": "mixed",
+       "folder": "Downloads",
+       "layout": "collection",
+       "naming": "title",
+       "skipExisting": false,
+       "type": "folder",
+       "color": "slate",
+       "icon": "folder",
+       "pinned": true
+      },
+      {
+       "id": "music",
+       "name": "Music",
+       "kind": "music",
+       "folder": "Music",
+       "layout": "artist-album",
+       "naming": "artist-title",
+       "skipExisting": true,
+       "type": "folder",
+       "color": "cobalt",
+       "icon": "music",
+       "pinned": true,
+       "ignore": [
+        "Podcasts"
+       ],
+       "scanFolder": true
+      },
+      {
+       "id": "videos",
+       "name": "Videos",
+       "kind": "video",
+       "folder": "Videos",
+       "layout": "platform",
+       "naming": "title-uploader",
+       "skipExisting": false,
+       "type": "folder",
+       "color": "violet",
+       "icon": "video",
+       "pinned": true
+      },
+      {
+       "id": "my-space",
+       "name": "My space",
+       "kind": "music",
+       "folder": "My space",
+       "layout": "flat",
+       "naming": "date-title",
+       "skipExisting": false,
+       "type": "folder"
+      },
+      {
+       "id": "ext",
+       "name": "External",
+       "kind": "mixed",
+       "folder": "External",
+       "linked": true,
+       "layout": "flat",
+       "naming": "title",
+       "skipExisting": false,
+       "type": "folder"
+      },
+      {
+       "id": "smart-1",
+       "name": "Rock",
+       "kind": "mixed",
+       "folder": "",
+       "layout": "flat",
+       "naming": "title",
+       "skipExisting": false,
+       "type": "smart",
+       "icon": "star",
+       "rules": {
+        "match": "any",
+        "rules": [
+         {
+          "field": "tag",
+          "values": [
+           "rock"
+          ]
+         }
+        ],
+        "onlyKind": "audio"
+       }
+      }
+     ],
+     "routes": {
+      "music": "music",
+      "other": "downloads"
+     }
+    },
+    "after": {
+     "items": [
+      {
+       "id": "00000000-0000-4000-8000-000000000001",
+       "space": "music",
+       "kind": "audio",
+       "title": "Song 1",
+       "addedAt": 1700000000001,
+       "favorite": true,
+       "userTags": [
+        "alpha",
+        "zeta"
+       ],
+       "plays": 5,
+       "place": "Music/Artist/Album/song-1.mp3",
+       "artist": "Artist",
+       "album": "Album",
+       "albumArtist": "Various",
+       "track": 3,
+       "disc": 1,
+       "year": 2019,
+       "genre": "Rock",
+       "duration": 215.457,
+       "chapters": [
+        {
+         "start": 0,
+         "title": "Intro"
+        },
+        {
+         "start": 61.5,
+         "title": "Verse"
+        }
+       ],
+       "gain": -7.25,
+       "subtitles": [
+        "en"
+       ],
+       "hasLyrics": true,
+       "sourceUrl": "https://music.example/watch?v=abc",
+       "sourceId": "youtube:abc",
+       "tags": [
+        "rock",
+        "live"
+       ],
+       "lastPlayedAt": 1700000005000,
+       "position": 12.5,
+       "watched": false
+      },
+      {
+       "id": "00000000-0000-4000-8000-000000000002",
+       "space": "videos",
+       "kind": "video",
+       "title": "Clip",
+       "addedAt": 1700000000002,
+       "width": 1920,
+       "height": 1080,
+       "duration": 61,
+       "watched": true,
+       "position": 30,
+       "favorite": false,
+       "userTags": [],
+       "plays": 0,
+       "place": "Videos/clip.mp4"
+      },
+      {
+       "id": "00000000-0000-4000-8000-000000000003",
+       "space": "downloads",
+       "kind": "image",
+       "title": "Picture",
+       "addedAt": 1700000000003,
+       "favorite": false,
+       "userTags": [],
+       "plays": 0,
+       "place": "Downloads/pic.jpg"
+      },
+      {
+       "id": "00000000-0000-4000-8000-000000000004",
+       "space": "music",
+       "kind": "audio",
+       "title": "Song 4",
+       "addedAt": 1700000000004,
+       "favorite": false,
+       "userTags": [],
+       "plays": 0,
+       "place": null
+      },
+      {
+       "id": "00000000-0000-4000-8000-000000000005",
+       "space": "ext",
+       "kind": "audio",
+       "title": "Song 5",
+       "addedAt": 1700000000005,
+       "favorite": false,
+       "userTags": [],
+       "plays": 0,
+       "place": "External/x/y.mp3"
+      },
+      {
+       "id": "00000000-0000-4000-8000-000000000006",
+       "space": "my-space",
+       "kind": "audio",
+       "title": "Song 6",
+       "addedAt": 1700000000006,
+       "favorite": false,
+       "userTags": [
+        "road"
+       ],
+       "plays": 0,
+       "place": "My space/z.mp3"
+      }
+     ],
+     "collections": [
+      {
+       "id": "00000000-0000-4000-8000-000000000101",
+       "name": "Road trip",
+       "kind": "own",
+       "space": "music",
+       "itemIds": [
+        "00000000-0000-4000-8000-000000000001",
+        "00000000-0000-4000-8000-000000000002",
+        "00000000-0000-4000-8000-000000000006"
+       ],
+       "seen": [
+        "u1",
+        "u2"
+       ],
+       "createdAt": 1700000000000,
+       "updatedAt": 1700000000010,
+       "coverItemId": "00000000-0000-4000-8000-000000000001",
+       "newItemIds": [],
+       "removedItemIds": []
+      },
+      {
+       "id": "00000000-0000-4000-8000-000000000102",
+       "name": "Mix",
+       "kind": "playlist",
+       "space": "videos",
+       "itemIds": [
+        "00000000-0000-4000-8000-000000000002",
+        "00000000-0000-4000-8000-000000000001"
+       ],
+       "seen": [
+        "x"
+       ],
+       "createdAt": 1700000000001,
+       "updatedAt": 1700000000011,
+       "source": {
+        "url": "https://video.example/playlist?list=PL1",
+        "provider": "video",
+        "id": "PL1"
+       },
+       "follow": {
+        "mode": "auto",
+        "intervalHours": 6,
+        "wifiOnly": true,
+        "notify": false,
+        "confirmAbove": 20,
+        "pendingCount": 3,
+        "pendingAt": 1700000000012
+       },
+       "newItemIds": [
+        "00000000-0000-4000-8000-000000000002"
+       ],
+       "removedItemIds": [
+        "00000000-0000-4000-8000-000000000001"
+       ]
+      },
+      {
+       "id": "00000000-0000-4000-8000-000000000103",
+       "name": "An album",
+       "kind": "album",
+       "space": "music",
+       "itemIds": [
+        "00000000-0000-4000-8000-000000000001"
+       ],
+       "seen": [],
+       "createdAt": 1700000000002,
+       "updatedAt": 1700000000002,
+       "newItemIds": [],
+       "removedItemIds": []
+      }
+     ],
+     "spaces": [
+      {
+       "id": "downloads",
+       "name": "Downloads",
+       "kind": "mixed",
+       "folder": "Downloads",
+       "layout": "collection",
+       "naming": "title",
+       "skipExisting": false,
+       "type": "folder",
+       "color": "slate",
+       "icon": "folder",
+       "pinned": true
+      },
+      {
+       "id": "music",
+       "name": "Music",
+       "kind": "music",
+       "folder": "Music",
+       "layout": "artist-album",
+       "naming": "artist-title",
+       "skipExisting": true,
+       "type": "folder",
+       "color": "cobalt",
+       "icon": "music",
+       "pinned": true,
+       "ignore": [
+        "Podcasts"
+       ],
+       "scanFolder": true
+      },
+      {
+       "id": "videos",
+       "name": "Videos",
+       "kind": "video",
+       "folder": "Videos",
+       "layout": "platform",
+       "naming": "title-uploader",
+       "skipExisting": false,
+       "type": "folder",
+       "color": "violet",
+       "icon": "video",
+       "pinned": true
+      },
+      {
+       "id": "my-space",
+       "name": "My space",
+       "kind": "music",
+       "folder": "My space",
+       "layout": "flat",
+       "naming": "date-title",
+       "skipExisting": false,
+       "type": "folder"
+      },
+      {
+       "id": "ext",
+       "name": "External",
+       "kind": "mixed",
+       "folder": "External",
+       "linked": true,
+       "layout": "flat",
+       "naming": "title",
+       "skipExisting": false,
+       "type": "folder"
+      },
+      {
+       "id": "smart-1",
+       "name": "Rock",
+       "kind": "mixed",
+       "folder": "",
+       "layout": "flat",
+       "naming": "title",
+       "skipExisting": false,
+       "type": "smart",
+       "icon": "star",
+       "rules": {
+        "match": "any",
+        "rules": [
+         {
+          "field": "tag",
+          "values": [
+           "rock"
+          ]
+         }
+        ],
+        "onlyKind": "audio"
+       }
+      }
+     ],
+     "routes": {
+      "music": "videos",
+      "other": "music"
+     }
+    }
+   },
+   "expected": [
+    {
+     "kind": "profile.set",
+     "body": {
+      "field": "routes",
+      "value": {
+       "music": "6b8e1c10-2d3a-4f55-8a01-000000000003",
+       "other": "6b8e1c10-2d3a-4f55-8a01-000000000002"
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "a new item with a placement, plays, favourite and tags",
+   "input": {
+    "op": "diff",
+    "actor": "11111111-1111-4111-8111-111111111111",
+    "replicaId": "22222222-2222-4222-8222-222222222222",
+    "before": {
+     "items": [
+      {
+       "id": "00000000-0000-4000-8000-000000000001",
+       "space": "music",
+       "kind": "audio",
+       "title": "Song 1",
+       "addedAt": 1700000000001,
+       "favorite": true,
+       "userTags": [
+        "alpha",
+        "zeta"
+       ],
+       "plays": 5,
+       "place": "Music/Artist/Album/song-1.mp3",
+       "artist": "Artist",
+       "album": "Album",
+       "albumArtist": "Various",
+       "track": 3,
+       "disc": 1,
+       "year": 2019,
+       "genre": "Rock",
+       "duration": 215.457,
+       "chapters": [
+        {
+         "start": 0,
+         "title": "Intro"
+        },
+        {
+         "start": 61.5,
+         "title": "Verse"
+        }
+       ],
+       "gain": -7.25,
+       "subtitles": [
+        "en"
+       ],
+       "hasLyrics": true,
+       "sourceUrl": "https://music.example/watch?v=abc",
+       "sourceId": "youtube:abc",
+       "tags": [
+        "rock",
+        "live"
+       ],
+       "lastPlayedAt": 1700000005000,
+       "position": 12.5,
+       "watched": false
+      },
+      {
+       "id": "00000000-0000-4000-8000-000000000002",
+       "space": "videos",
+       "kind": "video",
+       "title": "Clip",
+       "addedAt": 1700000000002,
+       "width": 1920,
+       "height": 1080,
+       "duration": 61,
+       "watched": true,
+       "position": 30,
+       "favorite": false,
+       "userTags": [],
+       "plays": 0,
+       "place": "Videos/clip.mp4"
+      },
+      {
+       "id": "00000000-0000-4000-8000-000000000003",
+       "space": "downloads",
+       "kind": "image",
+       "title": "Picture",
+       "addedAt": 1700000000003,
+       "favorite": false,
+       "userTags": [],
+       "plays": 0,
+       "place": "Downloads/pic.jpg"
+      },
+      {
+       "id": "00000000-0000-4000-8000-000000000004",
+       "space": "music",
+       "kind": "audio",
+       "title": "Song 4",
+       "addedAt": 1700000000004,
+       "favorite": false,
+       "userTags": [],
+       "plays": 0,
+       "place": null
+      },
+      {
+       "id": "00000000-0000-4000-8000-000000000005",
+       "space": "ext",
+       "kind": "audio",
+       "title": "Song 5",
+       "addedAt": 1700000000005,
+       "favorite": false,
+       "userTags": [],
+       "plays": 0,
+       "place": "External/x/y.mp3"
+      },
+      {
+       "id": "00000000-0000-4000-8000-000000000006",
+       "space": "my-space",
+       "kind": "audio",
+       "title": "Song 6",
+       "addedAt": 1700000000006,
+       "favorite": false,
+       "userTags": [
+        "road"
+       ],
+       "plays": 0,
+       "place": "My space/z.mp3"
+      }
+     ],
+     "collections": [
+      {
+       "id": "00000000-0000-4000-8000-000000000101",
+       "name": "Road trip",
+       "kind": "own",
+       "space": "music",
+       "itemIds": [
+        "00000000-0000-4000-8000-000000000001",
+        "00000000-0000-4000-8000-000000000002",
+        "00000000-0000-4000-8000-000000000006"
+       ],
+       "seen": [
+        "u1",
+        "u2"
+       ],
+       "createdAt": 1700000000000,
+       "updatedAt": 1700000000010,
+       "coverItemId": "00000000-0000-4000-8000-000000000001",
+       "newItemIds": [],
+       "removedItemIds": []
+      },
+      {
+       "id": "00000000-0000-4000-8000-000000000102",
+       "name": "Mix",
+       "kind": "playlist",
+       "space": "videos",
+       "itemIds": [
+        "00000000-0000-4000-8000-000000000002",
+        "00000000-0000-4000-8000-000000000001"
+       ],
+       "seen": [
+        "x"
+       ],
+       "createdAt": 1700000000001,
+       "updatedAt": 1700000000011,
+       "source": {
+        "url": "https://video.example/playlist?list=PL1",
+        "provider": "video",
+        "id": "PL1"
+       },
+       "follow": {
+        "mode": "auto",
+        "intervalHours": 6,
+        "wifiOnly": true,
+        "notify": false,
+        "confirmAbove": 20,
+        "pendingCount": 3,
+        "pendingAt": 1700000000012
+       },
+       "newItemIds": [
+        "00000000-0000-4000-8000-000000000002"
+       ],
+       "removedItemIds": [
+        "00000000-0000-4000-8000-000000000001"
+       ]
+      },
+      {
+       "id": "00000000-0000-4000-8000-000000000103",
+       "name": "An album",
+       "kind": "album",
+       "space": "music",
+       "itemIds": [
+        "00000000-0000-4000-8000-000000000001"
+       ],
+       "seen": [],
+       "createdAt": 1700000000002,
+       "updatedAt": 1700000000002,
+       "newItemIds": [],
+       "removedItemIds": []
+      }
+     ],
+     "spaces": [
+      {
+       "id": "downloads",
+       "name": "Downloads",
+       "kind": "mixed",
+       "folder": "Downloads",
+       "layout": "collection",
+       "naming": "title",
+       "skipExisting": false,
+       "type": "folder",
+       "color": "slate",
+       "icon": "folder",
+       "pinned": true
+      },
+      {
+       "id": "music",
+       "name": "Music",
+       "kind": "music",
+       "folder": "Music",
+       "layout": "artist-album",
+       "naming": "artist-title",
+       "skipExisting": true,
+       "type": "folder",
+       "color": "cobalt",
+       "icon": "music",
+       "pinned": true,
+       "ignore": [
+        "Podcasts"
+       ],
+       "scanFolder": true
+      },
+      {
+       "id": "videos",
+       "name": "Videos",
+       "kind": "video",
+       "folder": "Videos",
+       "layout": "platform",
+       "naming": "title-uploader",
+       "skipExisting": false,
+       "type": "folder",
+       "color": "violet",
+       "icon": "video",
+       "pinned": true
+      },
+      {
+       "id": "my-space",
+       "name": "My space",
+       "kind": "music",
+       "folder": "My space",
+       "layout": "flat",
+       "naming": "date-title",
+       "skipExisting": false,
+       "type": "folder"
+      },
+      {
+       "id": "ext",
+       "name": "External",
+       "kind": "mixed",
+       "folder": "External",
+       "linked": true,
+       "layout": "flat",
+       "naming": "title",
+       "skipExisting": false,
+       "type": "folder"
+      },
+      {
+       "id": "smart-1",
+       "name": "Rock",
+       "kind": "mixed",
+       "folder": "",
+       "layout": "flat",
+       "naming": "title",
+       "skipExisting": false,
+       "type": "smart",
+       "icon": "star",
+       "rules": {
+        "match": "any",
+        "rules": [
+         {
+          "field": "tag",
+          "values": [
+           "rock"
+          ]
+         }
+        ],
+        "onlyKind": "audio"
+       }
+      }
+     ],
+     "routes": {
+      "music": "music",
+      "other": "downloads"
+     }
+    },
+    "after": {
+     "items": [
+      {
+       "id": "00000000-0000-4000-8000-000000000001",
+       "space": "music",
+       "kind": "audio",
+       "title": "Song 1",
+       "addedAt": 1700000000001,
+       "favorite": true,
+       "userTags": [
+        "alpha",
+        "zeta"
+       ],
+       "plays": 5,
+       "place": "Music/Artist/Album/song-1.mp3",
+       "artist": "Artist",
+       "album": "Album",
+       "albumArtist": "Various",
+       "track": 3,
+       "disc": 1,
+       "year": 2019,
+       "genre": "Rock",
+       "duration": 215.457,
+       "chapters": [
+        {
+         "start": 0,
+         "title": "Intro"
+        },
+        {
+         "start": 61.5,
+         "title": "Verse"
+        }
+       ],
+       "gain": -7.25,
+       "subtitles": [
+        "en"
+       ],
+       "hasLyrics": true,
+       "sourceUrl": "https://music.example/watch?v=abc",
+       "sourceId": "youtube:abc",
+       "tags": [
+        "rock",
+        "live"
+       ],
+       "lastPlayedAt": 1700000005000,
+       "position": 12.5,
+       "watched": false
+      },
+      {
+       "id": "00000000-0000-4000-8000-000000000002",
+       "space": "videos",
+       "kind": "video",
+       "title": "Clip",
+       "addedAt": 1700000000002,
+       "width": 1920,
+       "height": 1080,
+       "duration": 61,
+       "watched": true,
+       "position": 30,
+       "favorite": false,
+       "userTags": [],
+       "plays": 0,
+       "place": "Videos/clip.mp4"
+      },
+      {
+       "id": "00000000-0000-4000-8000-000000000003",
+       "space": "downloads",
+       "kind": "image",
+       "title": "Picture",
+       "addedAt": 1700000000003,
+       "favorite": false,
+       "userTags": [],
+       "plays": 0,
+       "place": "Downloads/pic.jpg"
+      },
+      {
+       "id": "00000000-0000-4000-8000-000000000004",
+       "space": "music",
+       "kind": "audio",
+       "title": "Song 4",
+       "addedAt": 1700000000004,
+       "favorite": false,
+       "userTags": [],
+       "plays": 0,
+       "place": null
+      },
+      {
+       "id": "00000000-0000-4000-8000-000000000005",
+       "space": "ext",
+       "kind": "audio",
+       "title": "Song 5",
+       "addedAt": 1700000000005,
+       "favorite": false,
+       "userTags": [],
+       "plays": 0,
+       "place": "External/x/y.mp3"
+      },
+      {
+       "id": "00000000-0000-4000-8000-000000000006",
+       "space": "my-space",
+       "kind": "audio",
+       "title": "Song 6",
+       "addedAt": 1700000000006,
+       "favorite": false,
+       "userTags": [
+        "road"
+       ],
+       "plays": 0,
+       "place": "My space/z.mp3"
+      },
+      {
+       "id": "00000000-0000-4000-8000-000000000007",
+       "space": "music",
+       "kind": "audio",
+       "title": "Song 7",
+       "addedAt": 1700000000007,
+       "favorite": true,
+       "userTags": [
+        "fresh"
+       ],
+       "plays": 3,
+       "place": "Music/Artist/Album/song-7.mp3",
+       "artist": "New"
+      }
+     ],
+     "collections": [
+      {
+       "id": "00000000-0000-4000-8000-000000000101",
+       "name": "Road trip",
+       "kind": "own",
+       "space": "music",
+       "itemIds": [
+        "00000000-0000-4000-8000-000000000001",
+        "00000000-0000-4000-8000-000000000002",
+        "00000000-0000-4000-8000-000000000006"
+       ],
+       "seen": [
+        "u1",
+        "u2"
+       ],
+       "createdAt": 1700000000000,
+       "updatedAt": 1700000000010,
+       "coverItemId": "00000000-0000-4000-8000-000000000001",
+       "newItemIds": [],
+       "removedItemIds": []
+      },
+      {
+       "id": "00000000-0000-4000-8000-000000000102",
+       "name": "Mix",
+       "kind": "playlist",
+       "space": "videos",
+       "itemIds": [
+        "00000000-0000-4000-8000-000000000002",
+        "00000000-0000-4000-8000-000000000001"
+       ],
+       "seen": [
+        "x"
+       ],
+       "createdAt": 1700000000001,
+       "updatedAt": 1700000000011,
+       "source": {
+        "url": "https://video.example/playlist?list=PL1",
+        "provider": "video",
+        "id": "PL1"
+       },
+       "follow": {
+        "mode": "auto",
+        "intervalHours": 6,
+        "wifiOnly": true,
+        "notify": false,
+        "confirmAbove": 20,
+        "pendingCount": 3,
+        "pendingAt": 1700000000012
+       },
+       "newItemIds": [
+        "00000000-0000-4000-8000-000000000002"
+       ],
+       "removedItemIds": [
+        "00000000-0000-4000-8000-000000000001"
+       ]
+      },
+      {
+       "id": "00000000-0000-4000-8000-000000000103",
+       "name": "An album",
+       "kind": "album",
+       "space": "music",
+       "itemIds": [
+        "00000000-0000-4000-8000-000000000001"
+       ],
+       "seen": [],
+       "createdAt": 1700000000002,
+       "updatedAt": 1700000000002,
+       "newItemIds": [],
+       "removedItemIds": []
+      }
+     ],
+     "spaces": [
+      {
+       "id": "downloads",
+       "name": "Downloads",
+       "kind": "mixed",
+       "folder": "Downloads",
+       "layout": "collection",
+       "naming": "title",
+       "skipExisting": false,
+       "type": "folder",
+       "color": "slate",
+       "icon": "folder",
+       "pinned": true
+      },
+      {
+       "id": "music",
+       "name": "Music",
+       "kind": "music",
+       "folder": "Music",
+       "layout": "artist-album",
+       "naming": "artist-title",
+       "skipExisting": true,
+       "type": "folder",
+       "color": "cobalt",
+       "icon": "music",
+       "pinned": true,
+       "ignore": [
+        "Podcasts"
+       ],
+       "scanFolder": true
+      },
+      {
+       "id": "videos",
+       "name": "Videos",
+       "kind": "video",
+       "folder": "Videos",
+       "layout": "platform",
+       "naming": "title-uploader",
+       "skipExisting": false,
+       "type": "folder",
+       "color": "violet",
+       "icon": "video",
+       "pinned": true
+      },
+      {
+       "id": "my-space",
+       "name": "My space",
+       "kind": "music",
+       "folder": "My space",
+       "layout": "flat",
+       "naming": "date-title",
+       "skipExisting": false,
+       "type": "folder"
+      },
+      {
+       "id": "ext",
+       "name": "External",
+       "kind": "mixed",
+       "folder": "External",
+       "linked": true,
+       "layout": "flat",
+       "naming": "title",
+       "skipExisting": false,
+       "type": "folder"
+      },
+      {
+       "id": "smart-1",
+       "name": "Rock",
+       "kind": "mixed",
+       "folder": "",
+       "layout": "flat",
+       "naming": "title",
+       "skipExisting": false,
+       "type": "smart",
+       "icon": "star",
+       "rules": {
+        "match": "any",
+        "rules": [
+         {
+          "field": "tag",
+          "values": [
+           "rock"
+          ]
+         }
+        ],
+        "onlyKind": "audio"
+       }
+      }
+     ],
+     "routes": {
+      "music": "music",
+      "other": "downloads"
+     }
+    }
+   },
+   "expected": [
+    {
+     "kind": "item.add",
+     "body": {
+      "item": "00000000-0000-4000-8000-000000000007",
+      "fields": {
+       "media": "audio",
+       "space": "6b8e1c10-2d3a-4f55-8a01-000000000002",
+       "title": "Song 7",
+       "artist": "New",
+       "addedAt": 1700000000007
+      }
+     }
+    },
+    {
+     "kind": "item.place",
+     "body": {
+      "item": "00000000-0000-4000-8000-000000000007",
+      "place": "22222222-2222-4222-8222-222222222222",
+      "path": "Music/Artist/Album/song-7.mp3"
+     }
+    },
+    {
+     "kind": "item.set",
+     "body": {
+      "item": "00000000-0000-4000-8000-000000000007",
+      "field": "plays@11111111-1111-4111-8111-111111111111",
+      "value": 3
+     }
+    },
+    {
+     "kind": "set.add",
+     "body": {
+      "set": "favourites",
+      "element": "00000000-0000-4000-8000-000000000007"
+     }
+    },
+    {
+     "kind": "set.add",
+     "body": {
+      "set": "tags:00000000-0000-4000-8000-000000000007",
+      "element": "fresh"
+     }
+    }
+   ]
+  }
+ ]
+}

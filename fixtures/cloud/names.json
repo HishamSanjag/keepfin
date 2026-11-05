@@ -1,0 +1,547 @@
+{
+ "description": "Cloud provider cases written from the providers' documentation (dev-docs/plans/KEEPFIN-CLOUD-SPEC.md); expected values were reviewed by hand. Not recordings of live services.",
+ "cases": [
+  {
+   "name": "drive: a/b",
+   "provider": "drive",
+   "op": "nameEncode",
+   "input": {
+    "name": "a/b"
+   },
+   "expected": {
+    "encoded": "a/b"
+   }
+  },
+  {
+   "name": "drive: CON.txt",
+   "provider": "drive",
+   "op": "nameEncode",
+   "input": {
+    "name": "CON.txt"
+   },
+   "expected": {
+    "encoded": "CON.txt"
+   }
+  },
+  {
+   "name": "drive: x.",
+   "provider": "drive",
+   "op": "nameEncode",
+   "input": {
+    "name": "x."
+   },
+   "expected": {
+    "encoded": "x."
+   }
+  },
+  {
+   "name": "drive:  lead",
+   "provider": "drive",
+   "op": "nameEncode",
+   "input": {
+    "name": " lead"
+   },
+   "expected": {
+    "encoded": " lead"
+   }
+  },
+  {
+   "name": "drive: 50% off",
+   "provider": "drive",
+   "op": "nameEncode",
+   "input": {
+    "name": "50% off"
+   },
+   "expected": {
+    "encoded": "50%25 off"
+   }
+  },
+  {
+   "name": "drive: Café?",
+   "provider": "drive",
+   "op": "nameEncode",
+   "input": {
+    "name": "Café?"
+   },
+   "expected": {
+    "encoded": "Café?"
+   }
+  },
+  {
+   "name": "drive: ~$tmp",
+   "provider": "drive",
+   "op": "nameEncode",
+   "input": {
+    "name": "~$tmp"
+   },
+   "expected": {
+    "encoded": "~$tmp"
+   }
+  },
+  {
+   "name": "drive: a_vti_b",
+   "provider": "drive",
+   "op": "nameEncode",
+   "input": {
+    "name": "a_vti_b"
+   },
+   "expected": {
+    "encoded": "a_vti_b"
+   }
+  },
+  {
+   "name": "drive: song.part",
+   "provider": "drive",
+   "op": "nameEncode",
+   "input": {
+    "name": "song.part"
+   },
+   "expected": {
+    "encoded": "song.part"
+   }
+  },
+  {
+   "name": "drive: desktop.ini",
+   "provider": "drive",
+   "op": "nameEncode",
+   "input": {
+    "name": "desktop.ini"
+   },
+   "expected": {
+    "encoded": "desktop.ini"
+   }
+  },
+  {
+   "name": "drive: normal name.mp3",
+   "provider": "drive",
+   "op": "nameEncode",
+   "input": {
+    "name": "normal name.mp3"
+   },
+   "expected": {
+    "encoded": "normal name.mp3"
+   }
+  },
+  {
+   "name": "graph: a/b",
+   "provider": "graph",
+   "op": "nameEncode",
+   "input": {
+    "name": "a/b"
+   },
+   "expected": {
+    "encoded": "a%2Fb"
+   }
+  },
+  {
+   "name": "graph: CON.txt",
+   "provider": "graph",
+   "op": "nameEncode",
+   "input": {
+    "name": "CON.txt"
+   },
+   "expected": {
+    "encoded": "%43ON.txt"
+   }
+  },
+  {
+   "name": "graph: x.",
+   "provider": "graph",
+   "op": "nameEncode",
+   "input": {
+    "name": "x."
+   },
+   "expected": {
+    "encoded": "x%2E"
+   }
+  },
+  {
+   "name": "graph:  lead",
+   "provider": "graph",
+   "op": "nameEncode",
+   "input": {
+    "name": " lead"
+   },
+   "expected": {
+    "encoded": "%20lead"
+   }
+  },
+  {
+   "name": "graph: 50% off",
+   "provider": "graph",
+   "op": "nameEncode",
+   "input": {
+    "name": "50% off"
+   },
+   "expected": {
+    "encoded": "50%25 off"
+   }
+  },
+  {
+   "name": "graph: Café?",
+   "provider": "graph",
+   "op": "nameEncode",
+   "input": {
+    "name": "Café?"
+   },
+   "expected": {
+    "encoded": "Café%3F"
+   }
+  },
+  {
+   "name": "graph: ~$tmp",
+   "provider": "graph",
+   "op": "nameEncode",
+   "input": {
+    "name": "~$tmp"
+   },
+   "expected": {
+    "encoded": "%7E$tmp"
+   }
+  },
+  {
+   "name": "graph: a_vti_b",
+   "provider": "graph",
+   "op": "nameEncode",
+   "input": {
+    "name": "a_vti_b"
+   },
+   "expected": {
+    "encoded": "a%5Fvti_b"
+   }
+  },
+  {
+   "name": "graph: song.part",
+   "provider": "graph",
+   "op": "nameEncode",
+   "input": {
+    "name": "song.part"
+   },
+   "expected": {
+    "encoded": "song.part"
+   }
+  },
+  {
+   "name": "graph: desktop.ini",
+   "provider": "graph",
+   "op": "nameEncode",
+   "input": {
+    "name": "desktop.ini"
+   },
+   "expected": {
+    "encoded": "%64esktop.ini"
+   }
+  },
+  {
+   "name": "graph: normal name.mp3",
+   "provider": "graph",
+   "op": "nameEncode",
+   "input": {
+    "name": "normal name.mp3"
+   },
+   "expected": {
+    "encoded": "normal name.mp3"
+   }
+  },
+  {
+   "name": "dropbox: a/b",
+   "provider": "dropbox",
+   "op": "nameEncode",
+   "input": {
+    "name": "a/b"
+   },
+   "expected": {
+    "encoded": "a%2Fb"
+   }
+  },
+  {
+   "name": "dropbox: CON.txt",
+   "provider": "dropbox",
+   "op": "nameEncode",
+   "input": {
+    "name": "CON.txt"
+   },
+   "expected": {
+    "encoded": "CON.txt"
+   }
+  },
+  {
+   "name": "dropbox: x.",
+   "provider": "dropbox",
+   "op": "nameEncode",
+   "input": {
+    "name": "x."
+   },
+   "expected": {
+    "encoded": "x%2E"
+   }
+  },
+  {
+   "name": "dropbox:  lead",
+   "provider": "dropbox",
+   "op": "nameEncode",
+   "input": {
+    "name": " lead"
+   },
+   "expected": {
+    "encoded": " lead"
+   }
+  },
+  {
+   "name": "dropbox: 50% off",
+   "provider": "dropbox",
+   "op": "nameEncode",
+   "input": {
+    "name": "50% off"
+   },
+   "expected": {
+    "encoded": "50%25 off"
+   }
+  },
+  {
+   "name": "dropbox: Café?",
+   "provider": "dropbox",
+   "op": "nameEncode",
+   "input": {
+    "name": "Café?"
+   },
+   "expected": {
+    "encoded": "Café%3F"
+   }
+  },
+  {
+   "name": "dropbox: ~$tmp",
+   "provider": "dropbox",
+   "op": "nameEncode",
+   "input": {
+    "name": "~$tmp"
+   },
+   "expected": {
+    "encoded": "%7E$tmp"
+   }
+  },
+  {
+   "name": "dropbox: a_vti_b",
+   "provider": "dropbox",
+   "op": "nameEncode",
+   "input": {
+    "name": "a_vti_b"
+   },
+   "expected": {
+    "encoded": "a_vti_b"
+   }
+  },
+  {
+   "name": "dropbox: song.part",
+   "provider": "dropbox",
+   "op": "nameEncode",
+   "input": {
+    "name": "song.part"
+   },
+   "expected": {
+    "encoded": "song.part"
+   }
+  },
+  {
+   "name": "dropbox: desktop.ini",
+   "provider": "dropbox",
+   "op": "nameEncode",
+   "input": {
+    "name": "desktop.ini"
+   },
+   "expected": {
+    "encoded": "%64esktop.ini"
+   }
+  },
+  {
+   "name": "dropbox: normal name.mp3",
+   "provider": "dropbox",
+   "op": "nameEncode",
+   "input": {
+    "name": "normal name.mp3"
+   },
+   "expected": {
+    "encoded": "normal name.mp3"
+   }
+  },
+  {
+   "name": "webdav: a/b",
+   "provider": "webdav",
+   "op": "nameEncode",
+   "input": {
+    "name": "a/b"
+   },
+   "expected": {
+    "encoded": "a%2Fb"
+   }
+  },
+  {
+   "name": "webdav: CON.txt",
+   "provider": "webdav",
+   "op": "nameEncode",
+   "input": {
+    "name": "CON.txt"
+   },
+   "expected": {
+    "encoded": "CON.txt"
+   }
+  },
+  {
+   "name": "webdav: x.",
+   "provider": "webdav",
+   "op": "nameEncode",
+   "input": {
+    "name": "x."
+   },
+   "expected": {
+    "encoded": "x%2E"
+   }
+  },
+  {
+   "name": "webdav:  lead",
+   "provider": "webdav",
+   "op": "nameEncode",
+   "input": {
+    "name": " lead"
+   },
+   "expected": {
+    "encoded": "%20lead"
+   }
+  },
+  {
+   "name": "webdav: 50% off",
+   "provider": "webdav",
+   "op": "nameEncode",
+   "input": {
+    "name": "50% off"
+   },
+   "expected": {
+    "encoded": "50%25 off"
+   }
+  },
+  {
+   "name": "webdav: Café?",
+   "provider": "webdav",
+   "op": "nameEncode",
+   "input": {
+    "name": "Café?"
+   },
+   "expected": {
+    "encoded": "Café%3F"
+   }
+  },
+  {
+   "name": "webdav: ~$tmp",
+   "provider": "webdav",
+   "op": "nameEncode",
+   "input": {
+    "name": "~$tmp"
+   },
+   "expected": {
+    "encoded": "~$tmp"
+   }
+  },
+  {
+   "name": "webdav: a_vti_b",
+   "provider": "webdav",
+   "op": "nameEncode",
+   "input": {
+    "name": "a_vti_b"
+   },
+   "expected": {
+    "encoded": "a_vti_b"
+   }
+  },
+  {
+   "name": "webdav: song.part",
+   "provider": "webdav",
+   "op": "nameEncode",
+   "input": {
+    "name": "song.part"
+   },
+   "expected": {
+    "encoded": "song.par%74"
+   }
+  },
+  {
+   "name": "webdav: desktop.ini",
+   "provider": "webdav",
+   "op": "nameEncode",
+   "input": {
+    "name": "desktop.ini"
+   },
+   "expected": {
+    "encoded": "desktop.ini"
+   }
+  },
+  {
+   "name": "webdav: normal name.mp3",
+   "provider": "webdav",
+   "op": "nameEncode",
+   "input": {
+    "name": "normal name.mp3"
+   },
+   "expected": {
+    "encoded": "normal name.mp3"
+   }
+  },
+  {
+   "name": "graph key folds case",
+   "provider": "graph",
+   "op": "nameKey",
+   "input": {
+    "name": "ABC"
+   },
+   "expected": {
+    "key": "abc"
+   }
+  },
+  {
+   "name": "drive key keeps case",
+   "provider": "drive",
+   "op": "nameKey",
+   "input": {
+    "name": "ABC"
+   },
+   "expected": {
+    "key": "ABC"
+   }
+  },
+  {
+   "name": "too long on graph",
+   "provider": "graph",
+   "op": "nameCheck",
+   "input": {
+    "name": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+   },
+   "expected": {
+    "ok": false,
+    "reason": "too-long"
+   }
+  },
+  {
+   "name": "empty",
+   "provider": "dropbox",
+   "op": "nameCheck",
+   "input": {
+    "name": ""
+   },
+   "expected": {
+    "ok": false,
+    "reason": "empty"
+   }
+  },
+  {
+   "name": "graph path limit",
+   "provider": "graph",
+   "op": "pathCheck",
+   "input": {
+    "path": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+   },
+   "expected": {
+    "ok": false,
+    "reason": "path-too-long"
+   }
+  }
+ ]
+}

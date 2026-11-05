@@ -1,0 +1,832 @@
+.settings {
+  grid-template-columns: 232px minmax(0, 1fr);
+  gap: 32px;
+  align-items: start;
+}
+.settings-rail {
+  position: sticky;
+  top: 0;
+  display: grid;
+  gap: 12px;
+  z-index: 2;
+}
+.settings-nav {
+  display: grid;
+  gap: 2px;
+}
+.settings-nav button {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  height: 36px;
+  padding: 0 10px;
+  border-radius: var(--r-md);
+  color: var(--text-2);
+  font-weight: 600;
+  font-size: 13.5px;
+  text-align: left;
+}
+.settings-nav button:hover {
+  background: var(--hover);
+  color: var(--text);
+}
+.settings-nav button.selected {
+  background: var(--selected);
+  color: var(--text);
+}
+.settings-nav button.selected .icon {
+  color: var(--accent-text);
+}
+
+/* ---------- Search ---------- */
+.settings-search {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+.settings-search > .icon {
+  position: absolute;
+  left: 10px;
+  color: var(--text-3);
+  pointer-events: none;
+}
+.settings-search-input {
+  width: 100%;
+  border: 0;
+  height: 36px;
+  padding: 0 32px 0 32px;
+  border-radius: var(--r-md);
+  background: var(--surface);
+  color: var(--text);
+  box-shadow: inset 0 0 0 1px var(--line-strong);
+  font: inherit;
+  font-size: 13.5px;
+}
+.settings-search-input::placeholder {
+  color: var(--text-3);
+}
+.settings-search-input:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 1px;
+}
+.settings-search-clear {
+  position: absolute;
+  right: 4px;
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border-radius: var(--r-sm);
+  color: var(--text-2);
+}
+.settings-search-clear:hover {
+  background: var(--hover);
+  color: var(--text);
+}
+.settings-search-results {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  z-index: 30;
+  width: max(100%, 320px);
+  max-height: 360px;
+  overflow: auto;
+  margin: 0;
+  padding: 4px;
+  list-style: none;
+  border-radius: var(--r-lg);
+  background: var(--overlay);
+  box-shadow:
+    var(--shadow-md),
+    inset 0 0 0 1px var(--line-strong);
+}
+.settings-search-results li {
+  display: grid;
+  gap: 1px;
+  padding: 7px 10px;
+  border-radius: var(--r-md);
+  cursor: pointer;
+}
+.settings-search-results li.is-active {
+  background: var(--selected);
+}
+.settings-search-results li strong {
+  font-weight: 600;
+  font-size: 13.5px;
+}
+.settings-search-empty {
+  cursor: default !important;
+  color: var(--text-2);
+  font-size: 13px;
+}
+
+/* ---------- Content ---------- */
+.settings-panel {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 24px;
+  min-width: 0;
+  /* Cards stretch like Windows Settings, up to a width where label and control still read as one row. */
+  max-width: 1200px;
+}
+.settings-title {
+  font-family: var(--font-display);
+  font-size: 18px;
+  font-weight: 650;
+  margin-top: 4px;
+}
+.settings-group {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 10px;
+}
+.settings-group > header h3 {
+  font-size: 14px;
+  font-weight: 650;
+}
+.settings-group > header p {
+  margin-top: 3px;
+  font-size: 13px;
+  color: var(--text-2);
+  max-width: 64ch;
+}
+.settings-rows {
+  display: grid;
+  padding: 2px 18px;
+  border-radius: var(--r-lg);
+  background: var(--surface);
+  border: 1px solid var(--line);
+}
+.settings-cards {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 8px;
+  min-width: 0;
+}
+.settings-rows > .extras {
+  margin: 14px 0;
+}
+.settings-rows > .plain-fieldset {
+  padding: 2px 0 16px;
+  border-top: 1px solid var(--line);
+}
+.settings-rows > .plain-fieldset .extras {
+  margin-top: 14px;
+}
+.settings-rows .field-block {
+  padding: 16px 0;
+}
+.settings-rows .button-row {
+  padding: 0 0 16px;
+}
+
+/* ---------- Needs your attention ---------- */
+.settings-attention {
+  display: grid;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.settings-attention li {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 8px 8px 14px;
+  border-radius: var(--r-lg);
+  background: var(--warning-soft);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--warning) 28%, transparent);
+  font-size: 13.5px;
+}
+.settings-attention li > .icon {
+  flex: none;
+  color: var(--warning);
+}
+.settings-attention li > span {
+  flex: 1;
+  min-width: 0;
+}
+
+/* ---------- Setting cards ---------- */
+.setting-card {
+  display: grid;
+  gap: 10px;
+  min-width: 0;
+  padding: 12px 16px;
+  border-radius: var(--r-lg);
+  background: var(--surface);
+  box-shadow: inset 0 0 0 1px var(--line);
+}
+.setting-card-main {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  min-width: 0;
+}
+.setting-card-icon {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  border-radius: var(--r-md);
+  background: var(--accent-soft);
+  color: var(--accent-text);
+}
+.setting-card-text {
+  display: grid;
+  gap: 2px;
+  flex: 1 1 240px;
+  min-width: 0;
+  text-align: left;
+}
+.setting-card-title {
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+.setting-card-desc {
+  font-size: 13px;
+  color: var(--text-2);
+  max-width: 64ch;
+}
+.setting-card-control {
+  flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  max-width: 100%;
+}
+.setting-card-extra {
+  min-width: 0;
+}
+.setting-card.is-disabled .setting-card-text,
+.setting-card.is-disabled .setting-card-icon {
+  opacity: 0.55;
+}
+.setting-card-extra .field-block {
+  padding: 4px 0 2px;
+}
+.setting-card-extra .plain-fieldset {
+  padding: 0;
+}
+.setting-card-extra .app-icon-picker {
+  margin-top: 0;
+}
+
+/* One level of hiding: Speed and connections, Devices > Advanced. */
+.setting-expander {
+  display: grid;
+  gap: 8px;
+  min-width: 0;
+}
+.setting-expander-head {
+  width: 100%;
+  cursor: pointer;
+  text-align: left;
+  color: var(--text);
+}
+.setting-expander-head:hover {
+  background: var(--hover);
+}
+.setting-expander-head:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+}
+.setting-expander-head .setting-card-text {
+  display: grid;
+}
+.setting-expander-chevron {
+  flex: none;
+  display: grid;
+  place-items: center;
+  color: var(--text-2);
+}
+.setting-expander.is-open .setting-expander-chevron {
+  transform: rotate(180deg);
+}
+.setting-expander-body {
+  display: grid;
+  gap: 8px;
+  margin-left: 18px;
+  padding-left: 14px;
+  border-left: 2px solid var(--line);
+  min-width: 0;
+}
+.setting-expander-body > .setting-card {
+  background: var(--surface-2);
+}
+
+/* A setting that a search result or a link points at. */
+[id^='setting-'].is-highlight {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+  border-radius: var(--r-lg);
+}
+@media (prefers-reduced-motion: no-preference) {
+  [id^='setting-'].is-highlight {
+    animation: setting-flash 2.4s var(--ease, ease-out) forwards;
+  }
+  .setting-expander-chevron {
+    transition: transform var(--t-fast, 0.12s) var(--ease, ease-out);
+  }
+}
+@keyframes setting-flash {
+  0%,
+  55% {
+    outline-color: var(--accent);
+    background-color: var(--accent-soft);
+  }
+  100% {
+    outline-color: transparent;
+  }
+}
+.path {
+  font-variant-numeric: tabular-nums;
+  overflow-wrap: anywhere;
+  color: var(--text);
+}
+.scale-control {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 12px;
+  max-width: 100%;
+}
+.scale-control input[type='range'] {
+  width: 170px;
+  accent-color: var(--accent);
+}
+.scale-value {
+  min-width: 40px;
+  font-weight: 600;
+}
+.shortcuts {
+  display: grid;
+  margin: 0;
+  padding: 6px 0;
+}
+.shortcuts div {
+  display: grid;
+  grid-template-columns: 150px minmax(0, 1fr);
+  align-items: center;
+  gap: 12px;
+  padding: 8px 0;
+  border-top: 1px solid var(--line);
+}
+.shortcuts div:first-child {
+  border-top: 0;
+}
+.shortcuts dt {
+  display: flex;
+  gap: 4px;
+}
+.shortcuts dd {
+  margin: 0;
+  color: var(--text-2);
+  font-size: 13px;
+}
+.tool-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 250px), 1fr));
+  gap: 12px;
+  padding: 16px 0 4px;
+}
+.tool {
+  display: grid;
+  align-content: start;
+  gap: 6px;
+  padding: 14px;
+  border-radius: var(--r-lg);
+  background: var(--surface-2);
+  border: 1px solid var(--line);
+}
+.tool-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+.tool-name {
+  font-weight: 650;
+}
+.tool-role {
+  font-size: 12.5px;
+  color: var(--text-2);
+}
+.tool-version {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 12px;
+  font-size: 12.5px;
+  color: var(--text);
+  font-weight: 600;
+}
+.tool-version span + span {
+  color: var(--warning);
+}
+.tool-message {
+  font-size: 12px;
+  color: var(--text-3);
+}
+.tool-error {
+  font-size: 12.5px;
+  color: var(--danger);
+}
+.engine-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 0 16px;
+}
+.about-card {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  padding: 18px;
+  border-radius: var(--r-lg);
+  background: var(--surface);
+  border: 1px solid var(--line);
+}
+.about-card h3 {
+  font-family: var(--font-display);
+  font-size: 18px;
+  font-weight: 650;
+}
+.about-card > div {
+  display: grid;
+  gap: 4px;
+}
+.update-status {
+  display: grid;
+  gap: 2px;
+  padding: 16px 0 8px;
+}
+.update-progress {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding-bottom: 8px;
+}
+.update-progress .progress {
+  flex: 1;
+}
+.settings-rows > .muted.small {
+  padding-bottom: 12px;
+}
+.settings-rows > .inline-alert {
+  margin-bottom: 12px;
+}
+.notes-dialog {
+  width: min(var(--dialog-m), calc(100vw / var(--zoom) - 32px));
+}
+.release-markdown {
+  color: var(--text);
+  line-height: 1.6;
+  max-height: 60vh;
+  overflow: auto;
+}
+.release-markdown h1,
+.release-markdown h2,
+.release-markdown h3 {
+  font-size: 15px;
+  margin: 16px 0 6px;
+}
+.release-markdown ul {
+  list-style: disc;
+  padding-left: 20px;
+}
+.release-markdown li {
+  margin: 3px 0;
+  color: var(--text-2);
+}
+.release-markdown code {
+  font-size: 12.5px;
+  padding: 1px 5px;
+  border-radius: 4px;
+  background: var(--raised);
+}
+@container main (max-width: 720px) {
+  .settings {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 16px;
+  }
+  .settings-rail {
+    position: static;
+  }
+  .settings-search-results {
+    width: 100%;
+  }
+  /* One row of categories that scrolls sideways (the current one is scrolled into view), never a pile of wrapped chips. */
+  .settings-nav {
+    display: flex;
+    gap: 6px;
+    overflow-x: auto;
+    padding-bottom: 6px;
+    scrollbar-width: thin;
+  }
+  .settings-nav button {
+    flex: none;
+    height: 32px;
+    white-space: nowrap;
+    box-shadow: inset 0 0 0 1px var(--line-strong);
+  }
+  .option-row {
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+  .option-control {
+    justify-content: flex-start;
+  }
+  .setting-card-main {
+    flex-wrap: wrap;
+    gap: 10px 14px;
+  }
+  .setting-card-control {
+    flex: 1 1 100%;
+    justify-content: flex-start;
+    flex-wrap: wrap;
+  }
+  .setting-card-icon + .setting-card-text + .setting-card-control {
+    padding-left: 50px;
+  }
+  .setting-expander-body {
+    margin-left: 8px;
+    padding-left: 10px;
+  }
+  .settings-rows {
+    padding: 2px 14px;
+  }
+  .scale-control input[type='range'] {
+    width: 110px;
+    min-width: 0;
+  }
+  .shortcuts div {
+    grid-template-columns: 110px minmax(0, 1fr);
+  }
+}
+
+.settings-cards .support {
+  margin: 0;
+  max-width: none;
+}
+.settings-cards .support-card {
+  justify-items: start;
+  text-align: left;
+}
+/* Support */
+.support {
+  display: grid;
+  gap: 20px;
+  max-width: 560px;
+  margin: 8px auto 0;
+  justify-items: stretch;
+}
+.support-card {
+  display: grid;
+  justify-items: center;
+  gap: 6px;
+  padding: 32px 28px 28px;
+  text-align: center;
+  border-radius: var(--r-lg);
+  background: var(--surface);
+  border: 1px solid var(--line);
+}
+.support-avatar {
+  width: 96px;
+  height: 96px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 3px solid var(--surface);
+  box-shadow:
+    0 0 0 2px var(--accent),
+    0 8px 24px rgba(0, 0, 0, 0.25);
+  margin-bottom: 10px;
+}
+.support-card h3 {
+  font-family: var(--font-display);
+  font-size: 20px;
+  font-weight: 650;
+}
+.support-handle {
+  color: var(--accent-text);
+  font-size: 13.5px;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: var(--r-sm);
+}
+.support-handle:hover:not(:disabled) {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.support-card p {
+  margin-top: 10px;
+  max-width: 40ch;
+  line-height: 1.55;
+  color: var(--text-2);
+}
+.support-options {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 10px;
+}
+.support-option {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 16px;
+  min-height: 64px;
+  text-align: left;
+  color: var(--text);
+  border-radius: var(--r-lg);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  transition:
+    background-color var(--t-fast) var(--ease),
+    border-color var(--t-fast) var(--ease),
+    transform var(--t-fast) var(--ease);
+}
+.support-option:hover:not(:disabled) {
+  background: var(--hover);
+  border-color: var(--accent);
+}
+.support-option:active:not(:disabled) {
+  transform: translateY(1px);
+}
+.support-option:focus-visible,
+.support-handle:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+.support-option:disabled {
+  opacity: 0.55;
+}
+.support-option-icon {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 44px;
+  height: 44px;
+  border-radius: var(--r-md);
+  background: var(--accent-soft);
+  color: var(--accent-text);
+}
+.support-option-text {
+  display: grid;
+  gap: 2px;
+  flex: 1;
+  min-width: 0;
+}
+.support-option-text span {
+  font-size: 12.5px;
+  color: var(--text-2);
+}
+.support-option > .icon {
+  color: var(--text-3, var(--text-2));
+}
+.support-thanks {
+  text-align: center;
+}
+
+/* ---------- Updates: app vs download engine ---------- */
+.engine-summary {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 4px 0 8px;
+}
+.engine-meta {
+  margin-top: 6px;
+}
+.engine-advanced {
+  border-top: 1px solid var(--line);
+  padding-top: 8px;
+}
+.engine-advanced > summary {
+  cursor: pointer;
+  color: var(--text-2);
+  font-size: 13px;
+  padding: 6px 0;
+}
+.engine-advanced[open] > summary {
+  margin-bottom: 4px;
+}
+.engine-notice {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--accent-text);
+}
+
+/* Features & how-to */
+.guide {
+  display: grid;
+  gap: 16px;
+}
+/* The cards use the panel's width; running text keeps a comfortable line length. */
+.guide-intro,
+.guide-summary,
+.guide-steps {
+  max-width: 80ch;
+}
+.guide-intro {
+  margin: 0;
+  color: var(--text-2);
+}
+.guide-search {
+  max-width: 420px;
+}
+.guide-heading {
+  margin: 8px 0 8px;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  color: var(--text-2);
+}
+.guide-list {
+  display: grid;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.guide-card {
+  border-radius: var(--r-md);
+  box-shadow: inset 0 0 0 1px var(--line-strong);
+}
+.guide-card-head {
+  margin: 0;
+  font: inherit;
+}
+.guide-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  width: 100%;
+  min-height: 40px;
+  padding: 8px 12px;
+  border-radius: var(--r-md);
+  text-align: left;
+  font-weight: 600;
+  color: var(--text);
+}
+.guide-toggle:hover {
+  background: var(--hover);
+}
+.guide-card-body {
+  display: grid;
+  gap: 10px;
+  padding: 0 12px 12px;
+}
+.guide-card-body[hidden] {
+  display: none;
+}
+.guide-summary {
+  margin: 0;
+  color: var(--text-2);
+}
+.guide-steps {
+  margin: 0;
+  padding-left: 22px;
+  display: grid;
+  gap: 4px;
+}
+.guide-note {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin: 0;
+  font-size: 12.5px;
+  color: var(--text-2);
+}
+.guide-note .icon {
+  flex: none;
+  margin-top: 2px;
+}
+.guide-actions {
+  display: flex;
+}
+
+/* Settings -> Appearance -> App icon */
+.app-icon-picker { margin-top: 10px; display: grid; gap: 8px; }
+.app-icon-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(96px, 1fr)); gap: 8px; }
+.app-icon-option {
+  display: grid; justify-items: center; gap: 6px; min-height: 48px; padding: 10px 6px;
+  background: var(--surface-2); color: var(--text-2); border: 1px solid var(--line); border-radius: var(--r-md);
+  font: inherit; font-size: 12px; cursor: pointer;
+}
+.app-icon-option img { width: 56px; height: 56px; border-radius: 12px; }
+.app-icon-option:hover { border-color: var(--line-strong); color: var(--text); }
+.app-icon-option.selected { border-color: var(--accent); box-shadow: 0 0 0 2px var(--accent); color: var(--text); }
+.app-icon-option:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+.app-icon-help { margin: 0; font-size: 12px; color: var(--text-3); }
+@media (prefers-reduced-motion: no-preference) { .app-icon-option { transition: border-color 0.12s, box-shadow 0.12s; } }

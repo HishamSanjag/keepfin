@@ -1,0 +1,20 @@
+{
+  "main": "ink-tide",
+  "accents": ["#2855CE"],
+  "tokens": {
+    "ink": "#1E2128",
+    "accent": "#2855CE",
+    "accentLight": "#6F8FE6",
+    "paper": "#FFFFFF"
+  },
+  "variants": [
+    {"id": "ink-tide", "name": "Ink Tide", "adaptiveScale": 0.9, "fixedColours": true, "silhouette": "ink-tide-silhouette.svg", "silhouetteScale": 0.78, "logo": {"stacked": "ink-tide/keepfin-stacked-transparent.png", "stackedTile": "ink-tide/keepfin-stacked-dark.png", "stackedLight": "ink-tide/keepfin-stacked-light.png", "emblem": "ink-tide/keepfin-emblem-transparent.png", "wordmark": "ink-tide/keepfin-wordmark-transparent.png", "wordmarkLight": "ink-tide/keepfin-wordmark-light.png"}, "tokens": {"ink": "#08090B", "accent": "#2855CE", "accentLight": "#6F8FE6", "tile": "#101218"}},
+    {"id": "classic", "name": "Classic", "adaptiveScale": 0.72, "fixedColours": true, "tokens": {"ink": "#10151E", "accent": "#4C7EFF", "accentLight": "#A7C3FF", "tile": "#161D28"}},
+    {"id": "k-fin", "name": "Keepfin K"},
+    {"id": "fin", "name": "Fin", "adaptiveScale": 0.78},
+    {"id": "keep", "name": "Keep"},
+    {"id": "drop", "name": "Drop"},
+    {"id": "bookmark", "name": "Bookmark"},
+    {"id": "wave", "name": "Wave"}
+  ]
+}

@@ -1,0 +1,11 @@
+{
+  "description": "Presets in another container, the other resolutions, and an unknown preset.",
+  "cases": [
+    {"name":"720 in mkv","input":{"op":"preset","preset":"720","container":"mkv"},"expected":{"type":"video","maxHeight":720,"codec":"auto","container":"mkv"}},
+    {"name":"best in webm","input":{"op":"preset","preset":"best","container":"webm"},"expected":{"type":"video","maxHeight":null,"codec":"auto","container":"webm"}},
+    {"name":"1440","input":{"op":"preset","preset":"1440"},"expected":{"type":"video","maxHeight":1440,"codec":"auto","container":"mp4"}},
+    {"name":"720","input":{"op":"preset","preset":"720"},"expected":{"type":"video","maxHeight":720,"codec":"auto","container":"mp4"}},
+    {"name":"an unknown preset is rejected","input":{"op":"presetValid","preset":"8k"},"expected":{"valid":false}},
+    {"name":"a known preset is accepted","input":{"op":"presetValid","preset":"audio-flac"},"expected":{"valid":true}}
+  ]
+}

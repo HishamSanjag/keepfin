@@ -1,0 +1,26 @@
+{
+  "description": "Size estimate precedence (filesize, filesize_approx, bitrate x duration) and codec name mapping.",
+  "cases": [
+    {"name":"exact filesize wins","input":{"op":"size","format":{"filesize":1000,"filesize_approx":2000,"tbr":800},"duration":10},"expected":{"size":1000,"approx":false}},
+    {"name":"approximate filesize is second","input":{"op":"size","format":{"filesize_approx":2000,"tbr":800},"duration":10},"expected":{"size":2000,"approx":true}},
+    {"name":"bitrate times duration is third (kbit/s to bytes)","input":{"op":"size","format":{"tbr":800},"duration":10},"expected":{"size":1000000,"approx":true}},
+    {"name":"audio bitrate is used when there is no tbr","input":{"op":"size","format":{"abr":128},"duration":100},"expected":{"size":1600000,"approx":true}},
+    {"name":"no size information at all","input":{"op":"size","format":{"ext":"mp4"},"duration":10},"expected":{"size":null,"approx":true}},
+    {"name":"a bitrate without a duration cannot be sized","input":{"op":"size","format":{"tbr":800}},"expected":{"size":null,"approx":true}},
+    {"name":"vbr and abr are alternatives, not added together","input":{"op":"size","format":{"vbr":2000,"abr":128},"duration":10},"expected":{"size":160000,"approx":true}},
+    {"name":"h264 from avc1","input":{"op":"codec","kind":"video","value":"avc1.64002A"},"expected":"h264"},
+    {"name":"vp9 from vp09","input":{"op":"codec","kind":"video","value":"vp09.00.40.08"},"expected":"vp9"},
+    {"name":"vp9 from vp9","input":{"op":"codec","kind":"video","value":"vp9"},"expected":"vp9"},
+    {"name":"av1 from av01","input":{"op":"codec","kind":"video","value":"av01.0.08M.08"},"expected":"av1"},
+    {"name":"hevc from hev1","input":{"op":"codec","kind":"video","value":"hev1.1.6.L120"},"expected":"hevc"},
+    {"name":"hevc from hvc1","input":{"op":"codec","kind":"video","value":"hvc1.2.4"},"expected":"hevc"},
+    {"name":"unknown video codec","input":{"op":"codec","kind":"video","value":"theora"},"expected":"other"},
+    {"name":"aac from mp4a.40.2","input":{"op":"codec","kind":"audio","value":"mp4a.40.2"},"expected":"aac"},
+    {"name":"opus","input":{"op":"codec","kind":"audio","value":"opus"},"expected":"opus"},
+    {"name":"mp3","input":{"op":"codec","kind":"audio","value":"mp3"},"expected":"mp3"},
+    {"name":"vorbis","input":{"op":"codec","kind":"audio","value":"vorbis"},"expected":"vorbis"},
+    {"name":"flac","input":{"op":"codec","kind":"audio","value":"flac"},"expected":"flac"},
+    {"name":"alac is grouped with flac as lossless","input":{"op":"codec","kind":"audio","value":"alac"},"expected":"flac"},
+    {"name":"unknown audio codec","input":{"op":"codec","kind":"audio","value":"ac-3"},"expected":"other"}
+  ]
+}

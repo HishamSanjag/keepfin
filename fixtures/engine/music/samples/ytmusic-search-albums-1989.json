@@ -1,0 +1,535 @@
+{
+ "contents": {
+  "tabbedSearchResultsRenderer": {
+   "tabs": [
+    {
+     "tabRenderer": {
+      "title": "YT Music",
+      "selected": true,
+      "content": {
+       "sectionListRenderer": {
+        "contents": [
+         {
+          "musicShelfRenderer": {
+           "title": {
+            "runs": [
+             {
+              "text": "Albums"
+             }
+            ]
+           },
+           "contents": [
+            {
+             "musicResponsiveListItemRenderer": {
+              "flexColumns": [
+               {
+                "musicResponsiveListItemFlexColumnRenderer": {
+                 "text": {
+                  "runs": [
+                   {
+                    "text": "1989"
+                   }
+                  ]
+                 }
+                }
+               },
+               {
+                "musicResponsiveListItemFlexColumnRenderer": {
+                 "text": {
+                  "runs": [
+                   {
+                    "text": "Album"
+                   },
+                   {
+                    "text": " • "
+                   },
+                   {
+                    "text": "Taylor Swift",
+                    "navigationEndpoint": {
+                     "browseEndpoint": {
+                      "browseId": "UCPC0L1d253x-KuMNwa05TpA",
+                      "browseEndpointContextSupportedConfigs": {
+                       "browseEndpointContextMusicConfig": {
+                        "pageType": "MUSIC_PAGE_TYPE_ARTIST"
+                       }
+                      }
+                     }
+                    }
+                   },
+                   {
+                    "text": " • "
+                   },
+                   {
+                    "text": "2014"
+                   }
+                  ]
+                 }
+                }
+               }
+              ],
+              "flexColumnDisplayStyle": "MUSIC_RESPONSIVE_LIST_ITEM_FLEX_COLUMN_DISPLAY_STYLE_TWO_LINE_STACK",
+              "navigationEndpoint": {
+               "browseEndpoint": {
+                "browseId": "MPREb_K9GL6DCDUCq",
+                "browseEndpointContextSupportedConfigs": {
+                 "browseEndpointContextMusicConfig": {
+                  "pageType": "MUSIC_PAGE_TYPE_ALBUM"
+                 }
+                }
+               }
+              }
+             }
+            },
+            {
+             "musicResponsiveListItemRenderer": {
+              "flexColumns": [
+               {
+                "musicResponsiveListItemFlexColumnRenderer": {
+                 "text": {
+                  "runs": [
+                   {
+                    "text": "1989 (Taylor's Version)"
+                   }
+                  ]
+                 }
+                }
+               },
+               {
+                "musicResponsiveListItemFlexColumnRenderer": {
+                 "text": {
+                  "runs": [
+                   {
+                    "text": "Album"
+                   },
+                   {
+                    "text": " • "
+                   },
+                   {
+                    "text": "Taylor Swift",
+                    "navigationEndpoint": {
+                     "browseEndpoint": {
+                      "browseId": "UCPC0L1d253x-KuMNwa05TpA",
+                      "browseEndpointContextSupportedConfigs": {
+                       "browseEndpointContextMusicConfig": {
+                        "pageType": "MUSIC_PAGE_TYPE_ARTIST"
+                       }
+                      }
+                     }
+                    }
+                   },
+                   {
+                    "text": " • "
+                   },
+                   {
+                    "text": "2023"
+                   }
+                  ]
+                 }
+                }
+               }
+              ],
+              "flexColumnDisplayStyle": "MUSIC_RESPONSIVE_LIST_ITEM_FLEX_COLUMN_DISPLAY_STYLE_TWO_LINE_STACK",
+              "navigationEndpoint": {
+               "browseEndpoint": {
+                "browseId": "MPREb_5XXbjpMgJar",
+                "browseEndpointContextSupportedConfigs": {
+                 "browseEndpointContextMusicConfig": {
+                  "pageType": "MUSIC_PAGE_TYPE_ALBUM"
+                 }
+                }
+               }
+              }
+             }
+            },
+            {
+             "musicResponsiveListItemRenderer": {
+              "flexColumns": [
+               {
+                "musicResponsiveListItemFlexColumnRenderer": {
+                 "text": {
+                  "runs": [
+                   {
+                    "text": "Taylor Swift 1989 Medley"
+                   }
+                  ]
+                 }
+                }
+               },
+               {
+                "musicResponsiveListItemFlexColumnRenderer": {
+                 "text": {
+                  "runs": [
+                   {
+                    "text": "Single"
+                   },
+                   {
+                    "text": " • "
+                   },
+                   {
+                    "text": "Gardiner Sisters",
+                    "navigationEndpoint": {
+                     "browseEndpoint": {
+                      "browseId": "UCpWOW6JVaUhvd1fM9JSIiyg",
+                      "browseEndpointContextSupportedConfigs": {
+                       "browseEndpointContextMusicConfig": {
+                        "pageType": "MUSIC_PAGE_TYPE_ARTIST"
+                       }
+                      }
+                     }
+                    }
+                   },
+                   {
+                    "text": " • "
+                   },
+                   {
+                    "text": "2015"
+                   }
+                  ]
+                 }
+                }
+               }
+              ],
+              "flexColumnDisplayStyle": "MUSIC_RESPONSIVE_LIST_ITEM_FLEX_COLUMN_DISPLAY_STYLE_TWO_LINE_STACK",
+              "navigationEndpoint": {
+               "browseEndpoint": {
+                "browseId": "MPREb_MTq2ePOI3Eq",
+                "browseEndpointContextSupportedConfigs": {
+                 "browseEndpointContextMusicConfig": {
+                  "pageType": "MUSIC_PAGE_TYPE_ALBUM"
+                 }
+                }
+               }
+              }
+             }
+            },
+            {
+             "musicResponsiveListItemRenderer": {
+              "flexColumns": [
+               {
+                "musicResponsiveListItemFlexColumnRenderer": {
+                 "text": {
+                  "runs": [
+                   {
+                    "text": "Taylor Swift - 1989 (Taylor's Version) - Piano Covers"
+                   }
+                  ]
+                 }
+                }
+               },
+               {
+                "musicResponsiveListItemFlexColumnRenderer": {
+                 "text": {
+                  "runs": [
+                   {
+                    "text": "Album"
+                   },
+                   {
+                    "text": " • "
+                   },
+                   {
+                    "text": "Taylor Swift Piano Covers",
+                    "navigationEndpoint": {
+                     "browseEndpoint": {
+                      "browseId": "UCpYLe_DGRUQcGDN6TTSaNOg",
+                      "browseEndpointContextSupportedConfigs": {
+                       "browseEndpointContextMusicConfig": {
+                        "pageType": "MUSIC_PAGE_TYPE_ARTIST"
+                       }
+                      }
+                     }
+                    }
+                   },
+                   {
+                    "text": " • "
+                   },
+                   {
+                    "text": "2023"
+                   }
+                  ]
+                 }
+                }
+               }
+              ],
+              "flexColumnDisplayStyle": "MUSIC_RESPONSIVE_LIST_ITEM_FLEX_COLUMN_DISPLAY_STYLE_TWO_LINE_STACK",
+              "navigationEndpoint": {
+               "browseEndpoint": {
+                "browseId": "MPREb_ZnKArfGGYXy",
+                "browseEndpointContextSupportedConfigs": {
+                 "browseEndpointContextMusicConfig": {
+                  "pageType": "MUSIC_PAGE_TYPE_ALBUM"
+                 }
+                }
+               }
+              }
+             }
+            },
+            {
+             "musicResponsiveListItemRenderer": {
+              "flexColumns": [
+               {
+                "musicResponsiveListItemFlexColumnRenderer": {
+                 "text": {
+                  "runs": [
+                   {
+                    "text": "1989 (Taylor Swift)"
+                   }
+                  ]
+                 }
+                }
+               },
+               {
+                "musicResponsiveListItemFlexColumnRenderer": {
+                 "text": {
+                  "runs": [
+                   {
+                    "text": "Single"
+                   },
+                   {
+                    "text": " • "
+                   },
+                   {
+                    "text": "Glenn Darby",
+                    "navigationEndpoint": {
+                     "browseEndpoint": {
+                      "browseId": "UCs29Lcf922FSyta0oKGNNJg",
+                      "browseEndpointContextSupportedConfigs": {
+                       "browseEndpointContextMusicConfig": {
+                        "pageType": "MUSIC_PAGE_TYPE_ARTIST"
+                       }
+                      }
+                     }
+                    }
+                   },
+                   {
+                    "text": " • "
+                   },
+                   {
+                    "text": "2024"
+                   }
+                  ]
+                 }
+                }
+               }
+              ],
+              "flexColumnDisplayStyle": "MUSIC_RESPONSIVE_LIST_ITEM_FLEX_COLUMN_DISPLAY_STYLE_TWO_LINE_STACK",
+              "navigationEndpoint": {
+               "browseEndpoint": {
+                "browseId": "MPREb_qUNO0G7wE8u",
+                "browseEndpointContextSupportedConfigs": {
+                 "browseEndpointContextMusicConfig": {
+                  "pageType": "MUSIC_PAGE_TYPE_ALBUM"
+                 }
+                }
+               }
+              }
+             }
+            },
+            {
+             "musicResponsiveListItemRenderer": {
+              "flexColumns": [
+               {
+                "musicResponsiveListItemFlexColumnRenderer": {
+                 "text": {
+                  "runs": [
+                   {
+                    "text": "Midnights"
+                   }
+                  ]
+                 }
+                }
+               },
+               {
+                "musicResponsiveListItemFlexColumnRenderer": {
+                 "text": {
+                  "runs": [
+                   {
+                    "text": "Album"
+                   },
+                   {
+                    "text": " • "
+                   },
+                   {
+                    "text": "Taylor Swift",
+                    "navigationEndpoint": {
+                     "browseEndpoint": {
+                      "browseId": "UCPC0L1d253x-KuMNwa05TpA",
+                      "browseEndpointContextSupportedConfigs": {
+                       "browseEndpointContextMusicConfig": {
+                        "pageType": "MUSIC_PAGE_TYPE_ARTIST"
+                       }
+                      }
+                     }
+                    }
+                   },
+                   {
+                    "text": " • "
+                   },
+                   {
+                    "text": "2022"
+                   }
+                  ]
+                 }
+                }
+               }
+              ],
+              "flexColumnDisplayStyle": "MUSIC_RESPONSIVE_LIST_ITEM_FLEX_COLUMN_DISPLAY_STYLE_TWO_LINE_STACK",
+              "navigationEndpoint": {
+               "browseEndpoint": {
+                "browseId": "MPREb_z0ABWl3jaT0",
+                "browseEndpointContextSupportedConfigs": {
+                 "browseEndpointContextMusicConfig": {
+                  "pageType": "MUSIC_PAGE_TYPE_ALBUM"
+                 }
+                }
+               }
+              }
+             }
+            }
+           ]
+          }
+         }
+        ],
+        "header": {
+         "chipCloudRenderer": {
+          "chips": [
+           {
+            "chipCloudChipRenderer": {
+             "style": {
+              "styleType": "STYLE_SECONDARY"
+             },
+             "navigationEndpoint": {
+              "searchEndpoint": {
+               "query": "Taylor Swift 1989"
+              }
+             },
+             "icon": {
+              "iconType": "CLOSE"
+             },
+             "isSelected": false,
+             "uniqueId": "Clear filters"
+            }
+           },
+           {
+            "chipCloudChipRenderer": {
+             "style": {
+              "styleType": "STYLE_PRIMARY"
+             },
+             "text": {
+              "runs": [
+               {
+                "text": "Albums"
+               }
+              ]
+             },
+             "navigationEndpoint": {
+              "searchEndpoint": {
+               "query": "Taylor Swift 1989",
+               "params": "EgWKAQIYAWoKEAkQBRAKEAMQBA%3D%3D"
+              }
+             },
+             "isSelected": true,
+             "uniqueId": "Albums"
+            }
+           },
+           {
+            "chipCloudChipRenderer": {
+             "style": {
+              "styleType": "STYLE_DEFAULT"
+             },
+             "text": {
+              "runs": [
+               {
+                "text": "Artists"
+               }
+              ]
+             },
+             "navigationEndpoint": {
+              "searchEndpoint": {
+               "query": "Taylor Swift 1989",
+               "params": "EgWKAQIgAWoKEAkQBRAKEAMQBA%3D%3D"
+              }
+             },
+             "isSelected": false,
+             "uniqueId": "Artists"
+            }
+           },
+           {
+            "chipCloudChipRenderer": {
+             "style": {
+              "styleType": "STYLE_DEFAULT"
+             },
+             "text": {
+              "runs": [
+               {
+                "text": "Community playlists"
+               }
+              ]
+             },
+             "navigationEndpoint": {
+              "searchEndpoint": {
+               "query": "Taylor Swift 1989",
+               "params": "EgeKAQQoAEABagoQCRAFEAoQAxAE"
+              }
+             },
+             "isSelected": false,
+             "uniqueId": "Community playlists"
+            }
+           },
+           {
+            "chipCloudChipRenderer": {
+             "style": {
+              "styleType": "STYLE_DEFAULT"
+             },
+             "text": {
+              "runs": [
+               {
+                "text": "Songs"
+               }
+              ]
+             },
+             "navigationEndpoint": {
+              "searchEndpoint": {
+               "query": "Taylor Swift 1989",
+               "params": "EgWKAQIIAWoKEAkQBRAKEAMQBA%3D%3D"
+              }
+             },
+             "isSelected": false,
+             "uniqueId": "Songs"
+            }
+           },
+           {
+            "chipCloudChipRenderer": {
+             "style": {
+              "styleType": "STYLE_DEFAULT"
+             },
+             "text": {
+              "runs": [
+               {
+                "text": "Videos"
+               }
+              ]
+             },
+             "navigationEndpoint": {
+              "searchEndpoint": {
+               "query": "Taylor Swift 1989",
+               "params": "EgWKAQIQAWoKEAkQBRAKEAMQBA%3D%3D"
+              }
+             },
+             "isSelected": false,
+             "uniqueId": "Videos"
+            }
+           }
+          ],
+          "collapsedRowCount": 1,
+          "horizontalScrollable": true
+         }
+        }
+       }
+      },
+      "tabIdentifier": "music_search_catalog"
+     }
+    }
+   ]
+  }
+ }
+}

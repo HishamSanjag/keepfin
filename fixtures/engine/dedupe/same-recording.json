@@ -1,0 +1,27 @@
+{
+  "description": "Two recordings (artist, title, album, duration in seconds) -> the same recording by metadata (tier 3 of skip-existing)? Artist and title must match after noise removal, durations within 2 s, albums equal or missing, and version words (live, remix, acoustic, instrumental, extended, slowed, sped up, nightcore, karaoke, cover) must be the same on both sides.",
+  "cases": [
+    {"name":"release noise and a Topic channel do not matter","input":{"op":"same","a":{"artist":"Daft Punk","title":"One More Time","album":"Discovery","duration":320},"b":{"artist":"Daft Punk - Topic","title":"One More Time (Official Audio)","duration":321.5}},"expected":{"match":true}},
+    {"name":"diacritics and bracketed noise","input":{"op":"same","a":{"artist":"Sigur Rós","title":"Hoppípolla [HD]","duration":270},"b":{"artist":"Sigur Ros","title":"Hoppipolla (Official Video)","duration":271}},"expected":{"match":true}},
+    {"name":"featuring credits are ignored","input":{"op":"same","a":{"artist":"Artist","title":"Song (feat. Someone)","duration":200},"b":{"artist":"Artist","title":"Song","duration":200}},"expected":{"match":true}},
+    {"name":"a credit line with several artists matches its first artist","input":{"op":"same","a":{"artist":"A & B","title":"Song","duration":200},"b":{"artist":"A","title":"Song","duration":200}},"expected":{"match":true}},
+    {"name":"durations 2 s apart still match","input":{"op":"same","a":{"artist":"Band","title":"Song","duration":200},"b":{"artist":"Band","title":"Song","duration":202}},"expected":{"match":true}},
+    {"name":"durations 3 s apart do not match","input":{"op":"same","a":{"artist":"Band","title":"Song","duration":200},"b":{"artist":"Band","title":"Song","duration":203}},"expected":{"match":false}},
+    {"name":"an unknown duration never matches","input":{"op":"same","a":{"artist":"Band","title":"Song"},"b":{"artist":"Band","title":"Song","duration":200}},"expected":{"match":false}},
+    {"name":"a different album does not match","input":{"op":"same","a":{"artist":"Band","title":"Song","album":"Studio","duration":200},"b":{"artist":"Band","title":"Song","album":"Greatest Hits","duration":200}},"expected":{"match":false}},
+    {"name":"a missing album on one side matches","input":{"op":"same","a":{"artist":"Band","title":"Song","album":"Studio","duration":200},"b":{"artist":"Band","title":"Song","duration":200}},"expected":{"match":true}},
+    {"name":"albums compare ignoring case","input":{"op":"same","a":{"artist":"Band","title":"Song","album":"Studio","duration":200},"b":{"artist":"Band","title":"Song","album":"studio","duration":200}},"expected":{"match":true}},
+    {"name":"a different artist does not match","input":{"op":"same","a":{"artist":"Band","title":"Song","duration":200},"b":{"artist":"Someone Else","title":"Song","duration":200}},"expected":{"match":false}},
+    {"name":"a live version is a different recording","input":{"op":"same","a":{"artist":"Band","title":"Song","duration":200},"b":{"artist":"Band","title":"Song (Live)","duration":200}},"expected":{"match":false}},
+    {"name":"a remix is a different recording","input":{"op":"same","a":{"artist":"Band","title":"Song","duration":200},"b":{"artist":"Band","title":"Song (Remix)","duration":200}},"expected":{"match":false}},
+    {"name":"a slowed version is a different recording","input":{"op":"same","a":{"artist":"Band","title":"Song","duration":200},"b":{"artist":"Band","title":"Song (Slowed)","duration":200}},"expected":{"match":false}},
+    {"name":"a sped up version is a different recording","input":{"op":"same","a":{"artist":"Band","title":"Song","duration":200},"b":{"artist":"Band","title":"Song (Sped Up)","duration":200}},"expected":{"match":false}},
+    {"name":"a nightcore version is a different recording","input":{"op":"same","a":{"artist":"Band","title":"Song","duration":200},"b":{"artist":"Band","title":"Song (Nightcore)","duration":200}},"expected":{"match":false}},
+    {"name":"a karaoke version is a different recording","input":{"op":"same","a":{"artist":"Band","title":"Song","duration":200},"b":{"artist":"Band","title":"Song (Karaoke)","duration":200}},"expected":{"match":false}},
+    {"name":"an acoustic version is a different recording","input":{"op":"same","a":{"artist":"Band","title":"Song","duration":200},"b":{"artist":"Band","title":"Song (Acoustic)","duration":200}},"expected":{"match":false}},
+    {"name":"the same version word in two spellings matches","input":{"op":"same","a":{"artist":"Band","title":"Song (Live)","duration":200},"b":{"artist":"Band","title":"Song - Live","duration":200}},"expected":{"match":true}},
+    {"name":"titles that are only noise never match","input":{"op":"same","a":{"artist":"A","title":"(Official Video)","duration":1},"b":{"artist":"A","title":"[HD]","duration":1}},"expected":{"match":false}},
+    {"name":"no artist on either side never matches","input":{"op":"same","a":{"title":"x","duration":1},"b":{"title":"x","duration":1}},"expected":{"match":false}},
+    {"name":"an upload titled Artist - Title with no artist tag matches the tagged recording","input":{"op":"same","a":{"title":"Band - Song (Official Video)","duration":200},"b":{"artist":"Band","title":"Song","duration":200}},"expected":{"match":true}}
+  ]
+}

@@ -1,0 +1,29 @@
+{
+  "description": "A title (and optionally the artist whose name may lead it) -> the normalised title: lower case, accents and noise removed, version words kept. The same rules decide the metadata tier.",
+  "cases": [
+    {"name":"release noise and a lead artist are removed","input":{"op":"normalizeTitle","title":"Daft Punk - One More Time (Official Video) [HD]","artist":"Daft Punk"},"expected":"one more time"},
+    {"name":"accents and a featuring credit","input":{"op":"normalizeTitle","title":"Café del Mar (feat. Someone)"},"expected":"cafe del mar"},
+    {"name":"a trailing \"- Official Audio\"","input":{"op":"normalizeTitle","title":"Song - Official Audio"},"expected":"song"},
+    {"name":"a trailing \"ft.\" credit","input":{"op":"normalizeTitle","title":"Song ft. Someone"},"expected":"song"},
+    {"name":"a trailing \"- Lyric Video\"","input":{"op":"normalizeTitle","title":"Song - Lyric Video"},"expected":"song"},
+    {"name":"a trailing \"| Official Music Video\"","input":{"op":"normalizeTitle","title":"Song | Official Music Video"},"expected":"song"},
+    {"name":"the lead artist and a colon","input":{"op":"normalizeTitle","title":"Artist: Title","artist":"Artist"},"expected":"title"},
+    {"name":"a colon stays without an artist","input":{"op":"normalizeTitle","title":"Artist: Title"},"expected":"artist title"},
+    {"name":"the lead artist is matched without its Topic suffix","input":{"op":"normalizeTitle","title":"Band – Song","artist":"Band - Topic"},"expected":"song"},
+    {"name":"a title that is only noise is empty","input":{"op":"normalizeTitle","title":"(Official Video)"},"expected":""},
+    {"name":"an ampersand is spelled out","input":{"op":"normalizeTitle","title":"Tom & Jerry"},"expected":"tom and jerry"},
+    {"name":"a remaster note in brackets","input":{"op":"normalizeTitle","title":"Song (Remastered 2011)"},"expected":"song"},
+    {"name":"a year remaster note in square brackets","input":{"op":"normalizeTitle","title":"Song [2011 Remaster]"},"expected":"song"},
+    {"name":"a version word is kept","input":{"op":"normalizeTitle","title":"Song (Live)"},"expected":"song live"},
+    {"name":"a sped up version keeps both words","input":{"op":"normalizeTitle","title":"Song (Sped Up)"},"expected":"song sped up"},
+    {"name":"wide brackets around noise","input":{"op":"normalizeTitle","title":"Hoppípolla 【MV】"},"expected":"hoppipolla"},
+    {"name":"a bracketed \"with\" credit","input":{"op":"normalizeTitle","title":"Song (with Friend)"},"expected":"song"},
+    {"name":"a bracketed explicit tag","input":{"op":"normalizeTitle","title":"Song (Explicit)"},"expected":"song"},
+    {"name":"full-width letters fold to plain ones","input":{"op":"normalizeTitle","title":"ＳＯＮＧ １２３"},"expected":"song 123"},
+    {"name":"spaces collapse","input":{"op":"normalizeTitle","title":"  Song   Title  "},"expected":"song title"},
+    {"name":"a featuring credit and release noise together","input":{"op":"normalizeTitle","title":"Song (feat. A) (Official Video)"},"expected":"song"},
+    {"name":"a trailing \"- Visualizer\"","input":{"op":"normalizeTitle","title":"Song - Visualizer"},"expected":"song"},
+    {"name":"a trailing featuring credit with an ampersand","input":{"op":"normalizeTitle","title":"Song feat. A & B"},"expected":"song"},
+    {"name":"a sharp s stays as it is","input":{"op":"normalizeTitle","title":"Straße"},"expected":"straße"}
+  ]
+}

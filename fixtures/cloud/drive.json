@@ -1,0 +1,828 @@
+{
+ "description": "Cloud provider cases written from the providers' documentation (dev-docs/plans/KEEPFIN-CLOUD-SPEC.md); expected values were reviewed by hand. Not recordings of live services.",
+ "cases": [
+  {
+   "name": "list first page",
+   "provider": "drive",
+   "op": "list",
+   "input": {
+    "folder": {
+     "id": "P1"
+    }
+   },
+   "expected": {
+    "request": {
+     "method": "GET",
+     "url": "https://www.googleapis.com/drive/v3/files?q=%27P1%27%20in%20parents%20and%20trashed%3Dfalse&fields=nextPageToken,incompleteSearch,files(id,name,mimeType,size,md5Checksum,sha256Checksum,modifiedTime,createdTime,version,parents,trashed)&pageSize=1000&spaces=drive",
+     "headers": {},
+     "auth": true
+    }
+   }
+  },
+  {
+   "name": "list by name",
+   "provider": "drive",
+   "op": "list",
+   "input": {
+    "folder": {
+     "id": "P1"
+    },
+    "name": "Keep'fin",
+    "foldersOnly": true
+   },
+   "expected": {
+    "request": {
+     "method": "GET",
+     "url": "https://www.googleapis.com/drive/v3/files?q=%27P1%27%20in%20parents%20and%20trashed%3Dfalse%20and%20name%3D%27Keep%5C%27fin%27%20and%20mimeType%3D%27application%2Fvnd.google-apps.folder%27&fields=nextPageToken,incompleteSearch,files(id,name,mimeType,size,md5Checksum,sha256Checksum,modifiedTime,createdTime,version,parents,trashed)&pageSize=1000&spaces=drive",
+     "headers": {},
+     "auth": true
+    }
+   }
+  },
+  {
+   "name": "list next page",
+   "provider": "drive",
+   "op": "list",
+   "input": {
+    "folder": {
+     "id": "P1"
+    },
+    "cursor": "tok/1"
+   },
+   "expected": {
+    "request": {
+     "method": "GET",
+     "url": "https://www.googleapis.com/drive/v3/files?q=%27P1%27%20in%20parents%20and%20trashed%3Dfalse&fields=nextPageToken,incompleteSearch,files(id,name,mimeType,size,md5Checksum,sha256Checksum,modifiedTime,createdTime,version,parents,trashed)&pageSize=1000&spaces=drive&pageToken=tok%2F1",
+     "headers": {},
+     "auth": true
+    }
+   }
+  },
+  {
+   "name": "parse list with paging",
+   "provider": "drive",
+   "op": "parseList",
+   "input": {
+    "response": {
+     "status": 200,
+     "headers": {},
+     "body": "{\"nextPageToken\":\"T2\",\"incompleteSearch\":false,\"files\":[{\"id\":\"F9\",\"name\":\"a.mp3\",\"mimeType\":\"audio/mpeg\",\"size\":\"1234\",\"md5Checksum\":\"abc\",\"sha256Checksum\":\"def\",\"modifiedTime\":\"2026-10-15T12:00:00.500Z\",\"createdTime\":\"2026-10-14T00:00:00Z\",\"version\":\"7\",\"parents\":[\"P1\"]},{\"id\":\"D1\",\"name\":\"sub\",\"mimeType\":\"application/vnd.google-apps.folder\",\"parents\":[\"P1\"]}]}"
+    }
+   },
+   "expected": {
+    "ok": true,
+    "entries": [
+     {
+      "id": "F9",
+      "name": "a.mp3",
+      "folder": false,
+      "size": 1234,
+      "mtimeMs": 1792065600500,
+      "createdMs": 1791936000000,
+      "etag": "7",
+      "hashes": {
+       "sha256": "def",
+       "md5": "abc"
+      },
+      "parentId": "P1"
+     },
+     {
+      "id": "D1",
+      "name": "sub",
+      "folder": true,
+      "hashes": {},
+      "parentId": "P1"
+     }
+    ],
+    "nextCursor": "T2",
+    "incomplete": false
+   }
+  },
+  {
+   "name": "parse list incomplete",
+   "provider": "drive",
+   "op": "parseList",
+   "input": {
+    "response": {
+     "status": 200,
+     "headers": {},
+     "body": "{\"incompleteSearch\":true,\"files\":[]}"
+    }
+   },
+   "expected": {
+    "ok": true,
+    "entries": [],
+    "nextCursor": null,
+    "incomplete": true
+   }
+  },
+  {
+   "name": "parse list rejected page token",
+   "provider": "drive",
+   "op": "parseList",
+   "input": {
+    "response": {
+     "status": 400,
+     "headers": {},
+     "body": "{\"error\":{\"code\":400,\"message\":\"Invalid Value\",\"errors\":[{\"reason\":\"invalid\"}]}}"
+    },
+    "cursor": "bad"
+   },
+   "expected": {
+    "ok": false,
+    "error": {
+     "kind": "Fatal",
+     "status": 400,
+     "code": "ResetRequired",
+     "message": "Invalid Value"
+    }
+   }
+  },
+  {
+   "name": "stat",
+   "provider": "drive",
+   "op": "stat",
+   "input": {
+    "ref": {
+     "id": "F9"
+    }
+   },
+   "expected": {
+    "request": {
+     "method": "GET",
+     "url": "https://www.googleapis.com/drive/v3/files/F9?fields=id,name,mimeType,size,md5Checksum,sha256Checksum,modifiedTime,createdTime,version,parents,trashed",
+     "headers": {},
+     "auth": true
+    }
+   }
+  },
+  {
+   "name": "create folder",
+   "provider": "drive",
+   "op": "createFolder",
+   "input": {
+    "parent": {
+     "id": "P1"
+    },
+    "name": "Keepfin"
+   },
+   "expected": {
+    "request": {
+     "method": "POST",
+     "url": "https://www.googleapis.com/drive/v3/files?fields=id,name,mimeType,size,md5Checksum,sha256Checksum,modifiedTime,createdTime,version,parents,trashed",
+     "headers": {
+      "Content-Type": "application/json; charset=UTF-8"
+     },
+     "auth": true,
+     "body": "{\"name\":\"Keepfin\",\"mimeType\":\"application/vnd.google-apps.folder\",\"parents\":[\"P1\"]}"
+    }
+   }
+  },
+  {
+   "name": "create small",
+   "provider": "drive",
+   "op": "createSmall",
+   "input": {
+    "parent": {
+     "id": "P1"
+    },
+    "name": "lock.json",
+    "content": "{\"a\":1}"
+   },
+   "expected": {
+    "request": {
+     "method": "POST",
+     "url": "https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&fields=id,name,mimeType,size,md5Checksum,sha256Checksum,modifiedTime,createdTime,version,parents,trashed",
+     "headers": {
+      "Content-Type": "multipart/related; boundary=keepfin_boundary_7a1f3c"
+     },
+     "auth": true,
+     "body": "--keepfin_boundary_7a1f3c\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n{\"name\":\"lock.json\",\"parents\":[\"P1\"]}\r\n--keepfin_boundary_7a1f3c\r\nContent-Type: application/octet-stream\r\n\r\n{\"a\":1}\r\n--keepfin_boundary_7a1f3c--"
+    }
+   }
+  },
+  {
+   "name": "replace is refused",
+   "provider": "drive",
+   "op": "replaceSmall",
+   "input": {
+    "ref": {
+     "id": "F9"
+    },
+    "etag": "7",
+    "content": "x"
+   },
+   "expected": {
+    "unsupported": true,
+    "reason": "Drive has no content compare-and-swap: displaced bytes move to the Keepfin trash by id"
+   }
+  },
+  {
+   "name": "delete cas is refused",
+   "provider": "drive",
+   "op": "deleteCas",
+   "input": {
+    "ref": {
+     "id": "F9"
+    },
+    "etag": "7"
+   },
+   "expected": {
+    "unsupported": true,
+    "reason": "Drive has no conditional delete: move the object to the Keepfin trash by id"
+   }
+  },
+  {
+   "name": "advisory lock rewrite",
+   "provider": "drive",
+   "op": "replaceSmall",
+   "input": {
+    "ref": {
+     "id": "F9"
+    },
+    "advisory": true,
+    "content": "x"
+   },
+   "expected": {
+    "request": {
+     "method": "PATCH",
+     "url": "https://www.googleapis.com/upload/drive/v3/files/F9?uploadType=media&fields=id,name,mimeType,size,md5Checksum,sha256Checksum,modifiedTime,createdTime,version,parents,trashed",
+     "headers": {
+      "Content-Type": "application/octet-stream"
+     },
+     "auth": true,
+     "body": "x"
+    }
+   }
+  },
+  {
+   "name": "move to trash folder",
+   "provider": "drive",
+   "op": "move",
+   "input": {
+    "ref": {
+     "id": "F9"
+    },
+    "newParentId": "T1",
+    "fromParentId": "P1",
+    "newName": "F9-old.mp3"
+   },
+   "expected": {
+    "request": {
+     "method": "PATCH",
+     "url": "https://www.googleapis.com/drive/v3/files/F9?fields=id,name,mimeType,size,md5Checksum,sha256Checksum,modifiedTime,createdTime,version,parents,trashed&addParents=T1&removeParents=P1",
+     "headers": {
+      "Content-Type": "application/json; charset=UTF-8"
+     },
+     "auth": true,
+     "body": "{\"name\":\"F9-old.mp3\"}"
+    }
+   }
+  },
+  {
+   "name": "trash",
+   "provider": "drive",
+   "op": "trash",
+   "input": {
+    "ref": {
+     "id": "F9"
+    }
+   },
+   "expected": {
+    "request": {
+     "method": "PATCH",
+     "url": "https://www.googleapis.com/drive/v3/files/F9?fields=id,name,mimeType,size,md5Checksum,sha256Checksum,modifiedTime,createdTime,version,parents,trashed",
+     "headers": {
+      "Content-Type": "application/json; charset=UTF-8"
+     },
+     "auth": true,
+     "body": "{\"trashed\":true}"
+    }
+   }
+  },
+  {
+   "name": "download whole",
+   "provider": "drive",
+   "op": "download",
+   "input": {
+    "ref": {
+     "id": "F9"
+    }
+   },
+   "expected": {
+    "request": {
+     "method": "GET",
+     "url": "https://www.googleapis.com/drive/v3/files/F9?alt=media",
+     "headers": {},
+     "auth": true
+    }
+   }
+  },
+  {
+   "name": "download range",
+   "provider": "drive",
+   "op": "download",
+   "input": {
+    "ref": {
+     "id": "F9"
+    },
+    "start": 1000,
+    "end": 1999
+   },
+   "expected": {
+    "request": {
+     "method": "GET",
+     "url": "https://www.googleapis.com/drive/v3/files/F9?alt=media",
+     "headers": {
+      "Range": "bytes=1000-1999"
+     },
+     "auth": true
+    }
+   }
+  },
+  {
+   "name": "download 206 ok",
+   "provider": "drive",
+   "op": "parseDownload",
+   "input": {
+    "response": {
+     "status": 206,
+     "headers": {
+      "content-range": "bytes 1000-1999/5000",
+      "content-length": "1000"
+     },
+     "body": "x"
+    },
+    "start": 1000,
+    "end": 1999
+   },
+   "expected": {
+    "ok": true,
+    "start": 1000,
+    "end": 1999,
+    "length": 1000,
+    "total": 5000
+   }
+  },
+  {
+   "name": "download 200 ignored Range",
+   "provider": "drive",
+   "op": "parseDownload",
+   "input": {
+    "response": {
+     "status": 200,
+     "headers": {
+      "content-length": "5000"
+     },
+     "body": "x"
+    },
+    "start": 1000
+   },
+   "expected": {
+    "ok": false,
+    "ignoredRange": true,
+    "error": {
+     "kind": "Fatal",
+     "code": "range-ignored",
+     "status": 200
+    }
+   }
+  },
+  {
+   "name": "download 206 at wrong start",
+   "provider": "drive",
+   "op": "parseDownload",
+   "input": {
+    "response": {
+     "status": 206,
+     "headers": {
+      "content-range": "bytes 0-999/5000"
+     },
+     "body": "x"
+    },
+    "start": 1000
+   },
+   "expected": {
+    "ok": false,
+    "ignoredRange": true,
+    "error": {
+     "kind": "Fatal",
+     "code": "range-mismatch",
+     "status": 206
+    }
+   }
+  },
+  {
+   "name": "upload start",
+   "provider": "drive",
+   "op": "uploadStart",
+   "input": {
+    "parent": {
+     "id": "P1"
+    },
+    "name": "big.flac",
+    "size": 20971520
+   },
+   "expected": {
+    "request": {
+     "method": "POST",
+     "url": "https://www.googleapis.com/upload/drive/v3/files?uploadType=resumable&fields=id,name,mimeType,size,md5Checksum,sha256Checksum,modifiedTime,createdTime,version,parents,trashed",
+     "headers": {
+      "Content-Type": "application/json; charset=UTF-8",
+      "X-Upload-Content-Type": "application/octet-stream",
+      "X-Upload-Content-Length": "20971520"
+     },
+     "auth": true,
+     "body": "{\"name\":\"big.flac\",\"parents\":[\"P1\"]}"
+    }
+   }
+  },
+  {
+   "name": "upload start replace refused",
+   "provider": "drive",
+   "op": "uploadStart",
+   "input": {
+    "mode": "replace",
+    "ref": {
+     "id": "F9"
+    },
+    "size": 5
+   },
+   "expected": {
+    "unsupported": true,
+    "reason": "Drive never overwrites in place"
+   }
+  },
+  {
+   "name": "parse upload start",
+   "provider": "drive",
+   "op": "parseUploadStart",
+   "input": {
+    "response": {
+     "status": 200,
+     "headers": {
+      "location": "https://www.googleapis.com/upload/drive/v3/files?uploadType=resumable&upload_id=U1"
+     },
+     "body": ""
+    },
+    "nowMs": 1792065600000
+   },
+   "expected": {
+    "ok": true,
+    "session": {
+     "kind": "drive",
+     "url": "https://www.googleapis.com/upload/drive/v3/files?uploadType=resumable&upload_id=U1"
+    },
+    "nextOffset": 0,
+    "expiresAtMs": 1792670400000,
+    "chunk": {
+     "multiple": 262144,
+     "preferred": 8388608
+    }
+   }
+  },
+  {
+   "name": "upload chunk",
+   "provider": "drive",
+   "op": "uploadAppend",
+   "input": {
+    "session": {
+     "url": "https://www.googleapis.com/upload/drive/v3/files?uploadType=resumable&upload_id=U1"
+    },
+    "offset": 0,
+    "length": 8388608,
+    "total": 20971520
+   },
+   "expected": {
+    "request": {
+     "method": "PUT",
+     "url": "https://www.googleapis.com/upload/drive/v3/files?uploadType=resumable&upload_id=U1",
+     "headers": {
+      "Content-Length": "8388608",
+      "Content-Range": "bytes 0-8388607/20971520",
+      "Content-Type": "application/octet-stream"
+     },
+     "auth": true,
+     "bodyRef": {
+      "offset": 0,
+      "length": 8388608
+     }
+    }
+   }
+  },
+  {
+   "name": "upload last chunk",
+   "provider": "drive",
+   "op": "uploadAppend",
+   "input": {
+    "session": {
+     "url": "https://www.googleapis.com/upload/drive/v3/files?uploadType=resumable&upload_id=U1"
+    },
+    "offset": 16777216,
+    "length": 4194304,
+    "total": 20971520
+   },
+   "expected": {
+    "request": {
+     "method": "PUT",
+     "url": "https://www.googleapis.com/upload/drive/v3/files?uploadType=resumable&upload_id=U1",
+     "headers": {
+      "Content-Length": "4194304",
+      "Content-Range": "bytes 16777216-20971519/20971520",
+      "Content-Type": "application/octet-stream"
+     },
+     "auth": true,
+     "bodyRef": {
+      "offset": 16777216,
+      "length": 4194304
+     }
+    }
+   }
+  },
+  {
+   "name": "upload chunk not a multiple",
+   "provider": "drive",
+   "op": "uploadAppend",
+   "input": {
+    "session": {
+     "url": "https://www.googleapis.com/upload/x"
+    },
+    "offset": 0,
+    "length": 1000,
+    "total": 20971520
+   },
+   "expected": {
+    "throws": true
+   }
+  },
+  {
+   "name": "upload query",
+   "provider": "drive",
+   "op": "uploadQuery",
+   "input": {
+    "session": {
+     "url": "https://www.googleapis.com/upload/drive/v3/files?uploadType=resumable&upload_id=U1"
+    },
+    "total": 20971520
+   },
+   "expected": {
+    "request": {
+     "method": "PUT",
+     "url": "https://www.googleapis.com/upload/drive/v3/files?uploadType=resumable&upload_id=U1",
+     "headers": {
+      "Content-Length": "0",
+      "Content-Range": "bytes */20971520"
+     },
+     "auth": true
+    }
+   }
+  },
+  {
+   "name": "upload 308 with Range",
+   "provider": "drive",
+   "op": "parseUploadAppend",
+   "input": {
+    "response": {
+     "status": 308,
+     "headers": {
+      "range": "bytes=0-8388607"
+     },
+     "body": ""
+    }
+   },
+   "expected": {
+    "ok": true,
+    "done": false,
+    "nextOffset": 8388608
+   }
+  },
+  {
+   "name": "upload 308 nothing yet",
+   "provider": "drive",
+   "op": "parseUploadQuery",
+   "input": {
+    "response": {
+     "status": 308,
+     "headers": {},
+     "body": ""
+    }
+   },
+   "expected": {
+    "ok": true,
+    "done": false,
+    "nextOffset": 0
+   }
+  },
+  {
+   "name": "upload done",
+   "provider": "drive",
+   "op": "parseUploadAppend",
+   "input": {
+    "response": {
+     "status": 200,
+     "headers": {},
+     "body": "{\"id\":\"F9\",\"name\":\"a.mp3\",\"mimeType\":\"audio/mpeg\",\"size\":\"1234\",\"md5Checksum\":\"abc\",\"sha256Checksum\":\"def\",\"modifiedTime\":\"2026-10-15T12:00:00.500Z\",\"createdTime\":\"2026-10-14T00:00:00Z\",\"version\":\"7\",\"parents\":[\"P1\"]}"
+    }
+   },
+   "expected": {
+    "ok": true,
+    "done": true,
+    "entry": {
+     "id": "F9",
+     "name": "a.mp3",
+     "folder": false,
+     "size": 1234,
+     "mtimeMs": 1792065600500,
+     "createdMs": 1791936000000,
+     "etag": "7",
+     "hashes": {
+      "sha256": "def",
+      "md5": "abc"
+     },
+     "parentId": "P1"
+    }
+   }
+  },
+  {
+   "name": "upload session gone",
+   "provider": "drive",
+   "op": "parseUploadAppend",
+   "input": {
+    "response": {
+     "status": 404,
+     "headers": {},
+     "body": "{\"error\":{\"code\":404,\"message\":\"Not Found\"}}"
+    }
+   },
+   "expected": {
+    "ok": false,
+    "error": {
+     "kind": "NotFound",
+     "status": 404,
+     "code": "SessionExpired",
+     "message": "Not Found"
+    }
+   }
+  },
+  {
+   "name": "quota",
+   "provider": "drive",
+   "op": "parseQuota",
+   "input": {
+    "response": {
+     "status": 200,
+     "headers": {},
+     "body": "{\"storageQuota\":{\"limit\":\"16106127360\",\"usage\":\"1073741824\"},\"user\":{\"emailAddress\":\"a@b.c\"}}"
+    }
+   },
+   "expected": {
+    "ok": true,
+    "usedBytes": 1073741824,
+    "totalBytes": 16106127360,
+    "freeBytes": 15032385536,
+    "account": "a@b.c"
+   }
+  },
+  {
+   "name": "quota unlimited",
+   "provider": "drive",
+   "op": "parseQuota",
+   "input": {
+    "response": {
+     "status": 200,
+     "headers": {},
+     "body": "{\"storageQuota\":{\"usage\":\"5\"}}"
+    }
+   },
+   "expected": {
+    "ok": true,
+    "usedBytes": 5
+   }
+  },
+  {
+   "name": "error rate limit 403",
+   "provider": "drive",
+   "op": "parseDone",
+   "input": {
+    "response": {
+     "status": 403,
+     "headers": {
+      "retry-after": "7"
+     },
+     "body": "{\"error\":{\"code\":403,\"message\":\"Rate Limit Exceeded\",\"errors\":[{\"reason\":\"userRateLimitExceeded\"}]}}"
+    }
+   },
+   "expected": {
+    "ok": false,
+    "error": {
+     "kind": "RateLimited",
+     "status": 403,
+     "code": "userRateLimitExceeded",
+     "message": "Rate Limit Exceeded",
+     "retryAfterMs": 7000
+    }
+   }
+  },
+  {
+   "name": "error storage full",
+   "provider": "drive",
+   "op": "parseDone",
+   "input": {
+    "response": {
+     "status": 403,
+     "headers": {},
+     "body": "{\"error\":{\"code\":403,\"errors\":[{\"reason\":\"storageQuotaExceeded\"}]}}"
+    }
+   },
+   "expected": {
+    "ok": false,
+    "error": {
+     "kind": "QuotaFull",
+     "status": 403,
+     "code": "storageQuotaExceeded"
+    }
+   }
+  },
+  {
+   "name": "error 401",
+   "provider": "drive",
+   "op": "parseDone",
+   "input": {
+    "response": {
+     "status": 401,
+     "headers": {},
+     "body": "{\"error\":{\"code\":401,\"message\":\"Invalid Credentials\"}}"
+    }
+   },
+   "expected": {
+    "ok": false,
+    "error": {
+     "kind": "NeedsSignIn",
+     "status": 401,
+     "message": "Invalid Credentials",
+     "refresh": true
+    }
+   }
+  },
+  {
+   "name": "error 429",
+   "provider": "drive",
+   "op": "parseDone",
+   "input": {
+    "response": {
+     "status": 429,
+     "headers": {
+      "retry-after": "3"
+     },
+     "body": ""
+    }
+   },
+   "expected": {
+    "ok": false,
+    "error": {
+     "kind": "RateLimited",
+     "status": 429,
+     "retryAfterMs": 3000
+    }
+   }
+  },
+  {
+   "name": "error 503 is not throttling",
+   "provider": "drive",
+   "op": "parseDone",
+   "input": {
+    "response": {
+     "status": 503,
+     "headers": {},
+     "body": ""
+    }
+   },
+   "expected": {
+    "ok": false,
+    "error": {
+     "kind": "Transient",
+     "status": 503
+    }
+   }
+  },
+  {
+   "name": "error 404",
+   "provider": "drive",
+   "op": "parseDone",
+   "input": {
+    "response": {
+     "status": 404,
+     "headers": {},
+     "body": "{\"error\":{\"code\":404}}"
+    }
+   },
+   "expected": {
+    "ok": false,
+    "error": {
+     "kind": "NotFound",
+     "status": 404
+    }
+   }
+  }
+ ]
+}

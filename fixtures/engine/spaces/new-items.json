@@ -1,0 +1,28 @@
+{
+  "description": "Following a collection: which discovered entries are new (never in seen, once each, in source order), the confirmAbove gate, and which members left the source.",
+  "cases": [
+    {"name":"downloaded, deselected and deleted items are never new","input":{"op":"newKeys","seen":["youtube:aaaaaaaaaaa","youtube:bbbbbbbbbbb"],"entries":["https://www.youtube.com/watch?v=aaaaaaaaaaa","https://www.youtube.com/watch?v=bbbbbbbbbbb","https://www.youtube.com/watch?v=ccccccccccc","https://www.youtube.com/watch?v=ccccccccccc","https://www.youtube.com/watch?v=ddddddddddd"]},"expected":{"keys":["youtube:ccccccccccc","youtube:ddddddddddd"]}},
+    {"name":"a seen link stored with a trailing slash or fragment is still seen","input":{"op":"newKeys","seen":["https://example.com/post/1/","https://example.com/post/2#top"],"entries":["https://example.com/post/1","https://example.com/post/2","https://example.com/post/3"]},"expected":{"keys":["https://example.com/post/3"]}},
+    {"name":"an empty listing has nothing new","input":{"op":"newKeys","seen":["youtube:aaaaaaaaaaa"],"entries":[]},"expected":{"keys":[]}},
+    {"name":"everything seen means nothing new","input":{"op":"newKeys","seen":["youtube:aaaaaaaaaaa"],"entries":["https://youtu.be/aaaaaaaaaaa"]},"expected":{"keys":[]}},
+    {"name":"an unknown site is identified by its link","input":{"op":"newKeys","seen":[],"entries":["https://example.com/post/1"]},"expected":{"keys":["https://example.com/post/1"]}},
+    {"name":"the same recording under different links is one entry","input":{"op":"newKeys","seen":[],"entries":["https://www.youtube.com/watch?v=aaaaaaaaaaa","https://music.youtube.com/watch?v=aaaaaaaaaaa&list=PLx"]},"expected":{"keys":["youtube:aaaaaaaaaaa"]}},
+    {"name":"item key of a youtube link inside a playlist","input":{"op":"itemKey","url":"https://www.youtube.com/watch?v=abcdefghijk&list=PLabc"},"expected":"youtube:abcdefghijk"},
+    {"name":"item key of a spotify track","input":{"op":"itemKey","url":"https://open.spotify.com/track/4uLU6hMCjMI75M1A2tKUQC"},"expected":"spotify:4uLU6hMCjMI75M1A2tKUQC"},
+    {"name":"item key drops a trailing slash and fragment","input":{"op":"itemKey","url":"https://example.com/post/1/#top"},"expected":"https://example.com/post/1"},
+    {"name":"gate: nothing new","input":{"op":"gate","count":0,"confirmAbove":20},"expected":"none"},
+    {"name":"gate: one new item downloads","input":{"op":"gate","count":1,"confirmAbove":20},"expected":"enqueue"},
+    {"name":"gate: exactly confirmAbove downloads","input":{"op":"gate","count":20,"confirmAbove":20},"expected":"enqueue"},
+    {"name":"gate: one more than confirmAbove waits for review","input":{"op":"gate","count":21,"confirmAbove":20},"expected":"confirm"},
+    {"name":"gate: review approves the held items","input":{"op":"gate","count":28,"confirmAbove":20,"approved":true},"expected":"enqueue"},
+    {"name":"gate: approval with nothing new is still nothing","input":{"op":"gate","count":0,"confirmAbove":20,"approved":true},"expected":"none"},
+    {"name":"gate: confirmAbove 0 holds even one item","input":{"op":"gate","count":1,"confirmAbove":0},"expected":"confirm"},
+    {"name":"removed: only members with a source id can be judged","input":{"op":"removed","members":[{"id":"1","sourceId":"youtube:aaaaaaaaaaa"},{"id":"2","sourceId":"youtube:bbbbbbbbbbb"},{"id":"3"}],"discovered":["youtube:aaaaaaaaaaa"]},"expected":{"ids":["2"]}},
+    {"name":"removed: nothing left the source","input":{"op":"removed","members":[{"id":"1","sourceId":"youtube:aaaaaaaaaaa"},{"id":"2","sourceId":"youtube:bbbbbbbbbbb"},{"id":"3"}],"discovered":["youtube:aaaaaaaaaaa","youtube:bbbbbbbbbbb"]},"expected":{"ids":[]}},
+    {"name":"shorts and embed links name the same recording","input":{"op":"newKeys","seen":[],"entries":["https://www.youtube.com/shorts/aaaaaaaaaaa","https://www.youtube.com/embed/aaaaaaaaaaa","https://youtu.be/bbbbbbbbbbb?t=3"]},"expected":{"keys":["youtube:aaaaaaaaaaa","youtube:bbbbbbbbbbb"]}},
+    {"name":"item key of a deezer track","input":{"op":"itemKey","url":"https://www.deezer.com/en/track/3135556"},"expected":"deezer:3135556"},
+    {"name":"item key of text that is not a link","input":{"op":"itemKey","url":"  not a link/#x "},"expected":"not a link"},
+    {"name":"gate: a negative count is nothing","input":{"op":"gate","count":-1,"confirmAbove":20},"expected":"none"},
+    {"name":"removed: a member whose source is still listed stays","input":{"op":"removed","members":[{"id":"1","sourceId":"spotify:aaaaaaaa"}],"discovered":["spotify:aaaaaaaa","youtube:bbbbbbbbbbb"]},"expected":{"ids":[]}}
+  ]
+}

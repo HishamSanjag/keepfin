@@ -1,0 +1,97 @@
+{
+ "id": "293",
+ "title": "Flickermood",
+ "fulltitle": "Flickermood",
+ "uploader": "Forss",
+ "uploader_id": "183",
+ "duration": 213.886,
+ "thumbnail": "https://i1.sndcdn.com/artworks-000067273316-smsiqx-original.jpg",
+ "webpage_url": "https://soundcloud.com/forss/flickermood",
+ "original_url": "https://soundcloud.com/forss/flickermood",
+ "extractor": "soundcloud",
+ "extractor_key": "Soundcloud",
+ "artist": "Forss",
+ "artists": [
+  "Forss"
+ ],
+ "track": "Flickermood",
+ "release_year": 2003,
+ "playlist": null,
+ "_type": "video",
+ "ext": "m4a",
+ "format_id": "hls_aac_160k",
+ "thumbnails": [
+  {
+   "url": "https://i1.sndcdn.com/artworks-000067273316-smsiqx-t500x500.jpg",
+   "width": 500,
+   "height": 500
+  },
+  {
+   "url": "https://i1.sndcdn.com/artworks-000067273316-smsiqx-original.jpg",
+   "preference": 10
+  }
+ ],
+ "chapters": [],
+ "subtitles": {},
+ "automatic_captions": {},
+ "formats": [
+  {
+   "format_id": "hls_mp3_0_0",
+   "ext": "mp3",
+   "protocol": "m3u8_native",
+   "acodec": "mp3",
+   "vcodec": "none",
+   "tbr": 128,
+   "abr": 128,
+   "vbr": 0,
+   "filesize_approx": 3422176,
+   "resolution": "audio only",
+   "audio_ext": "mp3",
+   "video_ext": "none"
+  },
+  {
+   "format_id": "http_mp3_0_0",
+   "ext": "mp3",
+   "protocol": "http",
+   "acodec": "mp3",
+   "vcodec": "none",
+   "tbr": 128,
+   "abr": 128,
+   "vbr": 0,
+   "filesize_approx": 3422176,
+   "resolution": "audio only",
+   "audio_ext": "mp3",
+   "video_ext": "none"
+  },
+  {
+   "format_id": "hls_aac_96k",
+   "ext": "m4a",
+   "protocol": "m3u8_native",
+   "acodec": "mp4a.40.2",
+   "vcodec": "none",
+   "tbr": 96,
+   "abr": 96,
+   "vbr": 0,
+   "filesize_approx": 2566632,
+   "container": "m4a_dash",
+   "resolution": "audio only",
+   "audio_ext": "m4a",
+   "video_ext": "none"
+  },
+  {
+   "format_id": "hls_aac_160k",
+   "ext": "m4a",
+   "protocol": "m3u8_native",
+   "acodec": "mp4a.40.2",
+   "vcodec": "none",
+   "tbr": 160,
+   "abr": 160,
+   "vbr": 0,
+   "filesize_approx": 4277720,
+   "container": "m4a_dash",
+   "resolution": "audio only",
+   "audio_ext": "m4a",
+   "video_ext": "none"
+  }
+ ]
+}

@@ -1,0 +1,709 @@
+.app {
+  display: grid;
+  grid-template-columns: var(--rail-w) minmax(0, 1fr);
+  grid-template-rows: minmax(0, 1fr);
+  /* Root zoom scales every length; divide so the shell still fills the window exactly. */
+  height: calc(100dvh / var(--zoom));
+  overflow: hidden;
+}
+
+/* ---------- Rail ---------- */
+.rail {
+  grid-column: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  min-height: 0;
+  padding: 16px 12px 12px;
+  background: var(--rail);
+  border-right: 1px solid var(--line);
+}
+.rail-brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 4px 8px;
+  border-radius: var(--r-md);
+  text-align: left;
+}
+.rail-brand:hover {
+  background: var(--hover);
+}
+.rail-nav {
+  display: grid;
+  gap: 2px;
+}
+.nav-item {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  height: 38px;
+  padding: 0 10px;
+  border-radius: var(--r-md);
+  color: var(--text-2);
+  font-weight: 600;
+  text-align: left;
+  transition:
+    background-color var(--t-fast) var(--ease),
+    color var(--t-fast) var(--ease);
+}
+.nav-item:hover {
+  color: var(--text);
+  background: var(--hover);
+}
+.nav-item.selected {
+  color: var(--text);
+  background: var(--selected);
+}
+.nav-item.selected .nav-icon {
+  color: var(--accent-text);
+}
+.nav-icon {
+  display: grid;
+  place-items: center;
+}
+.nav-label {
+  flex: 1;
+}
+.nav-count {
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  min-width: 20px;
+  height: 20px;
+  padding: 0 6px;
+  border-radius: 99px;
+  display: grid;
+  place-items: center;
+  font-size: 11.5px;
+  font-weight: 700;
+  color: var(--on-accent);
+  background: var(--accent);
+}
+.rail-foot {
+  margin-top: auto;
+  display: grid;
+  gap: 8px;
+}
+.rail-foot-row {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  min-width: 0;
+}
+.activity {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 10px;
+  border-radius: var(--r-md);
+  background: var(--accent-soft);
+  color: var(--text);
+  font-size: 12.5px;
+  font-weight: 600;
+  text-align: left;
+}
+.activity-speed {
+  color: var(--accent-text);
+}
+.activity-bars {
+  display: inline-flex;
+  align-items: flex-end;
+  gap: 2px;
+  height: 12px;
+  flex: none;
+}
+.activity-bars i {
+  width: 3px;
+  height: 100%;
+  border-radius: 1px;
+  background: var(--accent);
+  animation: bars 1.1s var(--ease) infinite alternate;
+}
+.activity-bars i:nth-child(2) {
+  animation-delay: -0.35s;
+}
+.activity-bars i:nth-child(3) {
+  animation-delay: -0.7s;
+}
+@keyframes bars {
+  from {
+    transform: scaleY(0.35);
+  }
+  to {
+    transform: scaleY(1);
+  }
+}
+.activity-bars i {
+  transform-origin: bottom;
+}
+.engine-chip {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 6px 8px;
+  border-radius: var(--r-md);
+  text-align: left;
+}
+.engine-chip:hover {
+  background: var(--hover);
+}
+.engine-dot {
+  display: grid;
+  place-items: center;
+  width: 14px;
+  flex: none;
+  color: var(--text-3);
+}
+.engine-dot i {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--success);
+  box-shadow: 0 0 0 3px var(--success-soft);
+}
+.engine-idle .engine-dot i {
+  background: var(--text-3);
+  box-shadow: none;
+}
+.engine-busy .engine-dot {
+  color: var(--accent-text);
+}
+.engine-warn .engine-dot {
+  color: var(--warning);
+}
+.engine-text {
+  display: grid;
+  min-width: 0;
+  line-height: 1.25;
+}
+.engine-name {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.engine-detail {
+  font-size: 11.5px;
+  color: var(--text-3);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.engine-warn .engine-detail {
+  color: var(--warning);
+}
+
+/* ---------- Main column ---------- */
+.main {
+  grid-column: 2;
+  min-width: 0;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  scrollbar-gutter: stable;
+  container: main / inline-size;
+  padding: 0 var(--gutter) 48px;
+}
+.main:focus {
+  outline: none;
+}
+.screen {
+  max-width: var(--content-max);
+  margin-inline: auto;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 20px;
+  align-content: start;
+}
+
+/* ---------- Toasts / drop overlay ---------- */
+.toasts {
+  position: fixed;
+  right: 16px;
+  bottom: 16px;
+  z-index: 80;
+  display: grid;
+  gap: 8px;
+  width: min(380px, calc(100vw / var(--zoom) - 32px));
+  pointer-events: none;
+}
+.toasts[popover] {
+  inset: auto 16px 16px auto;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  overflow: visible;
+}
+.toast {
+  pointer-events: auto;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 8px 10px 14px;
+  border-radius: 10px;
+  background: var(--overlay);
+  box-shadow:
+    var(--shadow-lg),
+    inset 0 0 0 1px var(--line-strong);
+  font-size: 13.5px;
+  animation: toast-in var(--t) var(--ease);
+}
+.toast > .icon {
+  color: var(--accent-text);
+}
+.toast-success > .icon {
+  color: var(--success);
+}
+.toast-error > .icon {
+  color: var(--danger);
+}
+.toast-text {
+  flex: 1;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+@keyframes toast-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+}
+.drop-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 90;
+  display: grid;
+  place-items: center;
+  background: var(--scrim);
+  pointer-events: none;
+  animation: fade-in var(--t-fast) var(--ease);
+}
+.drop-card {
+  display: grid;
+  justify-items: center;
+  gap: 8px;
+  padding: 32px 40px;
+  border-radius: 18px;
+  background: var(--overlay);
+  border: 2px dashed var(--accent);
+  box-shadow: var(--shadow-lg);
+  text-align: center;
+}
+.drop-card strong {
+  font-family: var(--font-display);
+  font-size: 18px;
+}
+.drop-card span {
+  color: var(--text-2);
+  font-size: 13px;
+}
+
+
+
+/* ---------- App update indicator ---------- */
+.upd {
+  position: relative;
+  flex: none;
+}
+.upd-trigger {
+  position: relative;
+}
+.upd-pill {
+  display: inline-flex;
+  align-items: stretch;
+  min-height: 32px;
+  border-radius: 999px;
+  color: var(--accent-text);
+  background: var(--accent-soft);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--accent) 45%, transparent);
+}
+.upd-pill:hover,
+.upd-pill.is-open {
+  background: color-mix(in srgb, var(--accent) 22%, transparent);
+}
+.upd-pill-main,
+.upd-pill-x {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+  border-radius: 999px;
+}
+.upd-pill-main {
+  padding: 0 12px 0 11px;
+  font-size: 13px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.upd-pill-main + .upd-pill-x {
+  justify-content: center;
+  width: 28px;
+  margin-left: -4px;
+  opacity: 0.75;
+}
+.upd-pill-x:hover {
+  opacity: 1;
+  background: color-mix(in srgb, var(--accent) 18%, transparent);
+}
+.upd-pill-main:focus-visible,
+.upd-pill-x:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
+.upd-pill:has(.upd-pill-x) .upd-pill-main {
+  padding-right: 6px;
+}
+/* With the Activity bell beside it, a narrow page header shows the update pill as its icon (the label stays in aria-label). */
+@container main (max-width: 340px) {
+  .upd-pill-main span {
+    display: none;
+  }
+  .upd-pill-main {
+    padding: 0 9px;
+  }
+}
+.update-prompt {
+  display: grid;
+  gap: 10px;
+}
+.update-prompt p {
+  margin: 0;
+}
+.update-bullets {
+  margin: 0;
+  padding-left: 18px;
+  display: grid;
+  gap: 8px;
+  line-height: 1.45;
+}
+.upd-pop {
+  position: absolute;
+  z-index: 50;
+  top: calc(100% + 8px);
+  right: 0;
+  display: grid;
+  gap: 12px;
+  width: min(360px, calc(100vw - 32px));
+  padding: 16px;
+  border-radius: 12px;
+  background: var(--overlay);
+  box-shadow:
+    var(--shadow-lg),
+    inset 0 0 0 1px var(--line-strong);
+  animation: pop var(--t-fast) var(--ease);
+}
+.upd-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 4px 12px;
+}
+.upd-title {
+  font-size: 14px;
+  font-weight: 650;
+}
+.upd-ver {
+  font-size: 12px;
+  color: var(--accent-text);
+}
+.upd-notes {
+  max-height: 200px;
+  overflow: auto;
+  padding: 10px 12px;
+  border-radius: 8px;
+  background: var(--surface-2);
+  box-shadow: inset 0 0 0 1px var(--line);
+}
+.upd-notes .release-markdown {
+  font-size: 13px;
+}
+.upd-notes .release-markdown h1,
+.upd-notes .release-markdown h2,
+.upd-notes .release-markdown h3 {
+  font-size: 13px;
+  margin: 0 0 4px;
+}
+.upd-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+/* Footer: engine status plus two compact icon buttons without clipping the version. */
+.rail-foot-row {
+  gap: 0;
+}
+.rail-foot-row .engine-chip {
+  gap: 7px;
+  padding: 6px 4px 6px 8px;
+}
+.rail-foot-row .icon-btn {
+  width: 28px;
+  height: 28px;
+}
+.support-btn:hover:not(:disabled) {
+  color: var(--accent-text);
+}
+
+.update-prompt-icon {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  margin: 0 auto;
+  border-radius: 50%;
+  background: var(--accent-soft);
+  color: var(--accent-text);
+}
+.update-banner {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 8px 8px 14px;
+  border-radius: 12px;
+  color: var(--accent-text);
+  background: var(--accent-soft);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--accent) 30%, transparent);
+}
+.update-banner-text {
+  display: grid;
+  flex: 1;
+  min-width: 0;
+  color: var(--text);
+}
+.update-banner-text strong {
+  font-size: 14px;
+}
+.update-banner-text span {
+  font-size: 12.5px;
+  color: var(--text-2);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ---------- One sidebar: destinations, then "Your library" ---------- */
+.rail-fill {
+  flex: 1;
+}
+.your-lib {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 6px;
+  min-height: 0;
+}
+.your-lib .side-label {
+  margin: 4px 8px 0;
+}
+.side-chips {
+  display: grid;
+  flex: none;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 4px;
+  padding: 2px;
+}
+.side-chips .chip {
+  min-width: 0;
+  justify-content: center;
+  padding-inline: 4px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.side-chips .chip.on {
+  font-weight: 700;
+}
+.your-nav {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-height: 0;
+}
+.your-list {
+  display: grid;
+  gap: 1px;
+  align-content: start;
+  min-height: 0;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  overflow-y: auto;
+}
+.side-entry {
+  width: 100%;
+  min-height: 44px;
+  padding: 0 8px;
+}
+.side-cover {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 32px;
+  height: 32px;
+  border-radius: 5px;
+  overflow: hidden;
+  background: var(--thumb-bg);
+  color: var(--text-3);
+}
+.side-cover.round {
+  border-radius: 50%;
+}
+.side-entry .space-mark {
+  width: 32px;
+  height: 32px;
+  flex: none;
+}
+.side-text {
+  display: grid;
+  flex: 1;
+  min-width: 0;
+  line-height: 1.25;
+}
+.side-sub {
+  font-size: 11.5px;
+  font-weight: 500;
+  color: var(--text-3);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.side-empty {
+  padding: 8px;
+}
+
+
+/* ---------- Keepfin mode question ---------- */
+/* Wide enough for the two pictured choices side by side; they stack when the window is narrow. */
+.dialog.dialog-mode {
+  --dialog-s: 660px;
+}
+.mode-choices {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 12px;
+}
+.mode-choice {
+  position: relative;
+  display: grid;
+  grid-template-rows: auto 1fr;
+  align-content: start;
+  gap: 12px;
+  padding: 12px;
+  border-radius: var(--r-lg);
+  cursor: pointer;
+  box-shadow: inset 0 0 0 1px var(--line-strong);
+}
+.mode-choice:hover {
+  background: var(--hover);
+}
+.mode-choice.on {
+  background: var(--accent-soft);
+  box-shadow: inset 0 0 0 2px var(--accent);
+}
+.mode-choice input {
+  position: absolute;
+  opacity: 0;
+  inset: 0;
+  cursor: pointer;
+}
+.mode-choice:has(input:focus-visible) {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+}
+.mode-picture {
+  display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 16 / 10;
+}
+.mode-text {
+  display: grid;
+  align-content: start;
+  gap: 4px;
+  font-size: 13.5px;
+  line-height: 1.5;
+  color: var(--text-2);
+}
+.mode-text strong {
+  color: var(--text);
+  font-size: 14.5px;
+}
+
+/* ---------- Sidebar collapsed by hand: the same icon rail, any window width ---------- */
+/* How the collapsed rail looks and animates (icons stay put, labels fade, the width eases) is at the end of atelier.css. */
+.app[data-rail='collapsed'] {
+  --rail-w: 68px;
+}
+.app[data-rail='collapsed'] .nav-icon {
+  position: relative;
+}
+.app[data-rail='collapsed'] .nav-count {
+  right: -9px;
+  top: -6px;
+  transform: none;
+  min-width: 17px;
+  height: 17px;
+  font-size: 10.5px;
+  padding: 0 4px;
+  box-shadow: 0 0 0 2px var(--rail);
+}.rail-top {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  min-height: 56px; /* the same with the full logo and the collapsed mark, so the nav does not jump */
+}
+.rail-top .rail-brand {
+  flex: 1;
+  min-width: 0;
+}
+.rail-toggle {
+  flex: none;
+}
+.rail-toggle[aria-pressed='true'] {
+  color: var(--text-2);
+}
+.foot-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  min-height: 34px;
+  padding: 0 10px;
+  border-radius: var(--r-md);
+  color: var(--text-3);
+  font-size: 13px;
+  font-weight: 600;
+  text-align: left;
+  white-space: nowrap;
+}
+.foot-item:hover:not(:disabled) {
+  color: var(--text);
+  background: var(--hover);
+}
+.foot-item.support-btn:hover:not(:disabled) .icon {
+  color: var(--accent-text);
+}
+.foot-item .icon {
+  flex: none;
+}
+.rail-foot-links {
+  display: grid;
+  gap: 1px;
+  padding-top: 6px;
+  border-top: 1px solid var(--line);
+}

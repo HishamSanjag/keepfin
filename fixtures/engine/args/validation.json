@@ -1,0 +1,29 @@
+{
+  "description": "Structured intent is validated before it can reach a command line: unsafe or unknown values are rejected.",
+  "cases": [
+    {"name":"a plain video request is valid","input":{"op":"validateFormat","format":{"type":"video","codec":"auto","container":"mp4"}},"expected":{"valid":true}},
+    {"name":"an exact format id from the inspected list is valid","input":{"op":"validateFormat","format":{"type":"video","formatId":"hls-1080","container":"mkv","codec":"vp9","maxHeight":1080}},"expected":{"valid":true}},
+    {"name":"selector operators in a format id are rejected: plus","input":{"op":"validateFormat","format":{"type":"video","formatId":"299+140","codec":"auto","container":"mp4"}},"expected":{"valid":false}},
+    {"name":"selector operators in a format id are rejected: slash and star","input":{"op":"validateFormat","format":{"type":"video","formatId":"b/bv*","codec":"auto","container":"mp4"}},"expected":{"valid":false}},
+    {"name":"selector operators in a format id are rejected: filter","input":{"op":"validateFormat","format":{"type":"video","formatId":"137[height>1]","codec":"auto","container":"mp4"}},"expected":{"valid":false}},
+    {"name":"a format id with a space is rejected","input":{"op":"validateFormat","format":{"type":"video","formatId":"a b","codec":"auto","container":"mp4"}},"expected":{"valid":false}},
+    {"name":"a format id with shell text is rejected","input":{"op":"validateFormat","format":{"type":"video","formatId":"137; rm -rf","codec":"auto","container":"mp4"}},"expected":{"valid":false}},
+    {"name":"an audio format id with a space is rejected","input":{"op":"validateFormat","format":{"type":"video","audioFormatId":"a b","codec":"auto","container":"mp4"}},"expected":{"valid":false}},
+    {"name":"a DASH format id with = and : is valid","input":{"op":"validateFormat","format":{"type":"video","formatId":"dash-video=4000000","audioFormatId":"hls-audio:en~2@128","codec":"auto","container":"mp4"}},"expected":{"valid":true}},
+    {"name":"a format id with selector syntax is rejected","input":{"op":"validateFormat","format":{"type":"video","formatId":"137+140","codec":"auto","container":"mp4"}},"expected":{"valid":false}},
+    {"name":"a format id that looks like an option is rejected","input":{"op":"validateFormat","format":{"type":"video","formatId":"--exec","codec":"auto","container":"mp4"}},"expected":{"valid":false}},
+    {"name":"an unknown container is rejected","input":{"op":"validateFormat","format":{"type":"video","codec":"auto","container":"avi"}},"expected":{"valid":false}},
+    {"name":"an unknown codec is rejected","input":{"op":"validateFormat","format":{"type":"video","codec":"xvid","container":"mp4"}},"expected":{"valid":false}},
+    {"name":"a zero height is rejected","input":{"op":"validateFormat","format":{"type":"video","maxHeight":0,"codec":"auto","container":"mp4"}},"expected":{"valid":false}},
+    {"name":"an implausibly small height is rejected","input":{"op":"validateFormat","format":{"type":"video","maxHeight":50,"codec":"auto","container":"mp4"}},"expected":{"valid":false}},
+    {"name":"an unknown audio target is rejected","input":{"op":"validateFormat","format":{"type":"audio","target":"ogg","quality":"best"}},"expected":{"valid":false}},
+    {"name":"an unknown audio quality is rejected","input":{"op":"validateFormat","format":{"type":"audio","target":"mp3","quality":"999"}},"expected":{"valid":false}},
+    {"name":"an audio format id that looks like an option is rejected","input":{"op":"validateFormat","format":{"type":"audio","target":"mp3","quality":"best","formatId":"--x"}},"expected":{"valid":false}},
+    {"name":"valid options","input":{"op":"validateOptions","options":{"sponsorBlock":"mark","embedMetadata":true}},"expected":{"valid":true}},
+    {"name":"an unknown sponsor mode is rejected","input":{"op":"validateOptions","options":{"sponsorBlock":"exec"}},"expected":{"valid":false}},
+    {"name":"subtitle languages with shell text are rejected","input":{"op":"validateOptions","options":{"subtitles":{"enabled":true,"languages":"en; id","auto":false,"embed":false}}},"expected":{"valid":false}},
+    {"name":"a time range that ends before it starts is rejected","input":{"op":"validateOptions","options":{"section":{"start":10,"end":5}}},"expected":{"valid":false}},
+    {"name":"a negative start is rejected","input":{"op":"validateOptions","options":{"section":{"start":-1}}},"expected":{"valid":false}},
+    {"name":"a range from zero is valid","input":{"op":"validateOptions","options":{"section":{"start":0,"end":10}}},"expected":{"valid":true}}
+  ]
+}

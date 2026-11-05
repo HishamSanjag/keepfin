@@ -1,0 +1,138 @@
+name: Build Android
+
+on:
+  workflow_dispatch:
+  workflow_call:
+    inputs:
+      handoff:
+        # 'cache' hands the APK to the release job through the Actions cache (not billed storage).
+        type: string
+        default: artifact
+    secrets:
+      ANDROID_KEYSTORE_BASE64:
+        required: true
+      ANDROID_KEYSTORE_PASSWORD:
+        required: true
+      ANDROID_KEY_ALIAS:
+        required: true
+      ANDROID_KEY_PASSWORD:
+        required: true
+
+permissions:
+  contents: read
+
+jobs:
+  android:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v7
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version: '24'
+          cache: npm
+
+      - name: Set up Java
+        uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v6
+
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v4
+        with:
+          packages: 'platform-tools'
+
+      - name: Install Android build tools
+        run: sdkmanager "platforms;android-36" "build-tools;36.0.0"
+
+      - name: Install dependencies and generate icons
+        run: |
+          npm ci
+          npm run icons:build
+
+      - name: Read Android version
+        run: |
+          version=$(sed -n 's/.*versionName = "\(.*\)".*/\1/p' android/app/build.gradle.kts)
+          test -n "$version"
+          echo "ANDROID_VERSION=$version" >> "$GITHUB_ENV"
+
+      # JVM unit tests, including the shared engine fixtures in fixtures/engine (the same files desktop tests run).
+      # The shared core (core/) is also used by the app through includeBuild; test it on both of its targets.
+      - name: Test the shared core (JVM and JavaScript)
+        working-directory: core
+        run: |
+          chmod +x gradlew
+          ./gradlew jvmTest jsNodeTest --console=plain
+
+      - name: Run unit tests
+        working-directory: android
+        run: |
+          chmod +x gradlew
+          ./gradlew :app:testDebugUnitTest --console=plain
+
+      - name: Build release APK
+        working-directory: android
+        env:
+          # Cloud accounts: public OAuth client ids from repository variables (not secrets; empty means "Not available in this build").
+          KEEPFIN_GOOGLE_CLIENT_ID: ${{ vars.KEEPFIN_GOOGLE_CLIENT_ID }}
+          KEEPFIN_MS_CLIENT_ID: ${{ vars.KEEPFIN_MS_CLIENT_ID }}
+          KEEPFIN_DROPBOX_APP_KEY: ${{ vars.KEEPFIN_DROPBOX_APP_KEY }}
+        run: |
+          ./gradlew :app:assembleRelease --console=plain
+
+      - name: Sign and verify APK
+        env:
+          ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+        run: |
+          test -n "$ANDROID_KEYSTORE_BASE64"
+          printf '%s' "$ANDROID_KEYSTORE_BASE64" |
+            base64 --decode > "$RUNNER_TEMP/keepfin.p12"
+
+          tools="$ANDROID_HOME/build-tools/36.0.0"
+          mkdir -p releases/android
+          apk="releases/android/Keepfin-Android-$ANDROID_VERSION.apk"
+
+          "$tools/zipalign" -f -p 4 \
+            android/app/build/outputs/apk/release/app-release-unsigned.apk \
+            "$RUNNER_TEMP/aligned.apk"
+
+          "$tools/apksigner" sign \
+            --ks "$RUNNER_TEMP/keepfin.p12" \
+            --ks-key-alias "$ANDROID_KEY_ALIAS" \
+            --ks-pass env:ANDROID_KEYSTORE_PASSWORD \
+            --key-pass env:ANDROID_KEY_PASSWORD \
+            --out "$apk" \
+            "$RUNNER_TEMP/aligned.apk"
+
+          "$tools/apksigner" verify --verbose "$apk"
+
+      - name: Upload APK artifact
+        if: inputs.handoff != 'cache'
+        uses: actions/upload-artifact@v7
+        with:
+          name: keepfin-android
+          path: releases/android/*.apk
+          if-no-files-found: error
+          retention-days: 1
+
+      - name: Collect the APK for the release job
+        if: inputs.handoff == 'cache'
+        run: mkdir -p handoff/android && cp releases/android/*.apk handoff/android/
+
+      - name: Hand the APK to the release job
+        if: inputs.handoff == 'cache'
+        uses: actions/cache/save@v6
+        with:
+          path: handoff/android
+          key: keepfin-android-${{ github.run_id }}

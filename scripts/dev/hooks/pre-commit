@@ -1,0 +1,24 @@
+#!/bin/sh
+# Keepfin pre-commit hook: the fast checks, run before every commit.
+# Installed by `npm run hooks:install` (also runs on `npm ci`). Skip once with: git commit --no-verify
+set -e
+cd "$(git rev-parse --show-toplevel)"
+
+staged=$(git diff --cached --name-only --diff-filter=ACMR)
+[ -n "$staged" ] || exit 0
+
+echo "pre-commit: boundaries, banned APIs, links"
+npm run --silent check:boundaries
+npm run --silent check:apis
+npm run --silent check:links
+
+# Type-check only when app code changed. Rebuild the shared core only when core/ changed
+# (or when its compiled output is missing), because that build needs Gradle and is slow.
+if echo "$staged" | grep -qE '^(gui|core)/'; then
+  if echo "$staged" | grep -q '^core/' || [ ! -d build/core-js ]; then
+    echo "pre-commit: building the shared core"
+    npm run --silent core:build
+  fi
+  echo "pre-commit: type-check"
+  npx --no-install tsc --noEmit -p gui/tsconfig.json
+fi

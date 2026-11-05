@@ -1,0 +1,21 @@
+{
+  "description": "Folder-safe names and pasted-link validation (validity only: the normalised link text differs per platform).",
+  "cases": [
+    {"name":"path separators are replaced","input":{"op":"safeName","value":"a/b\\c"},"expected":"a_b_c"},
+    {"name":"reserved device names are prefixed","input":{"op":"safeName","value":"CON"},"expected":"_CON"},
+    {"name":"only dots becomes Untitled","input":{"op":"safeName","value":"..."},"expected":"Untitled"},
+    {"name":"percent signs are removed","input":{"op":"safeName","value":"100% real"},"expected":"100_ real"},
+    {"name":"trailing dots and spaces are trimmed","input":{"op":"safeName","value":"Song. . "},"expected":"Song"},
+    {"name":"colons and question marks are replaced","input":{"op":"safeName","value":"Who? Me: yes"},"expected":"Who_ Me_ yes"},
+    {"name":"runs of spaces collapse to one","input":{"op":"safeName","value":"a   b"},"expected":"a b"},
+    {"name":"a valid https link","input":{"op":"validateUrl","value":"https://example.com/a"},"expected":{"valid":true}},
+    {"name":"surrounding spaces are tolerated","input":{"op":"validateUrl","value":" https://example.com/a "},"expected":{"valid":true}},
+    {"name":"http is allowed","input":{"op":"validateUrl","value":"http://example.com/a.mp4"},"expected":{"valid":true}},
+    {"name":"file links are rejected","input":{"op":"validateUrl","value":"file:///etc/passwd"},"expected":{"valid":false}},
+    {"name":"javascript links are rejected","input":{"op":"validateUrl","value":"javascript:alert(1)"},"expected":{"valid":false}},
+    {"name":"ftp links are rejected","input":{"op":"validateUrl","value":"ftp://x/y"},"expected":{"valid":false}},
+    {"name":"links with credentials are rejected","input":{"op":"validateUrl","value":"https://user:pw@example.com/"},"expected":{"valid":false}},
+    {"name":"text that is not a link is rejected","input":{"op":"validateUrl","value":"not a url"},"expected":{"valid":false}},
+    {"name":"an empty value is rejected","input":{"op":"validateUrl","value":""},"expected":{"valid":false}}
+  ]
+}

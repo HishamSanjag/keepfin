@@ -1,0 +1,742 @@
+{
+ "description": "Cloud provider cases written from the providers' documentation (dev-docs/plans/KEEPFIN-CLOUD-SPEC.md); expected values were reviewed by hand. Not recordings of live services.",
+ "cases": [
+  {
+   "name": "list",
+   "provider": "webdav",
+   "op": "list",
+   "input": {
+    "base": "https://dav.example.com/remote.php/dav/files/me",
+    "folder": {
+     "path": "Keepfin/Café ♫"
+    }
+   },
+   "expected": {
+    "request": {
+     "method": "PROPFIND",
+     "url": "https://dav.example.com/remote.php/dav/files/me/Keepfin/Caf%C3%A9%20%E2%99%AB/",
+     "headers": {
+      "Content-Type": "application/xml; charset=utf-8",
+      "Depth": "1"
+     },
+     "auth": true,
+     "body": "<?xml version=\"1.0\" encoding=\"utf-8\"?><d:propfind xmlns:d=\"DAV:\"><d:prop><d:resourcetype/><d:getcontentlength/><d:getetag/><d:getlastmodified/></d:prop></d:propfind>"
+    }
+   }
+  },
+  {
+   "name": "parse list",
+   "provider": "webdav",
+   "op": "parseList",
+   "input": {
+    "response": {
+     "status": 207,
+     "headers": {},
+     "body": "<?xml version=\"1.0\"?><d:multistatus xmlns:d=\"DAV:\"><d:response><d:href>/remote.php/dav/files/me/Keepfin/</d:href><d:propstat><d:prop><d:resourcetype><d:collection/></d:resourcetype></d:prop><d:status>HTTP/1.1 200 OK</d:status></d:propstat></d:response><d:response><d:href>/remote.php/dav/files/me/Keepfin/a%20b.mp3</d:href><d:propstat><d:prop><d:resourcetype/><d:getcontentlength>42</d:getcontentlength><d:getetag>\"abc\"</d:getetag><d:getlastmodified>Wed, 15 Oct 2026 12:00:00 GMT</d:getlastmodified></d:prop><d:status>HTTP/1.1 200 OK</d:status></d:propstat></d:response><d:response><d:href>/remote.php/dav/files/me/Keepfin/sub/</d:href><d:propstat><d:prop><d:resourcetype><d:collection/></d:resourcetype></d:prop><d:status>HTTP/1.1 200 OK</d:status></d:propstat></d:response><d:response><d:href>/remote.php/dav/files/me/Keepfin/locked.bin</d:href><d:status>HTTP/1.1 403 Forbidden</d:status></d:response></d:multistatus>"
+    },
+    "base": "https://dav.example.com/remote.php/dav/files/me",
+    "folder": "Keepfin"
+   },
+   "expected": {
+    "ok": true,
+    "entries": [
+     {
+      "name": "a b.mp3",
+      "folder": false,
+      "size": 42,
+      "mtimeMs": 1792065600000,
+      "etag": "\"abc\"",
+      "hashes": {},
+      "path": "Keepfin/a b.mp3"
+     },
+     {
+      "name": "sub",
+      "folder": true,
+      "hashes": {},
+      "path": "Keepfin/sub"
+     }
+    ],
+    "nextCursor": null,
+    "incomplete": true,
+    "failed": [
+     "Keepfin/locked.bin"
+    ]
+   }
+  },
+  {
+   "name": "parse list entities",
+   "provider": "webdav",
+   "op": "parseList",
+   "input": {
+    "response": {
+     "status": 207,
+     "headers": {},
+     "body": "<?xml version=\"1.0\"?><d:multistatus xmlns:d=\"DAV:\"><d:response><d:href>/remote.php/dav/files/me/A&amp;B.txt</d:href><d:propstat><d:prop><d:resourcetype/><d:getcontentlength>1</d:getcontentlength></d:prop><d:status>HTTP/1.1 200 OK</d:status></d:propstat></d:response></d:multistatus>"
+    },
+    "base": "https://dav.example.com/remote.php/dav/files/me",
+    "folder": ""
+   },
+   "expected": {
+    "ok": true,
+    "entries": [
+     {
+      "name": "A&B.txt",
+      "folder": false,
+      "size": 1,
+      "hashes": {},
+      "path": "A&B.txt"
+     }
+    ],
+    "nextCursor": null,
+    "incomplete": false,
+    "failed": []
+   }
+  },
+  {
+   "name": "list refused",
+   "provider": "webdav",
+   "op": "parseList",
+   "input": {
+    "response": {
+     "status": 401,
+     "headers": {},
+     "body": ""
+    },
+    "base": "https://dav.example.com/remote.php/dav/files/me",
+    "folder": ""
+   },
+   "expected": {
+    "ok": false,
+    "error": {
+     "kind": "NeedsSignIn",
+     "status": 401
+    }
+   }
+  },
+  {
+   "name": "create folder",
+   "provider": "webdav",
+   "op": "createFolder",
+   "input": {
+    "base": "https://dav.example.com/remote.php/dav/files/me",
+    "parent": {
+     "path": "Keepfin"
+    },
+    "name": "ops"
+   },
+   "expected": {
+    "request": {
+     "method": "MKCOL",
+     "url": "https://dav.example.com/remote.php/dav/files/me/Keepfin/ops/",
+     "headers": {},
+     "auth": true
+    }
+   }
+  },
+  {
+   "name": "create only",
+   "provider": "webdav",
+   "op": "createSmall",
+   "input": {
+    "base": "https://dav.example.com/remote.php/dav/files/me",
+    "parent": {
+     "path": "Keepfin/.keepfin"
+    },
+    "name": "lock.json",
+    "content": "{}"
+   },
+   "expected": {
+    "request": {
+     "method": "PUT",
+     "url": "https://dav.example.com/remote.php/dav/files/me/Keepfin/.keepfin/lock.json",
+     "headers": {
+      "If-None-Match": "*",
+      "Content-Type": "application/octet-stream"
+     },
+     "auth": true,
+     "body": "{}"
+    }
+   }
+  },
+  {
+   "name": "replace needs the probe",
+   "provider": "webdav",
+   "op": "replaceSmall",
+   "input": {
+    "base": "https://dav.example.com/remote.php/dav/files/me",
+    "ref": {
+     "path": "a"
+    },
+    "etag": "\"1\"",
+    "content": "x"
+   },
+   "expected": {
+    "unsupported": true,
+    "reason": "The probe did not prove that this server honours If-Match"
+   }
+  },
+  {
+   "name": "replace after the probe",
+   "provider": "webdav",
+   "op": "replaceSmall",
+   "input": {
+    "base": "https://dav.example.com/remote.php/dav/files/me",
+    "cas": true,
+    "ref": {
+     "path": "a"
+    },
+    "etag": "\"1\"",
+    "content": "x"
+   },
+   "expected": {
+    "request": {
+     "method": "PUT",
+     "url": "https://dav.example.com/remote.php/dav/files/me/a",
+     "headers": {
+      "If-Match": "\"1\"",
+      "Content-Type": "application/octet-stream"
+     },
+     "auth": true,
+     "body": "x"
+    }
+   }
+  },
+  {
+   "name": "delete needs the probe",
+   "provider": "webdav",
+   "op": "deleteCas",
+   "input": {
+    "base": "https://dav.example.com/remote.php/dav/files/me",
+    "ref": {
+     "path": "a"
+    },
+    "etag": "\"1\""
+   },
+   "expected": {
+    "unsupported": true,
+    "reason": "The probe did not prove that this server honours If-Match"
+   }
+  },
+  {
+   "name": "move never overwrites",
+   "provider": "webdav",
+   "op": "move",
+   "input": {
+    "base": "https://dav.example.com/remote.php/dav/files/me",
+    "ref": {
+     "path": "a/b"
+    },
+    "toPath": "Keepfin/.keepfin/trash/b-1"
+   },
+   "expected": {
+    "request": {
+     "method": "MOVE",
+     "url": "https://dav.example.com/remote.php/dav/files/me/a/b",
+     "headers": {
+      "Destination": "https://dav.example.com/remote.php/dav/files/me/Keepfin/.keepfin/trash/b-1",
+      "Overwrite": "F"
+     },
+     "auth": true
+    }
+   }
+  },
+  {
+   "name": "download range",
+   "provider": "webdav",
+   "op": "download",
+   "input": {
+    "base": "https://dav.example.com/remote.php/dav/files/me",
+    "ref": {
+     "path": "a/b"
+    },
+    "start": 10,
+    "end": 19
+   },
+   "expected": {
+    "request": {
+     "method": "GET",
+     "url": "https://dav.example.com/remote.php/dav/files/me/a/b",
+     "headers": {
+      "Range": "bytes=10-19"
+     },
+     "auth": true
+    }
+   }
+  },
+  {
+   "name": "upload whole file",
+   "provider": "webdav",
+   "op": "uploadAppend",
+   "input": {
+    "base": "https://dav.example.com/remote.php/dav/files/me",
+    "parent": {
+     "path": "Keepfin"
+    },
+    "name": "x.flac",
+    "offset": 0,
+    "length": 100,
+    "total": 100
+   },
+   "expected": {
+    "request": {
+     "method": "PUT",
+     "url": "https://dav.example.com/remote.php/dav/files/me/Keepfin/x.flac",
+     "headers": {
+      "Content-Type": "application/octet-stream",
+      "Content-Length": "100",
+      "If-None-Match": "*"
+     },
+     "auth": true,
+     "bodyRef": {
+      "offset": 0,
+      "length": 100
+     }
+    }
+   }
+  },
+  {
+   "name": "upload cannot append",
+   "provider": "webdav",
+   "op": "uploadAppend",
+   "input": {
+    "base": "https://dav.example.com/remote.php/dav/files/me",
+    "parent": {
+     "path": "Keepfin"
+    },
+    "name": "x.flac",
+    "offset": 50,
+    "length": 50,
+    "total": 100
+   },
+   "expected": {
+    "throws": true
+   }
+  },
+  {
+   "name": "quota",
+   "provider": "webdav",
+   "op": "parseQuota",
+   "input": {
+    "response": {
+     "status": 207,
+     "headers": {},
+     "body": "<?xml version=\"1.0\"?><d:multistatus xmlns:d=\"DAV:\"><d:response><d:href>/</d:href><d:propstat><d:prop><d:quota-available-bytes>1000</d:quota-available-bytes><d:quota-used-bytes>24</d:quota-used-bytes></d:prop><d:status>HTTP/1.1 200 OK</d:status></d:propstat></d:response></d:multistatus>"
+    }
+   },
+   "expected": {
+    "ok": true,
+    "usedBytes": 24,
+    "freeBytes": 1000,
+    "totalBytes": 1024
+   }
+  },
+  {
+   "name": "probe passes",
+   "provider": "webdav",
+   "op": "probeEvaluate",
+   "input": {
+    "put": {
+     "status": 201,
+     "etag": "\"v1\""
+    },
+    "wrongMatch": {
+     "status": 412
+    },
+    "rightMatch": {
+     "status": 204
+    },
+    "range": {
+     "status": 206
+    },
+    "noneMatch": {
+     "status": 412
+    },
+    "moveOver": {
+     "status": 412
+    }
+   },
+   "expected": {
+    "cas": true,
+    "range": true,
+    "createOnly": true,
+    "noReplaceMove": true,
+    "strongEtag": true,
+    "ifMatchIgnored": false,
+    "reason": "ok"
+   }
+  },
+  {
+   "name": "probe: the local test server (ignores If-Match and If-None-Match, honours Overwrite: F)",
+   "provider": "webdav",
+   "op": "probeEvaluate",
+   "input": {
+    "put": {
+     "status": 201,
+     "etag": "\"58c38c46\""
+    },
+    "wrongMatch": {
+     "status": 200
+    },
+    "rightMatch": {
+     "status": 200
+    },
+    "range": {
+     "status": 206
+    },
+    "noneMatch": {
+     "status": 200
+    },
+    "moveOver": {
+     "status": 412
+    }
+   },
+   "expected": {
+    "cas": false,
+    "range": true,
+    "createOnly": false,
+    "noReplaceMove": true,
+    "strongEtag": true,
+    "ifMatchIgnored": true,
+    "reason": "The server ignored a wrong If-Match: no safe overwrite or delete"
+   }
+  },
+  {
+   "name": "probe: no-replace move and create-only requests",
+   "provider": "webdav",
+   "op": "probeMoveOver",
+   "input": {
+    "base": "https://dav.example.com/remote.php/dav/files/me",
+    "path": "Keepfin/.keepfin/probe-a",
+    "path2": "Keepfin/.keepfin/probe-b"
+   },
+   "expected": {
+    "request": {
+     "method": "MOVE",
+     "url": "https://dav.example.com/remote.php/dav/files/me/Keepfin/.keepfin/probe-a",
+     "headers": {
+      "Destination": "https://dav.example.com/remote.php/dav/files/me/Keepfin/.keepfin/probe-b",
+      "Overwrite": "F"
+     },
+     "auth": true
+    }
+   }
+  },
+  {
+   "name": "probe: If-None-Match request",
+   "provider": "webdav",
+   "op": "probeNoneMatch",
+   "input": {
+    "base": "https://dav.example.com/remote.php/dav/files/me",
+    "path": "Keepfin/.keepfin/probe-a"
+   },
+   "expected": {
+    "request": {
+     "method": "PUT",
+     "url": "https://dav.example.com/remote.php/dav/files/me/Keepfin/.keepfin/probe-a",
+     "headers": {
+      "If-None-Match": "*",
+      "Content-Type": "application/octet-stream"
+     },
+     "auth": true,
+     "body": "keepfin-probe-new"
+    }
+   }
+  },
+  {
+   "name": "probe: If-Match ignored",
+   "provider": "webdav",
+   "op": "probeEvaluate",
+   "input": {
+    "put": {
+     "status": 201,
+     "etag": "\"v1\""
+    },
+    "wrongMatch": {
+     "status": 204
+    },
+    "rightMatch": {
+     "status": 204
+    },
+    "range": {
+     "status": 200
+    }
+   },
+   "expected": {
+    "cas": false,
+    "range": false,
+    "createOnly": false,
+    "noReplaceMove": false,
+    "strongEtag": true,
+    "ifMatchIgnored": true,
+    "reason": "The server ignored a wrong If-Match: no safe overwrite or delete"
+   }
+  },
+  {
+   "name": "probe: weak etag",
+   "provider": "webdav",
+   "op": "probeEvaluate",
+   "input": {
+    "put": {
+     "status": 201,
+     "etag": "W/\"v1\""
+    },
+    "wrongMatch": {
+     "status": 412
+    },
+    "rightMatch": {
+     "status": 204
+    },
+    "range": {
+     "status": 206
+    }
+   },
+   "expected": {
+    "cas": false,
+    "range": true,
+    "createOnly": false,
+    "noReplaceMove": false,
+    "strongEtag": false,
+    "ifMatchIgnored": false,
+    "reason": "The server gave no strong ETag"
+   }
+  },
+  {
+   "name": "capabilities after a failed probe",
+   "provider": "webdav",
+   "op": "capabilities",
+   "input": {
+    "probe": {
+     "cas": false,
+     "range": true,
+     "createOnly": false,
+     "noReplaceMove": true
+    }
+   },
+   "expected": {
+    "provider": "webdav",
+    "scope": "account url + app password",
+    "listing": {
+     "paged": false,
+     "pageSize": 0,
+     "incompleteFlag": "per-resource 207 failures",
+     "changeFeed": null,
+     "shardAdvice": "PROPFIND Depth 1 is not paginated: shard media folders"
+    },
+    "stableIds": false,
+    "identity": "path",
+    "duplicateNames": false,
+    "serverHash": {
+     "algorithm": null,
+     "fallback": null,
+     "sha256WhenPresent": false
+    },
+    "createOnly": {
+     "byName": false,
+     "mechanism": "If-None-Match: * (only after the probe); else a temporary name, then MOVE with Overwrite: F when the probe proved that",
+     "noReplaceMove": true
+    },
+    "cas": {
+     "replace": false,
+     "delete": false,
+     "probeNeeded": true,
+     "probed": true,
+     "mechanism": "If-Match with a strong ETag, only after the probe passed"
+    },
+    "rangeDownload": true,
+    "upload": {
+     "resumable": false,
+     "chunkMultiple": 1,
+     "chunkPreferred": 0,
+     "chunkMax": 0,
+     "sequential": true,
+     "resume": "restart the file (Nextcloud v2 chunking when announced)"
+    },
+    "moveToTrashById": false,
+    "quota": true,
+    "unverified": [
+     "ETags are strong on this server (only the probe can tell)",
+     "quota-available-bytes is answered (RFC 4331 is optional)"
+    ]
+   }
+  },
+  {
+   "name": "basic auth",
+   "provider": "webdav",
+   "op": "basicAuth",
+   "input": {
+    "user": "me",
+    "password": "päss"
+   },
+   "expected": {
+    "authorization": "Basic bWU6cMOkc3M="
+   }
+  },
+  {
+   "name": "error precondition",
+   "provider": "webdav",
+   "op": "parseEntry",
+   "input": {
+    "response": {
+     "status": 412,
+     "headers": {},
+     "body": ""
+    }
+   },
+   "expected": {
+    "ok": false,
+    "error": {
+     "kind": "Conflict",
+     "status": 412,
+     "code": "precondition"
+    }
+   }
+  },
+  {
+   "name": "error exists",
+   "provider": "webdav",
+   "op": "parseEntry",
+   "input": {
+    "response": {
+     "status": 405,
+     "headers": {},
+     "body": ""
+    }
+   },
+   "expected": {
+    "ok": false,
+    "error": {
+     "kind": "Conflict",
+     "status": 405,
+     "code": "exists-or-unsupported"
+    }
+   }
+  },
+  {
+   "name": "error locked",
+   "provider": "webdav",
+   "op": "parseDone",
+   "input": {
+    "response": {
+     "status": 423,
+     "headers": {},
+     "body": ""
+    }
+   },
+   "expected": {
+    "ok": false,
+    "error": {
+     "kind": "Transient",
+     "status": 423,
+     "code": "locked"
+    }
+   }
+  },
+  {
+   "name": "error insufficient storage",
+   "provider": "webdav",
+   "op": "parseDone",
+   "input": {
+    "response": {
+     "status": 507,
+     "headers": {},
+     "body": ""
+    }
+   },
+   "expected": {
+    "ok": false,
+    "error": {
+     "kind": "QuotaFull",
+     "status": 507
+    }
+   }
+  },
+  {
+   "name": "nextcloud chunk start",
+   "provider": "webdav",
+   "op": "ncChunkStart",
+   "input": {
+    "uploadsBase": "https://dav.example.com/remote.php/dav/uploads/me",
+    "uploadId": "u1",
+    "destination": "https://dav.example.com/remote.php/dav/files/me/Keepfin/x.flac"
+   },
+   "expected": {
+    "request": {
+     "method": "MKCOL",
+     "url": "https://dav.example.com/remote.php/dav/uploads/me/u1",
+     "headers": {
+      "Destination": "https://dav.example.com/remote.php/dav/files/me/Keepfin/x.flac"
+     },
+     "auth": true
+    }
+   }
+  },
+  {
+   "name": "nextcloud chunk",
+   "provider": "webdav",
+   "op": "ncChunkPut",
+   "input": {
+    "uploadsBase": "https://dav.example.com/remote.php/dav/uploads/me",
+    "uploadId": "u1",
+    "destination": "https://dav.example.com/remote.php/dav/files/me/Keepfin/x.flac",
+    "number": 2,
+    "length": 10485760,
+    "offset": 10485760
+   },
+   "expected": {
+    "request": {
+     "method": "PUT",
+     "url": "https://dav.example.com/remote.php/dav/uploads/me/u1/00002",
+     "headers": {
+      "Destination": "https://dav.example.com/remote.php/dav/files/me/Keepfin/x.flac",
+      "Content-Length": "10485760"
+     },
+     "auth": true,
+     "bodyRef": {
+      "offset": 10485760,
+      "length": 10485760
+     }
+    }
+   }
+  },
+  {
+   "name": "nextcloud chunk too small",
+   "provider": "webdav",
+   "op": "ncChunkPut",
+   "input": {
+    "uploadsBase": "https://dav.example.com/remote.php/dav/uploads/me",
+    "uploadId": "u1",
+    "destination": "d",
+    "number": 1,
+    "length": 1000,
+    "offset": 0
+   },
+   "expected": {
+    "throws": true
+   }
+  },
+  {
+   "name": "nextcloud finish",
+   "provider": "webdav",
+   "op": "ncChunkFinish",
+   "input": {
+    "uploadsBase": "https://dav.example.com/remote.php/dav/uploads/me",
+    "uploadId": "u1",
+    "destination": "https://dav.example.com/remote.php/dav/files/me/Keepfin/x.flac",
+    "total": 20971520
+   },
+   "expected": {
+    "request": {
+     "method": "MOVE",
+     "url": "https://dav.example.com/remote.php/dav/uploads/me/u1/.file",
+     "headers": {
+      "Destination": "https://dav.example.com/remote.php/dav/files/me/Keepfin/x.flac",
+      "OC-Total-Length": "20971520",
+      "Overwrite": "F"
+     },
+     "auth": true
+    },
+    "note": "upload folders expire after 24 hours"
+   }
+  }
+ ]
+}

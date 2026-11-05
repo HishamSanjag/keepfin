@@ -1,0 +1,13 @@
+{
+  "android/app/src/main/java/app/keepfin/ui/StudioViewModel.kt": 1580,
+  "gui/desktop/library/index.ts": 1540,
+  "gui/desktop/manager.ts": 1460,
+  "gui/desktop/net/service.ts": 1405,
+  "android/app/src/main/java/app/keepfin/library/repo/LibraryRepository.kt": 1255,
+  "android/app/src/main/java/app/keepfin/net/NetService.kt": 1255,
+  "gui/desktop/store/persistence.ts": 1245,
+  "android/app/src/main/java/app/keepfin/MediaEngine.kt": 1210,
+  "android/app/src/main/java/app/keepfin/copies/CopiesManager.kt": 1190,
+  "gui/desktop/store/store.ts": 1180,
+  "core/src/commonMain/kotlin/app/keepfin/core/sqlstate/SqlStateDb.kt": 1100
+}

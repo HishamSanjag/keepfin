@@ -1,0 +1,91 @@
+{
+ "id": "x5kesuj",
+ "title": "Office Christmas Party Review –  Jason Bateman, Olivia Munn, T.J. Miller",
+ "fulltitle": "Office Christmas Party Review –  Jason Bateman, Olivia Munn, T.J. Miller",
+ "uploader": "Deadline",
+ "uploader_id": "x1xm8ri",
+ "duration": 187,
+ "thumbnail": "https://s2.dmcdn.net/v/K456B1g41yc8iNYz6/x1080",
+ "webpage_url": "https://www.dailymotion.com/video/x5kesuj",
+ "original_url": "https://www.dailymotion.com/video/x5kesuj",
+ "extractor": "dailymotion",
+ "extractor_key": "Dailymotion",
+ "is_live": null,
+ "release_year": null,
+ "playlist": null,
+ "age_limit": 0,
+ "_type": "video",
+ "ext": "mp4",
+ "format_id": "hls-1080",
+ "thumbnails": [
+  {
+   "url": "https://s2.dmcdn.net/v/K456B1g41ycT4aILX/x720",
+   "height": 720
+  },
+  {
+   "url": "https://s2.dmcdn.net/v/K456B1g41yc8iNYz6/x1080",
+   "height": 1080
+  }
+ ],
+ "chapters": [],
+ "subtitles": {},
+ "automatic_captions": {},
+ "formats": [
+  {
+   "format_id": "hls-380",
+   "ext": "mp4",
+   "protocol": "m3u8_native",
+   "acodec": "mp4a.40.2",
+   "vcodec": "avc1.42001e",
+   "width": 512,
+   "height": 288,
+   "dynamic_range": "SDR",
+   "tbr": 460.56,
+   "resolution": "512x288",
+   "audio_ext": "none",
+   "video_ext": "mp4"
+  },
+  {
+   "format_id": "hls-480",
+   "ext": "mp4",
+   "protocol": "m3u8_native",
+   "acodec": "mp4a.40.2",
+   "vcodec": "avc1.64001f",
+   "width": 848,
+   "height": 480,
+   "dynamic_range": "SDR",
+   "tbr": 836.28,
+   "resolution": "848x480",
+   "audio_ext": "none",
+   "video_ext": "mp4"
+  },
+  {
+   "format_id": "hls-720",
+   "ext": "mp4",
+   "protocol": "m3u8_native",
+   "acodec": "mp4a.40.2",
+   "vcodec": "avc1.64001f",
+   "width": 1280,
+   "height": 720,
+   "dynamic_range": "SDR",
+   "tbr": 2149.28,
+   "resolution": "1280x720",
+   "audio_ext": "none",
+   "video_ext": "mp4"
+  },
+  {
+   "format_id": "hls-1080",
+   "ext": "mp4",
+   "protocol": "m3u8_native",
+   "acodec": "mp4a.40.2",
+   "vcodec": "avc1.640028",
+   "width": 1920,
+   "height": 1080,
+   "dynamic_range": "SDR",
+   "tbr": 6221.6,
+   "resolution": "1920x1080",
+   "audio_ext": "none",
+   "video_ext": "mp4"
+  }
+ ]
+}

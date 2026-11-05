@@ -1,0 +1,777 @@
+{
+ "description": "Cloud provider cases written from the providers' documentation (dev-docs/plans/KEEPFIN-CLOUD-SPEC.md); expected values were reviewed by hand. Not recordings of live services.",
+ "cases": [
+  {
+   "name": "list root",
+   "provider": "graph",
+   "op": "list",
+   "input": {
+    "folder": {
+     "path": ""
+    }
+   },
+   "expected": {
+    "request": {
+     "method": "GET",
+     "url": "https://graph.microsoft.com/v1.0/me/drive/special/approot/children?$top=200&$select=id,name,size,eTag,cTag,file,folder,fileSystemInfo,lastModifiedDateTime,createdDateTime,parentReference",
+     "headers": {},
+     "auth": true
+    }
+   }
+  },
+  {
+   "name": "list path",
+   "provider": "graph",
+   "op": "list",
+   "input": {
+    "folder": {
+     "path": "Keepfin/art"
+    }
+   },
+   "expected": {
+    "request": {
+     "method": "GET",
+     "url": "https://graph.microsoft.com/v1.0/me/drive/special/approot:/Keepfin/art:/children?$top=200&$select=id,name,size,eTag,cTag,file,folder,fileSystemInfo,lastModifiedDateTime,createdDateTime,parentReference",
+     "headers": {},
+     "auth": true
+    }
+   }
+  },
+  {
+   "name": "list id",
+   "provider": "graph",
+   "op": "list",
+   "input": {
+    "folder": {
+     "id": "G0"
+    }
+   },
+   "expected": {
+    "request": {
+     "method": "GET",
+     "url": "https://graph.microsoft.com/v1.0/me/drive/items/G0/children?$top=200&$select=id,name,size,eTag,cTag,file,folder,fileSystemInfo,lastModifiedDateTime,createdDateTime,parentReference",
+     "headers": {},
+     "auth": true
+    }
+   }
+  },
+  {
+   "name": "list next link",
+   "provider": "graph",
+   "op": "list",
+   "input": {
+    "folder": {
+     "id": "G0"
+    },
+    "cursor": "https://graph.microsoft.com/v1.0/me/drive/items/G0/children?$skiptoken=abc"
+   },
+   "expected": {
+    "request": {
+     "method": "GET",
+     "url": "https://graph.microsoft.com/v1.0/me/drive/items/G0/children?$skiptoken=abc",
+     "headers": {},
+     "auth": true
+    }
+   }
+  },
+  {
+   "name": "list next link elsewhere is refused",
+   "provider": "graph",
+   "op": "list",
+   "input": {
+    "folder": {
+     "id": "G0"
+    },
+    "cursor": "https://evil.example/x"
+   },
+   "expected": {
+    "throws": true
+   }
+  },
+  {
+   "name": "parse list",
+   "provider": "graph",
+   "op": "parseList",
+   "input": {
+    "response": {
+     "status": 200,
+     "headers": {},
+     "body": "{\"value\":[{\"id\":\"G1\",\"name\":\"a.mp3\",\"size\":99,\"eTag\":\"\\\"{E1},2\\\"\",\"cTag\":\"c\",\"file\":{\"hashes\":{\"quickXorHash\":\"AAAAAAAAAAAAAAAAAAAAAAAAAAA=\"}},\"fileSystemInfo\":{\"lastModifiedDateTime\":\"2026-10-15T12:00:00Z\"},\"parentReference\":{\"id\":\"PP\"}},{\"id\":\"G2\",\"name\":\"sub\",\"folder\":{\"childCount\":1}},{\"id\":\"G3\",\"name\":\"gone\",\"deleted\":{}}],\"@odata.nextLink\":\"https://graph.microsoft.com/v1.0/x?$skiptoken=2\"}"
+    }
+   },
+   "expected": {
+    "ok": true,
+    "entries": [
+     {
+      "id": "G1",
+      "name": "a.mp3",
+      "folder": false,
+      "size": 99,
+      "mtimeMs": 1792065600000,
+      "etag": "\"{E1},2\"",
+      "hashes": {
+       "quickXor": "AAAAAAAAAAAAAAAAAAAAAAAAAAA="
+      },
+      "parentId": "PP"
+     },
+     {
+      "id": "G2",
+      "name": "sub",
+      "folder": true,
+      "hashes": {}
+     }
+    ],
+    "nextCursor": "https://graph.microsoft.com/v1.0/x?$skiptoken=2",
+    "incomplete": false
+   }
+  },
+  {
+   "name": "delta gone",
+   "provider": "graph",
+   "op": "parseList",
+   "input": {
+    "response": {
+     "status": 410,
+     "headers": {},
+     "body": "{\"error\":{\"code\":\"resyncRequired\"}}"
+    },
+    "cursor": "x"
+   },
+   "expected": {
+    "ok": false,
+    "error": {
+     "kind": "Fatal",
+     "status": 410,
+     "code": "ResetRequired"
+    }
+   }
+  },
+  {
+   "name": "stat",
+   "provider": "graph",
+   "op": "stat",
+   "input": {
+    "ref": {
+     "id": "G1"
+    }
+   },
+   "expected": {
+    "request": {
+     "method": "GET",
+     "url": "https://graph.microsoft.com/v1.0/me/drive/items/G1?$select=id,name,size,eTag,cTag,file,folder,fileSystemInfo,lastModifiedDateTime,createdDateTime,parentReference",
+     "headers": {},
+     "auth": true
+    }
+   }
+  },
+  {
+   "name": "create folder",
+   "provider": "graph",
+   "op": "createFolder",
+   "input": {
+    "parent": {
+     "path": "Keepfin"
+    },
+    "name": "ops"
+   },
+   "expected": {
+    "request": {
+     "method": "POST",
+     "url": "https://graph.microsoft.com/v1.0/me/drive/special/approot:/Keepfin:/children",
+     "headers": {
+      "Content-Type": "application/json"
+     },
+     "auth": true,
+     "body": "{\"name\":\"ops\",\"folder\":{},\"@microsoft.graph.conflictBehavior\":\"fail\"}"
+    }
+   }
+  },
+  {
+   "name": "create small fails if exists",
+   "provider": "graph",
+   "op": "createSmall",
+   "input": {
+    "parent": {
+     "path": "Keepfin/.keepfin"
+    },
+    "name": "lock.json",
+    "content": "{}"
+   },
+   "expected": {
+    "request": {
+     "method": "PUT",
+     "url": "https://graph.microsoft.com/v1.0/me/drive/special/approot:/Keepfin/.keepfin/lock.json:/content?@microsoft.graph.conflictBehavior=fail",
+     "headers": {
+      "Content-Type": "application/octet-stream"
+     },
+     "auth": true,
+     "body": "{}"
+    }
+   }
+  },
+  {
+   "name": "create small under id",
+   "provider": "graph",
+   "op": "createSmall",
+   "input": {
+    "parent": {
+     "id": "G0"
+    },
+    "name": "x y.json",
+    "content": "{}"
+   },
+   "expected": {
+    "request": {
+     "method": "PUT",
+     "url": "https://graph.microsoft.com/v1.0/me/drive/items/G0:/x%20y.json:/content?@microsoft.graph.conflictBehavior=fail",
+     "headers": {
+      "Content-Type": "application/octet-stream"
+     },
+     "auth": true,
+     "body": "{}"
+    }
+   }
+  },
+  {
+   "name": "replace with eTag",
+   "provider": "graph",
+   "op": "replaceSmall",
+   "input": {
+    "ref": {
+     "id": "G1"
+    },
+    "etag": "\"{E1},2\"",
+    "content": "x"
+   },
+   "expected": {
+    "request": {
+     "method": "PUT",
+     "url": "https://graph.microsoft.com/v1.0/me/drive/items/G1/content",
+     "headers": {
+      "Content-Type": "application/octet-stream",
+      "If-Match": "\"{E1},2\""
+     },
+     "auth": true,
+     "body": "x"
+    }
+   }
+  },
+  {
+   "name": "delete with eTag",
+   "provider": "graph",
+   "op": "deleteCas",
+   "input": {
+    "ref": {
+     "id": "G1"
+    },
+    "etag": "\"{E1},2\""
+   },
+   "expected": {
+    "request": {
+     "method": "DELETE",
+     "url": "https://graph.microsoft.com/v1.0/me/drive/items/G1",
+     "headers": {
+      "If-Match": "\"{E1},2\""
+     },
+     "auth": true
+    }
+   }
+  },
+  {
+   "name": "move to trash",
+   "provider": "graph",
+   "op": "move",
+   "input": {
+    "ref": {
+     "id": "G1"
+    },
+    "newParentId": "TR",
+    "newName": "G1-old",
+    "etag": "\"{E1},2\""
+   },
+   "expected": {
+    "request": {
+     "method": "PATCH",
+     "url": "https://graph.microsoft.com/v1.0/me/drive/items/G1",
+     "headers": {
+      "Content-Type": "application/json",
+      "If-Match": "\"{E1},2\""
+     },
+     "auth": true,
+     "body": "{\"name\":\"G1-old\",\"parentReference\":{\"id\":\"TR\"}}"
+    }
+   }
+  },
+  {
+   "name": "upload start create only",
+   "provider": "graph",
+   "op": "uploadStart",
+   "input": {
+    "parent": {
+     "path": "Keepfin/media"
+    },
+    "name": "a b.flac",
+    "size": 30000000
+   },
+   "expected": {
+    "request": {
+     "method": "POST",
+     "url": "https://graph.microsoft.com/v1.0/me/drive/special/approot:/Keepfin/media/a%20b.flac:/createUploadSession",
+     "headers": {
+      "Content-Type": "application/json"
+     },
+     "auth": true,
+     "body": "{\"item\":{\"@microsoft.graph.conflictBehavior\":\"fail\",\"name\":\"a b.flac\"}}"
+    }
+   }
+  },
+  {
+   "name": "upload start replace",
+   "provider": "graph",
+   "op": "uploadStart",
+   "input": {
+    "mode": "replace",
+    "ref": {
+     "id": "G1"
+    },
+    "etag": "\"{E1},2\"",
+    "size": 5
+   },
+   "expected": {
+    "request": {
+     "method": "POST",
+     "url": "https://graph.microsoft.com/v1.0/me/drive/items/G1/createUploadSession",
+     "headers": {
+      "Content-Type": "application/json",
+      "If-Match": "\"{E1},2\""
+     },
+     "auth": true,
+     "body": "{\"item\":{\"@microsoft.graph.conflictBehavior\":\"replace\"}}"
+    }
+   }
+  },
+  {
+   "name": "upload empty file refused",
+   "provider": "graph",
+   "op": "uploadStart",
+   "input": {
+    "parent": {
+     "path": ""
+    },
+    "name": "e",
+    "size": 0
+   },
+   "expected": {
+    "throws": true
+   }
+  },
+  {
+   "name": "parse upload start",
+   "provider": "graph",
+   "op": "parseUploadStart",
+   "input": {
+    "response": {
+     "status": 200,
+     "headers": {},
+     "body": "{\"uploadUrl\":\"https://up.example/s/1\",\"expirationDateTime\":\"2026-10-16T00:00:00.000Z\",\"nextExpectedRanges\":[\"0-\"]}"
+    },
+    "nowMs": 1792065600000
+   },
+   "expected": {
+    "ok": true,
+    "session": {
+     "kind": "graph",
+     "url": "https://up.example/s/1"
+    },
+    "nextOffset": 0,
+    "expiresAtMs": 1792108800000,
+    "chunk": {
+     "multiple": 327680,
+     "preferred": 10485760,
+     "max": 62914560
+    }
+   }
+  },
+  {
+   "name": "fragment",
+   "provider": "graph",
+   "op": "uploadAppend",
+   "input": {
+    "session": {
+     "url": "https://up.example/s/1"
+    },
+    "offset": 0,
+    "length": 10485760,
+    "total": 30000000
+   },
+   "expected": {
+    "request": {
+     "method": "PUT",
+     "url": "https://up.example/s/1",
+     "headers": {
+      "Content-Length": "10485760",
+      "Content-Range": "bytes 0-10485759/30000000",
+      "Content-Type": "application/octet-stream"
+     },
+     "auth": false,
+     "bodyRef": {
+      "offset": 0,
+      "length": 10485760
+     }
+    }
+   }
+  },
+  {
+   "name": "fragment last",
+   "provider": "graph",
+   "op": "uploadAppend",
+   "input": {
+    "session": {
+     "url": "https://up.example/s/1"
+    },
+    "offset": 20971520,
+    "length": 9028480,
+    "total": 30000000
+   },
+   "expected": {
+    "request": {
+     "method": "PUT",
+     "url": "https://up.example/s/1",
+     "headers": {
+      "Content-Length": "9028480",
+      "Content-Range": "bytes 20971520-29999999/30000000",
+      "Content-Type": "application/octet-stream"
+     },
+     "auth": false,
+     "bodyRef": {
+      "offset": 20971520,
+      "length": 9028480
+     }
+    }
+   }
+  },
+  {
+   "name": "fragment misaligned",
+   "provider": "graph",
+   "op": "uploadAppend",
+   "input": {
+    "session": {
+     "url": "https://up.example/s/1"
+    },
+    "offset": 0,
+    "length": 1000000,
+    "total": 30000000
+   },
+   "expected": {
+    "throws": true
+   }
+  },
+  {
+   "name": "fragment accepted",
+   "provider": "graph",
+   "op": "parseUploadAppend",
+   "input": {
+    "response": {
+     "status": 202,
+     "headers": {},
+     "body": "{\"expirationDateTime\":\"2026-10-16T00:00:00Z\",\"nextExpectedRanges\":[\"10485760-29999999\"]}"
+    }
+   },
+   "expected": {
+    "ok": true,
+    "done": false,
+    "nextOffset": 10485760,
+    "expiresAtMs": 1792108800000
+   }
+  },
+  {
+   "name": "upload done",
+   "provider": "graph",
+   "op": "parseUploadAppend",
+   "input": {
+    "response": {
+     "status": 201,
+     "headers": {},
+     "body": "{\"id\":\"G1\",\"name\":\"a.mp3\",\"size\":99,\"eTag\":\"\\\"{E1},2\\\"\",\"cTag\":\"c\",\"file\":{\"hashes\":{\"quickXorHash\":\"AAAAAAAAAAAAAAAAAAAAAAAAAAA=\"}},\"fileSystemInfo\":{\"lastModifiedDateTime\":\"2026-10-15T12:00:00Z\"},\"parentReference\":{\"id\":\"PP\"}}"
+    }
+   },
+   "expected": {
+    "ok": true,
+    "done": true,
+    "entry": {
+     "id": "G1",
+     "name": "a.mp3",
+     "folder": false,
+     "size": 99,
+     "mtimeMs": 1792065600000,
+     "etag": "\"{E1},2\"",
+     "hashes": {
+      "quickXor": "AAAAAAAAAAAAAAAAAAAAAAAAAAA="
+     },
+     "parentId": "PP"
+    }
+   }
+  },
+  {
+   "name": "upload name exists at commit",
+   "provider": "graph",
+   "op": "parseUploadAppend",
+   "input": {
+    "response": {
+     "status": 409,
+     "headers": {},
+     "body": "{\"error\":{\"code\":\"nameAlreadyExists\"}}"
+    }
+   },
+   "expected": {
+    "ok": false,
+    "error": {
+     "kind": "Conflict",
+     "status": 409,
+     "code": "nameAlreadyExists"
+    }
+   }
+  },
+  {
+   "name": "upload fragment overlap",
+   "provider": "graph",
+   "op": "parseUploadAppend",
+   "input": {
+    "response": {
+     "status": 416,
+     "headers": {},
+     "body": "{\"error\":{\"code\":\"invalidRange\"}}"
+    }
+   },
+   "expected": {
+    "ok": false,
+    "error": {
+     "kind": "Transient",
+     "status": 416,
+     "code": "ResumeNeeded"
+    }
+   }
+  },
+  {
+   "name": "upload query",
+   "provider": "graph",
+   "op": "parseUploadQuery",
+   "input": {
+    "response": {
+     "status": 200,
+     "headers": {},
+     "body": "{\"expirationDateTime\":\"2026-10-16T00:00:00Z\",\"nextExpectedRanges\":[\"5242880-\"]}"
+    }
+   },
+   "expected": {
+    "ok": true,
+    "done": false,
+    "nextOffset": 5242880,
+    "expiresAtMs": 1792108800000
+   }
+  },
+  {
+   "name": "upload session expired",
+   "provider": "graph",
+   "op": "parseUploadQuery",
+   "input": {
+    "response": {
+     "status": 404,
+     "headers": {},
+     "body": "{\"error\":{\"code\":\"itemNotFound\"}}"
+    }
+   },
+   "expected": {
+    "ok": false,
+    "error": {
+     "kind": "NotFound",
+     "status": 404,
+     "code": "SessionExpired"
+    }
+   }
+  },
+  {
+   "name": "download resolve",
+   "provider": "graph",
+   "op": "downloadResolve",
+   "input": {
+    "ref": {
+     "id": "G1"
+    }
+   },
+   "expected": {
+    "request": {
+     "method": "GET",
+     "url": "https://graph.microsoft.com/v1.0/me/drive/items/G1/content",
+     "headers": {},
+     "auth": true,
+     "redirect": "manual"
+    }
+   }
+  },
+  {
+   "name": "parse resolve",
+   "provider": "graph",
+   "op": "parseDownloadResolve",
+   "input": {
+    "response": {
+     "status": 302,
+     "headers": {
+      "location": "https://dl.example/pre/1"
+     },
+     "body": ""
+    }
+   },
+   "expected": {
+    "ok": true,
+    "url": "https://dl.example/pre/1"
+   }
+  },
+  {
+   "name": "download range from resolved url",
+   "provider": "graph",
+   "op": "download",
+   "input": {
+    "url": "https://dl.example/pre/1",
+    "start": 100,
+    "end": 199
+   },
+   "expected": {
+    "request": {
+     "method": "GET",
+     "url": "https://dl.example/pre/1",
+     "headers": {
+      "Range": "bytes=100-199"
+     },
+     "auth": false
+    }
+   }
+  },
+  {
+   "name": "quota",
+   "provider": "graph",
+   "op": "parseQuota",
+   "input": {
+    "response": {
+     "status": 200,
+     "headers": {},
+     "body": "{\"quota\":{\"total\":5368709120,\"used\":1000,\"remaining\":5368708120,\"state\":\"normal\"}}"
+    }
+   },
+   "expected": {
+    "ok": true,
+    "usedBytes": 1000,
+    "totalBytes": 5368709120,
+    "freeBytes": 5368708120,
+    "state": "normal"
+   }
+  },
+  {
+   "name": "error throttled",
+   "provider": "graph",
+   "op": "parseDone",
+   "input": {
+    "response": {
+     "status": 429,
+     "headers": {
+      "retry-after": "11"
+     },
+     "body": "{\"error\":{\"code\":\"TooManyRequests\"}}"
+    }
+   },
+   "expected": {
+    "ok": false,
+    "error": {
+     "kind": "RateLimited",
+     "status": 429,
+     "code": "TooManyRequests",
+     "retryAfterMs": 11000
+    }
+   }
+  },
+  {
+   "name": "error 503 with Retry-After",
+   "provider": "graph",
+   "op": "parseDone",
+   "input": {
+    "response": {
+     "status": 503,
+     "headers": {
+      "retry-after": "4"
+     },
+     "body": "{\"error\":{\"code\":\"serviceNotAvailable\"}}"
+    }
+   },
+   "expected": {
+    "ok": false,
+    "error": {
+     "kind": "Transient",
+     "status": 503,
+     "code": "serviceNotAvailable",
+     "retryAfterMs": 4000
+    }
+   }
+  },
+  {
+   "name": "error precondition",
+   "provider": "graph",
+   "op": "parseEntry",
+   "input": {
+    "response": {
+     "status": 412,
+     "headers": {},
+     "body": "{\"error\":{\"code\":\"preconditionFailed\"}}"
+    }
+   },
+   "expected": {
+    "ok": false,
+    "error": {
+     "kind": "Conflict",
+     "status": 412,
+     "code": "precondition"
+    }
+   }
+  },
+  {
+   "name": "error insufficient storage",
+   "provider": "graph",
+   "op": "parseDone",
+   "input": {
+    "response": {
+     "status": 507,
+     "headers": {},
+     "body": "{\"error\":{\"code\":\"insufficientStorage\"}}"
+    }
+   },
+   "expected": {
+    "ok": false,
+    "error": {
+     "kind": "QuotaFull",
+     "status": 507,
+     "code": "insufficientStorage"
+    }
+   }
+  },
+  {
+   "name": "error 401",
+   "provider": "graph",
+   "op": "parseDone",
+   "input": {
+    "response": {
+     "status": 401,
+     "headers": {},
+     "body": "{\"error\":{\"code\":\"InvalidAuthenticationToken\"}}"
+    }
+   },
+   "expected": {
+    "ok": false,
+    "error": {
+     "kind": "NeedsSignIn",
+     "status": 401,
+     "code": "InvalidAuthenticationToken",
+     "refresh": true
+    }
+   }
+  }
+ ]
+}

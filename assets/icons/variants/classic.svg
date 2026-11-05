@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512">
+  <title>Keepfin</title>
+  <rect width="512" height="512" rx="112" fill="#10151E"/>
+  <path d="M112 292 C146 180 226 112 340 80 C314 164 326 238 400 292 Z" fill="#4C7EFF" stroke="#4C7EFF" stroke-width="14" stroke-linejoin="round"/>
+  <path d="M184 352 L256 418 L328 352" fill="none" stroke="#A7C3FF" stroke-width="52" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

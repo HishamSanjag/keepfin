@@ -1,0 +1,9 @@
+{
+  "description": "Source recording -> the YouTube Music search text: leading artists, then the title without featuring credits and remaster suffixes.",
+  "cases": [
+    {"name":"one artist","input":{"op":"query","track":{"title":"One More Time","artists":["Daft Punk"]}},"expected":"Daft Punk One More Time"},
+    {"name":"featuring credits are removed from the title","input":{"op":"query","track":{"title":"Song (feat. Other)","artists":["Artist"]}},"expected":"Artist Song"},
+    {"name":"remaster suffixes are removed","input":{"op":"query","track":{"title":"Bohemian Rhapsody - Remastered 2011","artists":["Queen"]}},"expected":"Queen Bohemian Rhapsody"},
+    {"name":"the first two artists are searched","input":{"op":"query","track":{"title":"Get Lucky (feat. Pharrell Williams and Nile Rodgers)","artists":["Daft Punk","Pharrell Williams","Nile Rodgers"]}},"expected":"Daft Punk Pharrell Williams Get Lucky"}
+  ]
+}

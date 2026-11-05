@@ -1,0 +1,12 @@
+{
+  "description": "The words on a quality row (issue #6): the height, then the frame rate from 33 fps up (30, 31 and 32 fps read as plain), and \"Original\" when there is no height to read. Bytes have their own fixtures (args/labels.json, op bytes).",
+  "cases": [
+    {"name":"no frame rate","input":{"op":"videoLabel","height":1080},"expected":"1080p"},
+    {"name":"30 fps is plain","input":{"op":"videoLabel","height":1080,"fps":30},"expected":"1080p"},
+    {"name":"31 fps is plain","input":{"op":"videoLabel","height":720,"fps":31},"expected":"720p"},
+    {"name":"32 fps is plain","input":{"op":"videoLabel","height":720,"fps":32},"expected":"720p"},
+    {"name":"33 fps shows","input":{"op":"videoLabel","height":720,"fps":33},"expected":"720p33"},
+    {"name":"60 fps shows","input":{"op":"videoLabel","height":1080,"fps":60},"expected":"1080p60"},
+    {"name":"a direct file has no height","input":{"op":"videoLabel","height":0},"expected":"Original"}
+  ]
+}

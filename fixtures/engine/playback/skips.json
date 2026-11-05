@@ -1,0 +1,14 @@
+{
+  "description": "Skips that add up (YouTube): the same direction within 1000 ms of the last skip adds to the run; the other way, or later, starts a new one.",
+  "cases": [
+    {"name":"one skip forward","input":{"op":"skips","steps":[{"delta":10,"now":0}]},"expected":["+10 s"]},
+    {"name":"three quick skips forward add up","input":{"op":"skips","steps":[{"delta":10,"now":0},{"delta":10,"now":400},{"delta":10,"now":900}]},"expected":["+10 s","+20 s","+30 s"]},
+    {"name":"the window counts from the last skip, not the first","input":{"op":"skips","steps":[{"delta":10,"now":0},{"delta":10,"now":900},{"delta":10,"now":1800}]},"expected":["+10 s","+20 s","+30 s"]},
+    {"name":"exactly 1000 ms later still adds up","input":{"op":"skips","steps":[{"delta":5,"now":0},{"delta":5,"now":1000}]},"expected":["+5 s","+10 s"]},
+    {"name":"more than 1000 ms later starts over","input":{"op":"skips","steps":[{"delta":10,"now":0},{"delta":10,"now":1001}]},"expected":["+10 s","+10 s"]},
+    {"name":"back skips use a real minus sign and add up","input":{"op":"skips","steps":[{"delta":-5,"now":0},{"delta":-10,"now":300}]},"expected":["−5 s","−15 s"]},
+    {"name":"changing direction starts a new run","input":{"op":"skips","steps":[{"delta":10,"now":0},{"delta":10,"now":200},{"delta":-10,"now":400}]},"expected":["+10 s","+20 s","−10 s"]},
+    {"name":"announcement forward","input":{"op":"announce","total":30},"expected":"Skipped forward 30 seconds"},
+    {"name":"announcement back","input":{"op":"announce","total":-15},"expected":"Skipped back 15 seconds"}
+  ]
+}

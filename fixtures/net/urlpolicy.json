@@ -1,0 +1,622 @@
+{
+ "static": [
+  {
+   "url": "https://example.com/watch?v=1",
+   "allow": true
+  },
+  {
+   "url": "http://example.com:8080/a",
+   "allow": true
+  },
+  {
+   "url": "https://8.8.8.8/x",
+   "allow": true
+  },
+  {
+   "url": "https://[2606:4700:4700::1111]/x",
+   "allow": true
+  },
+  {
+   "url": "HTTPS://EXAMPLE.COM/",
+   "allow": true
+  },
+  {
+   "url": "ftp://example.com/a",
+   "allow": false,
+   "reason": "scheme"
+  },
+  {
+   "url": "file:///etc/passwd",
+   "allow": false,
+   "reason": "scheme"
+  },
+  {
+   "url": "javascript:alert(1)",
+   "allow": false,
+   "reason": "scheme"
+  },
+  {
+   "url": "ws://example.com",
+   "allow": false,
+   "reason": "scheme"
+  },
+  {
+   "url": "https://user@example.com/",
+   "allow": false,
+   "reason": "credentials"
+  },
+  {
+   "url": "https://user:pw@example.com/",
+   "allow": false,
+   "reason": "credentials"
+  },
+  {
+   "url": "https://:pw@example.com/",
+   "allow": false,
+   "reason": "credentials"
+  },
+  {
+   "url": "https://localhost/",
+   "allow": false,
+   "reason": "local-name"
+  },
+  {
+   "url": "http://foo.localhost/",
+   "allow": false,
+   "reason": "local-name"
+  },
+  {
+   "url": "http://printer.local/",
+   "allow": false,
+   "reason": "local-name"
+  },
+  {
+   "url": "http://db.internal/",
+   "allow": false,
+   "reason": "local-name"
+  },
+  {
+   "url": "http://127.0.0.1/",
+   "allow": false,
+   "reason": "address:loopback"
+  },
+  {
+   "url": "http://127.1/",
+   "allow": false,
+   "reason": "address:loopback"
+  },
+  {
+   "url": "http://0x7f.0.0.1/",
+   "allow": false,
+   "reason": "address:loopback"
+  },
+  {
+   "url": "http://2130706433/",
+   "allow": false,
+   "reason": "address:loopback"
+  },
+  {
+   "url": "http://017700000001/",
+   "allow": false,
+   "reason": "address:loopback"
+  },
+  {
+   "url": "http://10.0.0.5/",
+   "allow": false,
+   "reason": "address:private"
+  },
+  {
+   "url": "http://172.16.0.1/",
+   "allow": false,
+   "reason": "address:private"
+  },
+  {
+   "url": "http://172.31.255.255/",
+   "allow": false,
+   "reason": "address:private"
+  },
+  {
+   "url": "http://192.168.1.1/",
+   "allow": false,
+   "reason": "address:private"
+  },
+  {
+   "url": "http://100.64.0.1/",
+   "allow": false,
+   "reason": "address:private"
+  },
+  {
+   "url": "http://169.254.169.254/latest/meta-data",
+   "allow": false,
+   "reason": "address:link-local"
+  },
+  {
+   "url": "http://224.0.0.251/",
+   "allow": false,
+   "reason": "address:multicast"
+  },
+  {
+   "url": "http://239.255.255.250/",
+   "allow": false,
+   "reason": "address:multicast"
+  },
+  {
+   "url": "http://0.0.0.0/",
+   "allow": false,
+   "reason": "address:unspecified"
+  },
+  {
+   "url": "http://255.255.255.255/",
+   "allow": false,
+   "reason": "address:reserved"
+  },
+  {
+   "url": "http://[::1]/",
+   "allow": false,
+   "reason": "address:loopback"
+  },
+  {
+   "url": "http://[::]/",
+   "allow": false,
+   "reason": "address:unspecified"
+  },
+  {
+   "url": "http://[fe80::1]/",
+   "allow": false,
+   "reason": "address:link-local"
+  },
+  {
+   "url": "http://[fd00::1]/",
+   "allow": false,
+   "reason": "address:private"
+  },
+  {
+   "url": "http://[fc00::1]/",
+   "allow": false,
+   "reason": "address:private"
+  },
+  {
+   "url": "http://[ff02::fb]/",
+   "allow": false,
+   "reason": "address:multicast"
+  },
+  {
+   "url": "http://[::ffff:127.0.0.1]/",
+   "allow": false,
+   "reason": "address:loopback"
+  },
+  {
+   "url": "http://[::ffff:7f00:1]/",
+   "allow": false,
+   "reason": "address:loopback"
+  },
+  {
+   "url": "http://[::ffff:10.1.2.3]/",
+   "allow": false,
+   "reason": "address:private"
+  },
+  {
+   "url": "http://[::ffff:169.254.169.254]/",
+   "allow": false,
+   "reason": "address:link-local"
+  },
+  {
+   "url": "http://[64:ff9b::7f00:1]/",
+   "allow": false,
+   "reason": "address:loopback"
+  },
+  {
+   "url": "http://[2002:7f00:1::]/",
+   "allow": false,
+   "reason": "address:loopback"
+  },
+  {
+   "url": "http://[2001:db8::1]/",
+   "allow": false,
+   "reason": "address:reserved"
+  },
+  {
+   "url": "http://[2001::1]/",
+   "allow": false,
+   "reason": "address:reserved"
+  },
+  {
+   "url": "not a url",
+   "allow": false,
+   "reason": "bad-url"
+  },
+  {
+   "url": "",
+   "allow": false,
+   "reason": "bad-url"
+  },
+  {
+   "url": "http://",
+   "allow": false,
+   "reason": "bad-url"
+  }
+ ],
+ "addresses": [
+  [
+   "8.8.8.8",
+   null
+  ],
+  [
+   "1.1.1.1",
+   null
+  ],
+  [
+   "172.15.0.1",
+   null
+  ],
+  [
+   "172.32.0.1",
+   null
+  ],
+  [
+   "100.63.255.255",
+   null
+  ],
+  [
+   "100.128.0.1",
+   null
+  ],
+  [
+   "169.253.0.1",
+   null
+  ],
+  [
+   "223.255.255.255",
+   null
+  ],
+  [
+   "0.1.2.3",
+   "unspecified"
+  ],
+  [
+   "10.255.255.255",
+   "private"
+  ],
+  [
+   "127.255.255.254",
+   "loopback"
+  ],
+  [
+   "169.254.0.1",
+   "link-local"
+  ],
+  [
+   "192.0.0.1",
+   "reserved"
+  ],
+  [
+   "192.0.2.9",
+   "reserved"
+  ],
+  [
+   "198.18.0.1",
+   "reserved"
+  ],
+  [
+   "198.19.255.255",
+   "reserved"
+  ],
+  [
+   "198.51.100.1",
+   "reserved"
+  ],
+  [
+   "203.0.113.1",
+   "reserved"
+  ],
+  [
+   "224.0.0.1",
+   "multicast"
+  ],
+  [
+   "240.0.0.1",
+   "reserved"
+  ],
+  [
+   "2606:4700:4700::1111",
+   null
+  ],
+  [
+   "2a00:1450:4001:81b::200e",
+   null
+  ],
+  [
+   "2001:4860:4860::8888",
+   null
+  ],
+  [
+   "::",
+   "unspecified"
+  ],
+  [
+   "::1",
+   "loopback"
+  ],
+  [
+   "::2",
+   "reserved"
+  ],
+  [
+   "fe80::1",
+   "link-local"
+  ],
+  [
+   "febf::1",
+   "link-local"
+  ],
+  [
+   "fec0::1",
+   "reserved"
+  ],
+  [
+   "fc00::",
+   "private"
+  ],
+  [
+   "fdff:ffff::1",
+   "private"
+  ],
+  [
+   "ff00::1",
+   "multicast"
+  ],
+  [
+   "ff0e::1",
+   "multicast"
+  ],
+  [
+   "::ffff:8.8.8.8",
+   null
+  ],
+  [
+   "::ffff:0:0",
+   "unspecified"
+  ],
+  [
+   "::ffff:192.168.0.1",
+   "private"
+  ],
+  [
+   "::ffff:c0a8:1",
+   "private"
+  ],
+  [
+   "64:ff9b::808:808",
+   null
+  ],
+  [
+   "64:ff9b::a00:1",
+   "private"
+  ],
+  [
+   "64:ff9b:1::1",
+   "reserved"
+  ],
+  [
+   "2002:808:808::1",
+   null
+  ],
+  [
+   "2002:a00:1::1",
+   "private"
+  ],
+  [
+   "2001:db8::dead",
+   "reserved"
+  ],
+  [
+   "2001:0:4136:e378:8000:63bf:3fff:fdd2",
+   "reserved"
+  ],
+  [
+   "100::1",
+   "reserved"
+  ],
+  [
+   "fe80::1%eth0",
+   "malformed"
+  ],
+  [
+   "1:2:3:4:5:6:7:8:9",
+   "malformed"
+  ],
+  [
+   "1::2::3",
+   "malformed"
+  ],
+  [
+   "gggg::1",
+   "malformed"
+  ],
+  [
+   "01.2.3.4",
+   "malformed"
+  ],
+  [
+   "1.2.3",
+   "malformed"
+  ],
+  [
+   "256.1.1.1",
+   "malformed"
+  ],
+  [
+   "",
+   "malformed"
+  ]
+ ],
+ "resolved": [
+  {
+   "addresses": [
+    "8.8.8.8"
+   ],
+   "allow": true,
+   "reason": "ok"
+  },
+  {
+   "addresses": [
+    "8.8.8.8",
+    "2606:4700:4700::1111"
+   ],
+   "allow": true,
+   "reason": "ok"
+  },
+  {
+   "addresses": [],
+   "allow": false,
+   "reason": "address:unresolved"
+  },
+  {
+   "addresses": [
+    "127.0.0.1"
+   ],
+   "allow": false,
+   "reason": "address:loopback"
+  },
+  {
+   "addresses": [
+    "8.8.8.8",
+    "10.0.0.1"
+   ],
+   "allow": false,
+   "reason": "address:private"
+  },
+  {
+   "addresses": [
+    "[::1]"
+   ],
+   "allow": false,
+   "reason": "address:loopback"
+  },
+  {
+   "addresses": [
+    "::ffff:169.254.169.254"
+   ],
+   "allow": false,
+   "reason": "address:link-local"
+  }
+ ],
+ "redirects": [
+  {
+   "current": "https://a.example/x/y",
+   "location": "https://b.example/z",
+   "resolved": [
+    "8.8.8.8"
+   ],
+   "hops": 0,
+   "allow": true,
+   "href": "https://b.example/z"
+  },
+  {
+   "current": "https://a.example/x/y",
+   "location": "/other?q=1",
+   "resolved": [
+    "8.8.8.8"
+   ],
+   "hops": 3,
+   "allow": true,
+   "href": "https://a.example/other?q=1"
+  },
+  {
+   "current": "https://a.example/x/y",
+   "location": "next",
+   "resolved": [
+    "8.8.8.8"
+   ],
+   "hops": 0,
+   "allow": true,
+   "href": "https://a.example/x/next"
+  },
+  {
+   "current": "https://a.example/x/y",
+   "location": "//c.example/p",
+   "resolved": [
+    "8.8.8.8"
+   ],
+   "hops": 0,
+   "allow": true,
+   "href": "https://c.example/p"
+  },
+  {
+   "current": "https://a.example/x/y",
+   "location": "https://c.example/p",
+   "resolved": [
+    "10.0.0.1"
+   ],
+   "hops": 0,
+   "allow": false,
+   "reason": "address:private"
+  },
+  {
+   "current": "https://a.example/x/y",
+   "location": "https://c.example/p",
+   "resolved": [],
+   "hops": 0,
+   "allow": false,
+   "reason": "address:unresolved"
+  },
+  {
+   "current": "https://a.example/x/y",
+   "location": "http://127.0.0.1:8080/admin",
+   "resolved": [
+    "8.8.8.8"
+   ],
+   "hops": 0,
+   "allow": false,
+   "reason": "address:loopback"
+  },
+  {
+   "current": "https://a.example/x/y",
+   "location": "http://[::1]/",
+   "resolved": [],
+   "hops": 0,
+   "allow": false,
+   "reason": "address:loopback"
+  },
+  {
+   "current": "https://a.example/x/y",
+   "location": "file:///etc/passwd",
+   "resolved": [
+    "8.8.8.8"
+   ],
+   "hops": 0,
+   "allow": false,
+   "reason": "scheme"
+  },
+  {
+   "current": "https://a.example/x/y",
+   "location": "https://u:p@c.example/",
+   "resolved": [
+    "8.8.8.8"
+   ],
+   "hops": 0,
+   "allow": false,
+   "reason": "credentials"
+  },
+  {
+   "current": "https://a.example/x/y",
+   "location": "https://c.example/",
+   "resolved": [
+    "8.8.8.8"
+   ],
+   "hops": 10,
+   "allow": false,
+   "reason": "too-many-redirects"
+  },
+  {
+   "current": "https://a.example/x/y",
+   "location": "",
+   "resolved": [
+    "8.8.8.8"
+   ],
+   "hops": 0,
+   "allow": false,
+   "reason": "bad-url"
+  }
+ ]
+}

@@ -1,0 +1,302 @@
+{
+  "version": 1,
+  "title": "Features & how-to",
+  "intro": "Everything Keepfin can do, with the steps to use it. Tap Try it to jump there.",
+  "sections": [
+    {
+      "id": "download",
+      "title": "Downloading",
+      "features": [
+        {
+          "id": "paste",
+          "title": "Download from a link",
+          "summary": "Videos, songs, playlists, albums, channels and photo posts from YouTube, YouTube Music, Spotify, Apple Music, Deezer, SoundCloud, Instagram, TikTok, X and many more sites.",
+          "steps": ["Copy a link in any app.", "Open Keepfin: it offers the copied link. Or paste it into the box in Downloads.", "Pick Video or Audio and a quality, then tap Download."],
+          "try": "downloads"
+        },
+        {
+          "id": "share",
+          "title": "Share straight to Keepfin",
+          "summary": "Send a link from YouTube, Spotify or your browser without copying it.",
+          "steps": ["In the other app, tap Share.", "Choose Keepfin.", "Keepfin opens with the link already checked. Tap Download."],
+          "platforms": ["android"]
+        },
+        {
+          "id": "collections-download",
+          "title": "Whole playlists, albums and channels",
+          "summary": "Keepfin lists every item, so you can pick exactly what to save. Long lists load page by page.",
+          "steps": ["Paste a playlist, album or channel link.", "Untick what you don't want, or use Select all.", "Tap Download. Each item appears in Downloads as it finishes."],
+          "try": "downloads"
+        },
+        {
+          "id": "music-services",
+          "title": "Spotify, Apple Music and Deezer links",
+          "summary": "Keepfin reads the song details and finds the same recording on YouTube Music, then saves it with the right title, artist, album and cover.",
+          "steps": ["Paste a track, album or playlist link from Spotify, Apple Music or Deezer.", "Check the matches, then tap Download."]
+        },
+        {
+          "id": "save-to",
+          "title": "Choose where it is saved",
+          "summary": "Music links go to Music and everything else to Downloads, unless you choose another space.",
+          "steps": ["Next to Download, tap Save to.", "Pick a space. This choice applies to this download only.", "To change the defaults: Library › Edit › Where downloads go."]
+        },
+        {
+          "id": "skip-existing",
+          "title": "Songs you already have are skipped",
+          "summary": "Before downloading, Keepfin marks songs already in the space as \"Already in Music\". Live, remix and acoustic versions count as different songs.",
+          "steps": ["Download a playlist you saved before.", "Songs you have are unticked and labelled. Tick one again, or use Download anyway, to save it twice."]
+        },
+        {
+          "id": "lyrics",
+          "title": "Lyrics for your songs",
+          "summary": "Keepfin looks up lyrics for every song you download on LRCLIB, a free lyrics library, and saves them with the song. Timed lyrics follow along in the player. It's on by default.",
+          "steps": ["Download a song.", "Play it and open Lyrics in the full player.", "On the phone, the card under the controls shows the line being sung. Tap ✕ on it to hide it; ⋮ › Show lyrics preview brings it back.", "To turn it off: Settings › Downloads › Add lyrics to songs."]
+        },
+        {
+          "id": "sign-in",
+          "title": "Private, age-restricted or members-only videos",
+          "summary": "Sign in once inside Keepfin and those downloads work like any other.",
+          "steps": ["Open Settings › Downloads and go to the sign-in settings.", "On Android, sign in to the site in Keepfin's browser. On Windows, pick the browser you are signed in with.", "Try the download again."],
+          "try": "settings"
+        },
+        {
+          "id": "retry",
+          "title": "Pause, retry and failed items",
+          "summary": "Downloads retry by themselves after network trouble. Failed items in a playlist are listed first, with Retry failed. Items you don't want can be removed from the list; this never deletes saved files.",
+          "steps": ["Open Downloads.", "Tap a playlist group to see each item.", "Use Retry failed or Remove failed, or the menu on one item to retry or remove just that one."],
+          "try": "downloads"
+        }
+      ]
+    },
+    {
+      "id": "library",
+      "title": "Library and spaces",
+      "features": [
+        {
+          "id": "spaces",
+          "title": "Spaces",
+          "summary": "Spaces keep your media apart: Music, Videos and Downloads to start, plus any you create. Each has its own folder, color and icon.",
+          "steps": ["Open Library.", "Tap a space to open it.", "Tap Edit to create, color, pin or reorder spaces."],
+          "try": "library"
+        },
+        {
+          "id": "edit-spaces",
+          "title": "Reorder and pin spaces",
+          "summary": "Edit keeps the same grid you see on Library home. Pinned spaces show on home, and the rest are under All spaces.",
+          "steps": ["Library › Edit.", "Drag a card to move it. Built-in spaces move too.", "Tap the pin to show or hide a space on home. Tap + New space to add one.", "Tap Done."],
+          "try": "library-edit"
+        },
+        {
+          "id": "smart-spaces",
+          "title": "Smart spaces",
+          "summary": "A smart space gathers items from all your spaces by rules (tags, collections, source, artist, kind or date added) without moving any files.",
+          "steps": ["Library › Edit › + New space.", "Choose Smart, then pick a name and color.", "Add rules and watch the live count, then tap Save."],
+          "try": "library-edit"
+        },
+        {
+          "id": "collections",
+          "title": "Collections",
+          "summary": "Every playlist, album or channel you download stays together as a collection, in its original order. Your own playlists are collections too, marked Yours.",
+          "steps": ["Open a space, then the Collections tab. Or open Library › Collections › See all for every collection.", "Tap + to make your own playlist.", "Tap ▶ to play one collection, or Play all to play the whole space."],
+          "try": "library"
+        },
+        {
+          "id": "move-collection",
+          "title": "Move a playlist or album to another space",
+          "summary": "Move or copy a whole collection, or single songs, into any folder space.",
+          "steps": ["Open the collection and tap its menu ⋮, then Move to space… or Copy to space….", "Or open the target space, tap + Add, and pick Collections.", "Choose Move (one copy) or Copy (keeps the original)."]
+        },
+        {
+          "id": "follow",
+          "title": "Keep a playlist or channel in sync",
+          "summary": "A playlist or channel can follow its link: Keepfin checks it and downloads only the new items. It's off until you turn it on. Songs you deleted or skipped never come back, and more than 20 new items wait for your review.",
+          "steps": ["When you download a playlist, turn on Keep in sync and pick how often. Or open a downloaded collection and tap Follow settings.", "Tap Check now any time. Keepfin tells you what it found, and the collection shows the new songs downloading."],
+          "notes": {"desktop": "Checks run while Keepfin is open.", "android": "Checks run in the background, on Wi-Fi only if you choose."}
+        },
+        {
+          "id": "tags",
+          "title": "Tags and filters",
+          "summary": "Tags come from the source site, and you can add your own. Filter a space by one or more tags, play the result, or save it as a smart space.",
+          "steps": ["Open a space and tap a tag chip, or Tags ▾ for all of them.", "Choose Any or All.", "Tap Play, or Save as smart space.", "To add your own tag: select items, then Tags…."]
+        },
+        {
+          "id": "add-link",
+          "title": "Download straight into a space",
+          "summary": "Paste a link from inside a space and it downloads there. Playlists can be kept in sync from the same screen.",
+          "steps": ["Open a space and tap + Add.", "Choose From a link and paste it.", "Pick what to save, then tap Download."]
+        },
+        {
+          "id": "add-files",
+          "title": "Add files you already have",
+          "summary": "Bring songs and videos from your device into a space. The library only shows what Keepfin saved or what you add.",
+          "steps": ["Open a space and tap + Add.", "Choose Device files.", "Pick the files. They are copied into the space."]
+        },
+        {
+          "id": "select",
+          "title": "Select, move and delete",
+          "summary": "Work on many items at once.",
+          "steps": ["Long-press an item, or tap Select.", "Tap more items, or Select all.", "Choose Move, Tags…, Add to playlist or Delete."],
+          "desktopSteps": ["Ctrl-click an item, or click Select.", "Ctrl-click more items, or press Ctrl+A.", "Choose Move, Tags…, Add to playlist or Delete."]
+        },
+        {
+          "id": "undo",
+          "title": "Undo",
+          "summary": "Every change in the library shows a notice with Undo: moving, renaming, tags, favorites, playlists, removing a space, deleting a file and clearing download history. Undo reverses only that change and keeps anything you did since.",
+          "steps": ["Make a change, for example move or delete a file.", "Tap Undo in the notice before it closes."],
+          "desktopSteps": ["Make a change, for example move or delete a file.", "Click Undo in the notice before it closes. It stays open while the pointer is on it."]
+        },
+        {
+          "id": "trash",
+          "title": "Trash and Delete for good",
+          "summary": "Files you delete from your Keepfin folder wait in Trash for 30 days, then they are erased. Restore brings a file back with its tags, favorite, plays and playlist places, and never over a newer file with the same name.",
+          "steps": ["Open Settings › Storage & copies › Trash. It shows how many days each file has left.", "Tap Restore on a file, or its menu ⋮ › Delete for good….", "Tap Select to restore or delete several at once, or Empty trash… to erase everything.", "To skip the trash, tick Delete for good when you delete. Undo still works until the notice closes."],
+          "desktopSteps": ["Open Settings › Storage & copies › Trash. It shows how many days each file has left.", "Click Restore on a file, or its menu ⋮ › Delete for good….", "Click Select to restore or delete several at once, or Empty trash… to erase everything.", "To skip the trash, tick Delete for good when you delete. Undo still works until the notice closes."],
+          "try": "library"
+        },
+        {
+          "id": "move-folder",
+          "title": "Move your Keepfin folder",
+          "summary": "Put the whole library on another drive or in another folder. Keepfin closes your library, moves everything and checks every file in the new place, then restarts from there. Playlists, favorites and plays come along. The old place can stay as a backup copy.",
+          "steps": ["Open Settings › Storage & copies and click Change location….", "Pick an empty or new folder, then click Review.", "Check the plan. To keep the old place as a backup copy, turn on Keep the old place as a backup copy. Click Start: Keepfin moves the folder, then restarts once from the new place. Stop keeps it where it was.", "A space outside your Keepfin folder shows a notice. Click Bring them in, or Use the default folder in Edit space, and choose Move in, Copy in or Leave."],
+          "platforms": ["desktop"],
+          "try": "settings"
+        },
+        {
+          "id": "favorites",
+          "title": "Favorites",
+          "summary": "Add a song or video to your favorites and it appears in Favorites, a smart space that gathers them from every space. If you remove the Favorites space, Keepfin doesn't add it back.",
+          "steps": ["In the player, tap ♡. Or open an item's menu ⋮ and choose Add to favorites.", "Open Library › Favorites."],
+          "try": "library"
+        },
+        {
+          "id": "quick-filters",
+          "title": "Show one kind at a time",
+          "summary": "A space that holds more than one kind of media shows a chip for each kind (videos, audio, photos), so you can see just one. Music spaces keep their Songs, Albums, Artists and Collections tabs.",
+          "steps": ["Open a space, a smart space or Favorites.", "Tap a chip, such as Videos. Tap All to see everything again."]
+        },
+        {
+          "id": "edit-info",
+          "title": "Fix a title, artist or cover",
+          "summary": "Edit the details saved inside a song or video file.",
+          "steps": ["Open an item's menu ⋮.", "Choose Edit info.", "Change the fields or the cover, then Save."]
+        }
+      ]
+    },
+    {
+      "id": "player",
+      "title": "Player",
+      "features": [
+        {
+          "id": "music-player",
+          "title": "Music player",
+          "summary": "It plays on every page and in the background, with a queue, shuffle, repeat, favorites, synced lyrics, a sleep timer, speed and even volume between songs.",
+          "steps": ["Tap any song.", "Tap the bar at the bottom to open the full player.", "Swipe the cover left or right for the next or previous song.", "Use ✕ on the bar to stop and close the player."],
+          "desktopSteps": ["Click any song.", "Click the bar at the bottom to open the music player.", "Use the media keys on your keyboard, or the buttons on the bar."]
+        },
+        {
+          "id": "video-player",
+          "title": "Video player",
+          "summary": "Resume where you left off, with chapters, subtitles and their size, speed, audio tracks, picture-in-picture, A-B loop, screenshots, Previous and Next, and Up next.",
+          "steps": ["Tap a video in Library.", "Tap the screen for controls.", "Open the player's menu ⋮ for chapters, speed and Take screenshot."]
+        },
+        {
+          "id": "equalizer",
+          "title": "Equalizer and bass boost",
+          "summary": "Shape the sound with five bands and ten presets (Rock, Pop, Jazz and more), plus bass boost. Each device remembers its own settings.",
+          "steps": ["Open the full player.", "Open its menu ⋮ and choose Equalizer.", "Pick a preset or move the bands, then turn up Bass boost if you like."],
+          "desktopSteps": ["Open the music player.", "Open the player's options and choose Equalizer….", "Pick a preset or move the bands, then turn up Bass boost if you like."]
+        },
+        {
+          "id": "crossfade",
+          "title": "Crossfade between songs",
+          "summary": "Let the end of one song fade into the next, for up to 12 seconds.",
+          "steps": ["Settings › Library & playback › Crossfade.", "Drag the slider to choose how long songs overlap. Off switches songs within a few milliseconds."],
+          "platforms": ["desktop"],
+          "try": "settings"
+        },
+        {
+          "id": "controls",
+          "title": "Lock screen and media keys",
+          "summary": "Control playback from the lock screen, notifications, headphones and Bluetooth on Android, or media keys on Windows.",
+          "steps": ["Start a song, then use your device's media controls.", "Tap the media card on the lock screen or in the notification shade to open Keepfin on the player."],
+          "desktopSteps": ["Start a song, then use your keyboard's media keys or the Windows media flyout."]
+        }
+      ]
+    },
+    {
+      "id": "devices",
+      "title": "Your devices",
+      "features": [
+        {
+          "id": "pair",
+          "title": "Connect your phone and PC",
+          "summary": "Paired devices share one library: what you have, titles, tags, playlists and favorites. Each file stays on the device that saved it, and the other can play it over the network when you allow it. No account and no server in between.",
+          "steps": ["Open Keepfin on both devices, on the same Wi-Fi.", "Settings › Devices: press Connect on one of them.", "Check that both show the same six-digit code, then tap Codes match on both."],
+          "notes": {"desktop": "Away from home, install Tailscale on both devices and they find each other the same way.", "android": "Away from home, install Tailscale on both devices and they find each other the same way."},
+          "try": "settings"
+        },
+        {
+          "id": "rename-device",
+          "title": "Name your devices",
+          "summary": "Give each device a name you recognise. Your other devices learn the new name at once.",
+          "steps": ["Settings › Devices.", "Tap this device's name and type a new one."],
+          "try": "settings"
+        },
+        {
+          "id": "download-on",
+          "title": "Download on another device",
+          "summary": "Start a download on your PC from your phone, or the other way round. It is saved on that device.",
+          "steps": ["Paste or share a link as usual.", "Choose Download on… and pick the device."]
+        },
+        {
+          "id": "combine",
+          "title": "Combine libraries",
+          "summary": "Bring the library of another device into this one, so both show everything. If the other device hasn't shared its library yet, Keepfin tells you what to do on it.",
+          "steps": ["Settings › Devices, then open the other device.", "Choose Combine libraries and follow the steps."],
+          "try": "settings"
+        }
+      ]
+    },
+    {
+      "id": "settings",
+      "title": "Settings and updates",
+      "features": [
+        {
+          "id": "start-page",
+          "title": "Choose the first page",
+          "summary": "Open Keepfin on Downloads, Library, or wherever you left off.",
+          "steps": ["Settings › Appearance › Open Keepfin on."],
+          "try": "settings"
+        },
+        {
+          "id": "update-channel",
+          "title": "Stable or Beta updates",
+          "summary": "Beta gets new features early. Switching back to Stable never removes anything: you move to the next stable version when it's out.",
+          "steps": ["Settings › About Keepfin › Updates."],
+          "try": "settings"
+        },
+        {
+          "id": "parallel",
+          "title": "Parallel downloads",
+          "summary": "Choose how many downloads run at the same time. If YouTube starts limiting your network, Keepfin runs fewer at once for a while, then goes back to your setting.",
+          "steps": ["Settings › Downloads › Parallel downloads."],
+          "try": "settings"
+        },
+        {
+          "id": "back",
+          "title": "Back to where you were",
+          "summary": "Go back to the page you came from, scrolled to where you left it. An album, artist or playlist you opened inside a space counts as a page of its own.",
+          "steps": ["Press the back button on your mouse, or Alt+Left. Alt+Right goes forward again.", "Or click the back arrow next to a page's title."],
+          "platforms": ["desktop"]
+        },
+        {
+          "id": "library-off",
+          "title": "Prefer a plain downloader?",
+          "summary": "Turn the library off to go back to a simple download list. Your files stay where they are.",
+          "steps": ["Settings › Library & playback › Keepfin mode."],
+          "try": "settings"
+        }
+      ]
+    }
+  ]
+}

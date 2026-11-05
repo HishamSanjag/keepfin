@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width,initial-scale=1,viewport-fit=cover"
+    />
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https: http: keepfin-media:; media-src 'self' keepfin-media:; connect-src 'self'; object-src 'none'; base-uri 'none'"
+    />
+    <meta name="theme-color" content="#10151e" />
+    <link rel="icon" type="image/svg+xml" href="./icon.svg" />
+    <link rel="icon" type="image/png" sizes="32x32" href="./favicon-32.png" />
+    <link rel="apple-touch-icon" href="./apple-touch-icon.png" />
+    <title>Keepfin — keep the good stuff</title>
+    <style>
+      .boot { position: fixed; inset: 0; display: grid; place-items: center; background: #08090b; }
+      @media (prefers-color-scheme: light) { .boot { background: #f5f3ee; } }
+    </style>
+  </head>
+  <body>
+    <!-- The start screen, like Android's splash: the stacked logo until React's first render replaces it. -->
+    <div id="root"><div class="boot"><picture><source media="(prefers-color-scheme: light)" srcset="./brand/logo-light.png" /><img src="./brand/logo.png" alt="Keepfin" width="320" height="318" /></picture></div></div>
+    <script type="module" src="./main.tsx"></script>
+  </body>
+</html>

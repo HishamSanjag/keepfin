@@ -1,0 +1,13 @@
+{
+  "description": "Download presets -> the FormatRequest they stand for (container mp4, codec auto).",
+  "cases": [
+    {"name":"best","input":{"op":"preset","preset":"best"},"expected":{"type":"video","maxHeight":null,"codec":"auto","container":"mp4"}},
+    {"name":"2160","input":{"op":"preset","preset":"2160"},"expected":{"type":"video","maxHeight":2160,"codec":"auto","container":"mp4"}},
+    {"name":"1080","input":{"op":"preset","preset":"1080"},"expected":{"type":"video","maxHeight":1080,"codec":"auto","container":"mp4"}},
+    {"name":"480","input":{"op":"preset","preset":"480"},"expected":{"type":"video","maxHeight":480,"codec":"auto","container":"mp4"}},
+    {"name":"audio-mp3 starts at 320 (CHOICE-2)","input":{"op":"preset","preset":"audio-mp3"},"expected":{"type":"audio","target":"mp3","quality":"320"}},
+    {"name":"audio-m4a","input":{"op":"preset","preset":"audio-m4a"},"expected":{"type":"audio","target":"m4a","quality":"best"}},
+    {"name":"audio-opus","input":{"op":"preset","preset":"audio-opus"},"expected":{"type":"audio","target":"opus","quality":"best"}},
+    {"name":"audio-flac","input":{"op":"preset","preset":"audio-flac"},"expected":{"type":"audio","target":"flac","quality":"best"}}
+  ]
+}

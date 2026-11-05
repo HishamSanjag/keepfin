@@ -1,0 +1,7 @@
+{
+  "description": "Subtitle tracks from an info dict: manual tracks first, automatic captions only for languages without a manual track.",
+  "cases": [
+    {"name":"manual track beats the automatic caption of the same language","input":{"op":"subtitles","info":{"subtitles":{"en":[{"name":"English"}]},"automatic_captions":{"en":[{"name":"English (auto)"}],"fr":[{"name":"French"}]}}},"expected":[{"lang":"en","auto":false},{"lang":"fr","auto":true}]},
+    {"name":"manual tracks are sorted by language code","input":{"op":"subtitles","info":{"subtitles":{"en":[{"name":"English"}],"ar":[{"name":"Arabic"}]}}},"expected":[{"lang":"ar","auto":false},{"lang":"en","auto":false}]}
+  ]
+}

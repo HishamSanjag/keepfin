@@ -1,0 +1,7 @@
+{
+  "description": "The name of a height. A direct file has no height to read, so it is the original, never 0p.",
+  "cases": [
+    {"name":"a known height","input":{"op":"heightLabel","height":720},"expected":"720p"},
+    {"name":"an unknown height is the original","input":{"op":"heightLabel","height":0},"expected":"Original"}
+  ]
+}

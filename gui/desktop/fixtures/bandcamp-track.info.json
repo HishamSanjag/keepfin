@@ -1,0 +1,49 @@
+{
+ "id": "1812978515",
+ "title": "youtube-dl \"'/\\ä↭ - youtube-dl \"'/\\ä↭ - youtube-dl test song \"'/\\ä↭",
+ "fulltitle": "youtube-dl \"'/\\ä↭ - youtube-dl \"'/\\ä↭ - youtube-dl test song \"'/\\ä↭",
+ "uploader": "youtube-dl \"'/\\ä↭",
+ "uploader_id": "youtube-dl",
+ "duration": 9.8485,
+ "thumbnail": "https://f4.bcbits.com/img/a3216802731_5.jpg",
+ "webpage_url": "https://youtube-dl.bandcamp.com/track/youtube-dl-test-song",
+ "original_url": "https://youtube-dl.bandcamp.com/track/youtube-dl-test-song",
+ "extractor": "Bandcamp",
+ "extractor_key": "Bandcamp",
+ "artist": "youtube-dl \"'/\\ä↭",
+ "artists": [
+  "youtube-dl \"'/\\ä↭"
+ ],
+ "album": null,
+ "track": "youtube-dl \"'/\\ä↭ - youtube-dl test song \"'/\\ä↭",
+ "track_number": null,
+ "release_year": null,
+ "playlist": null,
+ "_type": "video",
+ "ext": "mp3",
+ "format_id": "mp3-128",
+ "thumbnails": [
+  {
+   "url": "https://f4.bcbits.com/img/a3216802731_5.jpg"
+  }
+ ],
+ "chapters": [],
+ "subtitles": {},
+ "automatic_captions": {},
+ "formats": [
+  {
+   "format_id": "mp3-128",
+   "ext": "mp3",
+   "protocol": "https",
+   "acodec": "mp3",
+   "vcodec": "none",
+   "tbr": 128,
+   "abr": 128,
+   "vbr": 0,
+   "filesize_approx": 157576,
+   "resolution": "audio only",
+   "audio_ext": "mp3",
+   "video_ext": "none"
+  }
+ ]
+}

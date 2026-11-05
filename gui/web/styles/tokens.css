@@ -1,0 +1,155 @@
+/* Cobalt Atelier tokens (dev-docs/plans/MAIN-REDESIGN.md). Dark is the default theme; light is a full peer, not an inversion.
+ * Surfaces separate by tone, not borders; cobalt is for the one primary action, selection and progress. */
+:root,
+:root[data-theme='dark'] {
+  color-scheme: dark;
+  --canvas: #111318;
+  --rail: #14171d;
+  --surface: #191d25;
+  --surface-2: #151920;
+  --raised: #1f2430;
+  --overlay: #1f2430;
+  --hover: rgba(238, 240, 245, 0.055);
+  --press: rgba(238, 240, 245, 0.09);
+  --line: #2a3040;
+  --line-strong: #363d50;
+  --control: #66708a;
+  /* Boundary of text fields, selects and segmented controls: 3:1 against the surface they sit on (WCAG 1.4.11). */
+  --field-border: #5c6680;
+  --text: #eef0f5;
+  --text-2: #a5adbd;
+  --text-3: #8d96a8;
+  /* Dark cobalt is #6F8FF0, not the spec's #456FEA (about 4.2:1 on the ink background, too low for text, links and selection):
+   * #6F8FF0 is about 6:1 on #111318, and filled controls carry dark text #0B1222 (about 6:1). */
+  --accent: #6f8ff0;
+  --accent-hover: #86a2f4;
+  --accent-press: #5c7de4;
+  --on-accent: #0b1222;
+  --accent-text: #9fb8ff;
+  --accent-soft: rgba(111, 143, 240, 0.16);
+  --selected: #1c2748;
+  --selected-line: #3a56a0;
+  --success: #6fd3a6;
+  --success-soft: rgba(111, 211, 166, 0.12);
+  --warning: #f2c063;
+  --warning-soft: rgba(242, 192, 99, 0.12);
+  --danger: #ff9e9a;
+  --danger-soft: rgba(255, 120, 114, 0.12);
+  --danger-solid: #e5484d;
+  --on-danger: #fff;
+  --hdr: #f2c063;
+  --focus: #a7c3ff;
+  --skeleton: #1f2430;
+  --skeleton-hi: #272d3b;
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.35);
+  --shadow-md: 0 3px 8px -3px rgba(0, 0, 0, 0.5), 0 1px 2px rgba(0, 0, 0, 0.4);
+  --shadow-lg: 0 8px 20px -8px rgba(0, 0, 0, 0.55), 0 1px 3px rgba(0, 0, 0, 0.35);
+  /* The player bar is the one surface with real elevation. */
+  --shadow-bar: 0 -4px 10px -6px rgba(0, 0, 0, 0.5), 0 -1px 0 rgba(255, 255, 255, 0.04);
+  --thumb-bg: #1f2430;
+  --scrim: rgba(5, 8, 13, 0.62);
+  /* Space colors: each tuned to keep 4.5:1 against surface and its own 13% tint in this theme. */
+  --sp-cobalt: #8fb0ff;
+  --sp-violet: #bba6ff;
+  --sp-teal: #4fd6c8;
+  --sp-olive: #bdd45f;
+  --sp-amber: #f5be52;
+  --sp-rust: #ff9a76;
+  --sp-berry: #f58cbd;
+  --sp-slate: #a9b8cf;
+}
+:root[data-theme='light'] {
+  color-scheme: light;
+  --canvas: #f5f6f8;
+  --rail: #eceef2;
+  --surface: #ffffff;
+  --surface-2: #fafbfc;
+  --raised: #eef0f4;
+  --overlay: #ffffff;
+  --hover: rgba(21, 24, 33, 0.045);
+  --press: rgba(21, 24, 33, 0.08);
+  --line: #e1e4ea;
+  --line-strong: #cfd4dd;
+  --control: #838c9f;
+  --field-border: #8a93a6;
+  --text: #151821;
+  --text-2: #4a5263;
+  --text-3: #5a6377;
+  --accent: #2855ce;
+  --accent-hover: #2149b8;
+  --accent-press: #1c3f9f;
+  --on-accent: #ffffff;
+  --accent-text: #2855ce;
+  --accent-soft: rgba(40, 85, 206, 0.09);
+  --selected: #e4ebfb;
+  --selected-line: #a9bdf0;
+  --success: #1d6b49;
+  --success-soft: rgba(29, 107, 73, 0.1);
+  --warning: #8a5800;
+  --warning-soft: rgba(176, 116, 0, 0.11);
+  --danger: #b3261e;
+  --danger-soft: rgba(179, 38, 30, 0.08);
+  --danger-solid: #c4302a;
+  --on-danger: #fff;
+  --hdr: #8a5800;
+  --focus: #2855ce;
+  --skeleton: #e7e9ee;
+  --skeleton-hi: #f2f3f6;
+  --shadow-sm: 0 1px 2px rgba(21, 24, 33, 0.08);
+  --shadow-md: 0 3px 8px -4px rgba(21, 24, 33, 0.22), 0 1px 2px rgba(21, 24, 33, 0.08);
+  --shadow-lg: 0 8px 20px -10px rgba(21, 24, 33, 0.3), 0 1px 3px rgba(21, 24, 33, 0.08);
+  --shadow-bar: 0 -4px 10px -6px rgba(21, 24, 33, 0.25), 0 -1px 0 rgba(21, 24, 33, 0.06);
+  --thumb-bg: #e6e9ef;
+  --scrim: rgba(21, 24, 33, 0.35);
+  /* Space colors: each tuned to keep 4.5:1 against surface and its own 13% tint in this theme. */
+  --sp-cobalt: #2855ce;
+  --sp-violet: #6a3fd6;
+  --sp-teal: #07655f;
+  --sp-olive: #536309;
+  --sp-amber: #7c4b00;
+  --sp-rust: #a3381a;
+  --sp-berry: #ae2260;
+  --sp-slate: #475569;
+}
+:root {
+  /* Text: Inter; headings: Manrope. Both are bundled (fonts.css); the system faces are the fallback while they load. */
+  --font: 'Inter', 'Segoe UI Variable Text', 'Segoe UI', system-ui, -apple-system, Roboto, 'Helvetica Neue', sans-serif;
+  --font-display: 'Manrope', 'Segoe UI Variable Display', 'Segoe UI', system-ui, -apple-system, Roboto, sans-serif;
+  /* Scale at 100% (px): display 26/32, title 17/24, subtitle 14/20, body 13/18, caption 12/16. */
+  --fs-display: 26px;
+  --lh-display: 32px;
+  --fs-title: 17px;
+  --lh-title: 24px;
+  --fs-subtitle: 14px;
+  --lh-subtitle: 20px;
+  --fs-body: 13px;
+  --lh-body: 18px;
+  --fs-caption: 12px;
+  --lh-caption: 16px;
+  /* Shape: 10px on cards and artwork; 8px rhythm between things. */
+  --r-sm: 6px;
+  --r-md: 8px;
+  --r-card: 10px;
+  --r-lg: 10px;
+  --r-xl: 12px;
+  --space-1: 6px;
+  --space-2: 12px;
+  --space-3: 16px;
+  --space-4: 24px;
+  --ease: cubic-bezier(0.2, 0.8, 0.2, 1);
+  /* Motion: 160-220ms fades and short slides (none with reduced motion, see base.css). */
+  --t-fast: 160ms;
+  --t: 200ms;
+  --rail-w: 208px;
+  /* The page structure (dev-docs/plans/PAGE-LAYOUT.md): app bar, page header, toolbar. */
+  --appbar-h: 48px;
+  --page-top: 26px;
+  /* Pages fill the window, like Spotify: no cap on width. Gutters grow a little on wide windows. */
+  --content-max: none;
+  --gutter: clamp(16px, calc(1.8vw / var(--zoom)), 32px);
+  /* Popups grow with the window in three sizes; narrow windows still keep a 16px margin on each side. */
+  --dialog-s: clamp(460px, calc(30vw / var(--zoom)), 600px);
+  --dialog-m: clamp(560px, calc(38vw / var(--zoom)), 820px);
+  --dialog-l: clamp(640px, calc(48vw / var(--zoom)), 980px);
+  --zoom: 1;
+}

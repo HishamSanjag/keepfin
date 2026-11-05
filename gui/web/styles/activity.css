@@ -1,0 +1,244 @@
+/* ---------- Activity centre: header bell and panel (dev-docs/architecture/ACTIVITY.md) ---------- */
+.act {
+  position: relative;
+  flex: none;
+}
+.act-bell {
+  position: relative;
+  width: 36px;
+  height: 36px;
+}
+.act-count {
+  position: absolute;
+  top: 2px;
+  right: 1px;
+  display: grid;
+  place-items: center;
+  min-width: 16px;
+  height: 16px;
+  padding: 0 4px;
+  border-radius: 8px;
+  background: var(--accent);
+  color: var(--on-accent);
+  font-size: 10.5px;
+  font-weight: 700;
+  line-height: 1;
+}
+.act-panel {
+  position: absolute;
+  z-index: 50;
+  top: calc(100% + 8px);
+  right: 0;
+  display: grid;
+  grid-template-rows: auto auto minmax(0, 1fr);
+  /* Container units follow the interface scale; vw/vh would not. */
+  width: min(380px, calc(100cqw - 2 * var(--gutter)));
+  max-height: min(480px, calc(100vh / var(--zoom) - 96px));
+  overflow: hidden;
+  border-radius: var(--r-xl);
+  background: var(--overlay);
+  box-shadow:
+    var(--shadow-lg),
+    inset 0 0 0 1px var(--line-strong);
+  transform-origin: top right;
+  animation: act-in var(--spring-snappy-ms, 340ms) var(--spring-snappy, var(--ease)) both;
+}
+.act-panel:focus {
+  outline: none;
+}
+@keyframes act-in {
+  from {
+    opacity: 0;
+    transform: scale(0.96) translateY(-6px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+.act-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 14px 8px;
+}
+.act-head strong {
+  font-size: 15px;
+  font-weight: 650;
+}
+.act-head .link-btn:disabled {
+  opacity: 0.4;
+}
+.act-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding: 0 14px 10px;
+  border-bottom: 1px solid var(--line);
+}
+.act-chip {
+  min-height: 28px;
+  padding: 3px 11px;
+  border-radius: 999px;
+  box-shadow: inset 0 0 0 1px var(--line-strong);
+  color: var(--text-2);
+  font-size: 12.5px;
+  transition:
+    background-color var(--spring-quick-ms, 240ms) var(--spring-quick, var(--ease)),
+    color var(--spring-quick-ms, 240ms) var(--spring-quick, var(--ease));
+}
+.act-chip:hover {
+  background: var(--hover);
+}
+.act-chip.is-on {
+  background: var(--accent-soft);
+  box-shadow: none;
+  color: var(--accent-text);
+  font-weight: 600;
+}
+.act-chip:focus-visible,
+.act-action:focus-visible,
+.act-bell:focus-visible,
+.act-remove:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 1px;
+}
+.act-list {
+  min-height: 0;
+  overflow-y: auto;
+  padding: 2px 0 8px;
+}
+.act-list ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.act-day {
+  margin: 0;
+  padding: 10px 14px 4px;
+  color: var(--text-3);
+  font-size: 11.5px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+.act-empty {
+  margin: 0;
+  padding: 28px 22px;
+  color: var(--text-2);
+  font-size: 13px;
+  text-align: center;
+  text-wrap: balance;
+}
+.act-row {
+  position: relative;
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 8px 14px;
+}
+.act-row:hover,
+.act-row:focus-within {
+  background: var(--hover);
+}
+.act-row.is-new::before {
+  content: '';
+  position: absolute;
+  left: 5px;
+  top: 20px;
+  width: 6px;
+  height: 6px;
+  border-radius: 3px;
+  background: var(--accent);
+}
+.act-ico {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 32px;
+  height: 32px;
+  border-radius: 9px;
+}
+.act-ico-new {
+  background: var(--accent-soft);
+  color: var(--accent-text);
+}
+.act-ico-ok {
+  background: var(--success-soft);
+  color: var(--success);
+}
+.act-ico-bad {
+  background: var(--danger-soft);
+  color: var(--danger);
+}
+.act-ico-app {
+  background: var(--raised);
+  color: var(--text-2);
+}
+.act-text {
+  display: grid;
+  flex: 1;
+  gap: 1px;
+  min-width: 0;
+}
+.act-text strong {
+  overflow: hidden;
+  font-size: 13.5px;
+  font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.act-detail {
+  overflow: hidden;
+  color: var(--text-2);
+  font-size: 12.5px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.act-actions {
+  display: flex;
+  gap: 12px;
+  margin-top: 2px;
+}
+.act-action {
+  padding: 2px 0;
+  color: var(--accent-text);
+  font-size: 12.5px;
+  font-weight: 600;
+}
+.act-action:hover {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.act-time {
+  flex: none;
+  padding-top: 2px;
+  color: var(--text-3);
+  font-size: 11.5px;
+  white-space: nowrap;
+}
+/* The remove cross takes the time's place on hover or keyboard focus; it stays in the tab order. */
+.act-remove {
+  position: absolute;
+  top: 6px;
+  right: 10px;
+  opacity: 0;
+  background: var(--overlay);
+}
+.act-row:hover .act-remove,
+.act-row:focus-within .act-remove {
+  opacity: 1;
+}
+.act-row:hover .act-time,
+.act-row:focus-within .act-time {
+  visibility: hidden;
+}
+@media (hover: none) {
+  .act-remove {
+    opacity: 1;
+    background: none;
+  }
+  .act-time {
+    visibility: hidden;
+  }
+}

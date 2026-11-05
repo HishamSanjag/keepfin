@@ -1,0 +1,23 @@
+{
+  "description": "More metadata-tier pairs.",
+  "cases": [
+    {"name":"a title that repeats the artist lead","input":{"op":"same","a":{"artist":"Band","title":"Band - Song","duration":200},"b":{"artist":"Band","title":"Song","duration":200}},"expected":{"match":true}},
+    {"name":"an ampersand and \"and\" are the same","input":{"op":"same","a":{"artist":"Tom & Jerry","title":"Song","duration":200},"b":{"artist":"Tom and Jerry","title":"Song","duration":200}},"expected":{"match":true}},
+    {"name":"a trailing \"- Official Video\"","input":{"op":"same","a":{"artist":"Band","title":"Song - Official Video","duration":200},"b":{"artist":"Band","title":"Song","duration":200}},"expected":{"match":true}},
+    {"name":"a trailing \"- Lyric Video\"","input":{"op":"same","a":{"artist":"Band","title":"Song - Lyric Video","duration":200},"b":{"artist":"Band","title":"Song","duration":200}},"expected":{"match":true}},
+    {"name":"wide-bracket noise","input":{"op":"same","a":{"artist":"Band","title":"Song 【MV】","duration":200},"b":{"artist":"Band","title":"Song","duration":200}},"expected":{"match":true}},
+    {"name":"live at a place is not the same as plain live","input":{"op":"same","a":{"artist":"Band","title":"Song (Live)","duration":200},"b":{"artist":"Band","title":"Song (Live at Wembley)","duration":200}},"expected":{"match":false}},
+    {"name":"an extended mix is a different recording","input":{"op":"same","a":{"artist":"Band","title":"Song (Extended Mix)","duration":200},"b":{"artist":"Band","title":"Song","duration":200}},"expected":{"match":false}},
+    {"name":"a cover is a different recording","input":{"op":"same","a":{"artist":"Band","title":"Song (Cover)","duration":200},"b":{"artist":"Band","title":"Song","duration":200}},"expected":{"match":false}},
+    {"name":"a deluxe edition is a different album","input":{"op":"same","a":{"artist":"Band","title":"Song","album":"Studio (Deluxe Edition)","duration":200},"b":{"artist":"Band","title":"Song","album":"Studio","duration":200}},"expected":{"match":false}},
+    {"name":"noise in an album name is ignored","input":{"op":"same","a":{"artist":"Band","title":"Song","album":"Studio (Official Audio)","duration":200},"b":{"artist":"Band","title":"Song","album":"Studio","duration":200}},"expected":{"match":true}},
+    {"name":"a featuring credit on the artist","input":{"op":"same","a":{"artist":"Band feat. Guest","title":"Song","duration":200},"b":{"artist":"Band","title":"Song","duration":200}},"expected":{"match":true}},
+    {"name":"the same artists in another order","input":{"op":"same","a":{"artist":"A & B","title":"Song","duration":200},"b":{"artist":"B & A","title":"Song","duration":200}},"expected":{"match":true}},
+    {"name":"one of two artists is not enough","input":{"op":"same","a":{"artist":"A & B","title":"Song","duration":200},"b":{"artist":"B","title":"Song","duration":200}},"expected":{"match":false}},
+    {"name":"two untagged uploads titled Artist - Title","input":{"op":"same","a":{"title":"Band - Song","duration":200},"b":{"title":"Band - Song (Official Audio)","duration":200}},"expected":{"match":true}},
+    {"name":"an en dash between artist and title","input":{"op":"same","a":{"title":"Band – Song","duration":200},"b":{"artist":"Band","title":"Song","duration":201}},"expected":{"match":true}},
+    {"name":"a version after a dash","input":{"op":"same","a":{"artist":"Band","title":"Song – Live","duration":200},"b":{"artist":"Band","title":"Song","duration":200}},"expected":{"match":false}},
+    {"name":"a Topic artist matches the plain artist","input":{"op":"same","a":{"artist":"Band - Topic","title":"Song","duration":200},"b":{"artist":"Band","title":"Song","duration":200}},"expected":{"match":true}},
+    {"name":"case and accents","input":{"op":"same","a":{"artist":"Sigur Rós","title":"Hoppípolla","duration":270},"b":{"artist":"SIGUR ROS","title":"HOPPIPOLLA","duration":270}},"expected":{"match":true}}
+  ]
+}

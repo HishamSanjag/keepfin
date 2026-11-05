@@ -1,0 +1,1531 @@
+/* Settings → Devices: this device, paired devices, Add a device and the number comparison. Tokens only. */
+
+.devices-intro {
+  display: grid;
+  gap: 12px;
+  justify-items: start;
+  padding: 6px 0 14px;
+  max-width: 62ch;
+}
+.devices-intro ul {
+  margin: 0;
+  padding-left: 18px;
+  display: grid;
+  gap: 6px;
+}
+
+.devices-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 0 14px;
+}
+
+/* ---------- This device ---------- */
+.devices-this {
+  display: grid;
+  gap: 14px;
+  padding: 10px 0 14px;
+}
+.devices-this-main {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: end;
+  gap: 16px 28px;
+}
+.devices-name {
+  display: grid;
+  gap: 4px;
+  min-width: min(100%, 240px);
+}
+.devices-fingerprint {
+  /* the normal font with tabular digits: a monospace face renders as handwriting on some phones */
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.04em;
+  margin: 2px 0 0;
+}
+.devices-libraries {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 4px;
+}
+.devices-libraries li {
+  display: grid;
+  gap: 2px;
+}
+.devices-actions {
+  display: flex;
+  gap: 8px;
+}
+
+/* ---------- Paired devices ---------- */
+.devices-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 380px), 1fr));
+  gap: 12px;
+  list-style: none;
+  margin: 0;
+  padding: 10px 0 14px;
+}
+.devices-card {
+  display: grid;
+  gap: 10px;
+  align-content: start;
+  min-width: 0;
+  padding: 16px;
+  border-radius: var(--r-lg);
+  background: var(--surface-2);
+  box-shadow: inset 0 0 0 1px var(--line-strong);
+}
+.devices-card[data-online] {
+  box-shadow: inset 0 0 0 1px var(--selected-line);
+}
+.devices-card-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+}
+.devices-card-head h4 {
+  font-family: var(--font-display);
+  font-size: 15px;
+  font-weight: 650;
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+.devices-card p {
+  margin: 0;
+}
+.devices-access {
+  display: grid;
+  gap: 6px;
+  margin: 0;
+  padding: 10px 12px;
+  border: 0;
+  border-radius: var(--r-md, 10px);
+  box-shadow: inset 0 0 0 1px var(--line-strong);
+}
+.devices-access legend {
+  padding: 0 6px;
+  font-weight: 600;
+}
+.devices-check {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 32px;
+}
+.devices-card-foot {
+  display: flex;
+  justify-content: flex-end;
+}
+
+/* ---------- Add a device ---------- */
+.devices-add {
+  display: grid;
+  gap: 14px;
+  padding: 10px 0 14px;
+}
+.devices-add-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+}
+.devices-add-head h4 {
+  margin: 0 0 2px;
+  font-family: var(--font-display);
+  font-size: 15px;
+  font-weight: 650;
+}
+.devices-add-head p {
+  margin: 0;
+}
+.devices-add-head-actions {
+  display: flex;
+  gap: 8px;
+}
+.devices-add-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 260px), 1fr));
+  gap: 16px;
+}
+.devices-add-grid section {
+  display: grid;
+  gap: 10px;
+  align-content: start;
+  min-width: 0;
+  padding: 14px;
+  border-radius: var(--r-lg);
+  background: var(--surface-2);
+  box-shadow: inset 0 0 0 1px var(--line-strong);
+}
+.devices-add-grid h5,
+.devices-field-label {
+  display: block;
+  margin: 0;
+  font-size: 13px;
+  font-weight: 650;
+}
+.devices-add-grid p {
+  margin: 0;
+}
+.devices-searching {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+}
+.devices-found {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 8px;
+}
+.devices-found li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+.devices-found li div {
+  display: grid;
+  min-width: 0;
+}
+.devices-address {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.devices-address .input {
+  flex: 1 1 200px;
+  min-width: 0;
+}
+.devices-qr {
+  display: grid;
+  gap: 8px;
+  justify-items: start;
+}
+.devices-qr img {
+  border-radius: var(--r-md, 10px);
+  background: #fff;
+  padding: 8px;
+}
+
+/* ---------- The comparison ---------- */
+.devices-pairing {
+  display: grid;
+  gap: 12px;
+  justify-items: start;
+  padding: 14px 16px;
+  border-radius: var(--r-lg);
+  background: var(--surface-2);
+  box-shadow: inset 0 0 0 1px var(--selected-line);
+}
+.devices-pairing h4 {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 16px;
+  font-weight: 650;
+}
+.devices-pairing p {
+  margin: 0;
+}
+.devices-sas {
+  font-family: var(--font-display);
+  font-size: 44px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  line-height: 1.1;
+  padding: 6px 0;
+}
+.devices-pairing-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .devices-card,
+  .devices-pairing {
+    transition: none;
+  }
+}
+
+/* ---------- Sharing a library, getting one, libraries on this device ---------- */
+.devices-share {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px 12px;
+  padding: 8px 12px;
+  border-radius: var(--r-md, 10px);
+  box-shadow: inset 0 0 0 1px var(--line-strong);
+}
+.devices-away {
+  color: var(--warning-ink, var(--text-2));
+}
+.devices-offers {
+  list-style: none;
+  margin: 0;
+  padding: 10px 0 14px;
+  display: grid;
+  gap: 10px;
+}
+.devices-offer {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px 14px;
+  padding: 12px 14px;
+  border-radius: var(--r-lg);
+  background: var(--surface-2);
+  box-shadow: inset 0 0 0 1px var(--line-strong);
+}
+.devices-offer > div {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+.devices-join {
+  display: grid;
+  gap: 8px;
+  padding: 12px 14px;
+  border-radius: var(--r-lg);
+  background: var(--surface-2);
+  box-shadow: inset 0 0 0 1px var(--selected-line);
+}
+.devices-join p {
+  margin: 0;
+}
+.devices-join-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+/* ---------- Downloads sent to other devices, and a download another device asked for ---------- */
+.remote-rows {
+  display: grid;
+  gap: 6px;
+  margin: 0 0 14px;
+  padding: 0;
+  list-style: none;
+}
+.remote-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 4px 12px;
+  align-items: center;
+  padding: 10px 14px;
+  border-radius: var(--r-lg);
+  background: var(--surface-2);
+  box-shadow: inset 0 0 0 1px var(--line-strong);
+}
+.remote-row-title {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-weight: 600;
+}
+.remote-row-meta {
+  grid-column: 1 / -1;
+  margin: 0;
+}
+.remote-row progress {
+  grid-column: 1 / -1;
+  width: 100%;
+  height: 4px;
+}
+.remote-ask {
+  display: grid;
+  gap: 8px;
+  padding: 12px 14px;
+  margin: 0 0 14px;
+  border-radius: var(--r-lg);
+  background: var(--surface-2);
+  box-shadow: inset 0 0 0 1px var(--selected-line);
+}
+.remote-ask p {
+  margin: 0;
+}
+.remote-ask-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.devices-menu {
+  display: grid;
+  gap: 4px;
+  padding: 6px;
+  min-width: 220px;
+}
+
+/* ---------- Status card (first on the page) ---------- */
+.device-status {
+  display: grid;
+  gap: 12px;
+  padding: 16px;
+  border-radius: var(--r-lg);
+  background: var(--surface);
+  box-shadow: inset 0 0 0 1px var(--line);
+}
+.device-status[data-state='ok'] {
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--success) 35%, transparent);
+}
+.device-status[data-state='warn'] {
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--warning) 40%, transparent);
+}
+.device-status-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px 14px;
+}
+.device-status-head > div {
+  flex: 1 1 260px;
+  min-width: 0;
+}
+.device-status-head h3 {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 15px;
+  font-weight: 650;
+}
+.device-status-head p {
+  margin: 2px 0 0;
+}
+.device-status-dot {
+  flex: none;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--text-3);
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--text-3) 18%, transparent);
+}
+.device-status[data-state='ok'] .device-status-dot {
+  background: var(--success);
+  box-shadow: 0 0 0 4px var(--success-soft);
+}
+.device-status[data-state='warn'] .device-status-dot {
+  background: var(--warning);
+  box-shadow: 0 0 0 4px var(--warning-soft);
+}
+.device-status .devices-intro {
+  padding: 0;
+}
+
+/* ---------- Paired devices as compact rows ---------- */
+.devices-rows {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 6px;
+}
+.devices-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  width: 100%;
+  min-height: 56px;
+  padding: 10px 14px;
+  border-radius: var(--r-lg);
+  background: var(--surface);
+  box-shadow: inset 0 0 0 1px var(--line);
+  text-align: left;
+  color: var(--text);
+}
+.devices-row:hover {
+  background: var(--hover);
+}
+.devices-row:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+}
+.devices-row[data-online] {
+  box-shadow: inset 0 0 0 1px var(--selected-line);
+}
+.devices-row-icon {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  border-radius: var(--r-md);
+  background: var(--accent-soft);
+  color: var(--accent-text);
+}
+.devices-row-text {
+  display: grid;
+  gap: 1px;
+  flex: 1;
+  min-width: 0;
+}
+.devices-row-text strong {
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+.devices-row-status {
+  flex: none;
+  font-size: 12.5px;
+  color: var(--text-2);
+}
+.devices-row-status.is-online {
+  color: var(--success);
+  font-weight: 600;
+}
+.devices-row > .icon {
+  flex: none;
+  color: var(--text-3);
+}
+
+/* Remove sits apart from the permissions, in a red area that asks again. */
+.devices-danger {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px 16px;
+  margin-top: 4px;
+  padding: 12px 14px;
+  border-radius: var(--r-md);
+  background: var(--danger-soft);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--danger) 30%, transparent);
+}
+.devices-danger p {
+  margin: 0;
+}
+.devices-card .btn-ghost.btn-sm {
+  justify-self: start;
+}
+.devices-danger .btn-ghost {
+  color: var(--danger);
+}
+
+.settings-cards > .devices-offers,
+.settings-cards > .devices-add {
+  padding: 0;
+}
+
+.setting-card .devices-libraries {
+  padding-left: 50px;
+}
+
+/* ---------- The 1.0 page: switch, route, Nearby, Away from home ---------- */
+.devices-switch {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  flex: none;
+  min-height: 32px;
+}
+.devices-row-status {
+  display: grid;
+  justify-items: end;
+  gap: 1px;
+}
+.devices-row-route {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-3);
+}
+.devices-row-route[data-route='tailscale'] {
+  color: var(--accent-text);
+}
+.devices-row-route[data-route='none'] {
+  color: var(--warning-ink, var(--text-3));
+}
+.devices-card-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  justify-content: flex-end;
+}
+.devices-nearby {
+  margin: 0;
+}
+.devices-nearby-row {
+  cursor: default;
+  background: var(--surface);
+}
+.devices-nearby-row:hover {
+  background: var(--surface);
+}
+.devices-nearby-row .devices-row-text .tabular {
+  overflow-wrap: anywhere;
+}
+.devices-nearby-empty {
+  display: grid;
+  gap: 4px;
+  padding: 10px 14px;
+  border-radius: var(--r-lg);
+  background: var(--surface);
+  box-shadow: inset 0 0 0 1px var(--line);
+}
+.devices-nearby-empty ul {
+  margin: 0;
+  padding-left: 18px;
+  display: grid;
+  gap: 2px;
+}
+.devices-nearby-foot {
+  display: flex;
+  justify-content: flex-start;
+  padding-top: 2px;
+}
+.devices-away-card {
+  display: grid;
+  gap: 8px;
+  padding: 12px 14px;
+  border-radius: var(--r-lg);
+  background: var(--surface);
+  box-shadow: inset 0 0 0 1px var(--line);
+}
+.devices-away-card p {
+  margin: 0;
+}
+.devices-away-status {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+.devices-away-steps {
+  margin: 0;
+  padding-left: 20px;
+  display: grid;
+  gap: 2px;
+}
+/* inside the group's own panel: no second frame */
+.settings-rows > .devices-away-card,
+.settings-rows > .devices-nearby-empty,
+.settings-rows .devices-nearby-row {
+  background: none;
+  box-shadow: none;
+}
+.settings-rows .devices-nearby-row:hover {
+  background: none;
+}
+/* ---------- How devices work: three steps, then what travels ---------- */
+.devices-how {
+  list-style: none;
+  margin: 0;
+  padding: 4px 0 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+  gap: 10px;
+}
+.devices-how li {
+  display: grid;
+  gap: 4px;
+  align-content: start;
+  padding: 12px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--surface-2);
+}
+.devices-how-step {
+  display: inline-grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text);
+  background: var(--line-strong);
+}
+.devices-what {
+  margin: 14px 0 0;
+  display: grid;
+  gap: 8px;
+}
+.devices-what > div {
+  display: grid;
+  grid-template-columns: 130px minmax(0, 1fr);
+  gap: 12px;
+  font-size: 13px;
+}
+.devices-what dt {
+  font-weight: 650;
+  color: var(--text);
+}
+.devices-what dd {
+  margin: 0;
+  color: var(--text-2);
+}
+@container main (max-width: 560px) {
+  .devices-what > div {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 2px;
+  }
+}
+.devices-row-sync {
+  color: var(--text-3);
+}
+.devices-row-sync[data-synced] {
+  color: var(--success);
+}
+
+/* ---------- The new page: Available devices (circle or list) beside the QR code, Your devices as cards ---------- */
+.devices-top {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(240px, 300px);
+  gap: 16px;
+  /* both sections start at the same top and end at the same bottom */
+  align-items: stretch;
+}
+.devices-top {
+  /* one shared header row, so the two panels start at the same top even when one description wraps */
+  grid-template-rows: auto minmax(0, 1fr);
+  row-gap: 0;
+}
+.devices-top > .settings-group {
+  grid-row: span 2;
+  grid-template-rows: subgrid;
+  gap: 10px;
+  min-width: 0;
+}
+.devices-top > .settings-group > .settings-cards {
+  grid-template-rows: minmax(0, 1fr);
+}
+@container main (max-width: 760px) {
+  .devices-top {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: none;
+    row-gap: 16px;
+  }
+  .devices-top > .settings-group {
+    grid-row: auto;
+    grid-template-rows: none;
+  }
+}
+/* every section of the page is one block of the same width: the same edges, the same padding, the same corners */
+.devices-panel {
+  box-sizing: border-box;
+  min-width: 0;
+  padding: 16px;
+  border-radius: var(--r-lg);
+  background: var(--surface);
+  box-shadow: inset 0 0 0 1px var(--line);
+}
+.devices-available {
+  display: grid;
+  align-content: start;
+  gap: 8px;
+}
+.devices-tailscale-line {
+  margin: 0;
+}
+.devices-rename {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+.devices-rename .input {
+  flex: 1 1 220px;
+  max-width: 320px;
+}
+.devices-rename p {
+  flex-basis: 100%;
+  margin: 0;
+}
+.dialog.devices-guide {
+  width: min(680px, calc(100vw - 32px));
+  max-width: min(680px, calc(100vw - 32px));
+}
+.devices-guide-body {
+  display: grid;
+  gap: 16px;
+}
+.devices-guide-away {
+  display: grid;
+  gap: 8px;
+}
+.devices-guide-away h3 {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 650;
+}
+.devices-guide-away .devices-away-card {
+  background: none;
+  box-shadow: none;
+  padding: 0;
+}
+.devices-available-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+.devices-available-status {
+  margin: 0;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 4px 12px;
+}
+/* the text on the left, Stop / Search again always in the same place, Not seeing it? after it */
+.devices-available-text {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  justify-content: flex-start;
+  min-width: 26ch;
+}
+.devices-available-action {
+  min-width: 84px;
+  text-align: left;
+}
+.devices-circle {
+  position: relative;
+  /* one square: every ring and every device position is a percentage of it, so the radar is round at any size */
+  box-sizing: border-box;
+  width: min(100%, 360px);
+  aspect-ratio: 1;
+  margin: 0 auto;
+  border-radius: var(--r-lg);
+  background: var(--surface-2);
+  box-shadow: inset 0 0 0 1px var(--line);
+  overflow: hidden;
+}
+.devices-ring {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  border-radius: 50%;
+  box-sizing: border-box;
+  border: 1.5px solid color-mix(in srgb, var(--text-2) 75%, var(--surface-2));
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+}
+.devices-ring-outer {
+  width: 78%;
+  aspect-ratio: 1;
+}
+.devices-ring-inner {
+  width: 46%;
+  aspect-ratio: 1;
+  border-color: color-mix(in srgb, var(--text-2) 55%, var(--surface-2));
+}
+.devices-sweep {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 78%;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  background: conic-gradient(from 0deg, transparent 0deg, transparent 300deg, color-mix(in srgb, var(--accent) 22%, transparent) 360deg);
+  pointer-events: none;
+  display: none;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .devices-sweep {
+    display: block;
+    animation: devices-sweep 6s linear infinite;
+  }
+}
+@keyframes devices-sweep {
+  to {
+    transform: translate(-50%, -50%) rotate(360deg);
+  }
+}
+.devices-circle-me {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 88px;
+  height: 88px;
+  transform: translate(-50%, -50%);
+  border-radius: 50%;
+  display: grid;
+  place-content: center;
+  justify-items: center;
+  gap: 3px;
+  background: linear-gradient(var(--accent-soft), var(--accent-soft)), var(--surface);
+  box-shadow: inset 0 0 0 1.5px var(--accent);
+  color: var(--text);
+  font-size: 12px;
+}
+.devices-node {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  width: 112px;
+  min-height: 48px;
+  padding: 6px 4px;
+  display: grid;
+  justify-items: center;
+  gap: 2px;
+  border: 0;
+  border-radius: var(--r-lg);
+  background: none;
+  color: var(--text);
+  text-align: center;
+  cursor: pointer;
+}
+.devices-node:hover:not(:disabled) {
+  background: var(--hover);
+}
+.devices-node:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+}
+.devices-node:disabled {
+  cursor: default;
+  opacity: 0.7;
+}
+.devices-node-icon {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: var(--surface);
+  color: var(--accent-text);
+  box-shadow: inset 0 0 0 2px var(--accent);
+}
+.devices-node[data-route='tailscale'] .devices-node-icon {
+  box-shadow: inset 0 0 0 2px var(--text-3);
+}
+.devices-node-name {
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 13px;
+  font-weight: 600;
+}
+.devices-node-route {
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 12px;
+  color: var(--text);
+  opacity: 0.85;
+}
+.devices-node-go {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--accent-text);
+}
+.devices-list {
+  display: grid;
+  gap: 8px;
+}
+.devices-short-id {
+  flex: none;
+  font-size: 12px;
+}
+.devices-help-list {
+  margin: 0;
+  padding-left: 18px;
+  display: grid;
+  gap: 8px;
+}
+.devices-qr-card {
+  display: grid;
+  align-content: start;
+  gap: 12px;
+  justify-items: center;
+  text-align: center;
+}
+.devices-qr-image {
+  display: grid;
+  place-items: center;
+  min-width: 148px;
+  min-height: 148px;
+  border-radius: var(--r-md);
+  background: #fff;
+  color: #4a5160;
+  padding: 8px;
+}
+.devices-qr-text {
+  display: grid;
+  gap: 4px;
+  justify-items: center;
+}
+.devices-qr-text h4 {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 15px;
+  font-weight: 650;
+}
+.devices-qr-text p {
+  margin: 0;
+}
+.devices-qr-code {
+  display: grid;
+  gap: 4px;
+  justify-items: center;
+  margin-top: 4px;
+}
+.devices-qr-code-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+.devices-qr-text p,
+.devices-qr-code p {
+  text-wrap: balance;
+  max-width: 30ch;
+}
+.devices-qr-code-row {
+  gap: 8px 12px;
+}
+.devices-qr-code-text {
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+  font-size: 22px;
+  font-weight: 650;
+  letter-spacing: 0.08em;
+  user-select: all;
+}
+
+/* Your devices: one card each, a row until opened */
+.devices-cards-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 8px;
+}
+.devices-cards-list > li {
+  min-width: 0;
+}
+.devices-cards-list .devices-card {
+  gap: 0;
+  padding: 0;
+}
+.devices-card-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  width: 100%;
+  min-height: 60px;
+  padding: 10px 14px;
+  border-radius: var(--r-lg);
+  text-align: left;
+  color: var(--text);
+}
+.devices-card-row:hover {
+  background: var(--hover);
+}
+.devices-card-row:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: -2px;
+}
+.devices-card-status {
+  flex: none;
+  padding: 3px 10px;
+  border-radius: 999px;
+  background: var(--surface);
+  color: var(--text-2);
+  box-shadow: inset 0 0 0 1px var(--line);
+  font-weight: 600;
+}
+.devices-card-status[data-status='Up to date'],
+.devices-card-status[data-status='Connected'] {
+  color: var(--success);
+}
+.devices-card-chevron {
+  flex: none;
+  color: var(--text-3);
+  display: grid;
+}
+.devices-card-body {
+  display: grid;
+  gap: 10px;
+  padding: 0 14px 14px;
+}
+.devices-card-body p {
+  margin: 0;
+}
+.devices-card-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+  padding-top: 4px;
+  border-top: 1px solid var(--line);
+}
+.devices-card-actions .btn-ghost {
+  color: var(--danger);
+}
+
+/* The pairing dialog */
+.devices-waiting {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.devices-dialog-body .spinner,
+.devices-available-status .spinner {
+  color: var(--accent-text);
+}
+.devices-dialog-body {
+  display: grid;
+  gap: 10px;
+  justify-items: start;
+}
+.devices-dialog-body p {
+  margin: 0;
+}
+.devices-dialog-body .devices-sas {
+  color: var(--text);
+}
+.devices-dialog-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: flex-end;
+  width: 100%;
+}
+
+/* The opened card: at most three short lines, in line with the name */
+.devices-cards-list .devices-card-body {
+  gap: 8px;
+  padding: 0 14px 12px 64px;
+}
+.devices-card-line {
+  color: var(--text-2);
+}
+/* the row button and, beside it (not inside it), the small Sync / Retry pill */
+.devices-card-head {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.devices-card-head .devices-card-row {
+  flex: 1;
+  min-width: 0;
+  width: auto;
+}
+.devices-card-head {
+  min-height: 60px;
+}
+/* the pill (or an empty slot of its width) sits in the same place on every row, so chips and chevrons line up */
+.devices-card-head .devices-card-pill {
+  flex: none;
+  width: 72px;
+  margin-right: 12px;
+  justify-content: center;
+}
+.devices-card-pill-slot {
+  display: block;
+  flex: none;
+  width: 72px;
+  height: 1px;
+  margin-right: 12px;
+}
+.devices-card-statusrow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px 12px;
+}
+.devices-card-statusrow .devices-card-line {
+  flex: 1 1 220px;
+  min-width: 0;
+}
+.devices-card-line[data-synced] {
+  color: var(--success);
+}
+.devices-chips {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 8px;
+}
+.devices-chips-lead {
+  margin-right: 2px;
+}
+.devices-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  min-height: 28px;
+  padding: 0 11px;
+  border-radius: 999px;
+  background: var(--surface);
+  color: var(--text-2);
+  box-shadow: inset 0 0 0 1px var(--line-strong);
+  font-size: 12.5px;
+  font-weight: 600;
+}
+/* a switch, not a button: off is a dashed outline in muted text, on is filled with a check */
+.devices-chip:not([data-on]) {
+  background: none;
+  color: var(--text-3);
+  box-shadow: none;
+  border: 1px dashed var(--line-strong);
+}
+.devices-chip:hover:not(:disabled) {
+  background: var(--hover);
+}
+.devices-chip[aria-pressed='true'] {
+  background: var(--accent-soft);
+  color: var(--accent-text);
+  box-shadow: inset 0 0 0 1px var(--selected-line);
+}
+.devices-chip:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+}
+.devices-chip:disabled {
+  opacity: 0.6;
+}
+.devices-card-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 4px 12px;
+  min-width: 0;
+}
+.devices-card-meta .tabular {
+  overflow-wrap: anywhere;
+}
+.devices-card-meta .btn-ghost {
+  color: var(--danger);
+}
+
+/* narrow or large text: found-device rows wrap instead of overflowing */
+.devices-nearby-row {
+  flex-wrap: wrap;
+  gap: 8px 12px;
+}
+.devices-nearby-row .devices-row-text {
+  flex: 1 1 110px;
+}
+.devices-available > *,
+.devices-list > * {
+  min-width: 0;
+}
+
+/* Files kept up to date on a device (after the pairing setup) */
+.devices-copy-line {
+  flex: 1 1 220px;
+  min-width: 0;
+  margin: 0;
+  color: var(--text-2);
+}
+.devices-copy-line[data-copy='upToDate'] {
+  color: var(--success);
+}
+.devices-copy-line[data-copy='review'] {
+  color: var(--warning, var(--text));
+}
+.devices-setup {
+  width: min(560px, calc(100vw - 32px));
+}
+.devices-setup-body {
+  justify-items: stretch;
+  gap: 14px;
+}
+.devices-setup-files,
+.devices-setup-direction {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  min-width: 0;
+  display: grid;
+  gap: 8px;
+}
+.devices-setup-files legend,
+.devices-setup-direction legend {
+  font-size: 12px;
+  font-weight: 650;
+  color: var(--text-3);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  padding: 0;
+  margin-bottom: 4px;
+}
+.devices-setup-list {
+  display: grid;
+  gap: 2px;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.devices-setup .copy-check {
+  min-height: 36px;
+}
+.devices-setup-review {
+  display: grid;
+  gap: 12px;
+}
+.devices-setup-facts {
+  display: grid;
+  gap: 6px;
+  margin: 0;
+  padding-left: 18px;
+}
+.devices-setup-facts li[data-ok='no'] {
+  color: var(--danger);
+}
+.devices-setup .copy-diffs ul {
+  margin: 4px 0;
+  padding-left: 18px;
+}
+.devices-setup .dialog-foot .devices-dialog-actions {
+  flex-wrap: nowrap;
+}
+.devices-cards-list .devices-card-body,
+.devices-card-statusrow {
+  min-width: 0;
+}
+.devices-card-statusrow .btn {
+  max-width: 100%;
+  white-space: normal;
+  height: auto;
+  min-height: 32px;
+  text-align: left;
+}
+/* narrow screens and large text: the Sync / Retry pill goes under the row instead of past the edge */
+/* every device row is one grid: the row, then a fixed action slot (Sync / Retry, or empty), so chips and chevrons line up on every row */
+.devices-card-head {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 84px;
+  align-items: center;
+  gap: 0;
+}
+.devices-card-head .devices-card-pill,
+.devices-card-pill-slot {
+  width: 72px;
+  margin: 0 12px 0 0;
+  justify-self: end;
+}
+.devices-card-status {
+  min-width: 96px;
+  text-align: center;
+}
+/* the state is in the chip: a row has no border of its own until it is open */
+.devices-card[data-online] {
+  box-shadow: inset 0 0 0 1px var(--line-strong);
+}
+.devices-card[data-open] {
+  box-shadow: inset 0 0 0 1px var(--selected-line);
+}
+@container main (max-width: 480px) {
+  .devices-card-status {
+    min-width: 0;
+  }
+}
+/* Combining two libraries: the Combine step, its review, the progress on the card and the Separate dialog */
+.devices-combine {
+  display: grid;
+  gap: 8px;
+  padding: 0 14px 12px 64px;
+  min-width: 0;
+}
+.devices-combine-line {
+  flex: 1 1 220px;
+  min-width: 0;
+  margin: 0;
+  color: var(--text-2);
+}
+.devices-combine-line[data-phase='done'] {
+  color: var(--success);
+}
+.devices-combine-line[data-phase='paused'],
+.devices-combine-line[data-phase='failed'] {
+  color: var(--warning, var(--text));
+}
+.devices-combine .progress {
+  width: 100%;
+}
+.devices-combine-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 14px;
+}
+.devices-combine-wait {
+  display: grid;
+  gap: 6px;
+}
+.devices-combine-wait p {
+  margin: 0;
+}
+.devices-combine-keep {
+  margin-top: 2px;
+}
+.devices-combine-entries {
+  display: grid;
+  gap: 6px;
+  justify-items: start;
+  min-width: 0;
+}
+.devices-combine-entries ul {
+  margin: 0;
+  padding-left: 18px;
+  display: grid;
+  gap: 4px;
+  max-height: 220px;
+  overflow: auto;
+  overflow-wrap: anywhere;
+  min-width: 0;
+}
+.devices-setup-review .muted {
+  margin: 0;
+}
+@container main (max-width: 560px) {
+  .devices-combine {
+    padding-left: 14px;
+  }
+}
+.devices-setup .devices-combine-held legend {
+  text-transform: none;
+  letter-spacing: 0;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-2);
+}
+
+/* ---------- Combine review as a picture (owner's choice A): before -> after, tiles, what comes along, what to check ---------- */
+.combine-flow {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr auto 1fr;
+  align-items: stretch;
+  gap: 8px;
+  margin: 4px 0 12px;
+}
+.combine-lib {
+  display: grid;
+  justify-items: start;
+  align-content: center;
+  gap: 2px;
+  min-width: 0;
+  padding: 10px 12px;
+  border-radius: var(--r-lg);
+  background: var(--surface-2);
+  box-shadow: inset 0 0 0 1px var(--line);
+}
+.combine-lib span {
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--text-2);
+  font-size: 12.5px;
+}
+.combine-lib strong {
+  font-size: 22px;
+  line-height: 1.15;
+  color: var(--text);
+}
+.combine-lib small {
+  color: var(--text-3);
+  font-size: 12px;
+}
+.combine-result {
+  background: var(--accent-soft);
+  box-shadow: inset 0 0 0 1.5px var(--accent);
+}
+.combine-result span,
+.combine-result strong {
+  color: var(--accent-text);
+}
+.combine-op {
+  display: grid;
+  place-items: center;
+  color: var(--text-3);
+  font-size: 18px;
+}
+.combine-tiles {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 8px;
+  margin: 0 0 12px;
+  padding: 0;
+  list-style: none;
+}
+.combine-tile {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  grid-template-rows: auto auto;
+  column-gap: 8px;
+  align-items: center;
+  padding: 8px 10px;
+  border-radius: var(--r-md);
+  background: var(--surface-2);
+}
+.combine-tile svg {
+  grid-row: span 2;
+  color: var(--accent-text);
+}
+.combine-tile strong {
+  font-size: 16px;
+  color: var(--text);
+}
+.combine-tile span:not(.sr-only) {
+  color: var(--text-2);
+  font-size: 12.5px;
+}
+.combine-along {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 12px;
+  font-size: 12.5px;
+}
+.combine-along ul {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.combine-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 9px;
+  border-radius: 999px;
+  background: var(--surface-2);
+  box-shadow: inset 0 0 0 1px var(--line);
+  color: var(--text-2);
+}
+.combine-check {
+  display: grid;
+  gap: 4px;
+  margin: 0 0 12px;
+  padding: 10px 12px;
+  border-radius: var(--r-md);
+  background: var(--warning-soft);
+}
+.combine-check > strong {
+  color: var(--text);
+}
+.combine-check > p {
+  margin: 0;
+  color: var(--text-2);
+}
+@container (max-width: 420px) {
+  .combine-flow {
+    grid-template-columns: 1fr auto 1fr;
+  }
+  .combine-flow > .combine-op:nth-of-type(2),
+  .combine-flow > .combine-result {
+    grid-column: 1 / -1;
+  }
+}

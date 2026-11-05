@@ -1,0 +1,17 @@
+{
+  "description": "Release-notes highlights: the few bullets for the update dialog, from the section of the platform asked for (plus sections naming neither), plain text, at most `limit` (default 3), each cut to 140 characters.",
+  "cases": [
+    {"name":"the Windows section, plain text, at most three","input":{"op":"highlights","notes":"## Windows\n- Adds **Spotify playlist** matching.\n- Fixes [resuming](https://x.test) downloads.\n- Third change.\n- Fourth change.\n\n## Android\n- Faster share sheet.","platform":"windows"},"expected":["Adds Spotify playlist matching.","Fixes resuming downloads.","Third change."]},
+    {"name":"the Android section","input":{"op":"highlights","notes":"## Windows\n- Adds **Spotify playlist** matching.\n- Fixes [resuming](https://x.test) downloads.\n- Third change.\n- Fourth change.\n\n## Android\n- Faster share sheet.","platform":"android"},"expected":["Faster share sheet."]},
+    {"name":"a smaller limit","input":{"op":"highlights","notes":"## Windows\n- Adds **Spotify playlist** matching.\n- Fixes [resuming](https://x.test) downloads.\n- Third change.\n- Fourth change.\n\n## Android\n- Faster share sheet.","platform":"windows","limit":2},"expected":["Adds Spotify playlist matching.","Fixes resuming downloads."]},
+    {"name":"notes without headings use every bullet (- and *)","input":{"op":"highlights","notes":"- one\n* two\ntext","platform":"windows"},"expected":["one","two"]},
+    {"name":"empty notes","input":{"op":"highlights","notes":"","platform":"windows"},"expected":[]},
+    {"name":"prose without bullets","input":{"op":"highlights","notes":"Just prose.","platform":"android"},"expected":[]},
+    {"name":"a long bullet is cut to 140 characters with an ellipsis","input":{"op":"highlights","notes":"- word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word ","platform":"windows"},"expected":["word word word word word word word word word word word word word word word word word word word word word word word word word word word wo…"]},
+    {"name":"sections that name neither platform are shared by both","input":{"op":"highlights","notes":"## Highlights\n- everyone\n## Windows\n- win only\n## Android\n- phone only","platform":"android"},"expected":["phone only","everyone"]},
+    {"name":"Desktop and Phone count as the Windows and Android sections","input":{"op":"highlights","notes":"## Desktop\n- d\n## Phone\n- p","platform":"android"},"expected":["p"]},
+    {"name":"images and tags are dropped, links keep their text","input":{"op":"highlights","notes":"- ![shot](a.png)Look <b>here</b> at [the docs](https://x.test) and `code`","platform":"windows"},"expected":["Look here at the docs and code"]},
+    {"name":"a bullet with only markup is skipped","input":{"op":"highlights","notes":"- **\n- real","platform":"windows"},"expected":["real"]},
+    {"name":"Windows line endings","input":{"op":"highlights","notes":"## Windows\r\n- one\r\n## Android\r\n- two\r\n","platform":"windows"},"expected":["one"]}
+  ]
+}

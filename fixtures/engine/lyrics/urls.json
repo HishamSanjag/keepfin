@@ -1,0 +1,22 @@
+{
+  "description": "The two requests: the exact one (needs the song's length, in seconds, rounded like JavaScript) and the search; fields written the way a browser writes a query.",
+  "cases": [
+    {"name":"get: no length","input":{"op":"getUrl","title":"Midnight City","artist":"M83"},"expected":null},
+    {"name":"get: zero length","input":{"op":"getUrl","title":"Midnight City","artist":"M83","duration":0},"expected":null},
+    {"name":"get: all fields","input":{"op":"getUrl","title":"Midnight City","artist":"M83","album":"Hurry Up","duration":243.6},"expected":"https://lrclib.net/api/get?track_name=Midnight+City&artist_name=M83&album_name=Hurry+Up&duration=244"},
+    {"name":"get: half rounds up","input":{"op":"getUrl","title":"A","artist":"B","duration":243.5},"expected":"https://lrclib.net/api/get?track_name=A&artist_name=B&duration=244"},
+    {"name":"get: below half rounds down","input":{"op":"getUrl","title":"A","artist":"B","duration":243.4},"expected":"https://lrclib.net/api/get?track_name=A&artist_name=B&duration=243"},
+    {"name":"get: empty album left out","input":{"op":"getUrl","title":"A","artist":"B","album":"","duration":100},"expected":"https://lrclib.net/api/get?track_name=A&artist_name=B&duration=100"},
+    {"name":"get: apostrophe and ampersand","input":{"op":"getUrl","title":"Don't Stop & Go","artist":"Rock/Roll","duration":120},"expected":"https://lrclib.net/api/get?track_name=Don%27t+Stop+%26+Go&artist_name=Rock%2FRoll&duration=120"},
+    {"name":"get: accented","input":{"op":"getUrl","title":"Déjà Vu","artist":"Beyoncé","album":"Café","duration":200},"expected":"https://lrclib.net/api/get?track_name=D%C3%A9j%C3%A0+Vu&artist_name=Beyonc%C3%A9&album_name=Caf%C3%A9&duration=200"},
+    {"name":"get: arabic","input":{"op":"getUrl","title":"تملي معاك","artist":"عمرو دياب","duration":270},"expected":"https://lrclib.net/api/get?track_name=%D8%AA%D9%85%D9%84%D9%8A+%D9%85%D8%B9%D8%A7%D9%83&artist_name=%D8%B9%D9%85%D8%B1%D9%88+%D8%AF%D9%8A%D8%A7%D8%A8&duration=270"},
+    {"name":"get: korean","input":{"op":"getUrl","title":"봄날","artist":"BTS","duration":274.2},"expected":"https://lrclib.net/api/get?track_name=%EB%B4%84%EB%82%A0&artist_name=BTS&duration=274"},
+    {"name":"get: symbols","input":{"op":"getUrl","title":"a~b*c(d)!e","artist":"x'y","duration":90},"expected":"https://lrclib.net/api/get?track_name=a%7Eb*c%28d%29%21e&artist_name=x%27y&duration=90"},
+    {"name":"search: all fields","input":{"op":"searchUrl","title":"Midnight City","artist":"M83"},"expected":"https://lrclib.net/api/search?track_name=Midnight+City&artist_name=M83"},
+    {"name":"search: apostrophe and ampersand","input":{"op":"searchUrl","title":"Don't Stop & Go","artist":"Rock/Roll"},"expected":"https://lrclib.net/api/search?track_name=Don%27t+Stop+%26+Go&artist_name=Rock%2FRoll"},
+    {"name":"search: accented","input":{"op":"searchUrl","title":"Déjà Vu","artist":"Beyoncé"},"expected":"https://lrclib.net/api/search?track_name=D%C3%A9j%C3%A0+Vu&artist_name=Beyonc%C3%A9"},
+    {"name":"search: arabic","input":{"op":"searchUrl","title":"تملي معاك","artist":"عمرو دياب"},"expected":"https://lrclib.net/api/search?track_name=%D8%AA%D9%85%D9%84%D9%8A+%D9%85%D8%B9%D8%A7%D9%83&artist_name=%D8%B9%D9%85%D8%B1%D9%88+%D8%AF%D9%8A%D8%A7%D8%A8"},
+    {"name":"search: korean","input":{"op":"searchUrl","title":"봄날","artist":"BTS"},"expected":"https://lrclib.net/api/search?track_name=%EB%B4%84%EB%82%A0&artist_name=BTS"},
+    {"name":"search: symbols","input":{"op":"searchUrl","title":"a~b*c(d)!e","artist":"x'y"},"expected":"https://lrclib.net/api/search?track_name=a%7Eb*c%28d%29%21e&artist_name=x%27y"}
+  ]
+}

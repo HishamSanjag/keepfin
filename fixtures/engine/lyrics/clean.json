@@ -1,0 +1,16 @@
+{
+  "description": "The title used for the lookup: tags such as [Official Video] dropped, and a leading \"Artist - \" dropped when it is the song's artist.",
+  "cases": [
+    {"name":"leading artist dropped","input":{"op":"clean","title":"M83 - Midnight City [Official Video]","artist":"M83"},"expected":"Midnight City"},
+    {"name":"another dash kept","input":{"op":"clean","title":"Part One - Part Two","artist":"M83"},"expected":"Part One - Part Two"},
+    {"name":"tag only","input":{"op":"clean","title":"Midnight City (Official Video)"},"expected":"Midnight City"},
+    {"name":"topic artist matches","input":{"op":"clean","title":"M83 – Midnight City","artist":"M83 - Topic"},"expected":"Midnight City"},
+    {"name":"no artist keeps the dash","input":{"op":"clean","title":"A - B"},"expected":"A - B"},
+    {"name":"tag 4K","input":{"op":"clean","title":"Song [4K]","artist":"Someone"},"expected":"Song"},
+    {"name":"arabic leading artist","input":{"op":"clean","title":"عمرو دياب - تملي معاك","artist":"عمرو دياب"},"expected":"تملي معاك"},
+    {"name":"korean leading artist and tag","input":{"op":"clean","title":"BTS - 봄날 (Official Video)","artist":"BTS"},"expected":"봄날"},
+    {"name":"accented artist","input":{"op":"clean","title":"Beyoncé — Halo","artist":"Beyoncé"},"expected":"Halo"},
+    {"name":"accent differs","input":{"op":"clean","title":"Beyonce - Halo","artist":"Beyoncé"},"expected":"Beyonce - Halo"},
+    {"name":"title with a line break","input":{"op":"clean","title":"A - B\nC","artist":"A"},"expected":"A - B\nC"}
+  ]
+}

@@ -1,0 +1,163 @@
+/* Settings → Storage and Devices → Where your files are: one row per place, what it holds, its size and state. Tokens only. */
+
+.where-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 8px;
+}
+.where-list > li {
+  min-width: 0;
+}
+.where-row {
+  display: grid;
+  grid-template-columns: 36px minmax(0, 1fr) auto auto;
+  align-items: center;
+  gap: 8px 14px;
+  width: 100%;
+  min-height: 60px;
+  padding: 10px 14px;
+  border-radius: var(--r-lg);
+  background: var(--surface-2);
+  box-shadow: inset 0 0 0 1px var(--line-strong);
+  color: var(--text);
+  text-align: left;
+}
+.where-row:is(button):hover {
+  background: var(--hover);
+}
+.where-row:is(button):focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+}
+.where-row[data-state='copying'] {
+  box-shadow: inset 0 0 0 1px var(--selected-line);
+}
+.where-row[data-state='needsDecision'] {
+  box-shadow: inset 0 0 0 1px var(--warning);
+}
+.where-icon {
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  border-radius: var(--r-md);
+  background: var(--accent-soft);
+  color: var(--accent-text);
+}
+.where-text {
+  display: grid;
+  gap: 1px;
+  min-width: 0;
+}
+.where-name {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 2px 8px;
+}
+.where-name strong {
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+.where-text .small {
+  overflow-wrap: anywhere;
+}
+.where-tag {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-2);
+}
+.where-state {
+  display: grid;
+  gap: 1px;
+  justify-items: end;
+  text-align: right;
+  min-width: 0;
+}
+.where-size {
+  color: var(--text);
+  font-weight: 600;
+}
+.where-status {
+  color: var(--text-2);
+  overflow-wrap: anywhere;
+}
+.where-status[data-tone='good'] {
+  color: var(--success);
+}
+.where-status[data-tone='busy'] {
+  color: var(--accent-text);
+}
+.where-status[data-tone='warn'] {
+  color: var(--warning);
+  font-weight: 600;
+}
+.where-chevron {
+  display: grid;
+  color: var(--text-3);
+}
+/* a row without a link has no chevron: the state column takes the space */
+.where-row:not(:has(.where-chevron)) {
+  grid-template-columns: 36px minmax(0, 1fr) auto;
+}
+
+.where-singles {
+  display: grid;
+  gap: 8px;
+  margin-top: 12px;
+}
+.where-note {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 14px;
+  margin-top: 12px;
+}
+.where-note p {
+  margin: 0;
+  flex: 1 1 260px;
+  min-width: 0;
+}
+
+/* narrow panels and large text: the size and state go under the name instead of squeezing it */
+@container app (max-width: 640px) {
+  .where-row {
+    grid-template-columns: 36px minmax(0, 1fr) auto;
+  }
+  .where-state {
+    grid-column: 2 / -1;
+    grid-row: 2;
+    justify-items: start;
+    text-align: left;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 2px 10px;
+  }
+  .where-row:not(:has(.where-chevron)) {
+    grid-template-columns: 36px minmax(0, 1fr);
+  }
+}
+
+/* Details… on a library item: facts, then where the file is kept */
+.item-details {
+  display: grid;
+  gap: 10px;
+  margin: 0;
+}
+.item-details > div {
+  display: grid;
+  grid-template-columns: 6.5em minmax(0, 1fr);
+  gap: 10px;
+  align-items: baseline;
+}
+.item-details dt,
+.item-details dd {
+  margin: 0;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.where-item-line {
+  font-weight: 600;
+}

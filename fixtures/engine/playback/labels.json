@@ -1,0 +1,18 @@
+{
+  "description": "The time label and the speeds a player offers.",
+  "cases": [
+    {"name":"under an hour","input":{"op":"clock","seconds":125},"expected":"2:05"},
+    {"name":"zero","input":{"op":"clock","seconds":0},"expected":"0:00"},
+    {"name":"fractions are dropped, not rounded","input":{"op":"clock","seconds":59.9},"expected":"0:59"},
+    {"name":"over an hour","input":{"op":"clock","seconds":3723},"expected":"1:02:03"},
+    {"name":"negative time is 0:00","input":{"op":"clock","seconds":-4},"expected":"0:00"},
+    {"name":"under a minute reads as a clock","input":{"op":"timeLeft","seconds":11},"expected":"0:11 left"},
+    {"name":"59.9 seconds is still under a minute","input":{"op":"timeLeft","seconds":59.9},"expected":"0:59 left"},
+    {"name":"a minute is 1 min","input":{"op":"timeLeft","seconds":60},"expected":"1 min left"},
+    {"name":"whole minutes round down","input":{"op":"timeLeft","seconds":274},"expected":"4 min left"},
+    {"name":"an hour or more","input":{"op":"timeLeft","seconds":4320},"expected":"1 h 12 min left"},
+    {"name":"whole hours drop the minutes","input":{"op":"timeLeft","seconds":3630},"expected":"1 h left"},
+    {"name":"nothing left","input":{"op":"timeLeft","seconds":-3},"expected":"0:00 left"},
+    {"name":"the speeds offered","input":{"op":"speeds"},"expected":[0.25,0.5,0.75,1,1.25,1.5,1.75,2]}
+  ]
+}

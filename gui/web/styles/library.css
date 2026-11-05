@@ -1,0 +1,271 @@
+.lib-summary {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px 16px;
+  min-height: 28px;
+  margin-top: -8px;
+  font-size: 12.5px;
+  color: var(--text-3);
+}
+.lib-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid var(--line);
+}
+.lib-toolbar .search {
+  flex: 1 1 220px;
+}
+.lib-list {
+  display: grid;
+  margin-top: -12px;
+}
+.lib-row {
+  display: grid;
+  grid-template-columns: 96px minmax(0, 1fr) 76px 112px auto;
+  align-items: center;
+  gap: 16px;
+  padding: 10px 4px 10px 0;
+  border-bottom: 1px solid var(--line);
+  content-visibility: auto;
+  contain-intrinsic-size: auto 76px;
+}
+.lib-row:hover {
+  background: linear-gradient(90deg, transparent, var(--hover) 8%, var(--hover) 92%, transparent);
+}
+.thumb-lib {
+  width: 96px;
+  border-radius: 6px;
+}
+.lib-text {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+}
+.lib-title {
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.lib-meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12.5px;
+  color: var(--text-2);
+  min-width: 0;
+}
+.lib-meta > .sep-list {
+  flex: 1;
+}
+.lib-note {
+  font-size: 12.5px;
+  color: var(--warning-text, var(--accent-text));
+}
+.lib-error {
+  font-size: 12.5px;
+  color: var(--danger);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.lib-size,
+.lib-date {
+  font-size: 12.5px;
+  color: var(--text-2);
+  text-align: right;
+  white-space: nowrap;
+}
+.lib-size {
+  color: var(--text);
+  font-weight: 600;
+}
+.lib-actions {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+.lib-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(208px, 1fr));
+  align-items: start;
+  gap: 20px 16px;
+}
+.lib-card {
+  position: relative;
+  display: grid;
+  align-content: start;
+  gap: 8px;
+  min-width: 0;
+  content-visibility: auto;
+  contain-intrinsic-size: auto 210px;
+}
+.lib-card-media {
+  position: relative;
+  display: block;
+  border-radius: 10px;
+}
+.lib-card-media .thumb {
+  width: 100%;
+  border-radius: 10px;
+  transition: transform var(--t) var(--ease);
+}
+.lib-card-media:hover:not(:disabled) .thumb {
+  transform: scale(1.015);
+}
+.lib-card-state {
+  position: absolute;
+  left: 8px;
+  bottom: 8px;
+  z-index: 2;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 8px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #fff;
+  background: rgba(8, 12, 18, 0.8);
+}
+.lib-failed .lib-card-state .icon {
+  color: #ff9e9a;
+}
+.lib-card-body {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+/* Every card has the same text structure: a title of exactly two lines, then two one-line meta rows. */
+.lib-card-body .lib-title {
+  white-space: normal;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  line-height: 18px;
+  height: 36px;
+  font-size: 13.5px;
+}
+.lib-card-body .lib-meta {
+  flex-wrap: nowrap;
+  align-items: flex-start;
+  line-height: 18px;
+  height: 18px;
+  overflow: hidden;
+}
+.lib-card-body .lib-meta.sep-list > * {
+  flex: none;
+}
+/* The folder and more buttons sit at the end of the first meta row, so that row leaves room for them. */
+.lib-card-body .lib-meta:nth-child(2) {
+  margin-right: 58px;
+}
+.lib-card-actions {
+  position: absolute;
+  right: 0;
+  bottom: 13px;
+  display: flex;
+  gap: 0;
+}
+@container main (max-width: 760px) {
+  .lib-row {
+    grid-template-columns: 80px minmax(0, 1fr) auto;
+    row-gap: 2px;
+  }
+  .thumb-lib {
+    width: 80px;
+    grid-row: span 2;
+  }
+  .lib-size,
+  .lib-date {
+    display: none;
+  }
+  .lib-grid {
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  }
+}
+
+.group-card .lib-card-media .group-stack {
+  position: absolute;
+  right: 8px;
+  bottom: 8px;
+  z-index: 2;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 7px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #fff;
+  background: rgba(8, 12, 18, 0.8);
+}
+.group-card .group-counts {
+  font-size: 12.5px;
+  color: var(--text-2);
+}
+.group-card .group-counts.has-failed .sum-failed {
+  color: var(--danger);
+}
+.group-card .group-counts .sum-saved {
+  color: var(--success);
+}
+.group-kind {
+  position: absolute;
+  left: 8px;
+  bottom: 8px;
+  z-index: 2;
+  padding: 2px 7px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #fff;
+  background: rgba(8, 12, 18, 0.8);
+}
+@container main (max-width: 640px) {
+  .lib-details-btn {
+    display: none;
+  }
+}
+
+/* Play overlay on a finished download's cover: shown on hover and keyboard focus. */
+.thumb-play {
+  position: relative;
+  display: block;
+  border-radius: 10px;
+}
+.thumb-play-badge {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  display: grid;
+  place-items: center;
+  color: #fff;
+  background: rgba(8, 12, 18, 0.45);
+  opacity: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  transition: opacity var(--t-fast) var(--ease);
+}
+.thumb-play:hover .thumb-play-badge,
+.thumb-play:focus-visible .thumb-play-badge,
+.lib-card-media:hover .thumb-play-badge,
+.lib-card-media:focus-visible .thumb-play-badge {
+  opacity: 1;
+}
+@media (prefers-reduced-motion: reduce) {
+  .thumb-play-badge {
+    transition: none;
+  }
+}
+
+.shelf-open .shelf-item {
+  flex: 0 0 150px;
+  scroll-snap-align: start;
+}

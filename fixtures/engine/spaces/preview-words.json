@@ -1,0 +1,16 @@
+{
+  "description": "The download preview: the Both words and how many Extras groups were changed from the defaults. See SCHEMA.md.",
+  "cases": [
+    {"name":"words, in order: looking, none, found, link","input":{"op":"previewWords"},"expected":["Looking for the music video…","No official music video was found, so Both is off.","The song is saved with this video beside it. They stay on the same second.","The song is saved with this video beside it."]},
+    {"name":"playlist words, in order: add, none, new","input":{"op":"playlistWords"},"expected":["Add to playlist","No playlist","New playlist…"]},
+    {"name":"no playlist chosen shows the add words","input":{"op":"playlistLabel"},"expected":"Add to playlist"},
+    {"name":"a blank name shows the add words","input":{"op":"playlistLabel","name":" "},"expected":"Add to playlist"},
+    {"name":"a chosen playlist shows its name","input":{"op":"playlistLabel","name":"Road trip"},"expected":"Road trip"},
+    {"name":"nothing changed counts none","input":{"op":"extrasCount"},"expected":0},
+    {"name":"one group counts one","input":{"op":"extrasCount","sponsor":true},"expected":1},
+    {"name":"each group counts once","input":{"op":"extrasCount","subtitles":true,"cut":true,"sponsor":true,"chapters":true,"inFile":true,"beside":true,"queue":true},"expected":7},
+    {"name":"two groups","input":{"op":"extrasCount","subtitles":true,"queue":true},"expected":2},
+    {"name":"label with nothing changed","input":{"op":"extrasLabel","changed":0},"expected":"Extras"},
+    {"name":"label with two changed","input":{"op":"extrasLabel","changed":2},"expected":"Extras · 2"}
+  ]
+}

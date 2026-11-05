@@ -1,0 +1,28 @@
+node_modules/
+build/
+releases/
+dist/
+*.log
+.DS_Store
+.gradle/
+.kotlin/
+android/local.properties
+android/app/build/
+test-results/
+playwright-report/
+.codebase-memory/
+*.jks
+*.keystore
+.env
+.env.*
+!*.example
+cookies*.txt
+
+# Editor and tool folders (never committed)
+.idea/
+.claude-flow/
+
+# Kept on the owner's machine only (the repository is public)
+CLAUDE.local.md
+dev-docs/
+e3.mjs

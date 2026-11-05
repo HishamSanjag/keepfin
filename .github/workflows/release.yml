@@ -1,0 +1,130 @@
+name: Release Keepfin
+
+on:
+  workflow_dispatch:
+  push:
+    tags: ['v*']
+
+permissions:
+  contents: read
+
+concurrency:
+  group: studio-release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+      prerelease: ${{ steps.version.outputs.prerelease }}
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '24'
+          package-manager-cache: false
+      - name: Check shared version and release notes
+        id: version
+        run: |
+          node --input-type=module <<'JS'
+          import fs from 'node:fs';
+          const {version} = JSON.parse(fs.readFileSync('package.json', 'utf8'));
+          if (!/^\d+\.\d+\.\d+(-beta\.\d+)?$/.test(version)) throw new Error('Expected a version such as 0.3.8 or 0.5.0-beta.1');
+          const android = fs.readFileSync('android/app/build.gradle.kts', 'utf8');
+          const androidVersion = android.match(/versionName\s*=\s*"([^"]+)"/)?.[1];
+          if (androidVersion !== version) throw new Error(`Version mismatch: desktop ${version}, Android ${androidVersion}`);
+          if (process.env.GITHUB_REF_TYPE === 'tag' && process.env.GITHUB_REF_NAME !== `v${version}`) {
+            throw new Error(`Release tag must be v${version}`);
+          }
+          const notes = `docs/release-notes/${version}.md`;
+          if (!fs.existsSync(notes) || !fs.readFileSync(notes, 'utf8').trim()) {
+            throw new Error(`Write release notes before tagging: ${notes}`);
+          }
+          fs.appendFileSync(process.env.GITHUB_OUTPUT, `version=${version}\nprerelease=${version.includes('-')}\n`);
+          console.log(`Validated Keepfin v${version}`);
+          JS
+
+  windows:
+    needs: validate
+    uses: ./.github/workflows/build-windows.yml
+    with:
+      handoff: cache
+
+  android:
+    needs: validate
+    uses: ./.github/workflows/build-android.yml
+    with:
+      handoff: cache
+    secrets: inherit
+
+  publish:
+    if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
+    needs: [validate, windows, android]
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: write # to publish the release
+      actions: write # only to delete this run's own hand-off caches after publishing
+    env:
+      VERSION: ${{ needs.validate.outputs.version }}
+      PRERELEASE: ${{ needs.validate.outputs.prerelease }}
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '24'
+          package-manager-cache: false
+      # Builds hand their files over through the Actions cache: private artifact storage is billed and small.
+      - name: Receive Windows files
+        uses: actions/cache/restore@v6
+        with:
+          path: handoff/windows
+          key: keepfin-windows-${{ github.run_id }}
+          enableCrossOsArchive: true
+          fail-on-cache-miss: true
+      - name: Receive signed Android APK
+        uses: actions/cache/restore@v6
+        with:
+          path: handoff/android
+          key: keepfin-android-${{ github.run_id }}
+          fail-on-cache-miss: true
+      - name: Arrange release files
+        run: |
+          mkdir -p release-assets
+          mv handoff/windows release-assets/windows
+          mv handoff/android release-assets/android
+      - name: Publish one release with all downloads
+        run: |
+          node scripts/release/verify-update-assets.mjs release-assets/windows "$VERSION"
+          files=(
+            "release-assets/windows/Keepfin-Setup-$VERSION.exe"
+            "release-assets/windows/Keepfin-Portable-$VERSION.exe"
+            "release-assets/windows/Keepfin-$VERSION.msi"
+            "release-assets/android/Keepfin-Android-$VERSION.apk"
+            "release-assets/windows/latest.yml"
+            "release-assets/windows/Keepfin-Setup-$VERSION.exe.blockmap"
+          )
+          for file in "${files[@]}"; do
+            test -s "$file" || { echo "Missing release download: $file" >&2; exit 1; }
+          done
+          gh release create "$GITHUB_REF_NAME" "${files[@]}" \
+            --draft \
+            --title "Keepfin v$VERSION" \
+            --notes-file "docs/release-notes/$VERSION.md"
+          # Expose the release to update clients only after all uploads succeed. A beta is a
+          # pre-release: GitHub's latest release, which both apps and the website read, never points to it.
+          if [ "$PRERELEASE" = "true" ]; then
+            gh release edit "$GITHUB_REF_NAME" --draft=false --prerelease --latest=false
+          else
+            gh release edit "$GITHUB_REF_NAME" --draft=false --latest
+          fi
+      # The binaries now live in the public release; drop this run's hand-off copies.
+      - name: Free hand-off cache
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh cache delete "keepfin-windows-$GITHUB_RUN_ID" --repo "$GITHUB_REPOSITORY" || true
+          gh cache delete "keepfin-android-$GITHUB_RUN_ID" --repo "$GITHUB_REPOSITORY" || true

@@ -1,0 +1,84 @@
+/* The Trash page: a compact list, newest deletion first. Amber is never the only signal: the last days carry a warning icon and bold text. */
+.trash-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+}
+.trash-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 56px;
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--line);
+  border-radius: 8px;
+}
+.trash-row:hover,
+.trash-row.is-selected {
+  background: var(--hover);
+}
+.trash-kind {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  flex: none;
+  border-radius: 8px;
+  color: var(--text-2);
+  background: var(--hover);
+}
+.trash-text {
+  min-width: 0;
+  flex: 1;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  column-gap: 12px;
+  row-gap: 2px;
+}
+.trash-name {
+  flex: 1 1 100%;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--text);
+  font-weight: 600;
+}
+.trash-meta,
+.trash-when {
+  white-space: nowrap;
+}
+.trash-when.is-soon {
+  color: var(--warning);
+  font-weight: 600;
+}
+.trash-left {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+.trash-actions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex: none;
+}
+.trash-check {
+  width: 18px;
+  height: 18px;
+  flex: none;
+  accent-color: var(--accent, currentColor);
+}
+.trash-check:focus-visible,
+.trash-row .btn:focus-visible {
+  outline: 2px solid var(--focus, var(--text));
+  outline-offset: 2px;
+}
+.trash-count {
+  color: var(--text-2);
+  font-size: 13px;
+  margin-right: 4px;
+}

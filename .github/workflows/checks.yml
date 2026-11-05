@@ -1,0 +1,63 @@
+name: Checks
+
+# Runs the fast checks on every branch push (not tags) so a broken change shows up before a release.
+# Plain on purpose: no secrets, read-only, nothing is built for distribution.
+on:
+  push:
+    branches: ['**']
+
+permissions:
+  contents: read
+
+# A newer push to the same branch cancels the older run.
+concurrency:
+  group: checks-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  windows:
+    runs-on: windows-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '24'
+          cache: npm
+      # The shared core is built by Gradle, which npm run check starts.
+      - uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: gradle/actions/setup-gradle@v6
+      - run: npm ci
+      - name: Run checks
+        run: npm run check
+
+  android:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '24'
+          cache: npm
+      - uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: gradle/actions/setup-gradle@v6
+      - uses: android-actions/setup-android@v4
+        with:
+          packages: 'platform-tools'
+      - run: sdkmanager "platforms;android-36" "build-tools;36.0.0"
+      # Icons are generated from assets/icons/icon.svg before the Android build reads them.
+      - run: |
+          npm ci
+          npm run icons:build
+      - name: Android unit tests
+        working-directory: android
+        run: |
+          chmod +x gradlew
+          ./gradlew :app:testDebugUnitTest --console=plain

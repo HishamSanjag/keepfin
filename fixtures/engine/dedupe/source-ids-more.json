@@ -1,0 +1,16 @@
+{
+  "description": "More links -> the stable id of the recording they name.",
+  "cases": [
+    {"name":"youtube embed link","input":{"op":"sourceId","url":"https://www.youtube.com/embed/abc123DEF45"},"expected":"youtube:abc123DEF45"},
+    {"name":"youtube live link","input":{"op":"sourceId","url":"https://www.youtube.com/live/abc123DEF45?feature=share"},"expected":"youtube:abc123DEF45"},
+    {"name":"youtube mobile watch link","input":{"op":"sourceId","url":"https://m.youtube.com/watch?v=abc123DEF45"},"expected":"youtube:abc123DEF45"},
+    {"name":"a youtube id that is too short","input":{"op":"sourceId","url":"https://www.youtube.com/watch?v=short"},"expected":null},
+    {"name":"a youtube page with no video","input":{"op":"sourceId","url":"https://www.youtube.com/watch"},"expected":null},
+    {"name":"apple music song link","input":{"op":"sourceId","url":"https://music.apple.com/us/song/get-lucky/617154366"},"expected":"apple-music:617154366"},
+    {"name":"spotify embed link","input":{"op":"sourceId","url":"https://open.spotify.com/embed/track/4uLU6hMCjMI75M1A2tKUQC"},"expected":"spotify:4uLU6hMCjMI75M1A2tKUQC"},
+    {"name":"a spotify id that is too short","input":{"op":"sourceId","url":"https://open.spotify.com/track/short"},"expected":null},
+    {"name":"deezer track without a language","input":{"op":"sourceId","url":"https://www.deezer.com/track/3135556"},"expected":"deezer:3135556"},
+    {"name":"an apple music album has no recording id","input":{"op":"sourceId","url":"https://music.apple.com/us/album/x/617154241"},"expected":null},
+    {"name":"an empty link","input":{"op":"sourceId","url":""},"expected":null}
+  ]
+}

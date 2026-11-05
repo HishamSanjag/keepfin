@@ -1,0 +1,17 @@
+{
+  "description": "A link -> the stable id of the recording it names (tier 1 of skip-existing). Collections and unknown sites have none.",
+  "cases": [
+    {"name":"youtube music watch link with a playlist","input":{"op":"sourceId","url":"https://music.youtube.com/watch?v=abc123DEF45&list=x"},"expected":"youtube:abc123DEF45"},
+    {"name":"youtu.be link with a timestamp","input":{"op":"sourceId","url":"https://youtu.be/abc123DEF45?t=3"},"expected":"youtube:abc123DEF45"},
+    {"name":"youtube short","input":{"op":"sourceId","url":"https://www.youtube.com/shorts/abc123DEF45"},"expected":"youtube:abc123DEF45"},
+    {"name":"spotify track","input":{"op":"sourceId","url":"https://open.spotify.com/track/4uLU6hMCjMI75M1A2tKUQC"},"expected":"spotify:4uLU6hMCjMI75M1A2tKUQC"},
+    {"name":"spotify track with an intl prefix and share id","input":{"op":"sourceId","url":"https://open.spotify.com/intl-de/track/4uLU6hMCjMI75M1A2tKUQC?si=1"},"expected":"spotify:4uLU6hMCjMI75M1A2tKUQC"},
+    {"name":"deezer track","input":{"op":"sourceId","url":"https://www.deezer.com/en/track/3135556"},"expected":"deezer:3135556"},
+    {"name":"apple music track inside an album","input":{"op":"sourceId","url":"https://music.apple.com/us/album/random-access-memories/617154241?i=617154366"},"expected":"apple-music:617154366"},
+    {"name":"a spotify album has no recording id","input":{"op":"sourceId","url":"https://open.spotify.com/album/4uLU6hMCjMI75M1A2tKUQC"},"expected":null},
+    {"name":"a spotify playlist has no recording id","input":{"op":"sourceId","url":"https://open.spotify.com/playlist/abc"},"expected":null},
+    {"name":"a youtube playlist has no recording id","input":{"op":"sourceId","url":"https://www.youtube.com/playlist?list=PLabc"},"expected":null},
+    {"name":"another site","input":{"op":"sourceId","url":"https://vimeo.com/1"},"expected":null},
+    {"name":"text that is not a link","input":{"op":"sourceId","url":"nope"},"expected":null}
+  ]
+}

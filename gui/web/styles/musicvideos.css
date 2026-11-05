@@ -1,0 +1,16 @@
+/* Music videos: a song's video shown on its own (library/musicVideos/). Rows reuse the song row look. */
+.mv-list {
+  display: grid;
+  gap: 2px;
+}
+.mv-item {
+  height: 56px;
+}
+.mv-row .row-size {
+  width: 80px;
+  text-align: right;
+}
+.mv-row .row-time {
+  width: 56px;
+  text-align: right;
+}

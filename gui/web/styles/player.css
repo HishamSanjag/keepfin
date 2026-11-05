@@ -1,0 +1,746 @@
+/* The full player: the frame every style shares, the cover stage (the cover, or the picture in its place), and the three styles
+   (gui/web/player/full/): Stage, Cinema and Afterglow. Tokens come from tokens.css; colours over a picture are fixed light-on-dark,
+   so controls on a video stay legible in both themes. */
+
+/* ---------- Shared: header, side panel, controls bar ---------- */
+.full-head {
+  position: relative;
+  z-index: 2;
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 24px;
+  touch-action: none;
+}
+.full-head .full-close {
+  margin-right: 6px;
+}
+.full-head-gap {
+  flex: 1;
+}
+.full-kicker {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-2);
+}
+.full-art {
+  position: relative;
+  aspect-ratio: 1;
+  view-transition-name: player-art;
+}
+.full-meta {
+  min-width: 0;
+}
+.full-meta h2 {
+  font-family: var(--font-display);
+  font-size: 24px;
+  line-height: 30px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.full-meta p {
+  color: var(--text-2);
+  font-size: 14px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.full-side {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-width: 0;
+  min-height: 0;
+}
+.full-panel {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+}
+/* The controls sit on an opaque layer, so they stay legible whatever the artwork wash behind them looks like. */
+.full-controls {
+  flex: none;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(300px, 560px) minmax(0, 1fr);
+  align-items: center;
+  gap: 24px;
+  padding: 12px 48px 14px;
+  background: var(--raised);
+  box-shadow: var(--shadow-bar);
+}
+.transport-block {
+  display: grid;
+  justify-items: center;
+  gap: 6px;
+  width: 100%;
+}
+.transport-block .seek {
+  width: 100%;
+}
+.fc-side {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+  font-size: 13px;
+  color: var(--text-2);
+}
+.fc-end {
+  justify-content: flex-end;
+}
+.next-up {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ---------- The cover stage: the cover, or the picture in its place ---------- */
+.cover-stage {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  border-radius: var(--r-xl);
+  background: var(--thumb-bg);
+  box-shadow: var(--shadow-lg);
+}
+.cover-stage .cover-art {
+  position: absolute;
+  inset: 0;
+  border-radius: 0;
+}
+.cover-wide .cover-art {
+  inset: 0;
+  margin: auto;
+  width: auto;
+  height: 100%;
+  aspect-ratio: 1;
+}
+.cover-media {
+  position: absolute;
+  inset: 0;
+  background: #000;
+}
+.cover-media > video {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  background: #000;
+}
+.cover-stage:fullscreen {
+  border-radius: 0;
+  box-shadow: none;
+  background: #000;
+}
+.cover-pill,
+.cover-full {
+  position: absolute;
+  z-index: 3;
+  background: rgba(12, 14, 20, 0.78);
+  color: #eef0f5;
+}
+.cover-pill {
+  right: 12px;
+  bottom: 12px;
+  border-radius: 999px;
+}
+.cover-wide .cover-pill {
+  right: auto;
+  left: 12px;
+  top: 12px;
+  bottom: auto;
+}
+.cover-pill .segmented {
+  background: transparent;
+  box-shadow: none;
+  border-radius: 999px;
+  padding: 3px;
+}
+.cover-pill .segmented button {
+  height: 30px;
+  border-radius: 999px;
+  color: #eef0f5;
+}
+.cover-pill .segmented button:hover:not(:disabled):not(.checked) {
+  background: rgba(238, 240, 245, 0.16);
+  color: #fff;
+}
+.cover-pill .segmented button.checked,
+:root[data-theme='dark'] .cover-pill .segmented button.checked {
+  background: #eef0f5;
+  color: #111318;
+  box-shadow: none;
+}
+.cover-full {
+  top: 12px;
+  right: 12px;
+  border-radius: 10px;
+}
+.cover-full:hover:not(:disabled) {
+  background: rgba(12, 14, 20, 0.92);
+}
+/* Cinema paints the line being sung over the lower part of the stage. */
+.cinema-line {
+  position: absolute;
+  z-index: 2;
+  left: 20px;
+  right: 20px;
+  bottom: 18px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 44px;
+  padding: 8px 16px;
+  border-radius: 10px;
+  background: rgba(10, 12, 18, 0.7);
+  color: #eef0f5;
+  font-size: 17px;
+  font-weight: 700;
+  line-height: 24px;
+}
+.cinema-note {
+  color: #ffd6aa;
+}
+/* Full screen: the controls show while the pointer or keys move, then fade. */
+.cover-hud {
+  position: absolute;
+  inset: 0;
+  z-index: 4;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  pointer-events: none;
+  background: linear-gradient(rgba(0, 0, 0, 0.6), transparent 22%, transparent 68%, rgba(0, 0, 0, 0.72));
+  transition: opacity var(--t) var(--ease);
+  --text: #eef0f5;
+  --text-2: #c8cdd8;
+  --canvas: #111318;
+  --hover: rgba(238, 240, 245, 0.14);
+  --control: #8d96a8;
+  --line: #4a5266;
+  color: #eef0f5;
+}
+.cover-hud > * {
+  pointer-events: auto;
+}
+.cover-stage.hud-off {
+  cursor: none;
+}
+.cover-stage.hud-off .cover-hud {
+  opacity: 0;
+}
+.cover-hud-top {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 16px;
+}
+.cover-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 36px;
+  padding: 0 12px;
+  border-radius: 10px;
+  background: rgba(12, 14, 20, 0.78);
+  color: #eef0f5;
+  font-size: 13px;
+  font-weight: 600;
+}
+.cover-back:hover {
+  background: rgba(12, 14, 20, 0.92);
+}
+.cover-hud-title {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 14px;
+  font-weight: 600;
+}
+.cover-hud-bar {
+  display: grid;
+  justify-items: center;
+  gap: 4px;
+  padding: 0 24px 14px;
+}
+.cover-hud-bar .seek {
+  width: min(900px, 100%);
+}
+
+/* ---------- Stage ---------- */
+.layout-stage .full-body {
+  display: grid;
+  grid-template-columns: minmax(0, 5fr) minmax(0, 6fr);
+  gap: 56px;
+  flex: 1;
+  min-height: 0;
+  width: 100%;
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 0 56px 16px 64px;
+}
+.layout-stage .full-main {
+  --cover: min(440px, 100%, 52vh);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: flex-start;
+  gap: 18px;
+  min-width: 0;
+  min-height: 0;
+}
+.layout-stage .full-art,
+.layout-stage .full-title {
+  width: var(--cover);
+}
+.full-title {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+.full-title .full-meta {
+  flex: 1;
+}
+.layout-stage .lyric {
+  font-size: 26px;
+}
+.layout-stage .lyric:not(.plain) {
+  color: color-mix(in srgb, var(--text) 76%, transparent);
+}
+.layout-stage .lyric.active {
+  color: var(--text);
+}
+.layout-stage .lyric.plain {
+  font-size: 18px;
+}
+
+/* ---------- Cinema ---------- */
+.cinema {
+  flex: 1;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) clamp(300px, 28vw, 380px);
+}
+.cinema-main {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+}
+.cinema-stage {
+  flex: 1;
+  min-height: 0;
+  container-type: size;
+  display: grid;
+  place-items: center;
+  padding: 4px 24px 0;
+}
+.cinema-frame {
+  width: min(100cqw, 100cqh * 16 / 9);
+  aspect-ratio: 16 / 9;
+}
+.cinema-main > .now-error {
+  padding: 8px 24px 0;
+}
+.cinema-controls {
+  grid-template-columns: minmax(0, 1fr) minmax(300px, 520px) minmax(0, 1fr);
+  margin-top: 12px;
+  padding: 14px 32px 16px;
+  box-shadow: none;
+}
+.cinema-song {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+.cinema-thumb {
+  width: 56px;
+  height: 56px;
+  flex: none;
+  border-radius: 8px;
+  overflow: hidden;
+}
+.cinema-song .full-meta {
+  flex: 1;
+}
+.cinema-song .full-meta h2 {
+  font-size: 17px;
+  line-height: 24px;
+}
+.cinema-side {
+  padding: 16px 16px 0;
+  background: var(--surface-2);
+}
+.layout-cinema .lyric {
+  font-size: 20px;
+}
+
+/* ---------- Afterglow ---------- */
+.afterglow-glow {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  overflow: hidden;
+  pointer-events: none;
+}
+/* The glow is one oversized layer that drifts by transform alone (no repaint); a veil keeps text AA over any cover. */
+.afterglow-glow::before {
+  content: '';
+  position: absolute;
+  inset: -15%;
+  background:
+    radial-gradient(48% 56% at 22% 24%, rgba(var(--glow, 111, 143, 240), 0.7), transparent 72%),
+    radial-gradient(40% 48% at 88% 92%, color-mix(in srgb, var(--accent) 38%, transparent), transparent 72%);
+  will-change: transform;
+}
+:root[data-theme='light'] .afterglow-glow::before {
+  opacity: 0.55;
+}
+.afterglow-glow::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: color-mix(in srgb, var(--canvas) 40%, transparent);
+}
+@media (prefers-reduced-motion: no-preference) {
+  .afterglow-glow::before {
+    animation: glow-drift 32s ease-in-out infinite alternate;
+  }
+}
+@keyframes glow-drift {
+  to {
+    transform: translate3d(4%, 3%, 0) scale(1.06);
+  }
+}
+.afterglow-body {
+  flex: 1;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: clamp(300px, 26vw, 380px) minmax(0, 1fr);
+  gap: clamp(32px, 6vw, 96px);
+  width: 100%;
+  max-width: 1500px;
+  margin: 0 auto;
+  padding: 8px clamp(24px, 5vw, 80px) 0;
+}
+.afterglow-main {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 14px;
+  min-width: 0;
+  min-height: 0;
+}
+.afterglow-art {
+  width: min(100%, 42vh);
+}
+.visualizer {
+  display: block;
+  width: 100%;
+  height: 40px;
+  color: var(--accent-text);
+}
+.afterglow-main .transport {
+  justify-content: space-between;
+}
+.afterglow-extras {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.afterglow-lyrics {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  overflow: hidden;
+}
+.afterglow-lyrics .lyrics {
+  padding-block: 30%;
+  padding-inline-end: 12%;
+  gap: 22px;
+}
+.afterglow-lyrics .lyric {
+  font-size: clamp(24px, 2.7vw, 38px);
+  font-weight: 800;
+  line-height: 1.15;
+  letter-spacing: -0.02em;
+}
+.afterglow-lyrics .lyric:not(.plain) {
+  color: color-mix(in srgb, var(--text) 80%, transparent);
+}
+.afterglow-lyrics .lyric.active {
+  transform: scale(1.2);
+}
+.afterglow-lyrics .lyric.plain {
+  font-size: clamp(18px, 1.8vw, 24px);
+}
+/* Up next: the whole queue fills the big centre area, in large rows (the same list, reorder and remove as everywhere). */
+.afterglow-queue {
+  align-self: stretch;
+  padding-block: 8px 24px;
+  padding-inline-end: 4px;
+}
+.afterglow-queue .queue-head {
+  padding-bottom: 12px;
+  font-size: 15px;
+}
+.afterglow-queue .queue-row {
+  min-height: 72px;
+  contain-intrinsic-size: auto 72px;
+  border-radius: 14px;
+}
+.afterglow-queue .queue-row.is-current {
+  background: color-mix(in srgb, var(--text) 10%, transparent);
+}
+.afterglow-queue .q-main {
+  min-height: 72px;
+  gap: 16px;
+}
+.afterglow-queue .q-art {
+  width: 52px;
+  height: 52px;
+  border-radius: 10px;
+}
+.afterglow-queue .row-title {
+  font-size: 18px;
+  font-weight: 700;
+}
+.afterglow-queue .row-sub,
+.afterglow-queue .row-time {
+  font-size: 14px;
+  color: var(--text-2);
+}
+/* ---------- Narrow windows ---------- */
+/* One column below 960 px: the song above the Lyrics / Queue panel, and the page scrolls. Each row keeps its content's height, and the
+   panel has its own height, so lyrics still scroll inside it. The controls bar keeps the transport and the volume. */
+@container app (max-width: 959px) {
+  .layout-stage .full-body,
+  .afterglow-body {
+    grid-template-columns: minmax(0, 1fr);
+    align-content: start;
+    overflow-y: auto;
+    padding: 0 20px 20px;
+    gap: 20px;
+  }
+  .layout-stage .full-main,
+  .afterglow-main {
+    min-height: auto;
+  }
+  .layout-stage .full-side {
+    height: clamp(300px, 60vh, 520px);
+  }
+  .afterglow-lyrics,
+  .afterglow-queue {
+    height: clamp(300px, 50vh, 460px);
+  }
+  .full-controls,
+  .cinema-controls {
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 12px;
+    padding: 10px 20px 12px;
+  }
+  .full-controls > .fc-side:first-child {
+    display: none;
+  }
+  .cinema {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: minmax(0, 1fr) clamp(260px, 40vh, 420px);
+  }
+  .cinema-main {
+    overflow-y: auto;
+  }
+  .cinema-stage {
+    flex: none;
+    container-type: normal;
+    padding: 4px 20px 0;
+  }
+  .cinema-frame {
+    width: 100%;
+  }
+  .cinema-song .full-meta p {
+    display: none;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .cover-hud {
+    transition: none;
+  }
+}
+
+/* ---------- The mini bar: a floating island ---------- */
+/* It floats 16 px from the window's sides and bottom (the app grid keeps the page above it, so nothing hides behind it). Left the cover,
+   title, artist and heart; middle the transport with the seek bar; right Video, Lyrics, Queue, volume and More. No artwork tint. */
+.now-bar {
+  position: relative;
+  z-index: 20;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(300px, 560px) minmax(0, 1fr);
+  align-items: center;
+  gap: 4px 24px;
+  margin: 8px 16px 16px;
+  padding: 10px 14px 10px 12px;
+  border-radius: 20px;
+  background: var(--raised);
+  box-shadow:
+    var(--shadow-bar),
+    inset 0 0 0 1px var(--line);
+}
+.now-left {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  min-width: 0;
+}
+.now-info {
+  /* only as wide as the song: the heart sits right after it */
+  flex: 0 1 auto;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  min-width: 0;
+  border-radius: 14px;
+  text-align: left;
+}
+.now-cover {
+  position: relative;
+  flex: none;
+  width: 56px;
+  height: 56px;
+  border-radius: 14px;
+  overflow: hidden;
+}
+.now-art {
+  width: 100%;
+  height: 100%;
+  border-radius: inherit;
+}
+.now-chevron {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  display: grid;
+  place-items: center;
+  width: 18px;
+  height: 18px;
+  border-radius: 6px;
+  background: rgba(12, 14, 20, 0.62);
+  color: #eef0f5;
+}
+.now-text {
+  display: grid;
+  min-width: 0;
+  gap: 1px;
+}
+.now-title {
+  font-size: 14px;
+  font-weight: 650;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.now-artist {
+  font-size: 12.5px;
+  color: var(--text-2);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.now-center {
+  display: grid;
+  gap: 4px;
+  width: 100%;
+}
+.now-bar .play-btn {
+  width: 40px;
+  height: 40px;
+}
+.now-right {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 2px;
+  min-width: 0;
+}
+.video-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 36px;
+  margin-right: 4px;
+  padding: 0 12px;
+  border-radius: 999px;
+  background: var(--hover);
+  color: var(--text);
+  font-size: 13px;
+  font-weight: 600;
+}
+.video-pill:hover {
+  background: var(--press);
+}
+/* Narrower windows: the Video pill keeps only its icon, then the volume slider opens above its button, then two rows. */
+@container app (max-width: 1099px) {
+  .video-pill-text {
+    display: none;
+  }
+  .video-pill {
+    width: 36px;
+    padding: 0;
+    justify-content: center;
+  }
+}
+@container app (max-width: 959px) {
+  .now-bar {
+    grid-template-columns: minmax(140px, 1fr) minmax(220px, 2fr) auto;
+    gap: 4px 16px;
+    padding: 8px 10px;
+  }
+  .now-cover {
+    width: 44px;
+    height: 44px;
+    border-radius: 10px;
+  }
+  .now-bar .sleep-chip {
+    display: none;
+  }
+  .now-right .volume {
+    position: relative;
+  }
+  .now-right .volume-track {
+    position: absolute;
+    bottom: 100%;
+    left: 50%;
+    translate: -50% 0;
+    padding: 12px 14px;
+    border-radius: 8px;
+    background: var(--overlay);
+    box-shadow: var(--shadow-md), inset 0 0 0 1px var(--line-strong);
+    opacity: 0;
+    visibility: hidden;
+    transition:
+      opacity var(--t-fast) var(--ease),
+      visibility 0s linear var(--t-fast);
+  }
+  .now-right .volume:hover .volume-track,
+  .now-right .volume:focus-within .volume-track {
+    opacity: 1;
+    visibility: visible;
+    transition: opacity var(--t-fast) var(--ease);
+  }
+}
+@container app (max-width: 799px) {
+  .now-bar {
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+  .now-center {
+    grid-column: 1 / -1;
+    grid-row: 2;
+  }
+}

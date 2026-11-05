@@ -1,0 +1,468 @@
+/* ---------- The download preview: one window for every case (dev-docs/plans/DOWNLOAD-PREVIEW.md) ---------- */
+.dialog.preview {
+  width: min(740px, calc(100vw / var(--zoom) - 32px));
+  max-height: calc(100dvh / var(--zoom) - 56px);
+  overflow: hidden;
+}
+/* A window with tabs keeps one height, so switching to Extras never makes it jump. */
+.dialog.preview.has-tabs {
+  height: calc(100dvh / var(--zoom) - 56px);
+}
+.preview .dialog-body {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+  gap: 0;
+  min-height: 0;
+  padding: 0;
+  overflow: hidden;
+  color: var(--text);
+  /* the window's own width decides how its body folds up, not the page behind it */
+  container: preview / inline-size;
+}
+.preview-head {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 16px 12px 12px 20px;
+}
+.preview-cover {
+  width: min(128px, 30%);
+  flex: none;
+  border-radius: var(--r-md);
+}
+.preview-cover.is-square {
+  width: min(72px, 20%);
+  aspect-ratio: 1;
+}
+.preview-cover .icon {
+  width: 26px;
+  height: 26px;
+}
+.preview-title {
+  flex: 1;
+  min-width: 0;
+}
+.preview-title h2 {
+  font-family: var(--font-display);
+  font-size: 18px;
+  line-height: 1.3;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  overflow-wrap: anywhere;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
+  text-wrap: pretty;
+}
+.preview-facts {
+  margin-top: 3px;
+  font-size: 13px;
+  color: var(--text-2);
+  overflow-wrap: anywhere;
+}
+.preview-status {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 2px 8px;
+  margin-top: 2px;
+}
+.preview-status .spinner {
+  color: var(--accent-text);
+}
+
+/* Tabs: a line under the one that is open. */
+.preview .tabs {
+  gap: 22px;
+  padding: 0 20px;
+  border-bottom: 1px solid var(--line);
+}
+.preview .tabs [role='tab'] {
+  height: 40px;
+  padding: 0;
+  border-radius: 0;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -1px;
+  background: none;
+  box-shadow: none;
+}
+.preview .tabs [role='tab'].selected {
+  border-bottom-color: var(--accent);
+  background: none;
+  box-shadow: none;
+}
+.preview-error {
+  margin: 0;
+  padding: 8px 20px 0;
+}
+.preview-scroll {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: auto;
+  padding: 14px 20px;
+}
+.preview-panel {
+  display: grid;
+  align-content: start;
+  gap: 12px;
+  min-width: 0;
+}
+.preview-panel[hidden] {
+  display: none;
+}
+
+/* Bottom: Save to, Download on…, Download. */
+.preview .dialog-foot {
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 8px 10px;
+  padding: 12px 20px 14px;
+}
+.foot-gap {
+  flex: 1 1 0;
+}
+.preview .dest {
+  flex: 0 1 auto;
+  max-width: 100%;
+}
+
+/* ---------- What to save ---------- */
+.sizes {
+  display: grid;
+  gap: 8px;
+  min-width: 0;
+}
+.size-rows {
+  display: grid;
+  gap: 2px;
+}
+.size-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 44px;
+  padding: 0 12px;
+  border-radius: var(--r-md);
+  cursor: pointer;
+  transition: background-color var(--t-fast) var(--ease);
+}
+.size-row:hover {
+  background: var(--hover);
+}
+.size-row.checked {
+  background: var(--accent-soft);
+}
+.size-row:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: -2px;
+}
+.size-row .radio-dot {
+  flex: none;
+}
+.size-row.checked .radio-dot {
+  border-color: var(--accent);
+}
+.size-row.checked .radio-dot::after {
+  transform: scale(1);
+}
+.size-row-label {
+  font-weight: 600;
+  color: var(--text);
+}
+.size-row-detail {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 12.5px;
+  color: var(--text-2);
+}
+.size-row-size {
+  font-weight: 600;
+  color: var(--text);
+  white-space: nowrap;
+}
+.size-unknown {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-3);
+}
+.format-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 12px;
+}
+.size-row-label .badge {
+  margin-left: 8px;
+}
+.preview .gallery-grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+.preview .gallery-grid .thumb {
+  border-radius: var(--r-md);
+}
+
+/* A line of context above the sizes: a note, a hint, the video that Both keeps. */
+.preview-note {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 12px;
+  border-radius: var(--r-md);
+  background: var(--accent-soft);
+  color: var(--accent-text);
+}
+.preview-note > span {
+  flex: 1;
+  min-width: 0;
+}
+.preview-hint {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  font-size: 12.5px;
+  color: var(--text-3);
+}
+.found-video {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  border-radius: var(--r-md);
+  background: var(--raised);
+}
+.found-video > div:last-child {
+  min-width: 0;
+}
+.found-video-cover {
+  width: 72px;
+  flex: none;
+  border-radius: 6px;
+}
+
+/* Keep in sync and Quality for all: quiet rows on the main tab. */
+.sync-row,
+.preview-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 12px;
+  min-height: 44px;
+  padding: 6px 12px;
+  border-radius: var(--r-md);
+  background: var(--raised);
+}
+.sync-row.is-on {
+  box-shadow: inset 0 0 0 1px var(--accent);
+}
+.sync-row .switch {
+  order: 3;
+}
+.sync-interval {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+.sync-text {
+  display: grid;
+  flex: 1 1 200px;
+  min-width: 0;
+}
+.sync-title {
+  font-weight: 600;
+  color: var(--text);
+  cursor: pointer;
+}
+.sync-desc {
+  font-size: 12.5px;
+  color: var(--text-3);
+}
+.preview-row {
+  justify-content: space-between;
+}
+.preview-row-label {
+  color: var(--text-2);
+}
+
+/* The entries of a collection and the links of a batch flow in the window's own scroll. */
+.preview .collection-toolbar {
+  position: sticky;
+  top: -14px;
+  z-index: 2;
+  margin: 0 -20px;
+  padding: 8px 20px;
+  background: var(--overlay);
+}
+.preview .entries {
+  max-height: none;
+  overflow: visible;
+}
+.dismiss-all {
+  justify-self: start;
+}
+
+/* Nothing was readable: say what happened and what can be done. */
+.preview-problem {
+  display: grid;
+  gap: 16px;
+  justify-items: center;
+  padding: 24px 8px;
+  text-align: center;
+}
+.preview-problem p {
+  margin: 0;
+  max-width: 52ch;
+  color: var(--text-2);
+}
+.preview-problem-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px;
+}
+
+/* ---------- Extras ---------- */
+.extras {
+  display: grid;
+}
+.extra {
+  display: grid;
+  gap: 2px;
+  padding: 12px 0 14px;
+  border-bottom: 1px solid var(--line);
+}
+.extra:first-child {
+  padding-top: 0;
+}
+.extra:last-child {
+  border-bottom: 0;
+}
+.extra-name {
+  font-weight: 600;
+  color: var(--text);
+}
+.extra-note {
+  margin: 0;
+  font-size: 12.5px;
+  line-height: 1.5;
+  color: var(--text-3);
+}
+.extra-body {
+  display: grid;
+  gap: 10px;
+  justify-items: start;
+  margin-top: 8px;
+}
+.extra-more {
+  display: grid;
+  gap: 10px;
+  width: 100%;
+}
+.extra-switch {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  font-size: 13px;
+  cursor: pointer;
+}
+.extra-pills .chip {
+  height: 30px;
+  padding: 0 12px;
+  font-size: 13px;
+}
+.extra .clock-pair {
+  width: 100%;
+}
+
+/* ---------- A narrow window (or a large text size) ---------- */
+@container preview (max-width: 560px) {
+  .preview .tabs {
+    gap: 18px;
+    padding: 0 16px;
+  }
+  .preview-scroll {
+    padding: 12px 16px;
+  }
+  .preview-error {
+    padding: 8px 16px 0;
+  }
+  .preview .collection-toolbar {
+    margin: 0 -16px;
+    padding: 8px 16px;
+  }
+  .size-row {
+    padding: 0 8px;
+  }
+  .radio-row {
+    grid-template-columns: 16px 40px minmax(0, 1fr) auto;
+    row-gap: 2px;
+    padding: 8px 12px;
+  }
+  .radio-row .row-meta {
+    grid-column: 3;
+    grid-row: 2;
+  }
+  .radio-row .size-cell {
+    grid-column: 4;
+    grid-row: 1 / span 2;
+  }
+  .size-track {
+    display: none;
+  }
+  .batch-row {
+    grid-template-columns: 64px minmax(0, 1fr);
+  }
+  .thumb-sm {
+    width: 64px;
+  }
+  .batch-actions {
+    grid-column: 1 / -1;
+    flex-wrap: wrap;
+  }
+  .batch-actions .select {
+    flex: 1;
+  }
+  .batch-actions .select select {
+    max-width: none;
+    width: 100%;
+  }
+  .entry {
+    grid-template-columns: 18px 56px minmax(0, 1fr) auto;
+  }
+  .entry-pos {
+    display: none;
+  }
+  .thumb-xs {
+    width: 56px;
+  }
+}
+
+/* Video | Audio | Both: equal parts across the top of the main tab. */
+.preview-panel > .segmented {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: minmax(0, 1fr);
+}
+.preview-panel > .segmented button {
+  height: 34px;
+}
+
+/* Format and Quality for all: two dropdowns on one line. */
+.preview-selects {
+  flex-wrap: nowrap;
+  justify-content: flex-start;
+  gap: 8px 16px;
+}
+.preview-select {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}

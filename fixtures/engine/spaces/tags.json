@@ -1,0 +1,25 @@
+{
+  "description": "Tag normalisation (lower case, trimmed, deduplicated in order, no empties, links or values over 30 characters, at most 15 source tags) and the tags worth a chip in a scope (on at least minItems items, plus every user tag; most used first, then A to Z).",
+  "cases": [
+    {"name":"normalised, deduplicated, no empties, links or long values","input":{"op":"normalizeTags","raw":[" Lo-Fi ","lo-fi","","  ","#Chill","https://example.com/x","www.x.com","aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","Hip  Hop"]},"expected":["lo-fi","chill","hip hop"]},
+    {"name":"exactly 30 characters is kept, 31 is dropped","input":{"op":"normalizeTags","raw":["bbbbbbbbbbbbbbbbbbbbbbbbbbbbbb","cccccccccccccccccccccccccccccc1"]},"expected":["bbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"]},
+    {"name":"at most 15 source tags, in order","input":{"op":"normalizeTags","raw":["tag1","tag2","tag3","tag4","tag5","tag6","tag7","tag8","tag9","tag10","tag11","tag12","tag13","tag14","tag15","tag16","tag17","tag18"]},"expected":["tag1","tag2","tag3","tag4","tag5","tag6","tag7","tag8","tag9","tag10","tag11","tag12","tag13","tag14","tag15"]},
+    {"name":"null entries are skipped","input":{"op":"normalizeTags","raw":[null,"ok"]},"expected":["ok"]},
+    {"name":"accented tags are only lower-cased","input":{"op":"normalizeTags","raw":["Café"]},"expected":["café"]},
+    {"name":"a domain-like value is dropped like a link","input":{"op":"normalizeTags","raw":["example.com/a"]},"expected":[]},
+    {"name":"one string with several tags is split on commas and semicolons","input":{"op":"normalizeTags","raw":["Pop, Rock; ROCK"]},"expected":["pop","rock"]},
+    {"name":"source tags: genres first, then genre, tags and categories","input":{"op":"sourceTags","info":{"genres":["Electronic","Ambient"],"genre":"Ambient","tags":["chill","Study"],"categories":["Music"]}},"expected":["electronic","ambient","chill","study","music"]},
+    {"name":"source tags: a single genre","input":{"op":"sourceTags","info":{"genre":"Pop"}},"expected":["pop"]},
+    {"name":"source tags: a genre string with several values","input":{"op":"sourceTags","info":{"genre":"Jazz, Blues"}},"expected":["jazz","blues"]},
+    {"name":"source tags: nothing in the info","input":{"op":"sourceTags","info":{}},"expected":[]},
+    {"name":"scope tags: used at least twice, plus every user tag","input":{"op":"scopeTags","items":[{"tags":["lofi","solo"]},{"tags":["lofi","jazz"],"userTags":["mine"]},{"tags":["jazz","lofi","lofi"]}]},"expected":[{"tag":"lofi","count":3,"user":false},{"tag":"jazz","count":2,"user":false},{"tag":"mine","count":1,"user":true}]},
+    {"name":"scope tags: a higher minimum","input":{"op":"scopeTags","minItems":3,"items":[{"tags":["lofi","solo"]},{"tags":["lofi","jazz"],"userTags":["mine"]},{"tags":["jazz","lofi","lofi"]}]},"expected":[{"tag":"lofi","count":3,"user":false},{"tag":"mine","count":1,"user":true}]},
+    {"name":"scope tags: ties sort A to Z","input":{"op":"scopeTags","items":[{"tags":["jazz","rare"]},{"tags":["jazz","pop"]},{"tags":["pop"],"userTags":["gym"]}]},"expected":[{"tag":"jazz","count":2,"user":false},{"tag":"pop","count":2,"user":false},{"tag":"gym","count":1,"user":true}]},
+    {"name":"scope tags: nothing in scope","input":{"op":"scopeTags","items":[]},"expected":[]},
+    {"name":"leading hashes and inner spaces are cleaned","input":{"op":"normalizeTags","raw":["##Deep   House"]},"expected":["deep house"]},
+    {"name":"a site name inside longer text drops the value","input":{"op":"normalizeTags","raw":["listen at example.com now","tv.guide"]},"expected":["tv.guide"]},
+    {"name":"a value with a scheme is dropped, one that only contains :// later is kept","input":{"op":"normalizeTags","raw":["ftp://host","a b://c"]},"expected":["a b://c"]},
+    {"name":"commas and semicolons split inside every value","input":{"op":"normalizeTags","raw":["a,b;c","d"]},"expected":["a","b","c","d"]},
+    {"name":"source tags cap at 15 across all lists","input":{"op":"sourceTags","info":{"genres":["g1","g2","g3","g4","g5","g6","g7","g8"],"tags":["t1","t2","t3","t4","t5","t6","t7","t8"]}},"expected":["g1","g2","g3","g4","g5","g6","g7","g8","t1","t2","t3","t4","t5","t6","t7"]}
+  ]
+}

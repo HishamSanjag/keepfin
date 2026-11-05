@@ -1,0 +1,14 @@
+{
+  "description": "Which text is a release version: X.Y.Z or X.Y.Z-beta.N. Result is true or false.",
+  "cases": [
+    {"name":"a final release","input":{"op":"valid","value":"0.5.5"},"expected":true},
+    {"name":"a beta","input":{"op":"valid","value":"0.5.5-beta.1"},"expected":true},
+    {"name":"a two-digit beta number","input":{"op":"valid","value":"0.5.5-beta.10"},"expected":true},
+    {"name":"a release candidate is not a version","input":{"op":"valid","value":"0.9.0-rc.1"},"expected":false},
+    {"name":"a beta without a number","input":{"op":"valid","value":"0.5.5-beta"},"expected":false},
+    {"name":"two numbers only","input":{"op":"valid","value":"0.5"},"expected":false},
+    {"name":"four numbers","input":{"op":"valid","value":"0.5.5.1"},"expected":false},
+    {"name":"empty","input":{"op":"valid","value":""},"expected":false},
+    {"name":"words","input":{"op":"valid","value":"latest"},"expected":false}
+  ]
+}

@@ -1,0 +1,5 @@
+# Engine patches and the Unix Gradle launcher must survive Windows checkouts.
+*.patch text eol=lf
+android/gradlew text eol=lf
+# Shell scripts run by sh need LF line endings, also on Windows checkouts.
+scripts/dev/hooks/* text eol=lf

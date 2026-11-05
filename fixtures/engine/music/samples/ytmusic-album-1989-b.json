@@ -1,0 +1,1373 @@
+{
+ "contents": {
+  "twoColumnBrowseResultsRenderer": {
+   "secondaryContents": {
+    "sectionListRenderer": {
+     "contents": [
+      {
+       "musicShelfRenderer": {
+        "contents": [
+         {
+          "musicResponsiveListItemRenderer": {
+           "flexColumns": [
+            {
+             "musicResponsiveListItemFlexColumnRenderer": {
+              "text": {
+               "runs": [
+                {
+                 "text": "Welcome To New York (Taylor's Version)",
+                 "navigationEndpoint": {
+                  "watchEndpoint": {
+                   "videoId": "FsGdznlfE2U",
+                   "playlistId": "OLAK5uy_ncKvykObOe16WxrmZEAlCbWBRZm2Utaqk"
+                  }
+                 }
+                }
+               ]
+              }
+             }
+            },
+            {
+             "musicResponsiveListItemFlexColumnRenderer": {
+              "text": {}
+             }
+            },
+            {
+             "musicResponsiveListItemFlexColumnRenderer": {
+              "text": {
+               "runs": [
+                {
+                 "text": "99M plays"
+                }
+               ]
+              }
+             }
+            }
+           ],
+           "fixedColumns": [
+            {
+             "musicResponsiveListItemFixedColumnRenderer": {
+              "text": {
+               "runs": [
+                {
+                 "text": "3:33"
+                }
+               ]
+              }
+             }
+            }
+           ],
+           "playlistItemData": {
+            "videoId": "FsGdznlfE2U"
+           },
+           "index": {
+            "runs": [
+             {
+              "text": "1"
+             }
+            ]
+           }
+          }
+         },
+         {
+          "musicResponsiveListItemRenderer": {
+           "flexColumns": [
+            {
+             "musicResponsiveListItemFlexColumnRenderer": {
+              "text": {
+               "runs": [
+                {
+                 "text": "Blank Space (Taylor's Version)",
+                 "navigationEndpoint": {
+                  "watchEndpoint": {
+                   "videoId": "gir8BEqAutk",
+                   "playlistId": "OLAK5uy_ncKvykObOe16WxrmZEAlCbWBRZm2Utaqk"
+                  }
+                 }
+                }
+               ]
+              }
+             }
+            },
+            {
+             "musicResponsiveListItemFlexColumnRenderer": {
+              "text": {}
+             }
+            },
+            {
+             "musicResponsiveListItemFlexColumnRenderer": {
+              "text": {
+               "runs": [
+                {
+                 "text": "142M plays"
+                }
+               ]
+              }
+             }
+            }
+           ],
+           "fixedColumns": [
+            {
+             "musicResponsiveListItemFixedColumnRenderer": {
+              "text": {
+               "runs": [
+                {
+                 "text": "3:52"
+                }
+               ]
+              }
+             }
+            }
+           ],
+           "playlistItemData": {
+            "videoId": "gir8BEqAutk"
+           },
+           "index": {
+            "runs": [
+             {
+              "text": "2"
+             }
+            ]
+           }
+          }
+         },
+         {
+          "musicResponsiveListItemRenderer": {
+           "flexColumns": [
+            {
+             "musicResponsiveListItemFlexColumnRenderer": {
+              "text": {
+               "runs": [
+                {
+                 "text": "Style (Taylor's Version)",
+                 "navigationEndpoint": {
+                  "watchEndpoint": {
+                   "videoId": "2JgvVfOfoWI",
+                   "playlistId": "OLAK5uy_ncKvykObOe16WxrmZEAlCbWBRZm2Utaqk"
+                  }
+                 }
+                }
+               ]
+              }
+             }
+            },
+            {
+             "musicResponsiveListItemFlexColumnRenderer": {
+              "text": {}
+             }
+            },
+            {
+             "musicResponsiveListItemFlexColumnRenderer": {
+              "text": {
+               "runs": [
+                {
+                 "text": "115M plays"
+                }
+               ]
+              }
+             }
+            }
+           ],
+           "fixedColumns": [
+            {
+             "musicResponsiveListItemFixedColumnRenderer": {
+              "text": {
+               "runs": [
+                {
+                 "text": "3:51"
+                }
+               ]
+              }
+             }
+            }
+           ],
+           "playlistItemData": {
+            "videoId": "2JgvVfOfoWI"
+           },
+           "index": {
+            "runs": [
+             {
+              "text": "3"
+             }
+            ]
+           }
+          }
+         },
+         {
+          "musicResponsiveListItemRenderer": {
+           "flexColumns": [
+            {
+             "musicResponsiveListItemFlexColumnRenderer": {
+              "text": {
+               "runs": [
+                {
+                 "text": "Out Of The Woods (Taylor's Version)",
+                 "navigationEndpoint": {
+                  "watchEndpoint": {
+                   "videoId": "gp1MR2WAAXY",
+                   "playlistId": "OLAK5uy_ncKvykObOe16WxrmZEAlCbWBRZm2Utaqk"
+                  }
+                 }
+                }
+               ]
+              }
+             }
+            },
+            {
+             "musicResponsiveListItemFlexColumnRenderer": {
+              "text": {}
+             }
+            },
+            {
+             "musicResponsiveListItemFlexColumnRenderer": {
+              "text": {
+               "runs": [
+                {
+                 "text": "33M plays"
+                }
+               ]
+              }
+             }
+            }
+           ],
+           "fixedColumns": [
+            {
+             "musicResponsiveListItemFixedColumnRenderer": {
+              "text": {
+               "runs": [
+                {
+                 "text": "3:56"
+                }
+               ]
+              }
+             }
+            }
+           ],
+           "playlistItemData": {
+            "videoId": "gp1MR2WAAXY"
+           },
+           "index": {
+            "runs": [
+             {
+              "text": "4"
+             }
+            ]
+           }
+          }
+         },
+         {
+          "musicResponsiveListItemRenderer": {
+           "flexColumns": [
+            {
+             "musicResponsiveListItemFlexColumnRenderer": {
+              "text": {
+               "runs": [
+                {
+                 "text": "All You Had To Do Was Stay (Taylor's Version)",
+                 "navigationEndpoint": {
+                  "watchEndpoint": {
+                   "videoId": "_Usd5X5XJXM",
+                   "playlistId": "OLAK5uy_ncKvykObOe16WxrmZEAlCbWBRZm2Utaqk"
+                  }
+                 }
+                }
+               ]
+              }
+             }
+            },
+            {
+             "musicResponsiveListItemFlexColumnRenderer": {
+              "text": {}
+             }
+            },
+            {
+             "musicResponsiveListItemFlexColumnRenderer": {
+              "text": {
+               "runs": [
+                {
+                 "text": "25M plays"
+                }
+               ]
+              }
+             }
+            }
+           ],
+           "fixedColumns": [
+            {
+             "musicResponsiveListItemFixedColumnRenderer": {
+              "text": {
+               "runs": [
+                {
+                 "text": "3:14"
+                }
+               ]
+              }
+             }
+            }
+           ],
+           "playlistItemData": {
+            "videoId": "_Usd5X5XJXM"
+           },
+           "index": {
+            "runs": [
+             {
+              "text": "5"
+             }
+            ]
+           }
+          }
+         },
+         {
+          "musicResponsiveListItemRenderer": {
+           "flexColumns": [
+            {
+             "musicResponsiveListItemFlexColumnRenderer": {
+              "text": {
+               "runs": [
+                {
+                 "text": "Shake It Off (Taylor's Version)",
+                 "navigationEndpoint": {
+                  "watchEndpoint": {
+                   "videoId": "mvVBuG4IOW4",
+                   "playlistId": "OLAK5uy_ncKvykObOe16WxrmZEAlCbWBRZm2Utaqk"
+                  }
+                 }
+                }
+               ]
+              }
+             }
+            },
+            {
+             "musicResponsiveListItemFlexColumnRenderer": {
+              "text": {}
+             }
+            },
+            {
+             "musicResponsiveListItemFlexColumnRenderer": {
+              "text": {
+               "runs": [
+                {
+                 "text": "82M plays"
+                }
+               ]
+              }
+             }
+            }
+           ],
+           "fixedColumns": [
+            {
+             "musicResponsiveListItemFixedColumnRenderer": {
+              "text": {
+               "runs": [
+                {
+                 "text": "3:40"
+                }
+               ]
+              }
+             }
+            }
+           ],
+           "playlistItemData": {
+            "videoId": "mvVBuG4IOW4"
+           },
+           "index": {
+            "runs": [
+             {
+              "text": "6"
+             }
+            ]
+           }
+          }
+         },
+         {
+          "musicResponsiveListItemRenderer": {
+           "flexColumns": [
+            {
+             "musicResponsiveListItemFlexColumnRenderer": {
+              "text": {
+               "runs": [
+                {
+                 "text": "I Wish You Would (Taylor's Version)",
+                 "navigationEndpoint": {
+                  "watchEndpoint": {
+                   "videoId": "89aQIli8aVU",
+                   "playlistId": "OLAK5uy_ncKvykObOe16WxrmZEAlCbWBRZm2Utaqk"
+                  }
+                 }
+                }
+               ]
+              }
+             }
+            },
+            {
+             "musicResponsiveListItemFlexColumnRenderer": {
+              "text": {}
+             }
+            },
+            {
+             "musicResponsiveListItemFlexColumnRenderer": {
+              "text": {
+               "runs": [
+                {
+                 "text": "28M plays"
+                }
+               ]
+              }
+             }
+            }
+           ],
+           "fixedColumns": [
+            {
+             "musicResponsiveListItemFixedColumnRenderer": {
+              "text": {
+               "runs": [
+                {
+                 "text": "3:28"
+                }
+               ]
+              }
+             }
+            }
+           ],
+           "playlistItemData": {
+            "videoId": "89aQIli8aVU"
+           },
+           "index": {
+            "runs": [
+             {
+              "text": "7"
+             }
+            ]
+           }
+          }
+         },
+         {
+          "musicResponsiveListItemRenderer": {
+           "flexColumns": [
+            {
+             "musicResponsiveListItemFlexColumnRenderer": {
+              "text": {
+               "runs": [
+                {
+                 "text": "Bad Blood (Taylor's Version)",
+                 "navigationEndpoint": {
+                  "watchEndpoint": {
+                   "videoId": "lUvBk4owRNU",
+                   "playlistId": "OLAK5uy_ncKvykObOe16WxrmZEAlCbWBRZm2Utaqk"
+                  }
+                 }
+                }
+               ]
+              }
+             }
+            },
+            {
+             "musicResponsiveListItemFlexColumnRenderer": {
+              "text": {}
+             }
+            },
+            {
+             "musicResponsiveListItemFlexColumnRenderer": {
+              "text": {
+               "runs": [
+                {
+                 "text": "39M plays"
+                }
+               ]
+              }
+             }
+            }
+           ],
+           "fixedColumns": [
+            {
+             "musicResponsiveListItemFixedColumnRenderer": {
+              "text": {
+               "runs": [
+                {
+                 "text": "3:32"
+                }
+               ]
+              }
+             }
+            }
+           ],
+           "playlistItemData": {
+            "videoId": "lUvBk4owRNU"
+           },
+           "index": {
+            "runs": [
+             {
+              "text": "8"
+             }
+            ]
+           }
+          }
+         },
+         {
+          "musicResponsiveListItemRenderer": {
+           "flexColumns": [
+            {
+             "musicResponsiveListItemFlexColumnRenderer": {
+              "text": {
+               "runs": [
+                {
+                 "text": "Wildest Dreams (Taylor's Version)",
+                 "navigationEndpoint": {
+                  "watchEndpoint": {
+                   "videoId": "vtW_4j7SsZk",
+                   "playlistId": "OLAK5uy_ncKvykObOe16WxrmZEAlCbWBRZm2Utaqk"
+                  }
+                 }
+                }
+               ]
+              }
+             }
+            },
+            {
+             "musicResponsiveListItemFlexColumnRenderer": {
+              "text": {}
+             }
+            },
+            {
+             "musicResponsiveListItemFlexColumnRenderer": {
+              "text": {
+               "runs": [
+                {
+                 "text": "181M plays"
+                }
+               ]
+              }
+             }
+            }
+           ],
+           "fixedColumns": [
+            {
+             "musicResponsiveListItemFixedColumnRenderer": {
+              "text": {
+               "runs": [
+                {
+                 "text": "3:41"
+                }
+               ]
+              }
+             }
+            }
+           ],
+           "playlistItemData": {
+            "videoId": "vtW_4j7SsZk"
+           },
+           "index": {
+            "runs": [
+             {
+              "text": "9"
+             }
+            ]
+           }
+          }
+         },
+         {
+          "musicResponsiveListItemRenderer": {
+           "flexColumns": [
+            {
+             "musicResponsiveListItemFlexColumnRenderer": {
+              "text": {
+               "runs": [
+                {
+                 "text": "How You Get The Girl (Taylor's Version)",
+                 "navigationEndpoint": {
+                  "watchEndpoint": {
+                   "videoId": "rnwD7veCoFQ",
+                   "playlistId": "OLAK5uy_ncKvykObOe16WxrmZEAlCbWBRZm2Utaqk"
+                  }
+                 }
+                }
+               ]
+              }
+             }
+            },
+            {
+             "musicResponsiveListItemFlexColumnRenderer": {
+              "text": {}
+             }
+            },
+            {
+             "musicResponsiveListItemFlexColumnRenderer": {
+              "text": {
+               "runs": [
+                {
+                 "text": "43M plays"
+                }
+               ]
+              }
+             }
+            }
+           ],
+           "fixedColumns": [
+            {
+             "musicResponsiveListItemFixedColumnRenderer": {
+              "text": {
+               "runs": [
+                {
+                 "text": "4:08"
+                }
+               ]
+              }
+             }
+            }
+           ],
+           "playlistItemData": {
+            "videoId": "rnwD7veCoFQ"
+           },
+           "index": {
+            "runs": [
+             {
+              "text": "10"
+             }
+            ]
+           }
+          }
+         },
+         {
+          "musicResponsiveListItemRenderer": {
+           "flexColumns": [
+            {
+             "musicResponsiveListItemFlexColumnRenderer": {
+              "text": {
+               "runs": [
+                {
+                 "text": "This Love (Taylor’s Version)",
+                 "navigationEndpoint": {
+                  "watchEndpoint": {
+                   "videoId": "mvxQYPR4lmU",
+                   "playlistId": "OLAK5uy_ncKvykObOe16WxrmZEAlCbWBRZm2Utaqk"
+                  }
+                 }
+                }
+               ]
+              }
+             }
+            },
+            {
+             "musicResponsiveListItemFlexColumnRenderer": {
+              "text": {}
+             }
+            },
+            {
+             "musicResponsiveListItemFlexColumnRenderer": {
+              "text": {
+               "runs": [
+                {
+                 "text": "63M plays"
+                }
+               ]
+              }
+             }
+            }
+           ],
+           "fixedColumns": [
+            {
+             "musicResponsiveListItemFixedColumnRenderer": {
+              "text": {
+               "runs": [
+                {
+                 "text": "4:11"
+                }
+               ]
+              }
+             }
+            }
+           ],
+           "playlistItemData": {
+            "videoId": "mvxQYPR4lmU"
+           },
+           "index": {
+            "runs": [
+             {
+              "text": "11"
+             }
+            ]
+           }
+          }
+         },
+         {
+          "musicResponsiveListItemRenderer": {
+           "flexColumns": [
+            {
+             "musicResponsiveListItemFlexColumnRenderer": {
+              "text": {
+               "runs": [
+                {
+                 "text": "I Know Places (Taylor's Version)",
+                 "navigationEndpoint": {
+                  "watchEndpoint": {
+                   "videoId": "0jTGzm-6cYE",
+                   "playlistId": "OLAK5uy_ncKvykObOe16WxrmZEAlCbWBRZm2Utaqk"
+                  }
+                 }
+                }
+               ]
+              }
+             }
+            },
+            {
+             "musicResponsiveListItemFlexColumnRenderer": {
+              "text": {}
+             }
+            },
+            {
+             "musicResponsiveListItemFlexColumnRenderer": {
+              "text": {
+               "runs": [
+                {
+                 "text": "33M plays"
+                }
+               ]
+              }
+             }
+            }
+           ],
+           "fixedColumns": [
+            {
+             "musicResponsiveListItemFixedColumnRenderer": {
+              "text": {
+               "runs": [
+                {
+                 "text": "3:16"
+                }
+               ]
+              }
+             }
+            }
+           ],
+           "playlistItemData": {
+            "videoId": "0jTGzm-6cYE"
+           },
+           "index": {
+            "runs": [
+             {
+              "text": "12"
+             }
+            ]
+           }
+          }
+         },
+         {
+          "musicResponsiveListItemRenderer": {
+           "flexColumns": [
+            {
+             "musicResponsiveListItemFlexColumnRenderer": {
+              "text": {
+               "runs": [
+                {
+                 "text": "Clean (Taylor's Version)",
+                 "navigationEndpoint": {
+                  "watchEndpoint": {
+                   "videoId": "AppsjTInqiw",
+                   "playlistId": "OLAK5uy_ncKvykObOe16WxrmZEAlCbWBRZm2Utaqk"
+                  }
+                 }
+                }
+               ]
+              }
+             }
+            },
+            {
+             "musicResponsiveListItemFlexColumnRenderer": {
+              "text": {}
+             }
+            },
+            {
+             "musicResponsiveListItemFlexColumnRenderer": {
+              "text": {
+               "runs": [
+                {
+                 "text": "31M plays"
+                }
+               ]
+              }
+             }
+            }
+           ],
+           "fixedColumns": [
+            {
+             "musicResponsiveListItemFixedColumnRenderer": {
+              "text": {
+               "runs": [
+                {
+                 "text": "4:31"
+                }
+               ]
+              }
+             }
+            }
+           ],
+           "playlistItemData": {
+            "videoId": "AppsjTInqiw"
+           },
+           "index": {
+            "runs": [
+             {
+              "text": "13"
+             }
+            ]
+           }
+          }
+         },
+         {
+          "musicResponsiveListItemRenderer": {
+           "flexColumns": [
+            {
+             "musicResponsiveListItemFlexColumnRenderer": {
+              "text": {
+               "runs": [
+                {
+                 "text": "Wonderland (Taylor's Version)",
+                 "navigationEndpoint": {
+                  "watchEndpoint": {
+                   "videoId": "JhICcmiIE80",
+                   "playlistId": "OLAK5uy_ncKvykObOe16WxrmZEAlCbWBRZm2Utaqk"
+                  }
+                 }
+                }
+               ]
+              }
+             }
+            },
+            {
+             "musicResponsiveListItemFlexColumnRenderer": {
+              "text": {}
+             }
+            },
+            {
+             "musicResponsiveListItemFlexColumnRenderer": {
+              "text": {
+               "runs": [
+                {
+                 "text": "38M plays"
+                }
+               ]
+              }
+             }
+            }
+           ],
+           "fixedColumns": [
+            {
+             "musicResponsiveListItemFixedColumnRenderer": {
+              "text": {
+               "runs": [
+                {
+                 "text": "4:06"
+                }
+               ]
+              }
+             }
+            }
+           ],
+           "playlistItemData": {
+            "videoId": "JhICcmiIE80"
+           },
+           "index": {
+            "runs": [
+             {
+              "text": "14"
+             }
+            ]
+           }
+          }
+         },
+         {
+          "musicResponsiveListItemRenderer": {
+           "flexColumns": [
+            {
+             "musicResponsiveListItemFlexColumnRenderer": {
+              "text": {
+               "runs": [
+                {
+                 "text": "You Are In Love (Taylor's Version)",
+                 "navigationEndpoint": {
+                  "watchEndpoint": {
+                   "videoId": "M7ySK0keirY",
+                   "playlistId": "OLAK5uy_ncKvykObOe16WxrmZEAlCbWBRZm2Utaqk"
+                  }
+                 }
+                }
+               ]
+              }
+             }
+            },
+            {
+             "musicResponsiveListItemFlexColumnRenderer": {
+              "text": {}
+             }
+            },
+            {
+             "musicResponsiveListItemFlexColumnRenderer": {
+              "text": {
+               "runs": [
+                {
+                 "text": "25M plays"
+                }
+               ]
+              }
+             }
+            }
+           ],
+           "fixedColumns": [
+            {
+             "musicResponsiveListItemFixedColumnRenderer": {
+              "text": {
+               "runs": [
+                {
+                 "text": "4:28"
+                }
+               ]
+              }
+             }
+            }
+           ],
+           "playlistItemData": {
+            "videoId": "M7ySK0keirY"
+           },
+           "index": {
+            "runs": [
+             {
+              "text": "15"
+             }
+            ]
+           }
+          }
+         },
+         {
+          "musicResponsiveListItemRenderer": {
+           "flexColumns": [
+            {
+             "musicResponsiveListItemFlexColumnRenderer": {
+              "text": {
+               "runs": [
+                {
+                 "text": "New Romantics (Taylor's Version)",
+                 "navigationEndpoint": {
+                  "watchEndpoint": {
+                   "videoId": "3-BcH7KowGE",
+                   "playlistId": "OLAK5uy_ncKvykObOe16WxrmZEAlCbWBRZm2Utaqk"
+                  }
+                 }
+                }
+               ]
+              }
+             }
+            },
+            {
+             "musicResponsiveListItemFlexColumnRenderer": {
+              "text": {}
+             }
+            },
+            {
+             "musicResponsiveListItemFlexColumnRenderer": {
+              "text": {
+               "runs": [
+                {
+                 "text": "30M plays"
+                }
+               ]
+              }
+             }
+            }
+           ],
+           "fixedColumns": [
+            {
+             "musicResponsiveListItemFixedColumnRenderer": {
+              "text": {
+               "runs": [
+                {
+                 "text": "3:51"
+                }
+               ]
+              }
+             }
+            }
+           ],
+           "playlistItemData": {
+            "videoId": "3-BcH7KowGE"
+           },
+           "index": {
+            "runs": [
+             {
+              "text": "16"
+             }
+            ]
+           }
+          }
+         },
+         {
+          "musicResponsiveListItemRenderer": {
+           "flexColumns": [
+            {
+             "musicResponsiveListItemFlexColumnRenderer": {
+              "text": {
+               "runs": [
+                {
+                 "text": "\"Slut!\" (Taylor's Version) (From The Vault)",
+                 "navigationEndpoint": {
+                  "watchEndpoint": {
+                   "videoId": "qrxsceexTBw",
+                   "playlistId": "OLAK5uy_ncKvykObOe16WxrmZEAlCbWBRZm2Utaqk"
+                  }
+                 }
+                }
+               ]
+              }
+             }
+            },
+            {
+             "musicResponsiveListItemFlexColumnRenderer": {
+              "text": {}
+             }
+            },
+            {
+             "musicResponsiveListItemFlexColumnRenderer": {
+              "text": {
+               "runs": [
+                {
+                 "text": "70M plays"
+                }
+               ]
+              }
+             }
+            }
+           ],
+           "fixedColumns": [
+            {
+             "musicResponsiveListItemFixedColumnRenderer": {
+              "text": {
+               "runs": [
+                {
+                 "text": "3:01"
+                }
+               ]
+              }
+             }
+            }
+           ],
+           "playlistItemData": {
+            "videoId": "qrxsceexTBw"
+           },
+           "index": {
+            "runs": [
+             {
+              "text": "17"
+             }
+            ]
+           }
+          }
+         },
+         {
+          "musicResponsiveListItemRenderer": {
+           "flexColumns": [
+            {
+             "musicResponsiveListItemFlexColumnRenderer": {
+              "text": {
+               "runs": [
+                {
+                 "text": "Say Don't Go (Taylor's Version) (From The Vault)",
+                 "navigationEndpoint": {
+                  "watchEndpoint": {
+                   "videoId": "C-z-IckrQK8",
+                   "playlistId": "OLAK5uy_ncKvykObOe16WxrmZEAlCbWBRZm2Utaqk"
+                  }
+                 }
+                }
+               ]
+              }
+             }
+            },
+            {
+             "musicResponsiveListItemFlexColumnRenderer": {
+              "text": {}
+             }
+            },
+            {
+             "musicResponsiveListItemFlexColumnRenderer": {
+              "text": {
+               "runs": [
+                {
+                 "text": "38M plays"
+                }
+               ]
+              }
+             }
+            }
+           ],
+           "fixedColumns": [
+            {
+             "musicResponsiveListItemFixedColumnRenderer": {
+              "text": {
+               "runs": [
+                {
+                 "text": "4:40"
+                }
+               ]
+              }
+             }
+            }
+           ],
+           "playlistItemData": {
+            "videoId": "C-z-IckrQK8"
+           },
+           "index": {
+            "runs": [
+             {
+              "text": "18"
+             }
+            ]
+           }
+          }
+         },
+         {
+          "musicResponsiveListItemRenderer": {
+           "flexColumns": [
+            {
+             "musicResponsiveListItemFlexColumnRenderer": {
+              "text": {
+               "runs": [
+                {
+                 "text": "Now That We Don't Talk (Taylor's Version) (From The Vault)",
+                 "navigationEndpoint": {
+                  "watchEndpoint": {
+                   "videoId": "yF4ulRTCn44",
+                   "playlistId": "OLAK5uy_ncKvykObOe16WxrmZEAlCbWBRZm2Utaqk"
+                  }
+                 }
+                }
+               ]
+              }
+             }
+            },
+            {
+             "musicResponsiveListItemFlexColumnRenderer": {
+              "text": {}
+             }
+            },
+            {
+             "musicResponsiveListItemFlexColumnRenderer": {
+              "text": {
+               "runs": [
+                {
+                 "text": "47M plays"
+                }
+               ]
+              }
+             }
+            }
+           ],
+           "fixedColumns": [
+            {
+             "musicResponsiveListItemFixedColumnRenderer": {
+              "text": {
+               "runs": [
+                {
+                 "text": "2:27"
+                }
+               ]
+              }
+             }
+            }
+           ],
+           "playlistItemData": {
+            "videoId": "yF4ulRTCn44"
+           },
+           "index": {
+            "runs": [
+             {
+              "text": "19"
+             }
+            ]
+           }
+          }
+         },
+         {
+          "musicResponsiveListItemRenderer": {
+           "flexColumns": [
+            {
+             "musicResponsiveListItemFlexColumnRenderer": {
+              "text": {
+               "runs": [
+                {
+                 "text": "Suburban Legends (Taylor's Version) (From The Vault)",
+                 "navigationEndpoint": {
+                  "watchEndpoint": {
+                   "videoId": "ZGBPKYbzSXs",
+                   "playlistId": "OLAK5uy_ncKvykObOe16WxrmZEAlCbWBRZm2Utaqk"
+                  }
+                 }
+                }
+               ]
+              }
+             }
+            },
+            {
+             "musicResponsiveListItemFlexColumnRenderer": {
+              "text": {}
+             }
+            },
+            {
+             "musicResponsiveListItemFlexColumnRenderer": {
+              "text": {
+               "runs": [
+                {
+                 "text": "13M plays"
+                }
+               ]
+              }
+             }
+            }
+           ],
+           "fixedColumns": [
+            {
+             "musicResponsiveListItemFixedColumnRenderer": {
+              "text": {
+               "runs": [
+                {
+                 "text": "2:52"
+                }
+               ]
+              }
+             }
+            }
+           ],
+           "playlistItemData": {
+            "videoId": "ZGBPKYbzSXs"
+           },
+           "index": {
+            "runs": [
+             {
+              "text": "20"
+             }
+            ]
+           }
+          }
+         },
+         {
+          "musicResponsiveListItemRenderer": {
+           "flexColumns": [
+            {
+             "musicResponsiveListItemFlexColumnRenderer": {
+              "text": {
+               "runs": [
+                {
+                 "text": "Is It Over Now? (Taylor's Version) (From The Vault)",
+                 "navigationEndpoint": {
+                  "watchEndpoint": {
+                   "videoId": "tNxUxm3-658",
+                   "playlistId": "OLAK5uy_ncKvykObOe16WxrmZEAlCbWBRZm2Utaqk"
+                  }
+                 }
+                }
+               ]
+              }
+             }
+            },
+            {
+             "musicResponsiveListItemFlexColumnRenderer": {
+              "text": {}
+             }
+            },
+            {
+             "musicResponsiveListItemFlexColumnRenderer": {
+              "text": {
+               "runs": [
+                {
+                 "text": "79M plays"
+                }
+               ]
+              }
+             }
+            }
+           ],
+           "fixedColumns": [
+            {
+             "musicResponsiveListItemFixedColumnRenderer": {
+              "text": {
+               "runs": [
+                {
+                 "text": "3:50"
+                }
+               ]
+              }
+             }
+            }
+           ],
+           "playlistItemData": {
+            "videoId": "tNxUxm3-658"
+           },
+           "index": {
+            "runs": [
+             {
+              "text": "21"
+             }
+            ]
+           }
+          }
+         }
+        ]
+       }
+      }
+     ]
+    }
+   },
+   "tabs": [
+    {
+     "tabRenderer": {
+      "content": {
+       "sectionListRenderer": {
+        "contents": [
+         {
+          "musicResponsiveHeaderRenderer": {
+           "title": {
+            "runs": [
+             {
+              "text": "1989 (Taylor's Version)"
+             }
+            ]
+           },
+           "subtitle": {
+            "runs": [
+             {
+              "text": "Album"
+             },
+             {
+              "text": " • "
+             },
+             {
+              "text": "2023"
+             }
+            ]
+           },
+           "straplineTextOne": {
+            "runs": [
+             {
+              "text": "Taylor Swift",
+              "navigationEndpoint": {
+               "browseEndpoint": {
+                "browseId": "UCPC0L1d253x-KuMNwa05TpA",
+                "browseEndpointContextSupportedConfigs": {
+                 "browseEndpointContextMusicConfig": {
+                  "pageType": "MUSIC_PAGE_TYPE_ARTIST"
+                 }
+                }
+               }
+              }
+             }
+            ]
+           }
+          }
+         }
+        ]
+       }
+      }
+     }
+    }
+   ]
+  }
+ }
+}

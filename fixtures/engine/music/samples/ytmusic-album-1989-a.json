@@ -1,0 +1,877 @@
+{
+ "contents": {
+  "twoColumnBrowseResultsRenderer": {
+   "secondaryContents": {
+    "sectionListRenderer": {
+     "contents": [
+      {
+       "musicShelfRenderer": {
+        "contents": [
+         {
+          "musicResponsiveListItemRenderer": {
+           "flexColumns": [
+            {
+             "musicResponsiveListItemFlexColumnRenderer": {
+              "text": {
+               "runs": [
+                {
+                 "text": "Welcome To New York",
+                 "navigationEndpoint": {
+                  "watchEndpoint": {
+                   "videoId": "FsGdznlfE2U",
+                   "playlistId": "OLAK5uy_n8mGmmk-aCPt9QQ9dOLQAHj0fDa7bBuLA"
+                  }
+                 }
+                }
+               ]
+              }
+             }
+            },
+            {
+             "musicResponsiveListItemFlexColumnRenderer": {
+              "text": {}
+             }
+            },
+            {
+             "musicResponsiveListItemFlexColumnRenderer": {
+              "text": {
+               "runs": [
+                {
+                 "text": "99M plays"
+                }
+               ]
+              }
+             }
+            }
+           ],
+           "fixedColumns": [
+            {
+             "musicResponsiveListItemFixedColumnRenderer": {
+              "text": {
+               "runs": [
+                {
+                 "text": "3:33"
+                }
+               ]
+              }
+             }
+            }
+           ],
+           "playlistItemData": {
+            "videoId": "FsGdznlfE2U"
+           },
+           "index": {
+            "runs": [
+             {
+              "text": "1"
+             }
+            ]
+           }
+          }
+         },
+         {
+          "musicResponsiveListItemRenderer": {
+           "flexColumns": [
+            {
+             "musicResponsiveListItemFlexColumnRenderer": {
+              "text": {
+               "runs": [
+                {
+                 "text": "Blank Space",
+                 "navigationEndpoint": {
+                  "watchEndpoint": {
+                   "videoId": "e-ORhEE9VVg",
+                   "playlistId": "OLAK5uy_n8mGmmk-aCPt9QQ9dOLQAHj0fDa7bBuLA"
+                  }
+                 }
+                }
+               ]
+              }
+             }
+            },
+            {
+             "musicResponsiveListItemFlexColumnRenderer": {
+              "text": {}
+             }
+            },
+            {
+             "musicResponsiveListItemFlexColumnRenderer": {
+              "text": {
+               "runs": [
+                {
+                 "text": "4.5B plays"
+                }
+               ]
+              }
+             }
+            }
+           ],
+           "fixedColumns": [
+            {
+             "musicResponsiveListItemFixedColumnRenderer": {
+              "text": {
+               "runs": [
+                {
+                 "text": "3:52"
+                }
+               ]
+              }
+             }
+            }
+           ],
+           "playlistItemData": {
+            "videoId": "e-ORhEE9VVg"
+           },
+           "index": {
+            "runs": [
+             {
+              "text": "2"
+             }
+            ]
+           }
+          }
+         },
+         {
+          "musicResponsiveListItemRenderer": {
+           "flexColumns": [
+            {
+             "musicResponsiveListItemFlexColumnRenderer": {
+              "text": {
+               "runs": [
+                {
+                 "text": "Style",
+                 "navigationEndpoint": {
+                  "watchEndpoint": {
+                   "videoId": "-CmadmM5cOk",
+                   "playlistId": "OLAK5uy_n8mGmmk-aCPt9QQ9dOLQAHj0fDa7bBuLA"
+                  }
+                 }
+                }
+               ]
+              }
+             }
+            },
+            {
+             "musicResponsiveListItemFlexColumnRenderer": {
+              "text": {}
+             }
+            },
+            {
+             "musicResponsiveListItemFlexColumnRenderer": {
+              "text": {
+               "runs": [
+                {
+                 "text": "1.3B plays"
+                }
+               ]
+              }
+             }
+            }
+           ],
+           "fixedColumns": [
+            {
+             "musicResponsiveListItemFixedColumnRenderer": {
+              "text": {
+               "runs": [
+                {
+                 "text": "3:51"
+                }
+               ]
+              }
+             }
+            }
+           ],
+           "playlistItemData": {
+            "videoId": "-CmadmM5cOk"
+           },
+           "index": {
+            "runs": [
+             {
+              "text": "3"
+             }
+            ]
+           }
+          }
+         },
+         {
+          "musicResponsiveListItemRenderer": {
+           "flexColumns": [
+            {
+             "musicResponsiveListItemFlexColumnRenderer": {
+              "text": {
+               "runs": [
+                {
+                 "text": "Out Of The Woods",
+                 "navigationEndpoint": {
+                  "watchEndpoint": {
+                   "videoId": "JLf9q36UsBk",
+                   "playlistId": "OLAK5uy_n8mGmmk-aCPt9QQ9dOLQAHj0fDa7bBuLA"
+                  }
+                 }
+                }
+               ]
+              }
+             }
+            },
+            {
+             "musicResponsiveListItemFlexColumnRenderer": {
+              "text": {}
+             }
+            },
+            {
+             "musicResponsiveListItemFlexColumnRenderer": {
+              "text": {
+               "runs": [
+                {
+                 "text": "251M plays"
+                }
+               ]
+              }
+             }
+            }
+           ],
+           "fixedColumns": [
+            {
+             "musicResponsiveListItemFixedColumnRenderer": {
+              "text": {
+               "runs": [
+                {
+                 "text": "3:56"
+                }
+               ]
+              }
+             }
+            }
+           ],
+           "playlistItemData": {
+            "videoId": "JLf9q36UsBk"
+           },
+           "index": {
+            "runs": [
+             {
+              "text": "4"
+             }
+            ]
+           }
+          }
+         },
+         {
+          "musicResponsiveListItemRenderer": {
+           "flexColumns": [
+            {
+             "musicResponsiveListItemFlexColumnRenderer": {
+              "text": {
+               "runs": [
+                {
+                 "text": "All You Had To Do Was Stay",
+                 "navigationEndpoint": {
+                  "watchEndpoint": {
+                   "videoId": "jZ3VMl-uvFE",
+                   "playlistId": "OLAK5uy_n8mGmmk-aCPt9QQ9dOLQAHj0fDa7bBuLA"
+                  }
+                 }
+                }
+               ]
+              }
+             }
+            },
+            {
+             "musicResponsiveListItemFlexColumnRenderer": {
+              "text": {}
+             }
+            },
+            {
+             "musicResponsiveListItemFlexColumnRenderer": {
+              "text": {
+               "runs": [
+                {
+                 "text": "24M plays"
+                }
+               ]
+              }
+             }
+            }
+           ],
+           "fixedColumns": [
+            {
+             "musicResponsiveListItemFixedColumnRenderer": {
+              "text": {
+               "runs": [
+                {
+                 "text": "3:14"
+                }
+               ]
+              }
+             }
+            }
+           ],
+           "playlistItemData": {
+            "videoId": "jZ3VMl-uvFE"
+           },
+           "index": {
+            "runs": [
+             {
+              "text": "5"
+             }
+            ]
+           }
+          }
+         },
+         {
+          "musicResponsiveListItemRenderer": {
+           "flexColumns": [
+            {
+             "musicResponsiveListItemFlexColumnRenderer": {
+              "text": {
+               "runs": [
+                {
+                 "text": "Shake It Off",
+                 "navigationEndpoint": {
+                  "watchEndpoint": {
+                   "videoId": "nfWlot6h_JM",
+                   "playlistId": "OLAK5uy_n8mGmmk-aCPt9QQ9dOLQAHj0fDa7bBuLA"
+                  }
+                 }
+                }
+               ]
+              }
+             }
+            },
+            {
+             "musicResponsiveListItemFlexColumnRenderer": {
+              "text": {}
+             }
+            },
+            {
+             "musicResponsiveListItemFlexColumnRenderer": {
+              "text": {
+               "runs": [
+                {
+                 "text": "4.3B plays"
+                }
+               ]
+              }
+             }
+            }
+           ],
+           "fixedColumns": [
+            {
+             "musicResponsiveListItemFixedColumnRenderer": {
+              "text": {
+               "runs": [
+                {
+                 "text": "3:40"
+                }
+               ]
+              }
+             }
+            }
+           ],
+           "playlistItemData": {
+            "videoId": "nfWlot6h_JM"
+           },
+           "index": {
+            "runs": [
+             {
+              "text": "6"
+             }
+            ]
+           }
+          }
+         },
+         {
+          "musicResponsiveListItemRenderer": {
+           "flexColumns": [
+            {
+             "musicResponsiveListItemFlexColumnRenderer": {
+              "text": {
+               "runs": [
+                {
+                 "text": "I Wish You Would",
+                 "navigationEndpoint": {
+                  "watchEndpoint": {
+                   "videoId": "89aQIli8aVU",
+                   "playlistId": "OLAK5uy_n8mGmmk-aCPt9QQ9dOLQAHj0fDa7bBuLA"
+                  }
+                 }
+                }
+               ]
+              }
+             }
+            },
+            {
+             "musicResponsiveListItemFlexColumnRenderer": {
+              "text": {}
+             }
+            },
+            {
+             "musicResponsiveListItemFlexColumnRenderer": {
+              "text": {
+               "runs": [
+                {
+                 "text": "28M plays"
+                }
+               ]
+              }
+             }
+            }
+           ],
+           "fixedColumns": [
+            {
+             "musicResponsiveListItemFixedColumnRenderer": {
+              "text": {
+               "runs": [
+                {
+                 "text": "3:28"
+                }
+               ]
+              }
+             }
+            }
+           ],
+           "playlistItemData": {
+            "videoId": "89aQIli8aVU"
+           },
+           "index": {
+            "runs": [
+             {
+              "text": "7"
+             }
+            ]
+           }
+          }
+         },
+         {
+          "musicResponsiveListItemRenderer": {
+           "flexColumns": [
+            {
+             "musicResponsiveListItemFlexColumnRenderer": {
+              "text": {
+               "runs": [
+                {
+                 "text": "Bad Blood",
+                 "navigationEndpoint": {
+                  "watchEndpoint": {
+                   "videoId": "QcIy9NiNbmo",
+                   "playlistId": "OLAK5uy_n8mGmmk-aCPt9QQ9dOLQAHj0fDa7bBuLA"
+                  }
+                 }
+                }
+               ]
+              }
+             }
+            },
+            {
+             "musicResponsiveListItemFlexColumnRenderer": {
+              "text": {}
+             }
+            },
+            {
+             "musicResponsiveListItemFlexColumnRenderer": {
+              "text": {
+               "runs": [
+                {
+                 "text": "1.9B plays"
+                }
+               ]
+              }
+             }
+            }
+           ],
+           "fixedColumns": [
+            {
+             "musicResponsiveListItemFixedColumnRenderer": {
+              "text": {
+               "runs": [
+                {
+                 "text": "3:32"
+                }
+               ]
+              }
+             }
+            }
+           ],
+           "playlistItemData": {
+            "videoId": "QcIy9NiNbmo"
+           },
+           "index": {
+            "runs": [
+             {
+              "text": "8"
+             }
+            ]
+           }
+          }
+         },
+         {
+          "musicResponsiveListItemRenderer": {
+           "flexColumns": [
+            {
+             "musicResponsiveListItemFlexColumnRenderer": {
+              "text": {
+               "runs": [
+                {
+                 "text": "Wildest Dreams",
+                 "navigationEndpoint": {
+                  "watchEndpoint": {
+                   "videoId": "IdneKLhsWOQ",
+                   "playlistId": "OLAK5uy_n8mGmmk-aCPt9QQ9dOLQAHj0fDa7bBuLA"
+                  }
+                 }
+                }
+               ]
+              }
+             }
+            },
+            {
+             "musicResponsiveListItemFlexColumnRenderer": {
+              "text": {}
+             }
+            },
+            {
+             "musicResponsiveListItemFlexColumnRenderer": {
+              "text": {
+               "runs": [
+                {
+                 "text": "1.2B plays"
+                }
+               ]
+              }
+             }
+            }
+           ],
+           "fixedColumns": [
+            {
+             "musicResponsiveListItemFixedColumnRenderer": {
+              "text": {
+               "runs": [
+                {
+                 "text": "3:41"
+                }
+               ]
+              }
+             }
+            }
+           ],
+           "playlistItemData": {
+            "videoId": "IdneKLhsWOQ"
+           },
+           "index": {
+            "runs": [
+             {
+              "text": "9"
+             }
+            ]
+           }
+          }
+         },
+         {
+          "musicResponsiveListItemRenderer": {
+           "flexColumns": [
+            {
+             "musicResponsiveListItemFlexColumnRenderer": {
+              "text": {
+               "runs": [
+                {
+                 "text": "How You Get The Girl",
+                 "navigationEndpoint": {
+                  "watchEndpoint": {
+                   "videoId": "rnwD7veCoFQ",
+                   "playlistId": "OLAK5uy_n8mGmmk-aCPt9QQ9dOLQAHj0fDa7bBuLA"
+                  }
+                 }
+                }
+               ]
+              }
+             }
+            },
+            {
+             "musicResponsiveListItemFlexColumnRenderer": {
+              "text": {}
+             }
+            },
+            {
+             "musicResponsiveListItemFlexColumnRenderer": {
+              "text": {
+               "runs": [
+                {
+                 "text": "43M plays"
+                }
+               ]
+              }
+             }
+            }
+           ],
+           "fixedColumns": [
+            {
+             "musicResponsiveListItemFixedColumnRenderer": {
+              "text": {
+               "runs": [
+                {
+                 "text": "4:08"
+                }
+               ]
+              }
+             }
+            }
+           ],
+           "playlistItemData": {
+            "videoId": "rnwD7veCoFQ"
+           },
+           "index": {
+            "runs": [
+             {
+              "text": "10"
+             }
+            ]
+           }
+          }
+         },
+         {
+          "musicResponsiveListItemRenderer": {
+           "flexColumns": [
+            {
+             "musicResponsiveListItemFlexColumnRenderer": {
+              "text": {
+               "runs": [
+                {
+                 "text": "This Love",
+                 "navigationEndpoint": {
+                  "watchEndpoint": {
+                   "videoId": "fn3xDFK2w9k",
+                   "playlistId": "OLAK5uy_n8mGmmk-aCPt9QQ9dOLQAHj0fDa7bBuLA"
+                  }
+                 }
+                }
+               ]
+              }
+             }
+            },
+            {
+             "musicResponsiveListItemFlexColumnRenderer": {
+              "text": {}
+             }
+            },
+            {
+             "musicResponsiveListItemFlexColumnRenderer": {
+              "text": {
+               "runs": [
+                {
+                 "text": "20M plays"
+                }
+               ]
+              }
+             }
+            }
+           ],
+           "fixedColumns": [
+            {
+             "musicResponsiveListItemFixedColumnRenderer": {
+              "text": {
+               "runs": [
+                {
+                 "text": "4:11"
+                }
+               ]
+              }
+             }
+            }
+           ],
+           "playlistItemData": {
+            "videoId": "fn3xDFK2w9k"
+           },
+           "index": {
+            "runs": [
+             {
+              "text": "11"
+             }
+            ]
+           }
+          }
+         },
+         {
+          "musicResponsiveListItemRenderer": {
+           "flexColumns": [
+            {
+             "musicResponsiveListItemFlexColumnRenderer": {
+              "text": {
+               "runs": [
+                {
+                 "text": "I Know Places",
+                 "navigationEndpoint": {
+                  "watchEndpoint": {
+                   "videoId": "0jTGzm-6cYE",
+                   "playlistId": "OLAK5uy_n8mGmmk-aCPt9QQ9dOLQAHj0fDa7bBuLA"
+                  }
+                 }
+                }
+               ]
+              }
+             }
+            },
+            {
+             "musicResponsiveListItemFlexColumnRenderer": {
+              "text": {}
+             }
+            },
+            {
+             "musicResponsiveListItemFlexColumnRenderer": {
+              "text": {
+               "runs": [
+                {
+                 "text": "33M plays"
+                }
+               ]
+              }
+             }
+            }
+           ],
+           "fixedColumns": [
+            {
+             "musicResponsiveListItemFixedColumnRenderer": {
+              "text": {
+               "runs": [
+                {
+                 "text": "3:16"
+                }
+               ]
+              }
+             }
+            }
+           ],
+           "playlistItemData": {
+            "videoId": "0jTGzm-6cYE"
+           },
+           "index": {
+            "runs": [
+             {
+              "text": "12"
+             }
+            ]
+           }
+          }
+         },
+         {
+          "musicResponsiveListItemRenderer": {
+           "flexColumns": [
+            {
+             "musicResponsiveListItemFlexColumnRenderer": {
+              "text": {
+               "runs": [
+                {
+                 "text": "Clean",
+                 "navigationEndpoint": {
+                  "watchEndpoint": {
+                   "videoId": "xkXerW7kLXk",
+                   "playlistId": "OLAK5uy_n8mGmmk-aCPt9QQ9dOLQAHj0fDa7bBuLA"
+                  }
+                 }
+                }
+               ]
+              }
+             }
+            },
+            {
+             "musicResponsiveListItemFlexColumnRenderer": {
+              "text": {}
+             }
+            },
+            {
+             "musicResponsiveListItemFlexColumnRenderer": {
+              "text": {
+               "runs": [
+                {
+                 "text": "31M plays"
+                }
+               ]
+              }
+             }
+            }
+           ],
+           "fixedColumns": [
+            {
+             "musicResponsiveListItemFixedColumnRenderer": {
+              "text": {
+               "runs": [
+                {
+                 "text": "4:31"
+                }
+               ]
+              }
+             }
+            }
+           ],
+           "playlistItemData": {
+            "videoId": "xkXerW7kLXk"
+           },
+           "index": {
+            "runs": [
+             {
+              "text": "13"
+             }
+            ]
+           }
+          }
+         }
+        ]
+       }
+      }
+     ]
+    }
+   },
+   "tabs": [
+    {
+     "tabRenderer": {
+      "content": {
+       "sectionListRenderer": {
+        "contents": [
+         {
+          "musicResponsiveHeaderRenderer": {
+           "title": {
+            "runs": [
+             {
+              "text": "1989"
+             }
+            ]
+           },
+           "subtitle": {
+            "runs": [
+             {
+              "text": "Album"
+             },
+             {
+              "text": " • "
+             },
+             {
+              "text": "2014"
+             }
+            ]
+           },
+           "straplineTextOne": {
+            "runs": [
+             {
+              "text": "Taylor Swift",
+              "navigationEndpoint": {
+               "browseEndpoint": {
+                "browseId": "UCPC0L1d253x-KuMNwa05TpA",
+                "browseEndpointContextSupportedConfigs": {
+                 "browseEndpointContextMusicConfig": {
+                  "pageType": "MUSIC_PAGE_TYPE_ARTIST"
+                 }
+                }
+               }
+              }
+             }
+            ]
+           }
+          }
+         }
+        ]
+       }
+      }
+     }
+    }
+   ]
+  }
+ }
+}

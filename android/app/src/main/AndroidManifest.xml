@@ -1,0 +1,76 @@
+<manifest xmlns:android="http://schemas.android.com/apk/res/android" xmlns:tools="http://schemas.android.com/tools">
+    <uses-permission android:name="android.permission.INTERNET" />
+    <!-- Wi-Fi-only downloads and followed playlists need to know whether the active network is metered. -->
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" android:maxSdkVersion="28" />
+    <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC" />
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <uses-permission android:name="android.permission.WAKE_LOCK" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MEDIA_PLAYBACK" />
+    <!-- Devices on the network: the phone answers other devices and keeps serving them while "Keep this phone reachable" is on. -->
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_CONNECTED_DEVICE" />
+    <!-- Finds other devices with the platform's service discovery (the multicast lock is held only while Add a device is browsing); also what lets a connectedDevice service start. -->
+    <uses-permission android:name="android.permission.CHANGE_WIFI_MULTICAST_STATE" />
+    <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
+    <!-- Android 17 asks before an app talks to devices on the local network; ignored on earlier versions. -->
+    <uses-permission android:name="android.permission.ACCESS_LOCAL_NETWORK" />
+    <!-- Scanning the pairing code on another device (optional: the code can also be typed). -->
+    <uses-permission android:name="android.permission.CAMERA" />
+    <uses-feature android:name="android.hardware.camera" android:required="false" />
+    <!-- Requested only by "Find my earlier Keepfin files" after a reinstall; never required. -->
+    <uses-permission android:name="android.permission.READ_MEDIA_AUDIO" />
+    <uses-permission android:name="android.permission.READ_MEDIA_VIDEO" />
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" android:maxSdkVersion="32" />
+    <application android:name=".KeepfinApplication" android:label="Keepfin" android:icon="@mipmap/ic_launcher" android:roundIcon="@mipmap/ic_launcher_round" android:theme="@style/KeepfinTheme" android:allowBackup="false" android:extractNativeLibs="true" android:usesCleartextTraffic="false">
+        <service android:name=".DownloadService" android:exported="false" android:foregroundServiceType="dataSync" />
+        <!-- The one-time copy of an earlier library into the Keepfin folder (bounded, journaled chunks; stops within a second on the system time limit). -->
+        <service android:name=".setup.MigrationService" android:exported="false" android:foregroundServiceType="dataSync" />
+        <service android:name=".copies.CopiesService" android:exported="false" android:foregroundServiceType="dataSync" />
+        <service android:name=".net.ReachableService" android:exported="false" android:foregroundServiceType="connectedDevice" />
+        <!-- WorkManager's foreground host for the follow check: a long-running worker declares the same dataSync type. -->
+        <service android:name="androidx.work.impl.foreground.SystemForegroundService" android:foregroundServiceType="dataSync" tools:node="merge" />
+        <service android:name=".PlaybackService" android:exported="true" android:foregroundServiceType="mediaPlayback">
+            <intent-filter>
+                <action android:name="androidx.media3.session.MediaLibraryService" />
+                <action android:name="android.media.browse.MediaBrowserService" />
+            </intent-filter>
+        </service>
+        <activity android:name=".MainActivity" android:exported="true" android:launchMode="singleTask" android:screenOrientation="portrait" android:windowSoftInputMode="adjustResize" android:supportsPictureInPicture="true" android:configChanges="orientation|screenSize|keyboardHidden|smallestScreenSize|screenLayout">
+            <intent-filter><action android:name="android.intent.action.SEND" /><category android:name="android.intent.category.DEFAULT" /><data android:mimeType="text/plain" /></intent-filter>
+            <!-- The phone's camera app opens a Keepfin pairing QR (keepfin://pair?...) here. -->
+            <intent-filter><action android:name="android.intent.action.VIEW" /><category android:name="android.intent.category.DEFAULT" /><category android:name="android.intent.category.BROWSABLE" /><data android:scheme="keepfin" android:host="pair" /></intent-filter>
+        </activity>
+        <!-- The launcher entry. The app icon picker enables exactly one launcher entry: this one (the shipped icon) or one generated alias below; a new entry is enabled before the old one is disabled. -->
+        <activity-alias android:name=".MainLauncher" android:targetActivity=".MainActivity" android:enabled="true" android:exported="true" android:label="Keepfin" android:icon="@mipmap/ic_launcher" android:roundIcon="@mipmap/ic_launcher_round">
+            <intent-filter><action android:name="android.intent.action.MAIN" /><category android:name="android.intent.category.LAUNCHER" /></intent-filter>
+        </activity-alias>
+        <!-- app-icons:begin (generated by scripts/build/build-icons.mjs from assets/icons/variants/index.json; do not edit) -->
+        <activity-alias android:name=".AppIcon_classic_2855ce" android:targetActivity=".MainActivity" android:enabled="false" android:exported="true" android:label="Keepfin" android:icon="@mipmap/ic_launcher_classic_2855ce" android:roundIcon="@mipmap/ic_launcher_classic_2855ce_round">
+            <intent-filter><action android:name="android.intent.action.MAIN" /><category android:name="android.intent.category.LAUNCHER" /></intent-filter>
+        </activity-alias>
+        <activity-alias android:name=".AppIcon_k_fin_2855ce" android:targetActivity=".MainActivity" android:enabled="false" android:exported="true" android:label="Keepfin" android:icon="@mipmap/ic_launcher_k_fin_2855ce" android:roundIcon="@mipmap/ic_launcher_k_fin_2855ce_round">
+            <intent-filter><action android:name="android.intent.action.MAIN" /><category android:name="android.intent.category.LAUNCHER" /></intent-filter>
+        </activity-alias>
+        <activity-alias android:name=".AppIcon_fin_2855ce" android:targetActivity=".MainActivity" android:enabled="false" android:exported="true" android:label="Keepfin" android:icon="@mipmap/ic_launcher_fin_2855ce" android:roundIcon="@mipmap/ic_launcher_fin_2855ce_round">
+            <intent-filter><action android:name="android.intent.action.MAIN" /><category android:name="android.intent.category.LAUNCHER" /></intent-filter>
+        </activity-alias>
+        <activity-alias android:name=".AppIcon_keep_2855ce" android:targetActivity=".MainActivity" android:enabled="false" android:exported="true" android:label="Keepfin" android:icon="@mipmap/ic_launcher_keep_2855ce" android:roundIcon="@mipmap/ic_launcher_keep_2855ce_round">
+            <intent-filter><action android:name="android.intent.action.MAIN" /><category android:name="android.intent.category.LAUNCHER" /></intent-filter>
+        </activity-alias>
+        <activity-alias android:name=".AppIcon_drop_2855ce" android:targetActivity=".MainActivity" android:enabled="false" android:exported="true" android:label="Keepfin" android:icon="@mipmap/ic_launcher_drop_2855ce" android:roundIcon="@mipmap/ic_launcher_drop_2855ce_round">
+            <intent-filter><action android:name="android.intent.action.MAIN" /><category android:name="android.intent.category.LAUNCHER" /></intent-filter>
+        </activity-alias>
+        <activity-alias android:name=".AppIcon_bookmark_2855ce" android:targetActivity=".MainActivity" android:enabled="false" android:exported="true" android:label="Keepfin" android:icon="@mipmap/ic_launcher_bookmark_2855ce" android:roundIcon="@mipmap/ic_launcher_bookmark_2855ce_round">
+            <intent-filter><action android:name="android.intent.action.MAIN" /><category android:name="android.intent.category.LAUNCHER" /></intent-filter>
+        </activity-alias>
+        <activity-alias android:name=".AppIcon_wave_2855ce" android:targetActivity=".MainActivity" android:enabled="false" android:exported="true" android:label="Keepfin" android:icon="@mipmap/ic_launcher_wave_2855ce" android:roundIcon="@mipmap/ic_launcher_wave_2855ce_round">
+            <intent-filter><action android:name="android.intent.action.MAIN" /><category android:name="android.intent.category.LAUNCHER" /></intent-filter>
+        </activity-alias>
+        <!-- app-icons:end -->
+        <provider android:name="androidx.core.content.FileProvider" android:authorities="${applicationId}.files" android:exported="false" android:grantUriPermissions="true">
+            <meta-data android:name="android.support.FILE_PROVIDER_PATHS" android:resource="@xml/file_paths" />
+        </provider>
+    </application>
+</manifest>

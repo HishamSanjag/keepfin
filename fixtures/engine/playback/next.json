@@ -1,0 +1,21 @@
+{
+  "description": "What plays next: the list the item was opened from; opened alone, its folder in natural title order.",
+  "cases": [
+    {"name":"opened from a list: the list decides","input":{"op":"list","context":["a","b","c"],"folder":["x","a","y"]},"expected":["a","b","c"]},
+    {"name":"opened alone: the folder decides","input":{"op":"list","context":["a"],"folder":["x","a","y"]},"expected":["x","a","y"]},
+    {"name":"opened alone in a folder of one: just the item","input":{"op":"list","context":["a"],"folder":["a"]},"expected":["a"]},
+    {"name":"opened alone, no folder read","input":{"op":"list","context":["a"],"folder":null},"expected":["a"]},
+    {"name":"next in the list","input":{"op":"neighbour","list":["a","b","c"],"id":"b","dir":1},"expected":"c"},
+    {"name":"previous in the list","input":{"op":"neighbour","list":["a","b","c"],"id":"b","dir":-1},"expected":"a"},
+    {"name":"nothing after the last","input":{"op":"neighbour","list":["a","b","c"],"id":"c","dir":1},"expected":null},
+    {"name":"nothing before the first","input":{"op":"neighbour","list":["a","b","c"],"id":"a","dir":-1},"expected":null},
+    {"name":"an id not in the list has no neighbours","input":{"op":"neighbour","list":["a","b"],"id":"z","dir":1},"expected":null},
+    {"name":"episode numbers sort as numbers","input":{"op":"folderOrder","items":[{"id":"e10","title":"Episode 10"},{"id":"e2","title":"Episode 2"},{"id":"e1","title":"Episode 1"}]},"expected":["e1","e2","e10"]},
+    {"name":"leading zeros do not matter","input":{"op":"folderOrder","items":[{"id":"b","title":"Part 010"},{"id":"a","title":"Part 9"}]},"expected":["a","b"]},
+    {"name":"case is ignored","input":{"op":"folderOrder","items":[{"id":"b","title":"banana"},{"id":"a","title":"Apple"}]},"expected":["a","b"]},
+    {"name":"accents are ignored","input":{"op":"folderOrder","items":[{"id":"z","title":"Zoo"},{"id":"e","title":"École 2"},{"id":"e1","title":"Ecole 1"}]},"expected":["e1","e","z"]},
+    {"name":"Arabic titles with numbers sort as numbers","input":{"op":"folderOrder","items":[{"id":"d10","title":"الدرس 10"},{"id":"d2","title":"الدرس 2"}]},"expected":["d2","d10"]},
+    {"name":"Arabic-Indic digits sort as numbers","input":{"op":"folderOrder","items":[{"id":"d12","title":"الحلقة ١٢"},{"id":"d3","title":"الحلقة ٣"}]},"expected":["d3","d12"]},
+    {"name":"equal titles keep id order","input":{"op":"folderOrder","items":[{"id":"b","title":"Same"},{"id":"a","title":"same"}]},"expected":["a","b"]}
+  ]
+}
