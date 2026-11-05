@@ -1057,11 +1057,11 @@ export async function registerLibrarySuite({test, calls, last, sent, field}) {
 
   await test('video: opened alone, next and previous follow the folder in title order', async (page) => {
     await openSpace(page, 'Videos')
-    // opened with a list of one (as from a finished download): the videos of its folder decide next and previous
-    await page.evaluate(async () => {
-      const play = await import('/player/play.ts')
-      play.openVideo('v-salt', ['v-salt'])
-    })
+    // Play from a card's menu opens it with a list of one (as a finished download does): the videos of its folder
+    // decide next and previous. Through the interface, so it also runs against the bundled build CI tests.
+    await page.getByRole('button', {name: /^Folder Northbound Films/}).click()
+    await page.getByRole('button', {name: /^More actions for Salt Flats/}).first().click({force: true})
+    await page.getByRole('menuitem', {name: 'Play', exact: true}).click()
     const view = page.getByRole('dialog', {name: /Playing Salt Flats/})
     // Faroe Islands, Lofoten, Salt Flats: the videos of the "Northbound Films" folder
     await view.getByText(/3 of 3/).waitFor()
