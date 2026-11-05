@@ -14,8 +14,8 @@ android {
         applicationId = "app.keepfin"
         minSdk = 26
         targetSdk = 36
-        versionCode = 24
-        versionName = "1.0.0-beta.1"
+        versionCode = 25
+        versionName = "1.0.0"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         ndk { abiFilters += listOf("arm64-v8a", "x86_64") }
         // Cloud accounts: the public client ids of this build (build variables, never secrets; empty means the provider shows "Not available in this build").
