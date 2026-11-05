@@ -98,9 +98,15 @@ jobs:
           enableCrossOsArchive: true
 
   ui:
+    # The three UI regression suites in a real browser, each on its own runner beside the packaging job:
+    # flows (~550 user flows, the longest), progress isolation, and layout (~1,400 layout and accessibility checks).
+    name: ui (${{ matrix.suite }})
     runs-on: windows-latest
-    # ~550 layout checks, the UI flows and progress isolation in a real browser, beside the packaging job.
-    timeout-minutes: 40
+    timeout-minutes: 45
+    strategy:
+      fail-fast: false
+      matrix:
+        suite: [flows, progress, layout]
     steps:
       - name: Checkout source
         uses: actions/checkout@v7
@@ -124,11 +130,11 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Run UI regression suites
+      - name: Run the ${{ matrix.suite }} UI suite
         # The bundled production build loads far faster than the dev server's hundreds of modules, and it is what ships.
         env:
           KEEPFIN_UI_BUILD: '1'
         run: |
           npx playwright install chromium
           npm run core:build
-          npm run gui:ui-test
+          npm run gui:${{ matrix.suite }}-test
