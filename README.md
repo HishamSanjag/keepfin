@@ -4,69 +4,66 @@
 
 # Keepfin
 
-**Keep your media.** Download video, music, playlists, channels and posts from YouTube, YouTube Music, TikTok, Instagram, SoundCloud and more than 1,000 other sites, in every quality they offer, and keep them in one library you own.
+**Video and music downloader for Windows and Android.**
 
-For Windows and Android. Free, open source, no account.
+Save videos, songs and playlists from YouTube, YouTube Music, Facebook, Instagram, TikTok and more. Paste a link, choose video or audio, and download it to your device for offline use.
 
-[**Download**](https://github.com/HishamSanjag/keepfin/releases/latest) · [Website](https://keepfin.hishamsanjag.com) · [User guide](docs/README.md) · [Contributing](CONTRIBUTING.md)
+Free and open source. No Keepfin account required.
+
+[**Download for Windows**](https://github.com/HishamSanjag/keepfin/releases/latest) · [**Download for Android**](https://github.com/HishamSanjag/keepfin/releases/latest) · [Website](https://keepfin.hishamsanjag.com) · [User guide](docs/README.md)
 
 <br>
 
 <picture>
   <source media="(prefers-color-scheme: light)" srcset="docs/readme/banner-light.png">
-  <img src="docs/readme/banner-dark.png" alt="Keepfin on Windows and Android">
+  <img src="docs/readme/banner-dark.png" alt="Keepfin video and music downloader on Windows and Android">
 </picture>
 
 </div>
 
-## Contents
-
-- [Download](#download)
-- [What it does](#what-it-does)
-- [User guide](#user-guide)
-- [How it works](#how-it-works)
-- [Tech stack](#tech-stack)
-- [Project structure](#project-structure)
-- [For developers](#for-developers)
-- [Tests and checks](#tests-and-checks)
-- [Contributing](#contributing)
-- [License](#license)
+[Download](#download) · [Supported sites](#supported-sites) · [Features](#features) · [User guide](#user-guide) · [For developers](#for-developers)
 
 ## Download
 
-|             |                                                                                                                                                                                                         |
-| ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Windows** | [Keepfin Setup](https://github.com/HishamSanjag/keepfin/releases/latest) installs in a few clicks and updates itself quietly. Also available: a Portable EXE, and an MSI for managed installs. |
-| **Android** | [Keepfin APK](https://github.com/HishamSanjag/keepfin/releases/latest), Android 8 or later. It updates from inside the app.                                                                    |
+| Your device | What to download | Other options |
+| --- | --- | --- |
+| **Windows** | [Keepfin Setup](https://github.com/HishamSanjag/keepfin/releases/latest), with automatic app updates | Portable EXE to run without installing; MSI for managed installs |
+| **Android 8+** | [Keepfin APK](https://github.com/HishamSanjag/keepfin/releases/latest), with updates available inside the app | Allow APK installation when your phone asks |
 
-Everything runs on your device. There is no Keepfin server, account or tracking.
+Both links open the latest release. Expand **Assets** to find the installer or APK for your device.
 
-New here? [Getting started](docs/getting-started.md) takes a few minutes.
+### Your first download
 
-## What it does
+1. **Paste a link** from a supported site. On Android, you can also share a link directly to Keepfin.
+2. **Choose video or audio**, then pick the quality or file format.
+3. **Press Download.** Keep the file for offline use, play it in Keepfin, or open it in another app.
 
-### Download
+Choose **Just downloads** during setup for a simple downloader, or **Keepfin Complete** for the library and players too. See the [getting started guide](docs/getting-started.md) for installation and setup.
 
-|                                           |                                                                                                                                                                  |
-| ----------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Paste a link, see every option**        | One preview shows Video, Audio or Both, every quality with its real size, and the format beside it. Extras (subtitles, cutting, chapters) wait on their own tab. |
-| **Every quality**                         | 4K and 8K, HDR, 60 fps and every codec a site offers, saved as MP4, MKV or WebM.                                                                                 |
-| **Music, properly tagged**                | MP3 (320 kbps by default), M4A, Opus, FLAC or WAV, with cover art, tags and timed lyrics.                                                                        |
-| **Spotify, Apple Music and Deezer links** | Matched to the same recording on YouTube Music. Keepfin never takes audio from those services.                                                                   |
-| **Songs and their videos**                | YouTube Music links are songs and YouTube links are videos. Keep both, and they stay on the same second when you switch.                                         |
-| **Playlists and channels**                | Load page by page, pick what you want, download in parallel, and keep them in sync.                                                                              |
-| **Private content**                       | Use your own sign-in for members-only and age-restricted media. It never leaves your device.                                                                     |
+## Supported sites
 
-### Keep and play
+YouTube · YouTube Music · Facebook · Instagram · TikTok · X · Reddit · Vimeo · Twitch · SoundCloud · Bandcamp · Pinterest · and many more.
 
-|                           |                                                                                                                                               |
-| ------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
-| **A library and player**  | Spaces for music and videos, smart spaces, albums, artists, playlists, tags, search, Continue watching, lyrics and background playback.       |
-| **One Keepfin folder**    | Everything lives in one folder you choose, as normal files that open in any app.                                                              |
-| **Copies**                | A backup, mirror or two-way copy on another drive, a cloud account (Google Drive, Dropbox, WebDAV) or another device.                         |
-| **Your devices together** | Pair your phone and PC once to play and copy each other's files on your network or away from home, and send a download from one to the other. |
-| **Undo and Trash**        | Most changes can be undone, and deleted files wait in Trash for 30 days.                                                                      |
-| **Looks after itself**    | The download engine updates itself daily, and the apps update from the releases feed.                                                         |
+Available media, quality and sign-in requirements depend on the site and the link. Site changes can temporarily affect downloads; see the [downloading guide](docs/downloading.md) for details.
+
+**Spotify, Apple Music and Deezer links:** Keepfin reads the track, album or playlist details and finds matching recordings on YouTube Music. Audio comes from YouTube Music.
+
+## Features
+
+| What you want to do | What Keepfin offers |
+| --- | --- |
+| **Save a video** | Choose the available quality, up to 4K or 8K, including HDR and 60 fps when the source offers them. Save as MP4, MKV or WebM. |
+| **Download only the audio** | Choose MP3, M4A, Opus, FLAC or WAV, with cover art, tags and lyrics when available. Converting to FLAC does not improve the source audio quality. |
+| **Download a playlist or channel** | Review items as they load, select what you want, download several at once, and optionally check for new items later. |
+| **Save photo posts on Windows** | Download images from supported posts on Instagram, Pinterest, Reddit and other sites. |
+| **Choose extras** | Save subtitles, keep chapters or download part of a video. |
+| **Access media that needs sign-in** | Use your own website sign-in for supported private, members-only or age-restricted content your account can access. |
+| **Organize and play your files** | Use the built-in library, playlists, search and players, including lyrics and background playback. Files also open in other apps. |
+| **Back up or move between devices** | Make copies on another drive or a cloud account, and pair your phone and PC to play, copy or send downloads between them. |
+
+Downloads run on your device. There is no Keepfin server, account or tracking. Your media is saved as normal files in a folder you choose.
+
+### Screenshots
 
 <table>
 <tr>
@@ -99,7 +96,7 @@ New here? [Getting started](docs/getting-started.md) takes a few minutes.
 
 ## How it works
 
-Keepfin is two native apps that share one core. Downloads run on your own device; there is nothing hosted.
+Keepfin has a Windows app and a native Android app that share one core. Downloads run on your own device.
 
 ```mermaid
 flowchart TB
@@ -119,7 +116,7 @@ flowchart TB
 A download goes through four steps on both apps:
 
 1. **Read:** find out what the link is (a video, a song, a playlist, a channel, a photo post).
-2. **Choose:** you pick the quality or format; sizes are shown before anything downloads.
+2. **Choose:** you pick the quality or format; single videos and songs show file size estimates before downloading.
 3. **Download:** several at once, with automatic retries that continue where they stopped.
 4. **Save:** the file gets its title, artist, cover and details, and goes into your Keepfin folder.
 
@@ -132,7 +129,6 @@ Decisions both apps must make the same way are written once in `core/`, and shar
 | **Windows**         | Electron, React, TypeScript, Vite, electron-builder and electron-updater                      |
 | **Android**         | Kotlin, Jetpack Compose with Material 3, Media3, WorkManager, Coil                            |
 | **Shared core**     | Kotlin Multiplatform, compiled to JVM and JavaScript                                          |
-| **Download engine** | yt-dlp, gallery-dl and ffmpeg on Windows; youtubedl-android with ffmpeg and aria2c on Android |
 | **Tests and CI**    | Node's test runner, Playwright, JUnit, Compose UI tests, GitHub Actions                       |
 
 What each technology does here, with versions and links to its docs: **[Tech stack](docs/tech-stack.md)**.
