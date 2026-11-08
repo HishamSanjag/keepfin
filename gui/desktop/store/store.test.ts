@@ -35,7 +35,7 @@ async function env(): Promise<Env> {
         watch: false,
         ...extra,
       }),
-    cleanup: () => fs.rm(dir, {recursive: true, force: true}),
+    cleanup: () => fs.rm(dir, {recursive: true, force: true, maxRetries: 5}),
   }
 }
 
@@ -408,8 +408,8 @@ test('a damaged database, or one of another library, is replaced and the library
     const dbFile = path.join(e.device('dev'), 'state', 'library-state.v1.db')
     // damaged
     await fs.writeFile(dbFile, 'this is not a database file at all')
-    await fs.rm(`${dbFile}-wal`, {force: true})
-    await fs.rm(`${dbFile}-shm`, {force: true})
+    await fs.rm(`${dbFile}-wal`, {force: true, maxRetries: 5})
+    await fs.rm(`${dbFile}-shm`, {force: true, maxRetries: 5})
     const repaired = await e.open('dev', A)
     assert.equal(repaired.stats.checkpoint, false)
     assert.equal(repaired.stats.opsAdmitted + repaired.stats.outboxOps >= 3, true)
@@ -497,14 +497,14 @@ test('checkpoints every N operations, opened by the next start, equal to a full 
     await warm.close()
     // A new device (no database) loads the checkpoint parts and admits only the operations above them.
     const stateDir = path.join(e.device('dev'), 'state')
-    await fs.rm(stateDir, {recursive: true, force: true})
+    await fs.rm(stateDir, {recursive: true, force: true, maxRetries: 5})
     const fast = await e.open('dev', A)
     assert.equal(fast.stats.checkpoint, true)
     assert.ok(fast.stats.opsAdmitted < 161)
     assert.equal(JSON.stringify(fast.views()), fastViews)
     await fast.close()
     // Without database and parts everything is replayed.
-    await fs.rm(stateDir, {recursive: true, force: true})
+    await fs.rm(stateDir, {recursive: true, force: true, maxRetries: 5})
     await fs.rm(path.join(dataDir(e.folder.root), 'checkpoints'), {recursive: true, force: true})
     const slow = await e.open('dev', A)
     assert.equal(slow.stats.checkpoint, false)

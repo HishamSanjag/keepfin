@@ -15,6 +15,9 @@ import app.keepfin.core.sync.Observed
 import app.keepfin.core.sync.Op
 import app.keepfin.core.sync.OpDecode
 import app.keepfin.core.sync.OpId
+import app.keepfin.core.sync.SEGMENT_MAX_BYTES
+import app.keepfin.core.sync.SegmentCompaction
+import app.keepfin.core.sync.SegmentInfo
 import app.keepfin.core.sync.SegmentResult
 import app.keepfin.core.sync.decodeOp
 import app.keepfin.core.sync.decodeSegment
@@ -45,9 +48,25 @@ class StoreOptions(
     /** The merge state (SQLite on a phone). */
     val state: MergeState,
     /** Idle time before the outbox is written as a segment. */
-    val flushIdleMs: Long = 2_000,
+    val flushIdleMs: Long = 30_000,
+    /** The longest an operation waits in the outbox before it is published, however busy the library is. */
+    val flushMaxAgeMs: Long = 300_000,
     /** Operations in the outbox that flush at once. */
-    val flushOps: Int = 500,
+    val flushOps: Int = 2_000,
+    /** Compact on its own: merge this device's small segments and drop covered files (false: only on an explicit [KeepfinStore.compact]). */
+    val compact: Boolean = true,
+    /** Delay before the first compaction after the folder is opened. */
+    val compactDelayMs: Long = 60_000,
+    /** The least time between two compactions. */
+    val compactGapMs: Long = 600_000,
+    /** Delay between a flush that leaves enough small segments and the compaction. */
+    val compactSoonMs: Long = 5_000,
+    /** How long a compaction waits for segment transfers to finish before it skips the round. */
+    val leaseWaitMs: Long = 10_000,
+    /** Test hook, called at each compaction step ("published", "verified", "removing"); throwing simulates a crash there. */
+    val onCompactStep: ((step: String, first: Long, last: Long, removed: Int) -> Unit)? = null,
+    /** Reports each finished compaction round. */
+    val onCompact: ((CompactStats) -> Unit)? = null,
     /** Operations between checkpoints. */
     val checkpointEvery: Int = 5_000,
     val checkpointDelayMs: Long = 1_500,
@@ -76,12 +95,11 @@ data class OpenStats(
     val equivocations: Map<String, Long>,
 )
 
-private class Pending(val op: Op, val text: String)
+/** The device id found in a segment's trailer (null: an unsigned v1 file). */
+/** What one compaction round did. [skipped]: why nothing was done ("busy", "blocked", "closed"). */
+data class CompactStats(val merged: Int, val removed: Int, val dropped: Int, val skipped: String? = null)
 
-private data class SegmentFile(val ops: String, val actor: String, val first: Long, val last: Long, val name: String) {
-    val path get() = "$ops/$actor/$name"
-    val key get() = "$actor/$name"
-}
+private class Pending(val op: Op, val text: String)
 
 /**
  * This device's view of the sync log in `<Keepfin folder>/.keepfin` (a port of `gui/desktop/store/store.ts`):
@@ -135,6 +153,27 @@ class KeepfinStore private constructor(private val o: StoreOptions) {
     private var retryTimer: ScheduledFuture<*>? = null
     private var checkpointTimer: ScheduledFuture<*>? = null
     private var foldTimer: ScheduledFuture<*>? = null
+    /** When the oldest operation still in the outbox was written (the batching window never exceeds flushMaxAgeMs). */
+    private var oldestPendingAt = 0L
+    private var compactTimer: ScheduledFuture<*>? = null
+    private var compactAt = 0L
+    private val compaction = StoreCompaction(object : CompactionHost {
+        override val o get() = this@KeepfinStore.o
+        override val closed get() = this@KeepfinStore.closed
+        override val actor get() = this@KeepfinStore.actor
+        override val deviceId get() = this@KeepfinStore.deviceId
+        override val state get() = this@KeepfinStore.state
+        override val equivocations get() = this@KeepfinStore.equivocations
+        override val problems get() = this@KeepfinStore.problems
+        override val retries get() = this@KeepfinStore.retries
+        override val processed get() = this@KeepfinStore.processed
+        override fun listSegments() = this@KeepfinStore.listSegments()
+        override fun flushNow() = this@KeepfinStore.flushNow(false)
+        override fun scheduleCompact(delayMs: Long) = this@KeepfinStore.scheduleCompact(delayMs)
+        override fun segmentsChanged() {
+            segmentsWritten++
+        }
+    })
     private val listeners = java.util.concurrent.CopyOnWriteArrayList<(remote: Boolean) -> Unit>()
 
     @Volatile var stats: OpenStats? = null
@@ -225,7 +264,7 @@ class KeepfinStore private constructor(private val o: StoreOptions) {
             for (f in listing.entries) {
                 if (f.isDirectory) continue
                 val m = SEGMENT.matchEntire(f.name) ?: continue
-                out += SegmentFile(o.layout.ops, dir.name, m.groupValues[1].toLong(), m.groupValues[2].toLong(), f.name)
+                out += SegmentFile(o.layout.ops, dir.name, m.groupValues[1].toLong(), m.groupValues[2].toLong(), f.name, f.size)
             }
         }
         listingIncomplete = incomplete
@@ -363,8 +402,12 @@ class KeepfinStore private constructor(private val o: StoreOptions) {
         pendingOps = pending.size
         stats = OpenStats(System.currentTimeMillis() - started, usedCheckpoint, segmentsRead, admitted, outboxOps, rotated, equivocations)
         if (!o.readOnly) runCatching { writeActorNote() }
+        // files another file of the same actor already holds (a peer that received both, a sync tool that brought an old pile back) are
+        // dropped now, and this device's own pile is merged a little later
+        if (o.compact && !o.readOnly) runCatching { compaction.dropSubsumed(segments) }.onFailure { lastError = it }
         if (pending.isNotEmpty() && !o.readOnly) scheduleFlush(0)
         if (retries.isNotEmpty()) armRetry()
+        scheduleCompact(o.compactDelayMs)
     }
 
     private fun readSeq(): Long {
@@ -435,6 +478,7 @@ class KeepfinStore private constructor(private val o: StoreOptions) {
                     if (r != AdmitKind.Admitted && r != AdmitKind.Kept) throw IllegalStateException("The library rejected its own change ($r).")
                 }
             }
+            if (pending.isEmpty()) oldestPendingAt = o.now()
             pending.addAll(ops)
             nextSeq = seq
             hlc = clock
@@ -442,7 +486,10 @@ class KeepfinStore private constructor(private val o: StoreOptions) {
             pendingOps = pending.size
             revision++
             noteEnforced()
-            scheduleFlush(if (pending.size >= o.flushOps) 0 else o.flushIdleMs)
+            // Publishing is batched (a segment is a publication, not a safety event: every op is already fsynced in the outbox): wait for a
+            // quiet moment, but never longer than the maximum age of the oldest unpublished op.
+            val age = o.now() - oldestPendingAt
+            scheduleFlush(if (pending.size >= o.flushOps) 0 else minOf(o.flushIdleMs, maxOf(0L, o.flushMaxAgeMs - age)))
             armFold()
             emit(false)
         }
@@ -533,6 +580,7 @@ class KeepfinStore private constructor(private val o: StoreOptions) {
                 }
                 processed += "$a/$name"
                 segmentsWritten++
+                if (a == actor) compaction.filesSinceCompact++
                 flushedLast[a] = maxOf(flushedLast[a] ?: 0L, last)
                 done.addAll(run)
             }
@@ -544,6 +592,7 @@ class KeepfinStore private constructor(private val o: StoreOptions) {
         }
         if (compact || outboxBytes > OUTBOX_COMPACT_BYTES) compactOutbox()
         if (opsSinceCheckpoint >= o.checkpointEvery) scheduleCheckpoint()
+        if (compaction.filesSinceCompact >= 8) scheduleCompact(o.compactSoonMs)
     }
 
     /** The counter is saved before the outbox is emptied, so a restored install is told from a crash. */
@@ -664,8 +713,11 @@ class KeepfinStore private constructor(private val o: StoreOptions) {
     private fun rescanNow(force: Boolean) {
         if (closed) return
         var changed = false
+        var fresh = false
+        var listed: List<SegmentFile> = emptyList()
         try {
-            for (s in listSegments()) {
+            listed = listSegments()
+            for (s in listed) {
                 if (s.key in processed) continue
                 val retry = retries[s.key]
                 if (retry != null && retry.second > System.currentTimeMillis() && !force) continue
@@ -684,6 +736,7 @@ class KeepfinStore private constructor(private val o: StoreOptions) {
                 }
                 value as SegmentResult.Ok
                 processed += s.key
+                fresh = true
                 retries.remove(s.key)
                 problems.remove(s.key)
                 flushedLast[s.actor] = maxOf(flushedLast[s.actor] ?: 0L, s.last)
@@ -695,6 +748,8 @@ class KeepfinStore private constructor(private val o: StoreOptions) {
                 }
             }
             lastError = null
+            // a new file may cover older ones
+            if (fresh && o.compact && !o.readOnly) runCatching { compaction.dropSubsumed(listed) }.onFailure { lastError = it }
         } catch (e: FolderError) {
             lastError = e
             throw e
@@ -718,6 +773,35 @@ class KeepfinStore private constructor(private val o: StoreOptions) {
         val b = decodeSegment(fresh, o.libraryId) as? SegmentResult.Ok ?: return false
         return a.actor == expectedActor && a.first == b.first && a.last == b.last && a.ops.size == b.ops.size && a.ops.indices.all { a.ops[it].encode() == b.ops[it].encode() }
     }
+
+
+    // ------------------------------------------------------------------ compaction (dev-docs/plans/KEEPFIN-DATA-COMPACTION.md)
+    //
+    // Nothing is ever dropped, only repackaged: this device's own small segments are merged into larger ones (same ops, same key), the
+    // merged file is read back and compared op for op, and only then are the inputs removed. A crash at any step leaves a folder every
+    // reader handles (originals only, originals plus the merged file, a subset, the merged file alone).
+
+    private fun scheduleCompact(delayMs: Long) {
+        if (closed || !o.compact || o.readOnly) return
+        val wait = maxOf(delayMs, compaction.lastCompactAt + o.compactGapMs - System.currentTimeMillis())
+        val at = System.currentTimeMillis() + wait
+        if (compactTimer != null && compactAt <= at) return // already due sooner
+        compactTimer?.cancel(false)
+        compactAt = at
+        compactTimer = schedule(wait) {
+            compactTimer = null
+            if (!closed) compaction.compactRound()
+        }
+    }
+
+    /** One compaction round, on the store thread: drops covered files, then merges this device's small segments. */
+    fun compact(): CompletableFuture<CompactStats> = submit { compaction.compactRound() }
+
+    /**
+     * A segment transfer starts (a peer is being sent files): compaction removes no file until the result is closed. Waits for a
+     * removal in progress, so a transfer never lists files that are about to go.
+     */
+    fun hold(): AutoCloseable = compaction.hold()
 
     // ------------------------------------------------------------------ membership (network spec 9.1 #1 and #2)
 
@@ -790,9 +874,12 @@ class KeepfinStore private constructor(private val o: StoreOptions) {
                 retryTimer?.cancel(false)
                 checkpointTimer?.cancel(false)
                 foldTimer?.cancel(false)
+                compactTimer?.cancel(false)
                 if (!o.readOnly) {
                     flushNow(true)
                     writeParts()
+                    // enough small files and no compaction for a while: do it now rather than carry them to the next start
+                    if (o.compact && compaction.filesSinceCompact >= 8 && System.currentTimeMillis() - compaction.lastCompactAt >= o.compactGapMs) runCatching { compaction.compactRound() }.onFailure { lastError = it }
                 }
                 closed = true
                 runCatching { state.close() }
@@ -805,6 +892,7 @@ class KeepfinStore private constructor(private val o: StoreOptions) {
     /** Stops the thread without writing anything (tests that simulate a crash). */
     fun abandon() {
         closed = true
+        compactTimer?.cancel(false)
         executor.shutdownNow()
     }
 }

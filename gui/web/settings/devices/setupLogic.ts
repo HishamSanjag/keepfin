@@ -117,6 +117,7 @@ export function copyStatusLine(place: CopyPlaceView, name: string): string {
   if (place.status === 'disconnected' || offline) return `Waiting for ${name}`
   if (place.status === 'syncing') {
     const progress = place.progress
+    if (progress?.data) return 'Saving Keepfin’s own data…'
     if (!progress || progress.totalActions <= 0) return 'Copying…'
     return `Copying ${progress.doneActions.toLocaleString()} of ${plural(progress.totalActions, 'file')} · ${formatBytes(Math.max(0, progress.totalBytes - progress.doneBytes))} left`
   }

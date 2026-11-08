@@ -114,6 +114,10 @@ object CopiesTags {
     const val PROBLEM = "copies-problem"
     const val PROBLEM_RETRY = "copies-problem-retry"
     const val PROBLEM_FILES = "copies-problem-files"
+
+    /** The block shown while a copy is being removed (or could not be) and its Try again button. */
+    const val REMOVAL = "copies-removal"
+    const val REMOVE_RETRY = "copies-remove-retry"
 }
 
 private const val MUSIC_VIDEOS_NOTE = "Each song's music video goes with it."
@@ -240,7 +244,7 @@ private fun holdsWords(h: CopyHoldsUi, ui: CopiesUi): String {
     return if (names.isEmpty()) "Holds nothing yet" else "Holds " + names.joinToString(", ")
 }
 
-private fun statusWords(c: CopyCardUi): String = when (c.status) {
+private fun statusWords(c: CopyCardUi): String = if (c.removal?.failed == false) "Removing" else when (c.status) {
     CopyStatus.NEW -> "Not synced yet"
     CopyStatus.PREVIEW -> "Check the first sync"
     CopyStatus.SYNCING -> "Syncing"
@@ -314,6 +318,19 @@ private fun CopyCard(c: CopyCardUi, ui: CopiesUi, actions: CopiesActions, focuse
         }.joinToString(" · ")
         Text(line, fontSize = 14.sp, color = if (c.status == CopyStatus.REVIEW || c.status == CopyStatus.PROBLEM || c.status == CopyStatus.REFUSED) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurfaceVariant)
         c.statusText?.let { Text(it, fontSize = 13.sp, color = MaterialTheme.colorScheme.onSurfaceVariant) }
+        val removing = c.removal?.failed == false
+        c.removal?.let { rm ->
+            Column(Modifier.fillMaxWidth().semantics(mergeDescendants = true) { liveRegion = LiveRegionMode.Polite }.testTag(CopiesTags.REMOVAL), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                if (rm.failed) {
+                    Text("This copy was not removed", fontSize = 14.sp, fontWeight = FontWeight.SemiBold, color = MaterialTheme.colorScheme.error)
+                    Text(rm.text, fontSize = 13.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    OutlinedButton(onClick = { confirmRemove = true }, modifier = Modifier.heightIn(min = 48.dp).testTag(CopiesTags.REMOVE_RETRY)) { Text("Try again") }
+                } else {
+                    LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
+                    Text("Removing this copy: ${rm.text}", fontSize = 13.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                }
+            }
+        }
         c.problem?.takeIf { c.status != CopyStatus.SYNCING }?.let { ProblemBlock(it, c.connected) { io { actions.sync(c.id) } } }
         c.progress?.let { p ->
             LinearProgressIndicator(progress = { if (p.total > 0) p.done.toFloat() / p.total else 0f }, modifier = Modifier.fillMaxWidth())
@@ -323,7 +340,7 @@ private fun CopyCard(c: CopyCardUi, ui: CopiesUi, actions: CopiesActions, focuse
         val signInAgain = if (cloudActions != null) rememberCloudSignIn(cloudActions, scope) { step -> if (step is SignInStep.Failed) onError(step.message) else { onError(null); io { actions.sync(c.id) } } } else null
         FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
             if (c.status == CopyStatus.SYNCING) OutlinedButton(onClick = { actions.pause(c.id) }, modifier = Modifier.heightIn(min = 48.dp).testTag(CopiesTags.PAUSE)) { Text("Pause") }
-            else if (c.connected) Button(onClick = { io { actions.sync(c.id) } }, modifier = Modifier.heightIn(min = 48.dp).testTag(CopiesTags.SYNC)) { Text("Sync now") }
+            else if (c.connected) Button(onClick = { io { actions.sync(c.id) } }, enabled = !removing, modifier = Modifier.heightIn(min = 48.dp).testTag(CopiesTags.SYNC)) { Text("Sync now") }
             else if (c.cloud != null && c.cloud.needsSignIn) {
                 val provider = cloudActions?.state?.value?.accounts?.firstOrNull { it.id == c.cloud.accountId }?.provider
                 if (signInAgain != null && provider != null && provider != "webdav") Button(onClick = { signInAgain(provider, c.cloud.accountId) }, modifier = Modifier.heightIn(min = 48.dp).testTag(CloudTags.SIGN_IN_AGAIN)) { Text("Sign in again") }
@@ -347,7 +364,7 @@ private fun CopyCard(c: CopyCardUi, ui: CopiesUi, actions: CopiesActions, focuse
             if (c.cloud == null && c.peer == null) SwitchRow("One flat folder", c.flat, { v -> io { actions.edit(c.id, exports = Triple(c.playlistFiles, v, c.mp3)) } }, subtitle = "Every file again in one folder, for simple players")
             if (c.cloud == null && c.peer == null) SwitchRow("MP3 versions", c.mp3, { v -> io { actions.edit(c.id, exports = Triple(c.playlistFiles, c.flat, v)) } }, subtitle = "Songs in other formats, converted once to MP3")
         }
-        TextButton(onClick = { confirmRemove = true }, modifier = Modifier.heightIn(min = 48.dp)) { Text("Stop keeping this copy") }
+        TextButton(onClick = { confirmRemove = true }, enabled = !removing, modifier = Modifier.heightIn(min = 48.dp)) { Text("Stop keeping this copy") }
     }
     if (confirmRemove) {
         AlertDialog(
@@ -430,6 +447,8 @@ private fun AddCopyWizard(ui: CopiesUi, actions: CopiesActions, preselect: Set<S
     var step by remember { mutableStateOf(Step.FOLDER) }
     var cloudOpen by remember { mutableStateOf(false) }
     var deviceOpen by remember { mutableStateOf(false) }
+    // a cloud sign-in found no copy on the account: move on to the next page as soon as the place has been checked
+    var carryOn by remember { mutableStateOf(false) }
     var tree by remember { mutableStateOf<String?>(null) }
     var check by remember { mutableStateOf<CopyFolderCheck?>(null) }
     var name by remember { mutableStateOf("") }
@@ -454,6 +473,12 @@ private fun AddCopyWizard(ui: CopiesUi, actions: CopiesActions, preselect: Set<S
                 if (c.ok && name.isBlank()) name = c.suggestedName
                 busy = false
             }
+        }
+    }
+    LaunchedEffect(carryOn, check, busy, step) {
+        if (carryOn && step == Step.FOLDER && !busy) {
+            val c = check
+            if (c != null && c.ok) { carryOn = false; step = Step.WHAT } else if (c != null) carryOn = false
         }
     }
     fun draft() = CopyDraft(tree!!, name.trim().ifEmpty { "Copy" }, mode, CopyHoldsUi(all, if (all) emptySet() else spaces, if (all) emptySet() else playlists, !all && favourites), musicVideos = musicVideos)
@@ -513,10 +538,12 @@ private fun AddCopyWizard(ui: CopiesUi, actions: CopiesActions, preselect: Set<S
                         if (cloudOpen && cloudActions != null) {
                             CloudPlaceChooser(
                                 cloudActions,
+                                onNoCopyFound = { carryOn = true },
                                 onAddress = { address, suggested ->
                                     if (address == null) { tree = null; check = null }
                                     else if (address != tree) {
                                         tree = address
+                                        check = null
                                         scope.launch {
                                             busy = true
                                             val c = withContext(Dispatchers.IO) { runCatching { actions.checkFolder(address) }.getOrElse { CopyFolderCheck(false, it.message) } }

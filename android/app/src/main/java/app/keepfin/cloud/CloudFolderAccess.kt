@@ -171,6 +171,14 @@ internal class CloudFolderAccess(
         }
     }
 
+    override fun prune(path: String) {
+        guard(path) {
+            val p = alias(path)
+            val cur = transport.stat(p) ?: return@guard
+            transport.removeForGood(p, cur.etag)
+        }
+    }
+
     override fun rename(path: String, newName: String) {
         guard(path) {
             val from = alias(path)

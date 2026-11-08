@@ -32,6 +32,8 @@ import {
   sqlStateDbOpen,
   sqlStateViewQueries,
   sqlStateShardQueries,
+  syncPlanCompaction,
+  syncSubsumedSegments,
 } from '../../../build/core-js/keepfin-core.mjs'
 
 /** The envelope version (segment and checkpoint layouts, canonical JSON). */
@@ -344,6 +346,45 @@ export function decodeSegment(bytes: Uint8Array, library: string): SegmentDecode
 /** Writes a segment file for one actor's contiguous ops (canonical op texts). Throws if they are not. */
 export function encodeSegment(library: string, actor: string, ops: string[], key?: {pkcs8: Uint8Array; spki: Uint8Array}): Uint8Array {
   return toUint8(syncEncodeSegment(library, actor, JSON.stringify(ops), key ? toInt8(key.pkcs8) : undefined, key ? toInt8(key.spki) : undefined))
+}
+
+// ---- compaction (dev-docs/plans/KEEPFIN-DATA-COMPACTION.md) --------------------------------------------------------------
+
+/** What the planner knows about one segment file. `signer` is the device id in its trailer (null: an unsigned v1 file). */
+export interface CompactionFile {
+  actor: string
+  first: number
+  last: number
+  bytes: number
+  signer: string | null
+  /** False when the file could not be read or decoded: its actor is left alone. */
+  ok?: boolean
+  /** Named by membership (a genesis `lastSegmentHash` or a cutoff `segmentHash`): never merged or removed. */
+  named?: boolean
+}
+
+/** Replace the files at `inputs` (indexes into the list given, in seq order) by one file `first`..`last`. */
+export interface CompactionMerge {
+  actor: string
+  first: number
+  last: number
+  inputs: number[]
+}
+
+const compactionJson = (files: readonly CompactionFile[]) =>
+  JSON.stringify(files.map((f) => ({actor: f.actor, first: f.first, last: f.last, bytes: f.bytes, signer: f.signer, ok: f.ok !== false, named: f.named === true})))
+
+/**
+ * The merges to make: tiered, contiguous, only files signed by `currentSigner`, never an actor with problems
+ * (`blocked`, an unreadable file or an overlap).
+ */
+export function planCompaction(files: readonly CompactionFile[], currentSigner: string | null, blocked: readonly string[] = []): CompactionMerge[] {
+  return JSON.parse(syncPlanCompaction(compactionJson(files), currentSigner, JSON.stringify(blocked)))
+}
+
+/** Files that another, larger file of the same actor contains (the caller still checks the ops are equal before removing). */
+export function subsumedSegments(files: readonly CompactionFile[], blocked: readonly string[] = []): {index: number; by: number}[] {
+  return JSON.parse(syncSubsumedSegments(compactionJson(files), JSON.stringify(blocked)))
 }
 
 // ---- ops, clocks, keys ---------------------------------------------------------------------------------------------------

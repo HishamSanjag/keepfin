@@ -14,6 +14,7 @@ type Maybe<T> = T | Promise<T>
 export interface StoreLike {
   readonly actorId: string
   flush(): Promise<void>
+  hold?(): Promise<() => void>
   rescan(options?: {force?: boolean}): Promise<void>
   membership(): Maybe<SyncMembership>
   enableMembership(grant?: {actor: string; spkiBase64: string; perms: string[]}): Promise<void>
@@ -31,6 +32,7 @@ export function netLibraryFor(store: StoreLike, options: {libraryId: string; nam
     records: options.records,
     actor: () => store.actorId,
     flush: () => store.flush(),
+    hold: store.hold ? () => store.hold!() : undefined,
     rescan: () => store.rescan(),
     membership: async () => store.membership(),
     ensureMembership: (grant) => store.enableMembership(grant),

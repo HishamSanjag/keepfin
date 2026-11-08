@@ -47,15 +47,23 @@ object Sync {
     /** Pushes the segments [remote] (the peer's vector) lacks. */
     fun push(client: PeerClient, lib: NetLibrary, remote: Map<String, Long>): Pair<Int, Boolean> {
         lib.flush()
-        val missing = SegmentFiles.missingFor(lib.segments(), remote).filter { it.size in 1..SEGMENT_MAX_BYTES }
-        if (missing.isEmpty()) return 0 to false
-        val total = missing.sumOf { 4L + it.size }
-        val body = FramedSegments(lib, missing)
-        client.request("POST", "/v1/libraries/${lib.libraryId}/segments", body = body, contentLength = total, timeoutMs = 120_000).use { response ->
-            val bytes = PeerClient.readLimited(response.body!!.byteStream(), 1024 * 1024)
-            if (response.code == 403) return 0 to true
-            if (response.code != 200) throw PeerHttpError(response.code, "push", "The device answered ${response.code}.")
-            return (try { JSONObject(String(bytes, Charsets.UTF_8)).optInt("stored", 0) } catch (e: Exception) { 0 }) to false
+        // The lease: while files are listed, measured and sent, compaction removes none of them (a file that vanished would break the
+        // announced length of the body).
+        lib.hold().use {
+            // a file that is gone already (the listing may be a little old) is left out, and the sizes are the ones on disk now
+            val missing = SegmentFiles.missingFor(lib.segments(), remote).mapNotNull { seg ->
+                val st = try { lib.folder.stat(seg.path) } catch (e: app.keepfin.folder.FolderError) { null }
+                if (st == null || st.isDirectory || st.size !in 1..SEGMENT_MAX_BYTES) null else SegInfo(seg.actor, seg.first, seg.last, seg.name, st.size, seg.ops)
+            }
+            if (missing.isEmpty()) return 0 to false
+            val total = missing.sumOf { 4L + it.size }
+            val body = FramedSegments(lib, missing)
+            client.request("POST", "/v1/libraries/${lib.libraryId}/segments", body = body, contentLength = total, timeoutMs = 120_000).use { response ->
+                val bytes = PeerClient.readLimited(response.body!!.byteStream(), 1024 * 1024)
+                if (response.code == 403) return 0 to true
+                if (response.code != 200) throw PeerHttpError(response.code, "push", "The device answered ${response.code}.")
+                return (try { JSONObject(String(bytes, Charsets.UTF_8)).optInt("stored", 0) } catch (e: Exception) { 0 }) to false
+            }
         }
     }
 

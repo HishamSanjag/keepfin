@@ -225,6 +225,45 @@ export async function registerCopiesSuite({test, sent}) {
     assert.equal(await page.getByRole('dialog').count(), 0, 'the copy that is gone closes')
   })
 
+  await test('copies: Remove copy shows the copy being removed, says when it is done, and a second click starts nothing', async (page) => {
+    await openCopies(page)
+    await page.evaluate(() => (window.__copiesRemove = 'hold'))
+    const backup = await openCopy(page, 'Backup drive (E:)')
+    await backup.getByRole('button', {name: 'Remove copy…'}).click()
+    const remove = page.getByRole('dialog', {name: 'Remove Backup drive (E:)?'})
+    await remove.getByRole('radio', {name: /Also move its files to the Recycle Bin/}).check()
+    await remove.getByRole('button', {name: 'Remove copy and its files'}).click()
+    // the dialogs close at once; the row stays and says what is happening
+    await page.getByRole('dialog').waitFor({state: 'detached'})
+    await row(page, 'Backup drive (E:)').getByText('Removing · Moving its files to the Recycle Bin…').waitFor()
+    // opening it again: the removal shows, and neither Remove copy… nor Sync now can start another
+    const again = await openCopy(page, 'Backup drive (E:)')
+    await again.getByRole('progressbar', {name: 'Removing Backup drive (E:)'}).waitFor()
+    assert.equal(await again.getByRole('button', {name: 'Remove copy…'}).isDisabled(), true)
+    assert.equal(await again.getByRole('button', {name: 'Sync now'}).isDisabled(), true)
+    await page.keyboard.press('Escape')
+    assert.equal(await page.evaluate(() => window.__calls.filter((c) => c.op === 'copiesRemove').length), 1, 'one removal')
+    await page.evaluate(() => window.__finishRemove())
+    await row(page, 'Backup drive (E:)').waitFor({state: 'detached'})
+    await page.getByRole('status').filter({hasText: 'Backup drive (E:) was removed'}).getByText('Its files are in the Recycle Bin.').waitFor()
+  })
+
+  await test('copies: a removal that fails keeps the copy with the reason and a way to try again', async (page) => {
+    await openCopies(page)
+    await page.evaluate(() => (window.__copiesRemove = 'fail'))
+    const backup = await openCopy(page, 'Backup drive (E:)')
+    await backup.getByRole('button', {name: 'Remove copy…'}).click()
+    await page.getByRole('dialog', {name: 'Remove Backup drive (E:)?'}).getByRole('button', {name: 'Remove copy', exact: true}).click()
+    await row(page, 'Backup drive (E:)').getByText('Not removed').waitFor()
+    const failed = await openCopy(page, 'Backup drive (E:)')
+    await failed.getByText('The copy was not removed.', {exact: false}).waitFor()
+    await page.evaluate(() => (window.__copiesRemove = ''))
+    await failed.getByRole('button', {name: 'Try again'}).click()
+    await page.getByRole('dialog', {name: 'Remove Backup drive (E:)?'}).getByRole('button', {name: 'Remove copy', exact: true}).click()
+    await row(page, 'Backup drive (E:)').waitFor({state: 'detached'})
+    await page.getByRole('status').filter({hasText: 'Backup drive (E:) was removed'}).waitFor()
+  })
+
   await test('copies: a backup with nothing to free up says so and deletes nothing', async (page) => {
     await openCopies(page)
     await page.waitForFunction(() => !!window.__fake)
@@ -461,7 +500,8 @@ export async function registerCopiesSuite({test, sent}) {
       assert.equal(await folder.inputValue(), 'Library')
       await folder.fill('My music')
       await wizard.getByText('Keepfin/My music').waitFor()
-      await wizard.getByText('Already on this account').waitFor()
+      await wizard.getByText('A Keepfin copy is already on this account').waitFor()
+      assert.equal(await wizard.getByRole('radio', {name: /Everything/}).count(), 0, 'a copy was found there, so the step stays for the person to choose')
       await wizard.getByRole('button', {name: 'Continue'}).click()
       await wizard.getByRole('radio', {name: /Everything/}).waitFor()
       await wizard.getByRole('button', {name: 'Continue'}).click()
@@ -590,13 +630,33 @@ export async function registerCopiesSuite({test, sent}) {
     const found = wizard.getByRole('group', {name: 'Copies already on this account'})
     await found.getByText('The copy “Cloud backup” in your library').waitFor()
     await found.getByText('A Keepfin copy of this library').waitFor()
-    await found.getByRole('button', {name: 'Use this folder'}).click()
+    await found.getByRole('button', {name: 'Use it'}).last().click()
     assert.equal(await wizard.getByLabel('Folder in Google Drive').inputValue(), 'Phone library')
-    await found.getByRole('button', {name: 'Use on this computer'}).click()
+    await found.getByRole('button', {name: 'Use it'}).first().click()
     const attach = await got(page, 'copiesCloudAttach')
     assert.deepEqual(attach.copies.cloud, {accountId: 'acct-drive', folder: 'Music'})
     await page.getByRole('dialog', {name: 'Add a copy'}).waitFor({state: 'detached'})
   }, {fake: {copies: 'cloud'}})
+
+  await test('copies: signing in to an account with no Keepfin copy goes straight on to the next page', async (page) => {
+    await openCopies(page)
+    const wizard = await openAdd(page)
+    await wizard.getByRole('radio', {name: 'A cloud account'}).check()
+    await wizard.getByRole('button', {name: /OneDrive/}).click()
+    // no Continue press: the account has no copy, so the step carries on by itself
+    await wizard.getByRole('radio', {name: /Everything/}).waitFor()
+    assert.equal(await wizard.getByRole('heading', {name: 'What should it hold?'}).count(), 1)
+  })
+
+  await test('copies: signing in to an account that already has a copy stays and offers Use it or Make a new one', async (page) => {
+    await openCopies(page)
+    const wizard = await openAdd(page)
+    await wizard.getByRole('radio', {name: 'A cloud account'}).check()
+    await wizard.getByRole('button', {name: /Google Drive/}).click()
+    await wizard.getByText('A Keepfin copy is already on this account').waitFor()
+    await wizard.getByRole('button', {name: 'Make a new one'}).click()
+    await wizard.getByRole('radio', {name: /Everything/}).waitFor()
+  })
 
   await test('copies: a build without cloud providers offers only folders', async (page) => {
     await openCopies(page)

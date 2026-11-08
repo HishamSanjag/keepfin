@@ -72,6 +72,7 @@ export function CopyDialog({place, state, onState, onReview, onClose}: {place: C
   const words = modeWords[place.mode]
   const syncing = place.status === 'syncing'
   const backup = place.mode === 'backup'
+  const removing = place.removal?.state === 'removing'
 
   async function act(name: string, work: () => Promise<CopiesState | void>) {
     setBusy(name)
@@ -120,7 +121,7 @@ export function CopyDialog({place, state, onState, onReview, onClose}: {place: C
         title={place.name}
         footer={
           <>
-            <Button variant="ghost" icon="close" disabled={!!busy} onClick={() => setConfirm('remove')}>
+            <Button variant="ghost" icon="close" disabled={!!busy || removing} onClick={() => setConfirm('remove')}>
               Remove copy…
             </Button>
             {backup && (
@@ -142,7 +143,7 @@ export function CopyDialog({place, state, onState, onReview, onClose}: {place: C
             <Button
               variant="primary"
               icon="refresh"
-              disabled={!place.connected || syncing || !!busy}
+              disabled={!place.connected || syncing || !!busy || removing}
               loading={busy === 'sync' || syncing || (!!asked && !finished)}
               onClick={() => {
                 setAsked(Date.now())
@@ -158,6 +159,25 @@ export function CopyDialog({place, state, onState, onReview, onClose}: {place: C
         <div className="copy-dialog-panel" role="tabpanel" id="copy-dialog-panel" aria-labelledby={`copy-dialog-tab-${tab}`}>
           {tab === 'overview' && (
             <>
+              {place.removal?.state === 'removing' && (
+                <div className="copy-progress" role="status">
+                  <ProgressBar value={0} label={`Removing ${place.name}`} mode="indeterminate" />
+                  <span className="small muted">Removing this copy: {place.removal.text}</span>
+                </div>
+              )}
+              {place.removal?.state === 'failed' && (
+                <InlineAlert
+                  tone="error"
+                  title="This copy was not removed"
+                  actions={
+                    <Button size="sm" icon="refresh" disabled={!!busy} onClick={() => setConfirm('remove')}>
+                      Try again
+                    </Button>
+                  }
+                >
+                  {place.removal.text}
+                </InlineAlert>
+              )}
               {finished && (
                 <InlineAlert tone="info">
                   {place.waiting === 0 ? 'Synced just now: everything this copy holds is on it.' : `Synced just now. ${plural(place.waiting, 'file')} still ${place.waiting === 1 ? 'waits' : 'wait'} for the next sync.`}
@@ -212,7 +232,7 @@ export function CopyDialog({place, state, onState, onReview, onClose}: {place: C
                 <div className="copy-progress" role="status">
                   <ProgressBar value={percent} label={`Syncing ${place.name}`} mode={progress && (progress.totalActions > 0 || progress.totalBytes > 0) ? 'determinate' : 'indeterminate'} />
                   <span className="small muted tabular">
-                    {progress && progress.totalActions > 0 ? `${progress.doneActions.toLocaleString()} of ${plural(progress.totalActions, 'file')}` : 'Looking at both sides…'}
+                    {progress?.data ? 'Saving Keepfin’s own data…' : progress && progress.totalActions > 0 ? `${progress.doneActions.toLocaleString()} of ${plural(progress.totalActions, 'file')}` : 'Looking at both sides…'}
                     {progress?.current ? ` · ${progress.current.split('/').pop()}` : ''}
                   </span>
                 </div>
@@ -337,13 +357,12 @@ export function CopyDialog({place, state, onState, onReview, onClose}: {place: C
               <Button onClick={() => setConfirm(null)}>Cancel</Button>
               <Button
                 variant="danger"
-                loading={busy === 'remove'}
-                onClick={async () => {
-                  const ok = await act('remove', () => removeCopy(place.id, withFiles))
-                  if (ok) {
-                    setConfirm(null)
-                    onClose()
-                  }
+                disabled={removing}
+                onClick={() => {
+                  // the work goes on in the background: the copy's row says what it is doing, and the result arrives as a push
+                  void removeCopy(place.id, withFiles).then(onState, () => undefined)
+                  setConfirm(null)
+                  onClose()
                 }}
               >
                 {withFiles ? 'Remove copy and its files' : 'Remove copy'}

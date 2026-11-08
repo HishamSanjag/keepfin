@@ -67,6 +67,7 @@ object CloudTags {
     const val DISCONNECT = "cloud-disconnect"
     const val REMOVE_ACCESS = "cloud-remove-access"
     const val FOUND = "cloud-found"
+    const val MAKE_NEW = "cloud-make-new"
     const val USE_ACCOUNT = "cloud-use-account"
     const val SECTION = "cloud-accounts"
 }
@@ -164,7 +165,7 @@ private fun AccountCard(a: CloudAccountUi, cloud: CloudActions, scope: Coroutine
  * copy's address once the person has chosen a place (the wizard then checks it like a folder), or null while the choice is incomplete.
  */
 @Composable
-internal fun CloudPlaceChooser(cloud: CloudActions, onAddress: (String?, String) -> Unit, onAttach: (placeId: String, address: String) -> Unit) {
+internal fun CloudPlaceChooser(cloud: CloudActions, onAddress: (String?, String) -> Unit, onAttach: (placeId: String, address: String) -> Unit, onNoCopyFound: () -> Unit = {}) {
     val ui by cloud.state.collectAsStateWithLifecycle()
     val scope = rememberCoroutineScope()
     var provider by remember { mutableStateOf<String?>(null) }
@@ -173,13 +174,17 @@ internal fun CloudPlaceChooser(cloud: CloudActions, onAddress: (String?, String)
     var found by remember { mutableStateOf<List<FoundReplicaUi>>(emptyList()) }
     var message by remember { mutableStateOf<String?>(null) }
     var busy by remember { mutableStateOf(false) }
+    // the account a sign-in started here just made: once its copies are looked up, the wizard carries on by itself when it has none
+    var justSignedIn by remember { mutableStateOf<String?>(null) }
+    // "Make a new one": move on once the wizard has been given the address of the new folder
+    var makingNew by remember { mutableStateOf(false) }
     var url by remember { mutableStateOf("") }
     var user by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     val signIn = rememberCloudSignIn(cloud, scope) { step ->
         busy = false
         when (step) {
-            is SignInStep.Done -> { accountId = step.account.id; message = null }
+            is SignInStep.Done -> { justSignedIn = step.account.id; accountId = step.account.id; message = null }
             is SignInStep.Failed -> message = step.message
             else -> message = null
         }
@@ -193,14 +198,20 @@ internal fun CloudPlaceChooser(cloud: CloudActions, onAddress: (String?, String)
         val id = accountId
         if (id != null && account?.needsSignIn == false) {
             busy = true
-            found = withContext(Dispatchers.IO) { runCatching { cloud.find(id, if (account.provider == "webdav") folder else null) }.getOrDefault(emptyList()) }
+            val looked = withContext(Dispatchers.IO) { runCatching { cloud.find(id, if (account.provider == "webdav") folder else null) } }
+            found = looked.getOrDefault(emptyList())
             busy = false
+            val fresh = justSignedIn == id
+            if (fresh) justSignedIn = null
+            // nothing there yet: straight on to the copy's setup. A lookup that failed is not "nothing there"; the person decides.
+            if (fresh && looked.isSuccess && found.isEmpty()) onNoCopyFound()
         }
     }
     LaunchedEffect(accountId, folder, account?.needsSignIn) {
         kotlinx.coroutines.delay(400) // typing: the place is looked at once the name rests
         val id = accountId
         if (id != null && account?.needsSignIn == false && folder.isNotBlank()) onAddress(withContext(Dispatchers.IO) { runCatching { cloud.addressFor(id, folder) }.getOrNull() }, folder.trim()) else onAddress(null, folder.trim())
+        if (makingNew) { makingNew = false; onNoCopyFound() }
     }
     Column(Modifier.fillMaxWidth().testTag(CloudTags.CHOICE), verticalArrangement = Arrangement.spacedBy(8.dp)) {
         Text("Choose a service", fontSize = 15.sp)
@@ -222,7 +233,7 @@ internal fun CloudPlaceChooser(cloud: CloudActions, onAddress: (String?, String)
                                 message = null
                                 val r = withContext(Dispatchers.IO) { runCatching { cloud.connectWebdav(url, user, password) } }
                                 busy = false
-                                r.onSuccess { accountId = it.account.id; password = "" }.onFailure { message = it.message }
+                                r.onSuccess { justSignedIn = it.account.id; accountId = it.account.id; password = "" }.onFailure { message = it.message }
                             }
                         },
                         modifier = Modifier.heightIn(min = 48.dp).testTag(CloudTags.WEBDAV_CONNECT),
@@ -244,14 +255,26 @@ internal fun CloudPlaceChooser(cloud: CloudActions, onAddress: (String?, String)
                 if (account.provider != "webdav") Button(onClick = { busy = true; signIn(account.provider, account.id) }, modifier = Modifier.heightIn(min = 48.dp).testTag(CloudTags.SIGN_IN_AGAIN)) { Text("Sign in again") }
             } else {
                 if (found.isNotEmpty()) {
-                    Text("Already on this account", fontSize = 15.sp)
+                    Text("A Keepfin copy is already on this account", fontSize = 15.sp)
                     for (f in found) Row(Modifier.fillMaxWidth().testTag(CloudTags.FOUND), verticalAlignment = Alignment.CenterVertically) {
                         Text(f.name, Modifier.weight(1f), fontSize = 14.sp)
                         TextButton(
                             onClick = { scope.launch { val a = withContext(Dispatchers.IO) { runCatching { cloud.addressFor(account.id, f.name) }.getOrNull() }; if (a != null) { folder = f.name; if (f.knownPlaceId != null) onAttach(f.knownPlaceId, a) } } },
                             modifier = Modifier.heightIn(min = 48.dp),
-                        ) { Text(if (f.knownPlaceId != null) "Use on this phone" else "Use this") }
+                        ) { Text("Use it") }
                     }
+                    TextButton(
+                        onClick = {
+                            val taken = found.map { it.name.lowercase() }.toSet()
+                            val base = folder.trim().ifEmpty { "Library" }
+                            var next = base
+                            var n = 2
+                            while (next.lowercase() in taken) next = "$base ${n++}"
+                            folder = next
+                            makingNew = true
+                        },
+                        modifier = Modifier.heightIn(min = 48.dp).testTag(CloudTags.MAKE_NEW),
+                    ) { Text("Make a new one") }
                 }
                 OutlinedTextField(
                     folder, { folder = it }, label = { Text(if (account.provider == "webdav") "Folder on the server" else "Folder name") }, singleLine = true,

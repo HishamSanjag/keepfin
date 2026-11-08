@@ -49,6 +49,29 @@ async function nextNumber(dir: string): Promise<number> {
   return max + 1
 }
 
+/** How many manifests a place keeps on each side. */
+export const MANIFESTS_KEPT = 3
+
+/** Deletes all but the newest [keep] manifests of a place folder (a hard delete: a manifest is a record, not user data). */
+export async function pruneManifests(dir: string, keep = MANIFESTS_KEPT): Promise<number> {
+  let names: string[]
+  try {
+    names = await fs.readdir(dir)
+  } catch {
+    return 0
+  }
+  const numbered = names.flatMap((name) => {
+    const m = /^manifest-(\d+)\.jsonl$/.exec(name)
+    return m ? [{name, n: Number(m[1])}] : []
+  })
+  numbered.sort((a, b) => b.n - a.n)
+  let removed = 0
+  for (const old of numbered.slice(keep)) {
+    if (await fs.rm(path.join(dir, old.name), {force: true}).then(() => true, () => false)) removed++
+  }
+  return removed
+}
+
 /**
  * Writes the manifest of a completed run from the relationship's baseline (every entry in it was verified at the generation
  * it records) to the copy and to the main folder. The caller records the result in the `place.set` register.
@@ -117,6 +140,10 @@ export async function writeManifest(options: {
   }
   await fs.rename(tmp, copyFile)
   await fs.copyFile(copyFile, `${mainFile}`)
+  // Only the newest few are ever read (the latest one; coverage reads its header), so older ones are not kept: without this a
+  // library that runs a copy every day gains a manifest of the whole copy per run, for ever (dev-docs/plans/KEEPFIN-DATA-COMPACTION.md R4).
+  await pruneManifests(copyDir)
+  await pruneManifests(mainDir)
   return {n, sha256: 'sha256:' + hash.digest('hex'), files, copyFile, mainFile}
 }
 

@@ -2,7 +2,7 @@ import {useEffect, useState} from 'react'
 import '../../styles/copies.css'
 import '../../styles/where.css'
 import {useNav, navigate} from '../../nav'
-import type {CopiesState, CopyMode} from '../../../shared/copies'
+import type {CopiesState, CopyMode, CopyPlaceView} from '../../../shared/copies'
 import {librarySafety, type OnePlace} from '../../../shared/core/safety'
 import type {WhereKind, WherePlace} from '../../../shared/where'
 import {messageOf} from '../../bridge'
@@ -109,7 +109,7 @@ export function Places({copies}: {copies: Copies}) {
         <ul className="where-list" aria-label="Places that keep your library">
           {(here?.places ?? []).map((place) => (
             <li key={place.id}>
-              <PlaceRow place={place} now={now} mode={place.link?.to === 'copy' ? state.places.find((p) => p.id === place.link!.id)?.mode : undefined} onOpen={() => (place.link?.to === 'device' ? navigate('Settings', 'devices', `device-${place.link.id}`) : place.link && setOpen({copy: place.link.id}))} />
+              <PlaceRow place={place} now={now} mode={place.link?.to === 'copy' ? state.places.find((p) => p.id === place.link!.id)?.mode : undefined} removal={place.link?.to === 'copy' ? state.places.find((p) => p.id === place.link!.id)?.removal : undefined} onOpen={() => (place.link?.to === 'device' ? navigate('Settings', 'devices', `device-${place.link.id}`) : place.link && setOpen({copy: place.link.id}))} />
             </li>
           ))}
           {/* before "where" has answered: the copies alone */}
@@ -131,8 +131,8 @@ export function Places({copies}: {copies: Copies}) {
                       <span className="small muted where-line" title={holds}>{holds}</span>
                     </span>
                     <span className="where-state small">
-                      <span className="where-status" data-tone={status.tone === 'success' ? 'good' : status.tone === 'warning' || status.tone === 'danger' ? 'warn' : 'quiet'}>
-                        {place.status === 'problem' && place.statusText ? place.statusText : status.label}
+                      <span className="where-status" data-tone={place.removal ? (place.removal.state === 'failed' ? 'warn' : 'quiet') : status.tone === 'success' ? 'good' : status.tone === 'warning' || status.tone === 'danger' ? 'warn' : 'quiet'}>
+                        {place.removal ? removalWords(place.removal) : place.status === 'problem' && place.statusText ? place.statusText : status.label}
                       </span>
                     </span>
                     <span className="where-chevron" aria-hidden="true">
@@ -209,9 +209,12 @@ export function Places({copies}: {copies: Copies}) {
   )
 }
 
-function PlaceRow({place, now, mode, onOpen}: {place: WherePlace; now: number; mode?: CopyMode; onOpen: () => void}) {
+/** A copy being removed, or that could not be: the row says so in place of its sync status. */
+const removalWords = (removal: NonNullable<CopyPlaceView['removal']>) => (removal.state === 'removing' ? `Removing · ${removal.text}` : 'Not removed')
+
+function PlaceRow({place, now, mode, removal, onOpen}: {place: WherePlace; now: number; mode?: CopyMode; removal?: CopyPlaceView['removal']; onOpen: () => void}) {
   const size = sizeWords(place)
-  const status = statusWords(place, now)
+  const status = removal ? removalWords(removal) : statusWords(place, now)
   const type = mode ? modeWords[mode].name : undefined
   const body = (
     <>
@@ -232,7 +235,7 @@ function PlaceRow({place, now, mode, onOpen}: {place: WherePlace; now: number; m
       </span>
       <span className="where-state small">
         {size && <span className="tabular where-size">{place.thisDevice && place.holds.files ? plural(place.holds.files.of, 'file') : size}</span>}
-        <span className="where-status" data-tone={statusTone(place.status)}>
+        <span className="where-status" data-tone={removal ? (removal.state === 'failed' ? 'warn' : 'quiet') : statusTone(place.status)} {...(removal ? {role: 'status', title: removal.text} : {})}>
           {status}
         </span>
       </span>

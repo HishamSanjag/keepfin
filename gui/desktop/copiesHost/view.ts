@@ -100,6 +100,7 @@ export class CopiesView {
       connected: rt.connected,
       status,
       ...(statusText ? {statusText} : {}),
+      ...(rt.removal ? {removal: {...rt.removal}} : {}),
       ...(rt.worker && rt.progress ? {progress: {...rt.progress}} : {}),
       ...(cov?.verifiedAt ? {lastVerifiedAt: cov.verifiedAt} : {}),
       kept: cov?.kept ?? 0,

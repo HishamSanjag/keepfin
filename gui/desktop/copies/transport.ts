@@ -23,6 +23,8 @@ export interface TransportInventoryLine {
   fileId: string | null
   /** The provider's revision of the object (eTag / rev / version); the precondition of a later overwrite. */
   revision: string | null
+  /** The provider's SHA-256 of the bytes (hex), when it reports one (Drive): tells a new revision with the same bytes apart. */
+  sha256?: string | null
 }
 
 export interface TransportScanResult {

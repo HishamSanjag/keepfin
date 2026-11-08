@@ -13,13 +13,18 @@ class MemberView(val actor: String, val perms: Set<String>, val epoch: Long, val
 }
 
 /** The library's membership (network spec 9.1 #1): inactive until a `member.genesis` is held. */
-class MembershipView(val active: Boolean, val members: Map<String, MemberView>) {
+class MembershipView(
+    val active: Boolean,
+    val members: Map<String, MemberView>,
+    /** Per actor, the last seq of its history that was frozen when membership started (the segment that ends there is named by the genesis). */
+    val frozen: Map<String, Long> = emptyMap(),
+) {
     companion object {
         val INACTIVE = MembershipView(false, emptyMap())
 
         fun of(m: Membership): MembershipView =
             if (!m.active) INACTIVE
-            else MembershipView(true, m.members().mapValues { (_, i) -> MemberView(i.actor, i.perms, i.epoch, i.cutoff, i.keys.map { MemberKeyView(it.deviceId, it.until) }) })
+            else MembershipView(true, m.members().mapValues { (_, i) -> MemberView(i.actor, i.perms, i.epoch, i.cutoff, i.keys.map { MemberKeyView(it.deviceId, it.until) }) }, m.frozenHistory().mapValues { it.value.seq })
     }
 }
 

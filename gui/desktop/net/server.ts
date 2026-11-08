@@ -437,8 +437,10 @@ export class NetServer {
     const vector = parseVector(text)
     if (!vector) throw new HttpError(400, 'vector', 'The version vector is not valid.')
     const release = this.transfer(caller)
+    let hold = () => {}
     try {
       await lib.flush()
+      hold = (await lib.hold?.()) ?? hold // while files are listed and sent, compaction removes none of them
       const list = await listSegments(lib.root, lib.records)
       const missing = missingFor(list, vector)
       res.writeHead(200, {'content-type': 'application/x-keepfin-segments', 'cache-control': 'no-store', 'x-keepfin-vector': formatVector(vectorOf(list)).slice(0, 8192)})
@@ -452,6 +454,7 @@ export class NetServer {
       }
       res.end()
     } finally {
+      hold()
       release()
     }
   }

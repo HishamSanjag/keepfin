@@ -3,16 +3,12 @@ package app.keepfin.copies
 import android.content.Context
 import android.net.Uri
 import android.util.Base64
-import app.keepfin.core.copies.Action
 import app.keepfin.core.copies.ActionKind
 import app.keepfin.core.copies.CopyMode
 import app.keepfin.core.copies.Holds
 import app.keepfin.core.copies.PlaceConfig
 import app.keepfin.core.copies.PlaceOptions
 import app.keepfin.core.copies.ReviewKind
-import app.keepfin.core.copies.companionField
-import app.keepfin.core.copies.companionOfEntry
-import app.keepfin.core.copies.companionValue
 import app.keepfin.core.copies.copyProblemGroups
 import app.keepfin.core.copies.copyProblemShort
 import app.keepfin.core.copies.placeConfigFrom
@@ -31,7 +27,6 @@ import app.keepfin.folder.FolderError
 import app.keepfin.folder.KeepfinFolders
 import app.keepfin.folder.OpDraft
 import app.keepfin.folder.OpenFolderResult
-import app.keepfin.folder.SafFolderAccess
 import app.keepfin.library.repo.CopiesBackend
 import app.keepfin.library.repo.LibraryRepository
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -51,6 +46,9 @@ internal interface CopiesLibrary {
     fun apply(drafts: List<OpDraft>)
     fun observed(itemId: String): Pair<List<String>, List<String>>
     fun versionSum(): Long
+
+    /** Writes whatever the library has not published yet to the Keepfin folder, so a copy never lags it. */
+    fun publish() {}
 }
 
 internal class RepoCopiesLibrary(private val repo: LibraryRepository) : CopiesLibrary {
@@ -59,6 +57,7 @@ internal class RepoCopiesLibrary(private val repo: LibraryRepository) : CopiesLi
     override fun observed(itemId: String): Pair<List<String>, List<String>> =
         repo.observedItem(itemId)?.let { o -> o.tags.map { it.toString() } to o.heads.map { it.toString() } } ?: (emptyList<String>() to emptyList())
     override fun versionSum() = repo.versionSum()
+    override fun publish() = repo.publishPending()
 }
 
 private class Local(var treeUri: String, var lastRunAt: Long = 0, var seenSum: Long = -1)
@@ -78,6 +77,9 @@ private class Rt {
     var error: String? = null
     var paused = false
     var scannedAt = 0L
+
+    /** Stop keeping this copy: what it is doing, or why it stopped. */
+    var removal: CopyRemovalUi? = null
 
     /** Why a copy that is not connected cannot be reached right now (a cloud copy: no Wi-Fi, no network). */
     var away: String? = null
@@ -345,7 +347,7 @@ internal class CopiesManager(
         return CopyCardUi(
             p.id, p.name.ifEmpty { "Copy" }, p.mode, holdsUi(p.holds), folderLabel(l?.treeUri), r.connected, status, text, verified?.toLong(), r.kept, r.waiting, reviewCount, r.freeBytes, r.progress,
             p.everyHours, (every as? JBool)?.value != false, p.options.playlistFiles, p.options.flat, p.options.mp3, l?.let { cloud?.card(it.treeUri) }, l?.let { peers?.card(it.treeUri) },
-            companions = p.options.companions, musicVideos = p.options.musicVideos, problem = problem,
+            companions = p.options.companions, musicVideos = p.options.musicVideos, problem = problem, removal = r.removal,
         )
     }
 
@@ -708,14 +710,30 @@ internal class CopiesManager(
 
     @Synchronized
     fun remove(placeId: String) {
-        pause(placeId)
-        setRegisters(placeId, mapOf("removed" to JBool(true)))
-        local.remove(placeId)
-        acks.removeAll { it.startsWith("$placeId|") }
-        saveLocal()
-        peers?.forget(stateDir(placeId))
-        stateDir(placeId).deleteRecursively()
+        val place = places.firstOrNull { it.id == placeId } ?: return
+        val r = runtime(placeId)
+        // a second tap, or the screen opened again: the removal already running is the only one
+        if (r.removal?.failed == false) return
+        val wasPaused = r.paused
+        fun step(text: String) { r.removal = CopyRemovalUi(false, text); publish() }
+        step("Stopping the copy…")
+        try {
+            pause(placeId)
+            step("Forgetting the copy…")
+            setRegisters(placeId, mapOf("removed" to JBool(true)))
+            local.remove(placeId)
+            acks.removeAll { it.startsWith("$placeId|") }
+            saveLocal()
+            peers?.forget(stateDir(placeId))
+            stateDir(placeId).deleteRecursively()
+        } catch (e: Exception) {
+            r.paused = wasPaused
+            r.removal = CopyRemovalUi(true, e.message ?: "Keepfin could not stop keeping this copy.")
+            publish()
+            throw e
+        }
         rt.remove(placeId)
+        report = SyncReportUi("${place.name.ifEmpty { "The copy" }} was removed", "Its files stay where they are.", false, System.currentTimeMillis())
         refresh()
     }
 
@@ -856,6 +874,9 @@ internal class CopiesManager(
     }
 
     private fun executeRun(place: PlaceConfig, copy: FolderAccess, dir: File, dryRun: Boolean, flags: Flags, tree: String, confirmed: Set<String> = emptySet()): RunReport {
+        // publish before copying: operations wait in the outbox for a while (batched flushes) and the copy must not lag them
+        // (dev-docs/plans/KEEPFIN-DATA-COMPACTION.md R7). A failed flush changes nothing: the ops are safe in the outbox.
+        runCatching { library.publish() }
         val b = library.backend()
         val r = runtime(place.id)
         val host = LibraryHost(b, library, newId, now)
@@ -887,7 +908,7 @@ internal class CopiesManager(
             runCatching {
                 if (place.mode == CopyMode.Backup) Versions.pruneVersions(access, now(), place.options.versionsKeepDays) else Versions.purgeTrash(access, now())
             }
-            runCatching { copyMetadata(b.folder, access) }
+            runCatching { copyMetadata(b.folder, access, b.libraryId) }
             if (place.options.playlistFiles || place.options.flat || place.options.mp3 || access.stat(Exports.RECORD) != null) {
                 runCatching {
                     val names = NameMap.load(access)
@@ -906,9 +927,15 @@ internal class CopiesManager(
 
     val exportsNote = HashMap<String, ExportsReport>()
 
-    /** Copies the library's data folders (`ops`, `checkpoints`, `art`) to the copy, files it lacks or holds shorter. Never deletes. */
-    private fun copyMetadata(main: FolderAccess, copy: FolderAccess): Int {
+    /**
+     * Copies the library's data folders (`ops`, `checkpoints`, `art`) to the copy, files it lacks or holds shorter. A segment file that a
+     * larger file of the main folder covers is not copied. Nothing is deleted from the copy except segment files that a larger file on the
+     * copy covers (op for op) and that the main folder no longer lists (dev-docs/plans/KEEPFIN-DATA-COMPACTION.md R5, R6).
+     */
+    internal fun copyMetadata(main: FolderAccess, copy: FolderAccess, libraryId: String): Int {
         var copied = 0
+        val mainOps = app.keepfin.net.SegmentFiles.list(main)
+        val covered = SegmentPrune.coveredByName(mainOps).map { it.first.path }.toSet()
         for (dir in listOf("ops", "checkpoints", "art")) {
             val stack = ArrayList<String>().apply { add(".keepfin/$dir") }
             while (stack.isNotEmpty()) {
@@ -918,6 +945,7 @@ internal class CopiesManager(
                     val p = "$d/${e.name}"
                     if (e.isDirectory) { stack.add(p); continue }
                     if (e.name.endsWith(".tmp") || e.name.contains(".kftmp")) continue
+                    if (p in covered) continue
                     val have = copy.stat(p)
                     if (have != null && !have.isDirectory && have.size >= e.size) continue
                     copy.mkdirs(parentPath(p))
@@ -927,6 +955,9 @@ internal class CopiesManager(
                 }
             }
         }
+        // the copy's own pile: files a merged file on the copy covers, once the main folder has dropped them too
+        val listed = mainOps.map { "${it.actor}/${it.name}" }.toSet()
+        runCatching { SegmentPrune.pruneCovered(copy, libraryId) { "${it.actor}/${it.name}" in listed } }
         return copied
     }
 
@@ -1054,111 +1085,3 @@ internal class CopiesManager(
         return Scheduling.hold(s.counts[ActionKind.CopyTo] ?: 0, s.bytes[ActionKind.CopyTo] ?: 0, charging, unmetered, largeBytes, largeFiles)
     }
 }
-
-/** Library operations for the imports and revisions a run needs (dev-docs/plans/KEEPFIN-COPIES-SPEC.md 5.8 rule 3). */
-internal class LibraryHost(private val b: CopiesBackend, private val lib: CopiesLibrary, private val newId: () -> String, private val now: () -> Long) : MainHost {
-    private fun jstr(s: String) = JStr(s)
-
-    private fun headOp(itemId: String, content: String): String? = b.read { it.headsOf(itemId) }.firstOrNull { it.content == content }?.op
-
-    private fun spaceFor(destPath: String): String? {
-        val folders = b.read { it.spaceFolders() }
-        var best: String? = null
-        var bestLen = -1
-        for ((id, folder) in folders) if (folder.isEmpty() || destPath == folder || destPath.startsWith("$folder/")) if (folder.length > bestLen) { best = id; bestLen = folder.length }
-        return best ?: folders.keys.firstOrNull()
-    }
-
-    private fun kindOf(name: String): String {
-        val ext = name.substringAfterLast('.', "").lowercase()
-        return when (ext) {
-            "mp3", "m4a", "flac", "ogg", "opus", "wav", "aac" -> "audio"
-            "mp4", "mkv", "webm", "mov", "avi", "m4v" -> "video"
-            "jpg", "jpeg", "png", "webp", "gif" -> "image"
-            else -> "other"
-        }
-    }
-
-    /** Adds a new item for a file already in the Keepfin folder at [path]. */
-    fun addItem(path: String, content: String, size: Long, space: String?): String {
-        val itemId = newId()
-        val base = leafName(path)
-        val dot = base.lastIndexOf('.')
-        val fields = linkedMapOf<String, Jv>("media" to jstr(kindOf(base)), "title" to jstr(if (dot > 0) base.substring(0, dot) else base))
-        (space ?: spaceFor(path))?.let { fields["space"] = jstr(it) }
-        lib.apply(
-            listOf(
-                OpDraft("item.add", mapOf("item" to jstr(itemId), "fields" to JObj(fields))),
-                OpDraft("item.place", mapOf("item" to jstr(itemId), "place" to jstr(b.replicaId), "path" to jstr(path))),
-                OpDraft("item.revise", mapOf("item" to jstr(itemId), "content" to jstr(content), "size" to JNum(size), "parents" to JArr(emptyList()))),
-            ),
-        )
-        return itemId
-    }
-
-    override fun importNew(action: Action, stagedPath: String, destPath: String): ImportOutcome {
-        val content = action.contentId ?: throw IllegalStateException("This file has no content id.")
-        val size = b.folder.stat(stagedPath)?.size ?: 0
-        b.folder.rename(stagedPath, leafName(destPath))
-        // a music video file (`Song.video.mp4`) new in a copy belongs to the song beside it: it is that song's companion, never an item of its own
-        if (action.itemId == null) app.keepfin.core.copies.videoCompanionStem(leafName(destPath))?.let { stem ->
-            val song = b.read { it.songBeside(destPath.substringBeforeLast('/', ""), stem) }
-            val suffix = song?.let { app.keepfin.core.copies.companionSuffix(leafName(it.second), leafName(destPath)) }
-            if (song != null && suffix != null) {
-                lib.apply(listOf(OpDraft("item.set", mapOf("item" to jstr(song.first), "field" to jstr(companionField(suffix)), "value" to companionValue(content, size)))))
-                return ImportOutcome(song.first, app.keepfin.core.copies.COMPANION_REVISION + suffix, destPath)
-            }
-        }
-        var itemId = action.itemId
-        // a lyrics or subtitle file changed on both sides: the copy's version is kept beside it under its conflict name, as a file
-        if (itemId != null && companionOfEntry(action.revisionOp) != null) return ImportOutcome(itemId, action.revisionOp, destPath)
-        if (itemId != null) {
-            // another head of an existing item (a conflict): concurrent with the head already there
-            lib.apply(listOf(OpDraft("item.revise", mapOf("item" to jstr(itemId), "content" to jstr(content), "size" to JNum(size), "parents" to JArr(emptyList())))))
-        } else itemId = addItem(destPath, content, size, null)
-        return ImportOutcome(itemId, headOp(itemId, content), destPath)
-    }
-
-    /** Moves the bytes of a main file that is about to be replaced or deleted into the Keepfin trash: no version is lost. */
-    private fun archiveMain(path: String, why: String) {
-        val day = Instant.ofEpochMilli(now()).toString().take(10)
-        var target = ".keepfin/trash/copies/$day/$why-${leafName(path)}"
-        var n = 2
-        while (b.folder.stat(target) != null) target = ".keepfin/trash/copies/$day/$why-$n-${leafName(path)}".also { n++ }
-        Versions.moveVerified(b.folder, path, target, null)
-    }
-
-    private fun revise(action: Action, stagedPath: String, restoring: Boolean): String? {
-        val itemId = action.itemId
-        val content = action.contentId
-        if (itemId == null || content == null) throw IllegalStateException("This change names no item.")
-        val size = b.folder.stat(stagedPath)?.size ?: 0
-        if (b.folder.stat(action.path) != null) archiveMain(action.path, if (restoring) "restored" else "replaced")
-        b.folder.rename(stagedPath, leafName(action.path))
-        // the item's lyrics, subtitle or info file: its record changes, never the item's own content
-        companionOfEntry(action.revisionOp)?.let { suffix ->
-            lib.apply(listOf(OpDraft("item.set", mapOf("item" to jstr(itemId), "field" to jstr(companionField(suffix)), "value" to companionValue(content, size)))))
-            return action.revisionOp
-        }
-        val parents = lib.observed(itemId).second
-        lib.apply(listOf(OpDraft("item.revise", mapOf("item" to jstr(itemId), "content" to jstr(content), "size" to JNum(size), "parents" to JArr(parents.map { jstr(it) })))))
-        return headOp(itemId, content)
-    }
-
-    override fun reviseFromCopy(action: Action, stagedPath: String) = revise(action, stagedPath, false)
-    override fun restoreEditedDeleted(action: Action, stagedPath: String) = revise(action, stagedPath, true)
-
-    override fun deleteItem(action: Action) {
-        val itemId = action.itemId ?: throw IllegalStateException("This change names no item.")
-        // lyrics deleted on the copy and confirmed: the item keeps its other files and stays in the library
-        companionOfEntry(action.revisionOp)?.let { suffix ->
-            lib.apply(listOf(OpDraft("item.set", mapOf("item" to jstr(itemId), "field" to jstr(companionField(suffix)), "value" to JNull))))
-            if (b.folder.stat(action.path) != null) archiveMain(action.path, "deleted")
-            return
-        }
-        val (tags, heads) = lib.observed(itemId)
-        lib.apply(listOf(OpDraft("item.delete", mapOf("item" to jstr(itemId), "observedTags" to JArr(tags.map { jstr(it) }), "observedHeads" to JArr(heads.map { jstr(it) })))))
-        if (b.folder.stat(action.path) != null) archiveMain(action.path, "deleted")
-    }
-}
-

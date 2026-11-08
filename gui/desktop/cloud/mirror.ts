@@ -41,7 +41,7 @@ export interface MirrorProgress {
 }
 
 /** What the mirror asks of a replica: a cloud account, or (dev-docs/plans/KEEPFIN-NETWORK-SPEC.md 5) a paired device's folder. */
-export type MirrorTransport = Pick<CloudTransport, 'scan' | 'download' | 'uploadNew' | 'replace' | 'moveToTrash' | 'moveTo'>
+export type MirrorTransport = Pick<CloudTransport, 'scan' | 'download' | 'uploadNew' | 'replace' | 'moveToTrash' | 'moveTo'> & Partial<Pick<CloudTransport, 'beginUploads' | 'endUploads' | 'prune'>>
 
 export interface MirrorOptions {
   mirror: string
@@ -91,6 +91,8 @@ export interface PushReport {
   replaced: number
   moved: number
   trashed: number
+  /** Redundant segments and manifests removed for good (not trash entries). */
+  pruned?: number
   bytes: number
   failed: PushFailure[]
   /** Stopped early: the account is full or the sign-in is gone. */
@@ -168,6 +170,41 @@ export async function saveState(file: string, state: MirrorState): Promise<void>
 
 const abs = (root: string, rel: string) => path.join(root, ...rel.split('/'))
 
+const OPS_FILE = /^\.keepfin\/ops\/([^/]+)\/(\d{16})-(\d{16})\.seg$/
+const MANIFEST_FILE = /^(\.keepfin\/places\/[^/]+)\/manifest-(\d+)\.jsonl$/
+/** How many manifests a place keeps (the same number as copies/manifest.ts, which writes them). */
+const MANIFESTS_KEPT = 3
+
+/**
+ * Which of [candidates] a file in [held] makes redundant: a segment whose range a larger segment of the same actor holds (the
+ * larger one decided by the store that merged them, op for op), or a manifest with at least three newer ones. Only these two
+ * kinds under `.keepfin` are ever listed; everything else a mirror loses stays an ordinary removal
+ * (dev-docs/plans/KEEPFIN-DATA-COMPACTION.md R6).
+ */
+export function redundantIn(candidates: Iterable<string>, held: Iterable<string>): Set<string> {
+  const ranges = new Map<string, [number, number][]>()
+  const numbers = new Map<string, number[]>()
+  for (const p of held) {
+    const s = OPS_FILE.exec(p)
+    if (s) ranges.set(s[1]!, [...(ranges.get(s[1]!) ?? []), [Number(s[2]), Number(s[3])]])
+    const m = MANIFEST_FILE.exec(p)
+    if (m) numbers.set(m[1]!, [...(numbers.get(m[1]!) ?? []), Number(m[2])])
+  }
+  const out = new Set<string>()
+  for (const p of candidates) {
+    const s = OPS_FILE.exec(p)
+    if (s) {
+      const first = Number(s[2])
+      const last = Number(s[3])
+      if ((ranges.get(s[1]!) ?? []).some(([f, l]) => f <= first && l >= last && (f !== first || l !== last))) out.add(p)
+      continue
+    }
+    const m = MANIFEST_FILE.exec(p)
+    if (m && (numbers.get(m[1]!) ?? []).filter((n) => n > Number(m[2])).length >= MANIFESTS_KEPT) out.add(p)
+  }
+  return out
+}
+
 export function friendlyCloudError(error: unknown): string {
   if (error instanceof CloudError) {
     switch (error.kind) {
@@ -229,6 +266,11 @@ export async function pull(o: MirrorOptions): Promise<PullReport> {
       const remoteSame = line.revision !== null && line.revision === synced.revision
       if (remoteSame && localSame) continue
       if (remoteSame) continue // changed here only (or removed here): the push sends it
+      if (line.sha256 && line.size === synced.size && synced.contentId === `sha256:${line.sha256.toLowerCase()}`) {
+        // a new revision with the same bytes (Drive bumps `version` for changes that are not content): note it, download nothing
+        state.files[rel] = {...synced, revision: line.revision}
+        continue
+      }
       // the replica changed
       if (st === null || localSame) {
         jobs.push({line, conflict: false})
@@ -287,7 +329,19 @@ export async function pull(o: MirrorOptions): Promise<PullReport> {
   // what disappeared from the replica: only from a listing that was complete, and not a listing that suddenly shows nothing
   if (report.complete && !report.missingRoot) {
     const known = Object.keys(state.files).filter((p) => inScope(o, p))
-    const gone = known.filter((p) => !remote.has(p) && safeRelative(p))
+    const allGone = known.filter((p) => !remote.has(p) && safeRelative(p))
+    // files another device pruned because a larger one covers them are gone on purpose: they do not count as a mass removal
+    const pruned = redundantIn(allGone, remote.keys())
+    const gone = allGone.filter((p) => !pruned.has(p))
+    for (const rel of pruned) {
+      const synced = state.files[rel]!
+      const st = await fsp.lstat(abs(o.mirror, rel)).catch(() => null)
+      if (st && st.isFile() && same(synced, st)) {
+        await fsp.rm(abs(o.mirror, rel), {force: true})
+        report.removed++
+      }
+      delete state.files[rel]
+    }
     if (gone.length > 0 && (remote.size === 0 || (gone.length > 100 && gone.length > known.length / 2))) {
       report.suspicious = true
     } else {
@@ -328,7 +382,7 @@ async function walk(root: string, metaOnly = false): Promise<{rel: string; size:
 }
 
 export async function push(o: MirrorOptions): Promise<PushReport> {
-  const report: PushReport = {uploaded: 0, replaced: 0, moved: 0, trashed: 0, bytes: 0, failed: [], stopped: null}
+  const report: PushReport = {uploaded: 0, replaced: 0, moved: 0, trashed: 0, pruned: 0, bytes: 0, failed: [], stopped: null}
   const progress = (p: Partial<MirrorProgress>) => o.onProgress?.({phase: 'uploading', done: 0, total: 0, doneBytes: 0, totalBytes: 0, current: null, ...p})
   const state = await readState(o.stateFile)
   const files = (await walk(o.mirror, o.metaOnly)).filter((f) => inScope(o, f.rel))
@@ -440,16 +494,41 @@ export async function push(o: MirrorOptions): Promise<PushReport> {
       await saved()
     }
     // small files and the ones the metadata needs first are not special: a pool of four, as the account allows
-    await pool(uploads, o.parallelism ?? 4, (i) => upload(i, false), o.signal)
-    await pool(replacing, o.parallelism ?? 4, (i) => upload(i, true), o.signal)
+    // Drive lists a folder once for the files going into it, and checks for racing duplicates once per folder at the end
+    const sending = [...uploads, ...replacing]
+    o.media.beginUploads?.(sending.filter((i) => !i.rel.startsWith(META + '/')).map((i) => i.rel))
+    o.meta.beginUploads?.(sending.filter((i) => i.rel.startsWith(META + '/')).map((i) => i.rel.slice(META.length + 1)))
+    try {
+      await pool(uploads, o.parallelism ?? 4, (i) => upload(i, false), o.signal)
+      await pool(replacing, o.parallelism ?? 4, (i) => upload(i, true), o.signal)
+    } finally {
+      const lost = [...((await o.media.endUploads?.()) ?? []), ...((await o.meta.endUploads?.()) ?? []).map((p) => META + '/' + p)]
+      for (const rel of lost) {
+        const item = uploads.find((u) => u.rel === rel)
+        delete state.files[rel]
+        if (item) {
+          report.uploaded--
+          report.bytes -= item.size
+        }
+        fail('upload', rel, new CloudError({kind: 'Conflict', status: 0, code: 'exists'}, 'upload'))
+      }
+    }
 
+    // A segment a larger one covers, or an old manifest, is pruned for good, but only while the file that makes it redundant is already
+    // on the replica; anything else the runner removed goes to the trash as before.
+    const redundant = redundantIn(trashes, Object.keys(state.files).filter((p) => onDisk.has(p)))
     for (const rel of trashes) {
       if (o.signal?.aborted) break
       tick(rel)
       const r = remoteOf(rel)
       try {
-        await r.t.moveToTrash(r.p, state.files[rel]!.revision)
-        report.trashed++
+        if (redundant.has(rel) && r.t.prune) {
+          await r.t.prune(r.p, state.files[rel]!.revision)
+          report.pruned = (report.pruned ?? 0) + 1
+        } else {
+          await r.t.moveToTrash(r.p, state.files[rel]!.revision)
+          report.trashed++
+        }
         delete state.files[rel]
       } catch (error) {
         if (error instanceof CloudError && error.kind === 'NotFound') delete state.files[rel]

@@ -244,6 +244,7 @@ export function AddCopy({state, initialPath, initialSpaces, reason, onClose, onA
                 setName((current) => current || next.providerName)
               }}
               onFolder={setCloudFolder}
+              onContinue={() => go(1)}
               onState={(next) => onState?.(next)}
               onAttached={(next) => {
                 done.current = true

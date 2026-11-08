@@ -503,6 +503,9 @@ class NetServer(private val deps: NetServerDeps) {
         val vector = SegmentFiles.parseVector(text) ?: throw HttpError(400, "vector", "The version vector is not valid.")
         transfer(caller).use {
             lib.flush()
+            // while files are listed and sent, compaction removes none of them
+            val held = lib.hold()
+            try {
             val list = lib.segments()
             val missing = SegmentFiles.missingFor(list, vector)
             res.beginChunked(
@@ -523,6 +526,9 @@ class NetServer(private val deps: NetServerDeps) {
                 res.chunk(SegmentFiles.frame(bytes))
             }
             res.endChunked()
+            } finally {
+                held.close()
+            }
         }
     }
 

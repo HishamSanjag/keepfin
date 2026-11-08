@@ -40,7 +40,11 @@ data class CopyCardUi(
     val musicVideos: Boolean = true,
     /** Files that could not be copied at the last sync, in plain words; null when none failed. */
     val problem: CopyProblemUi? = null,
+    /** Stop keeping this copy is running (what it is doing) or stopped ([CopyRemovalUi.failed]: why; the copy is still here). */
+    val removal: CopyRemovalUi? = null,
 )
+
+data class CopyRemovalUi(val failed: Boolean, val text: String)
 
 /** Why some files of a copy were not copied (reasons grouped, the most common first). [files] are relative to the copy; [more] are not listed. */
 data class CopyProblemUi(val count: Int, val reasons: List<ProblemGroup>, val files: List<String>, val more: Int, val short: String)

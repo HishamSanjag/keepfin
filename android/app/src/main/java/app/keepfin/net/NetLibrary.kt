@@ -43,6 +43,9 @@ interface NetLibrary {
     /** Reads segments that arrived in the folder and admits them. */
     fun rescan()
 
+    /** Held while a segment transfer lists and reads files: the store removes no segment file (compaction) until it is closed. */
+    fun hold(): AutoCloseable = AutoCloseable {}
+
     /** A change in the library (own or remote): the peers are told. */
     fun onChange(listener: () -> Unit): () -> Unit
     fun membership(): MembershipView
@@ -94,6 +97,8 @@ class StoreNetLibrary(
         store.flush().get(60, TimeUnit.SECONDS)
         if (had > 0) synchronized(this) { cache = null }
     }
+
+    override fun hold(): AutoCloseable = store.hold()
 
     override fun rescan() {
         store.rescan(true).get(60, TimeUnit.SECONDS)

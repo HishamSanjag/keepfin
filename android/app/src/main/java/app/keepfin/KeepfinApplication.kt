@@ -33,7 +33,7 @@ class KeepfinApplication : Application() {
     private val foregroundTracker = object : ActivityLifecycleCallbacks {
         private var started = 0
         override fun onActivityStarted(activity: android.app.Activity) { started++; AppForeground.visible = true; devicesForeground(true) }
-        override fun onActivityStopped(activity: android.app.Activity) { started = (started - 1).coerceAtLeast(0); AppForeground.visible = started > 0; if (started == 0) devicesForeground(false) }
+        override fun onActivityStopped(activity: android.app.Activity) { started = (started - 1).coerceAtLeast(0); AppForeground.visible = started > 0; if (started == 0) { devicesForeground(false); publishLibrary() } }
         override fun onActivityCreated(activity: android.app.Activity, savedInstanceState: android.os.Bundle?) {}
         override fun onActivityResumed(activity: android.app.Activity) {}
         override fun onActivityPaused(activity: android.app.Activity) {}
@@ -46,6 +46,15 @@ class KeepfinApplication : Application() {
         if (!app.keepfin.net.NetRuntime.available) return
         if (visible) Thread { app.keepfin.net.NetRuntime.startIfNeeded(this, engineApi); app.keepfin.net.NetRuntime.foreground(true) }.also { it.isDaemon = true }.start()
         else app.keepfin.net.NetRuntime.foreground(false)
+    }
+
+    /**
+     * No screen is in front: whatever the library has not published yet is written to the Keepfin folder now (flushes wait up to 30 s while the
+     * app is used, and the process may be stopped soon after). Does nothing before the engine exists.
+     */
+    private fun publishLibrary() {
+        if (!engineCreated) return
+        Thread { runCatching { (engineApi as? MediaEngine)?.folderLibrary?.onBackground() } }.also { it.isDaemon = true }.start()
     }
 
     /** The first start of a new version leaves one "Keepfin updated to X" entry; a fresh install records nothing. */

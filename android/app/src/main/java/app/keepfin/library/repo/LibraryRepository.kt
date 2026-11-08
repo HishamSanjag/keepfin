@@ -345,6 +345,11 @@ internal class LibraryRepository(
         scheduler.shutdown()
     }
 
+    /** Writes whatever is pending into segments now (a copy run starts from what the library holds). Blocking. */
+    internal fun publishPending() {
+        backend().store.flush().get(60, TimeUnit.SECONDS)
+    }
+
     /** The app goes to the background: everything is in a segment. */
     fun onBackground() {
         if (ready.isDone && !ready.isCompletedExceptionally) {

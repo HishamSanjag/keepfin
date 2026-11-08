@@ -37,7 +37,20 @@ interface Located {
   /** The stored (escaped) name. */
   name: string
   entry?: CloudEntry
+  /** Set when the answer came from a batch's shared listing of this folder (its library path). */
+  dir?: string
 }
+
+/** One Drive folder's children, listed once for a batch of uploads and kept level with what this transport does to them. */
+interface DirView {
+  parent: Ref
+  byName: Map<string, CloudEntry[]>
+  /** The files this batch put there, to be checked against a fresh listing once the batch is done. */
+  mine: Map<string, {id: string; lib: string}>
+}
+
+/** A folder gets one shared listing when a batch writes at least this many files into it; fewer are cheaper to look up by name. */
+const VIEW_MIN_WRITES = 3
 
 export class CloudTransport implements CopyTransport {
   readonly kind: string
@@ -46,7 +59,11 @@ export class CloudTransport implements CopyTransport {
   private readonly encodeCache = new Map<string, string>()
   /** Folder library path -> Ref (ids on Drive). */
   private readonly folders = new Map<string, Ref>()
+  /** Folder lookups and creations in progress, shared by the callers that need the same folder. */
+  private readonly folderFlights = new Map<string, Promise<Ref | null>>()
   private readonly rootSegments: string[]
+  /** Drive only: the folders of a running upload batch that are listed once (see beginUploads). */
+  private batch: {planned: Map<string, number>; views: Map<string, Promise<DirView | null>>} | null = null
 
   constructor(private readonly options: CloudTransportOptions) {
     this.client = options.client
@@ -106,19 +123,33 @@ export class CloudTransport implements CopyTransport {
         ref = cached
         continue
       }
-      const stored = this.enc(raw)
-      const found = await this.client.list(ref, stored)
-      const folders = found.entries.filter((e) => e.folder && e.name === stored)
-      if (folders.length > 1) throw new CloudError({kind: 'Conflict', status: 0, code: 'duplicate-names', message: `Two folders named ${raw} exist; resolve them by hand.`}, 'resolve')
-      if (folders.length === 0) {
-        if (!create) return null
-        const made = await this.client.createFolder(ref, stored)
-        ref = {id: made.id}
-      } else {
-        ref = {id: folders[0]!.id}
+      // Drive allows two folders with one name, so two uploads that both miss the cache must not both make it: callers that
+      // need the same folder at the same time share one lookup (and one creation).
+      const flight = `${create ? 'make' : 'find'}${key}`
+      let pending = this.folderFlights.get(flight)
+      if (!pending) {
+        const parent = ref
+        pending = this.resolveFolder(parent, raw, key, create).finally(() => this.folderFlights.delete(flight))
+        this.folderFlights.set(flight, pending)
       }
-      this.folders.set(key, ref)
+      const found = await pending
+      if (!found) return null
+      ref = found
     }
+    return ref
+  }
+
+  private async resolveFolder(parent: Ref, raw: string, key: string, create: boolean): Promise<Ref | null> {
+    const stored = this.enc(raw)
+    const found = await this.client.list(parent, stored)
+    const folders = found.entries.filter((e) => e.folder && e.name === stored)
+    if (folders.length > 1) throw new CloudError({kind: 'Conflict', status: 0, code: 'duplicate-names', message: `Two folders named ${raw} exist; resolve them by hand.`}, 'resolve')
+    let ref: Ref
+    if (folders.length === 0) {
+      if (!create) return null
+      ref = {id: (await this.client.createFolder(parent, stored)).id}
+    } else ref = {id: folders[0]!.id}
+    this.folders.set(key, ref)
     return ref
   }
 
@@ -146,13 +177,83 @@ export class CloudTransport implements CopyTransport {
     const parent = await this.folderRef(parts, create)
     if (!parent) return null
     if (this.provider === 'drive') {
-      const found = (await this.client.list(parent, name)).entries.filter((e) => e.name === name && !e.folder)
+      const dir = parts.join('/')
+      const view = await this.viewOf(dir, parent)
+      const listed = view ? (view.byName.get(name) ?? []) : (await this.client.list(parent, name)).entries
+      const found = listed.filter((e) => e.name === name && !e.folder)
       if (found.length > 1) throw new CloudError({kind: 'Conflict', status: 0, code: 'duplicate-names', message: `Two files named ${leaf} exist.`}, 'resolve')
-      if (found.length === 0) return {ref: {}, parent, name}
-      return {ref: {id: found[0]!.id}, parent, name, entry: found[0]}
+      const from = view ? {dir} : {}
+      if (found.length === 0) return {ref: {}, parent, name, ...from}
+      return {ref: {id: found[0]!.id}, parent, name, entry: found[0], ...from}
     }
     const ref: Ref = {path: [parent.path, name].filter(Boolean).join('/')}
     return {ref, parent, name}
+  }
+
+  // ------------------------------------------------------------------------------------------------------ upload batches
+
+  /**
+   * Drive: tells the transport which library paths are about to be written, so that a folder receiving several of them is listed
+   * once (a name to entry map kept up to date by this transport) instead of once before and once after every file. The duplicate-
+   * name protection stays: every file written from the view is checked by one fresh listing per folder in endUploads. Folders
+   * receiving fewer files keep the per-file lookup and check. Other providers have create-only writes and ignore this.
+   */
+  beginUploads(libPaths: string[]): void {
+    if (this.provider !== 'drive') return
+    const planned = new Map<string, number>()
+    for (const lib of libPaths) {
+      const dir = lib.split('/').filter(Boolean).slice(0, -1).join('/')
+      planned.set(dir, (planned.get(dir) ?? 0) + 1)
+    }
+    this.batch = {planned, views: new Map()}
+  }
+
+  /**
+   * Ends the batch: one fresh listing per folder written from a view. Where a racing writer made the same name, the earliest
+   * object keeps it and ours goes to the trash, exactly as the per-file check does. Returns the library paths that lost.
+   */
+  async endUploads(): Promise<string[]> {
+    const batch = this.batch
+    this.batch = null
+    if (!batch) return []
+    const lost: string[] = []
+    for (const pending of batch.views.values()) {
+      const view = await pending.catch(() => null)
+      if (!view || view.mine.size === 0) continue
+      const fresh = await this.client.list(view.parent)
+      const byName = new Map<string, CloudEntry[]>()
+      for (const e of fresh.entries) if (!e.folder) byName.set(e.name, [...(byName.get(e.name) ?? []), e])
+      for (const [name, mine] of view.mine) {
+        // a listing that stopped early may miss the racing object: ask for this name alone, as the per-file check does
+        const named = fresh.complete ? byName.get(name) : (await this.client.list(view.parent, name)).entries.filter((e) => e.name === name && !e.folder)
+        const same = (named ?? []).sort((a, b) => (a.createdMs ?? 0) - (b.createdMs ?? 0) || a.id!.localeCompare(b.id!))
+        if (same.length > 1 && same[0]!.id !== mine.id) {
+          await this.client.trash({id: mine.id})
+          lost.push(mine.lib)
+        }
+      }
+    }
+    return lost
+  }
+
+  private viewOf(dir: string, parent: Ref): Promise<DirView | null> | null {
+    const batch = this.batch
+    if (!batch || (batch.planned.get(dir) ?? 0) < VIEW_MIN_WRITES) return null
+    let view = batch.views.get(dir)
+    if (!view) {
+      view = this.client.list(parent).then((res) => {
+        if (!res.complete) return null
+        const byName = new Map<string, CloudEntry[]>()
+        for (const e of res.entries) byName.set(e.name, [...(byName.get(e.name) ?? []), e])
+        return {parent, byName, mine: new Map()}
+      })
+      batch.views.set(dir, view)
+    }
+    return view
+  }
+
+  private async viewFor(loc: Located): Promise<DirView | null> {
+    return loc.dir === undefined ? null : ((await this.batch?.views.get(loc.dir)) ?? null)
   }
 
   // ------------------------------------------------------------------------------------------------------------ scan
@@ -196,7 +297,7 @@ export class CloudTransport implements CopyTransport {
           stack.push({lib: path, ref: this.provider === 'drive' ? {id: e.id} : {path: [ref.path, e.name].filter(Boolean).join('/')}})
         } else {
           count++
-          onLine({path, size: e.size ?? 0, mtimeMs: e.mtimeMs ?? 0, fileId: e.id ?? null, revision: e.etag ?? null})
+          onLine({path, size: e.size ?? 0, mtimeMs: e.mtimeMs ?? 0, fileId: e.id ?? null, revision: e.etag ?? null, sha256: e.hashes?.sha256 ?? null})
         }
       }
     }
@@ -218,7 +319,7 @@ export class CloudTransport implements CopyTransport {
       }
     }
     if (!entry || entry.folder) return null
-    return {path: lib, size: entry.size ?? 0, mtimeMs: entry.mtimeMs ?? 0, fileId: entry.id ?? null, revision: entry.etag ?? null}
+    return {path: lib, size: entry.size ?? 0, mtimeMs: entry.mtimeMs ?? 0, fileId: entry.id ?? null, revision: entry.etag ?? null, sha256: entry.hashes?.sha256 ?? null}
   }
   // ----------------------------------------------------------------------------------------------------------- bytes
 
@@ -234,6 +335,13 @@ export class CloudTransport implements CopyTransport {
     if (!loc) throw new CloudError({kind: 'NotFound', status: 404}, 'upload')
     if (this.provider === 'drive' && loc.entry) throw new CloudError({kind: 'Conflict', status: 0, code: 'exists'}, 'upload')
     const entry = await this.client.http.transfer(() => this.client.upload({file: sourceFile, contentId: expectedContentId, parent: loc.parent, name: loc.name, signal}))
+    const view = await this.viewFor(loc)
+    if (view) {
+      // the batch's one listing answered the "is it there" question; the duplicate check is one fresh listing per folder at the end
+      view.byName.set(loc.name, [{...entry, name: loc.name}])
+      view.mine.set(loc.name, {id: entry.id!, lib: remotePath})
+      return {revision: entry.etag ?? null}
+    }
     if (this.client.capabilities().duplicateNames) {
       // Drive has no create-only: if a racing writer made the same name, the earliest object keeps it and ours goes to the trash.
       const mine = (await this.client.list(loc.parent, loc.name)).entries.filter((e) => e.name === loc.name && !e.folder).sort((a, b) => (a.createdMs ?? 0) - (b.createdMs ?? 0) || a.id!.localeCompare(b.id!))
@@ -271,13 +379,34 @@ export class CloudTransport implements CopyTransport {
     const trashName = `${stamp}-${loc.name}`
     const trashRef = (await this.folderRef([KEEPFIN_DIR, 'trash'], true))!
     const casEtag = this.capabilities().casMutation && revision ? revision : undefined
-    if (this.provider === 'drive') await this.client.move(loc.ref, {newParentId: trashRef.id, fromParentId: loc.parent.id, newName: trashName})
-    else if (this.provider === 'graph') {
+    if (this.provider === 'drive') {
+      await this.client.move(loc.ref, {newParentId: trashRef.id, fromParentId: loc.parent.id, newName: trashName})
+      const view = await this.viewFor(loc)
+      view?.byName.delete(loc.name)
+      view?.mine.delete(loc.name)
+    } else if (this.provider === 'graph') {
       const t = await this.client.stat(trashRef)
       await this.client.move(loc.ref, {newParentId: t!.id, newName: trashName, etag: casEtag})
     } else if (this.provider === 'dropbox') await this.client.move(loc.ref, {toPath: [trashRef.path, trashName].join('/')})
     else await this.client.move(loc.ref, {toPath: [trashRef.path, trashName].join('/'), etag: casEtag})
     return {trashedAs: `${KEEPFIN_DIR}/trash/${trashName}`}
+  }
+
+  /**
+   * Removes an object that a larger one made redundant (a small segment a merged segment covers, an old manifest): no entry in the
+   * Keepfin trash, so merging a thousand segments does not add a thousand objects there (dev-docs/plans/KEEPFIN-DATA-COMPACTION.md R6).
+   * The provider's own recycle bin still holds it where it has one.
+   */
+  async prune(remotePath: string, revision: string | null): Promise<void> {
+    const loc = await this.locate(remotePath)
+    if (!loc || (this.provider === 'drive' && !loc.entry)) throw new CloudError({kind: 'NotFound', status: 404}, 'trash')
+    const casEtag = this.capabilities().casMutation && revision ? revision : undefined
+    await this.client.trash(loc.ref, this.provider === 'graph' || this.provider === 'webdav' ? casEtag : undefined)
+    if (this.provider === 'drive') {
+      const view = await this.viewFor(loc)
+      view?.byName.delete(loc.name)
+      view?.mine.delete(loc.name)
+    }
   }
 
   /**

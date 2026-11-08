@@ -75,6 +75,13 @@ interface FolderAccess {
     /** Removes a file or directory tree; a missing path is fine. */
     fun remove(path: String)
 
+    /**
+     * Removes a file that a larger one made redundant (a segment a merged segment covers, an old manifest): for good, with no trash or
+     * versions entry where the place keeps those. The caller has already checked that the larger file holds everything this one does
+     * (dev-docs/plans/KEEPFIN-DATA-COMPACTION.md R6). Default: [remove].
+     */
+    fun prune(path: String) = remove(path)
+
     /** Renames inside the same directory. A case-only change goes through a temporary name. [FolderError.NameConflict] when taken. */
     fun rename(path: String, newName: String)
 

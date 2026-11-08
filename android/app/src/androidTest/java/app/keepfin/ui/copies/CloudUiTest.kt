@@ -12,6 +12,7 @@ import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.captureToImage
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onAllNodesWithTag
+import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
@@ -54,22 +55,28 @@ import org.junit.runner.RunWith
 class CloudUiTest {
     @get:Rule val rule = createComposeRule()
 
-    private class FakeCloud(accounts: List<CloudAccountUi>) : CloudActions {
+    private class FakeCloud(accounts: List<CloudAccountUi>, private val signsInAs: CloudAccountUi? = null, private val onAccount: List<FoundReplicaUi> = emptyList()) : CloudActions {
         val calls = ArrayList<String>()
-        override val state: StateFlow<CloudUi> = MutableStateFlow(
+        private val flow = MutableStateFlow(
             CloudUi(
                 listOf(CloudProviderUi("drive", "Google Drive", true, "Keepfin sees only the files it creates itself."), CloudProviderUi("graph", "OneDrive", false, "Not available in this build."), CloudProviderUi("dropbox", "Dropbox", true, "x"), CloudProviderUi("webdav", "WebDAV", true, "A folder on your own server")),
                 accounts,
             ),
         )
+        override val state: StateFlow<CloudUi> = flow
         override fun refresh() {}
-        override fun beginSignIn(provider: String, accountId: String?): SignInStep { calls += "begin:$provider:$accountId"; return SignInStep.Failed("no browser here") }
+        override fun beginSignIn(provider: String, accountId: String?): SignInStep {
+            calls += "begin:$provider:$accountId"
+            val made = signsInAs ?: return SignInStep.Failed("no browser here")
+            flow.value = flow.value.copy(accounts = flow.value.accounts + made)
+            return SignInStep.Done(made)
+        }
         override fun finishSignIn(provider: String, accountId: String?, result: android.content.Intent?) = SignInStep.Cancelled
         override fun connectWebdav(url: String, user: String, password: String): WebdavConnected { calls += "webdav:$url:$user"; throw IllegalStateException("The server did not accept this user name and password.") }
         override fun disconnect(accountId: String) { calls += "disconnect:$accountId" }
         override fun removeAccess(accountId: String) = RevokeNoteUi(false, "n", null)
         override fun setMobileData(accountId: String, allowed: Boolean) { calls += "mobile:$accountId:$allowed" }
-        override fun find(accountId: String, webdavFolder: String?) = emptyList<FoundReplicaUi>()
+        override fun find(accountId: String, webdavFolder: String?) = onAccount
         override fun addressFor(accountId: String, folder: String) = "keepfin-cloud://$accountId/$folder"
         override fun folderNameFor(name: String) = name
     }
@@ -139,6 +146,29 @@ class CloudUiTest {
         rule.onNodeWithTag(CloudTags.PROVIDER + "webdav").performClick()
         rule.onNodeWithTag(CloudTags.WEBDAV_URL).assertExists()
         rule.onNodeWithTag(CloudTags.WEBDAV_CONNECT).performScrollTo().assertHeightIsAtLeast(48.dp)
+    }
+
+    @Test fun aSignInWithNoKeepfinCopyOnTheAccountMovesOnToTheNextPage() {
+        val cloud = FakeCloud(emptyList(), signsInAs = ok)
+        show(CopiesUi(true), Actions(cloud))
+        rule.onNodeWithTag(CopiesTags.ADD).performScrollTo().performClick()
+        rule.onNodeWithTag(CloudTags.CHOICE + "-open").performClick()
+        rule.onNodeWithTag(CloudTags.PROVIDER + "drive").performClick()
+        rule.onNodeWithTag(CloudTags.SIGN_IN).performScrollTo().performClick()
+        rule.waitUntil(5000) { rule.onAllNodesWithText("What should it hold?").fetchSemanticsNodes().isNotEmpty() }
+    }
+
+    @Test fun aSignInToAnAccountThatHasACopyStaysAndOffersUseItOrMakeANewOne() {
+        val cloud = FakeCloud(emptyList(), signsInAs = ok, onAccount = listOf(FoundReplicaUi("Library", "Keepfin/Library", "r1", null)))
+        show(CopiesUi(true), Actions(cloud))
+        rule.onNodeWithTag(CopiesTags.ADD).performScrollTo().performClick()
+        rule.onNodeWithTag(CloudTags.CHOICE + "-open").performClick()
+        rule.onNodeWithTag(CloudTags.PROVIDER + "drive").performClick()
+        rule.onNodeWithTag(CloudTags.SIGN_IN).performScrollTo().performClick()
+        rule.waitUntil(5000) { rule.onAllNodesWithText("A Keepfin copy is already on this account").fetchSemanticsNodes().isNotEmpty() }
+        rule.onNodeWithText("Use it").assertExists()
+        rule.onNodeWithTag(CloudTags.MAKE_NEW).performScrollTo().assertHeightIsAtLeast(48.dp).performClick()
+        rule.waitUntil(5000) { rule.onAllNodesWithText("What should it hold?").fetchSemanticsNodes().isNotEmpty() }
     }
 
     @Test fun atTwiceTheFontSizeTheWizardAndTheCardFit() {

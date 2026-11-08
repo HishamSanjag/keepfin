@@ -7,7 +7,7 @@
 //   open           merges the best checkpoint, admits every segment operation above it and the outbox
 //   watch/rescan   admits other actors' new segments; a partial segment is retried, never treated as corruption at once
 import {createHash} from 'node:crypto'
-import {readFileSync, readdirSync, rmSync, watch as fsWatch, writeFileSync, type FSWatcher} from 'node:fs'
+import {rmSync, watch as fsWatch, writeFileSync, type FSWatcher} from 'node:fs'
 import fs from 'node:fs/promises'
 import path from 'node:path'
 import {
@@ -28,13 +28,27 @@ import {
   type SyncTouched,
   type SyncViews,
 } from '../../shared/core/sync.js'
-import {DOMAIN_SEGMENT, deviceIdOf, signDomain} from '../../shared/core/net.js'
+import {deviceIdOf} from '../../shared/core/net.js'
 import {SqlState} from '../sqlstate/sqlstate.js'
 import {whereCounts, whereItem, type CopyCover, type WhereCounts, type WhereItemFacts} from './where.js'
-import {renameWithRetry} from '../fsutil.js'
+import {Compactor, type CompactionHost} from './compaction.js'
+import {
+  listSegments,
+  outboxOps,
+  segmentBytes,
+  segmentFilesSync,
+  segmentName,
+  segmentOps,
+  signedSegmentBytes,
+  writeBytesDurable,
+  type OpRef,
+  type SegmentFile,
+} from './segmentFiles.js'
 import {readJson, writeJsonAtomic} from './atomic.js'
 import {recordsPath} from './keepfinFolder.js'
 import type {OpDraft} from './mapping.js'
+
+export {keyString, listingLast, peekSegmentSigner, segmentBytes, segmentFilesSync, segmentOps, signedSegmentBytes, type OpRef} from './segmentFiles.js'
 
 /** The version of the device-local database layout. A database of another version is rebuilt from the segments. */
 const STATE_FORMAT = '1'
@@ -61,10 +75,26 @@ export interface StoreOptions {
   statePath?: string
   newId(): string
   now(): number
-  /** Idle time before the outbox is written as a segment (default 2,000 ms). */
+  /** Idle time before the outbox is written as a segment (default 30 s). */
   flushIdleMs?: number
-  /** Operations in the outbox that flush at once (default 500). */
+  /** The longest an operation waits in the outbox before it is published, however busy the library is (default 5 min). */
+  flushMaxAgeMs?: number
+  /** Operations in the outbox that flush at once (default 2,000). */
   flushOps?: number
+  /** Compact on its own: merge this device's small segments and drop covered files (default true; false: only on an explicit compact(); dev-docs/plans/KEEPFIN-DATA-COMPACTION.md). */
+  compact?: boolean
+  /** Delay before the first compaction after the folder is opened (default 60 s). */
+  compactDelayMs?: number
+  /** The least time between two compactions (default 10 min). */
+  compactGapMs?: number
+  /** Delay between a flush that leaves enough small segments and the compaction (default 5 s). */
+  compactSoonMs?: number
+  /** How long a compaction waits for segment transfers to finish before it skips the round (default 10 s). */
+  leaseWaitMs?: number
+  /** Test hook, called at each compaction step; throwing simulates a crash there. */
+  onCompactStep?(step: 'published' | 'verified' | 'removing', detail: {first: number; last: number; removed: number}): void | Promise<void>
+  /** Reports each finished compaction round. */
+  onCompact?(info: CompactStats): void
   /** Operations between checkpoints (default 5,000). */
   checkpointEvery?: number
   /** Delay before a due checkpoint is written, off the save path (default 1,500 ms). */
@@ -94,6 +124,9 @@ export interface StoreOptions {
 
 export type StoreChange = {remote: boolean}
 
+/** What one compaction round did. `skipped`: why nothing was done. */
+export type CompactStats = {merged: number; removed: number; dropped: number; skipped?: 'busy' | 'blocked' | 'closed'}
+
 export type OpenStats = {
   ms: number
   checkpoint: boolean
@@ -119,143 +152,6 @@ function mergeTouched(into: SyncTouched, more: SyncTouched) {
   }
 }
 
-/**
- * A segment file (sync spec section 9) built here instead of by the core: the same bytes, with the checksum from the
- * platform's SHA-256 (about 1 ms for 500 operations instead of 30 ms). The ops are the store's own canonical lines, in
- * contiguous order; store.test.ts proves the output equals the core's encodeSegment and decodes with it.
- */
-export function segmentBytes(library: string, actor: string, ops: readonly string[], first: number): Uint8Array {
-  const body = Buffer.from(ops.map((op) => `${op}\n`).join(''), 'utf8')
-  const header = `{"actor":"${actor}","count":${ops.length},"first":${first},"last":${first + ops.length - 1},"library":"${library}","sha256":"${createHash('sha256').update(body).digest('hex')}"}`
-  return Buffer.concat([Buffer.from(`KFSEG 1\n${header}\n`, 'utf8'), body])
-}
-
-/**
- * The same file as `KFSEG 2` (network spec 9.2): the v1 layout under the magic `KFSEG 2`, then one trailer line
- * `KFSIG {"alg","device","key","sig"}` whose signature covers every byte before it under the domain `keepfin-seg-v2`.
- * [unsigned] returns the bytes before the trailer (what a re-flush after a crash is compared against: ECDSA signatures differ
- * from run to run, the signed content does not).
- */
-export function signedSegmentBytes(library: string, actor: string, ops: readonly string[], first: number, signer: {pkcs8: Uint8Array; spki: Uint8Array}): {unsigned: Buffer; bytes: Buffer} {
-  const v1 = segmentBytes(library, actor, ops, first)
-  const unsigned = Buffer.concat([Buffer.from('KFSEG 2\n', 'utf8'), v1.subarray(8)])
-  const sig = signDomain(signer.pkcs8, DOMAIN_SEGMENT, unsigned)
-  const trailer = `KFSIG {"alg":"ES256","device":"${deviceIdOf(signer.spki)}","key":"${Buffer.from(signer.spki).toString('base64')}","sig":"${Buffer.from(sig).toString('base64')}"}\n`
-  return {unsigned, bytes: Buffer.concat([unsigned, Buffer.from(trailer, 'utf8')])}
-}
-
-const pad = (n: number) => String(n).padStart(16, '0')
-const segmentName = (first: number, last: number) => `${pad(first)}-${pad(last)}.seg`
-const SEGMENT = /^(\d{16})-(\d{16})\.seg$/
-
-async function writeBytesDurable(file: string, bytes: Uint8Array): Promise<void> {
-  await fs.mkdir(path.dirname(file), {recursive: true})
-  const temp = `${file}.${process.pid}.${Math.random().toString(36).slice(2)}.tmp`
-  const handle = await fs.open(temp, 'w')
-  try {
-    await handle.writeFile(bytes)
-    await handle.sync()
-  } finally {
-    await handle.close()
-  }
-  try {
-    await renameWithRetry(temp, file)
-  } catch (error) {
-    await fs.rm(temp, {force: true}).catch(() => undefined)
-    throw error
-  }
-}
-
-async function readDirs(dir: string): Promise<string[]> {
-  const entries = await fs.readdir(dir, {withFileTypes: true}).catch(() => [])
-  return entries.filter((entry) => entry.isDirectory()).map((entry) => entry.name)
-}
-
-type SegmentFile = {actor: string; first: number; last: number; name: string; file: string}
-
-async function listSegments(opsDir: string): Promise<SegmentFile[]> {
-  const out: SegmentFile[] = []
-  for (const actor of await readDirs(opsDir)) {
-    for (const name of await fs.readdir(path.join(opsDir, actor)).catch(() => [] as string[])) {
-      const match = SEGMENT.exec(name)
-      if (match) out.push({actor, first: Number(match[1]), last: Number(match[2]), name, file: path.join(opsDir, actor, name)})
-    }
-  }
-  return out.sort((a, b) => (a.actor < b.actor ? -1 : a.actor > b.actor ? 1 : a.first - b.first || a.last - b.last))
-}
-
-/** An ordering of "actor to highest seq" pairs as one string: what a projection cache says it reflects. */
-export function keyString(last: ReadonlyMap<string, number>): string {
-  return [...last].filter(([, seq]) => seq > 0).sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0)).map(([actor, seq]) => `${actor}:${seq}`).join(',')
-}
-
-/**
- * The highest seq per actor that the folder (segment file names) and this device's outbox hold, without opening the
- * store: cheap enough to decide at startup whether a projection cache is current.
- */
-export async function listingLast(root: string, outboxDir: string, records?: string): Promise<Map<string, number>> {
-  const last = new Map<string, number>()
-  for (const segment of await listSegments(path.join(recordsPath(root, records), 'ops'))) last.set(segment.actor, Math.max(last.get(segment.actor) ?? 0, segment.last))
-  const outbox = await fs.readFile(path.join(outboxDir, 'ops.jsonl'), 'utf8').catch(() => '')
-  const lines = outbox.split('\n')
-  lines.pop() // a torn last line
-  for (const line of lines) {
-    const at = line.lastIndexOf('"id":"')
-    if (at < 0) continue
-    const end = line.indexOf('"', at + 6)
-    const id = line.slice(at + 6, end)
-    const colon = id.lastIndexOf(':')
-    const seq = Number(id.slice(colon + 1))
-    if (colon > 0 && Number.isSafeInteger(seq)) last.set(id.slice(0, colon), Math.max(last.get(id.slice(0, colon)) ?? 0, seq))
-  }
-  return last
-}
-
-export type OpRef = {line: string; signer: string | null}
-
-/** The segment files of [opsDir] as one fixed list (so two passes over it read the same files). */
-export function segmentFilesSync(opsDir: string): {actor: string; first: number; last: number; file: string}[] {
-  const segments: {actor: string; first: number; last: number; file: string}[] = []
-  for (const entry of readdirSync(opsDir, {withFileTypes: true})) {
-    if (!entry.isDirectory()) continue
-    for (const name of readdirSync(path.join(opsDir, entry.name))) {
-      const match = SEGMENT.exec(name)
-      if (match) segments.push({actor: entry.name, first: Number(match[1]), last: Number(match[2]), file: path.join(opsDir, entry.name, name)})
-    }
-  }
-  return segments.sort((a, b) => (a.actor < b.actor ? -1 : a.actor > b.actor ? 1 : a.first - b.first || a.last - b.last))
-}
-
-/** Every op the segments hold with the device id that signed its segment (null: a v1 file), read synchronously; an unreadable segment is skipped. */
-export function* segmentOps(files: readonly {file: string}[], libraryId: string): Generator<OpRef> {
-  for (const segment of files) {
-    let value: ReturnType<typeof decodeSegment>
-    try {
-      value = decodeSegment(readFileSync(segment.file), libraryId)
-    } catch {
-      continue
-    }
-    if (value.ok) for (const line of value.ops) yield {line, signer: value.signer}
-  }
-}
-
-/** The outbox lines (a torn last line dropped), each admitted under [ownSigner] when it is this actor's. */
-function outboxOps(outboxFile: string, ownActor: string, ownSigner: string | null): OpRef[] {
-  let outbox = ''
-  try {
-    outbox = readFileSync(outboxFile, 'utf8')
-  } catch {
-    // none
-  }
-  const lines = outbox.split('\n')
-  lines.pop() // a torn last line
-  const out: OpRef[] = []
-  for (const line of lines) {
-    if (!line) continue
-    out.push({line, signer: ownSigner && line.includes(`"id":"${ownActor}:`) ? ownSigner : null})
-  }
-  return out
-}
 /** The shard names that the bits of [mask] stand for (bit i is `CHECKPOINT_SHARDS[i]`). */
 function shardsOf(mask: number): string[] {
   return CHECKPOINT_SHARDS.filter((_, i) => (mask >> i) & 1)
@@ -284,6 +180,11 @@ export class KeepfinStore {
   private closed = false
   private outboxBytes = 0
   private checkpointTimer?: NodeJS.Timeout
+  /** When the oldest operation still in the outbox was written (the batching window never exceeds flushMaxAgeMs). */
+  private oldestPendingAt = 0
+  private compactTimer?: NodeJS.Timeout
+  private compactAt = 0
+  private readonly compactor: Compactor
   stats!: OpenStats
 
   /** This device's id as a signer (SHA-256 of its SPKI), or null when segments are not signed. */
@@ -292,6 +193,30 @@ export class KeepfinStore {
   private constructor(private readonly options: StoreOptions) {
     this.actor = options.actor
     this.deviceId = options.signer ? deviceIdOf(options.signer.spki) : null
+    const store = this
+    const host: CompactionHost = {
+      get closed() {
+        return store.closed
+      },
+      options,
+      get opsDir() {
+        return store.opsDir
+      },
+      actor: this.actor,
+      deviceId: this.deviceId,
+      processed: this.processed,
+      problems: this.problems,
+      retries: this.retries,
+      get equivocations() {
+        return store.equivocations
+      },
+      get sql() {
+        return store.sql
+      },
+      flush: () => this.flushNow(),
+      scheduleCompact: (delay) => this.scheduleCompact(delay),
+    }
+    this.compactor = new Compactor(host)
   }
 
   // ------------------------------------------------------------------ paths
@@ -499,9 +424,13 @@ export class KeepfinStore {
     await this.writeActorNote().catch(() => undefined)
     this.sql.takeTouched() // everything so far is the baseline; later calls report what changed after it
     this.stats = {ms: Date.now() - started, checkpoint: usedCheckpoint, segmentsRead, opsAdmitted: admitted, outboxOps, rotated, equivocations}
+    // Files another file of the same actor already holds (a peer that received both, a file-sync tool that brought back an old
+    // pile) are dropped now, and the pile is merged a little later (both off the open path's critical work).
+    if (this.options.compact !== false) await this.compactor.dropSubsumed(segments).catch((error) => console.error('Could not drop covered library segments:', error))
     if (this.options.watch !== false) this.startWatching()
     if (this.pending.length) this.scheduleFlush(0)
     if (this.retries.size) this.armRetry()
+    this.scheduleCompact(this.options.compactDelayMs ?? 60_000)
   }
 
   private async writeActorNote() {
@@ -795,6 +724,7 @@ export class KeepfinStore {
         for (const result of this.admitMany(texts.slice(from, from + 2000), this.deviceId)) if (result.kind !== 'admitted' && result.kind !== 'kept') throw new Error(`The library rejected its own change (${result.kind}).`)
         if (texts.length > 2000) await new Promise((resolve) => setImmediate(resolve))
       }
+      if (!this.pending.length) this.oldestPendingAt = this.options.now()
       for (const text of texts) this.pending.push({actor: this.actor, seq: first++, text})
       this.nextSeq = seq
       this.hlc = hlc
@@ -803,7 +733,11 @@ export class KeepfinStore {
       this.opsSinceCheckpoint += texts.length
       this.version++
       if (options.external) this.emit({remote: true})
-      this.scheduleFlush(this.pending.length >= (this.options.flushOps ?? 500) ? 0 : this.options.flushIdleMs ?? 2000)
+      // Publishing is batched (a segment is a publication, not a safety event: every op is already fsynced in the outbox): wait
+      // for a quiet moment, but never longer than the maximum age of the oldest unpublished op.
+      const age = this.options.now() - this.oldestPendingAt
+      const wait = Math.min(this.options.flushIdleMs ?? 30_000, Math.max(0, (this.options.flushMaxAgeMs ?? 300_000) - age))
+      this.scheduleFlush(this.pending.length >= (this.options.flushOps ?? 2000) ? 0 : wait)
     }
   }
 
@@ -860,6 +794,7 @@ export class KeepfinStore {
         if (!same) throw new Error(`A different segment already exists at ${file}.`)
       }
       if (!existing) await writeBytesDurable(file, bytes)
+      if (actor === this.actor) this.compactor.filesSinceCompact++
       this.processed.add(`${actor}/${segmentName(first, last)}`)
       this.flushedLast.set(actor, Math.max(this.flushedLast.get(actor) ?? 0, last))
     }
@@ -869,6 +804,7 @@ export class KeepfinStore {
     // when it has grown or on close: one fsync per flush instead of four.
     if (compact || this.outboxBytes > 4_000_000) await this.compactOutbox()
     if (this.opsSinceCheckpoint >= (this.options.checkpointEvery ?? 5000)) this.scheduleCheckpoint()
+    if (this.compactor.filesSinceCompact >= 8) this.scheduleCompact(this.options.compactSoonMs ?? 5000)
   }
 
   /** The counter is saved before the outbox is emptied, so a restored install is told from a crash. */
@@ -934,6 +870,46 @@ export class KeepfinStore {
     }
     this.options.onCheckpoint?.({parts: shards.length, buildMs: built, bytes})
   }
+
+  // ------------------------------------------------------------------ compaction (dev-docs/plans/KEEPFIN-DATA-COMPACTION.md)
+  //
+  // Nothing is ever dropped, only repackaged: this device's own small segments are merged into larger ones (same ops, same
+  // key), the merged file is read back and compared op for op, and only then are the inputs removed. A crash at any step
+  // leaves a folder every reader handles (originals only, originals plus the merged file, a subset, the merged file alone).
+
+  private scheduleCompact(delay: number) {
+    if (this.closed || this.options.compact === false) return
+    const wait = Math.max(delay, this.compactor.lastCompactAt + (this.options.compactGapMs ?? 600_000) - Date.now())
+    const at = Date.now() + wait
+    if (this.compactTimer && this.compactAt <= at) return // already due sooner
+    clearTimeout(this.compactTimer)
+    this.compactAt = at
+    this.compactTimer = setTimeout(() => {
+      this.compactTimer = undefined
+      void this.compact().catch((error) => console.error('Could not compact the library segments:', error))
+    }, wait)
+    this.compactTimer.unref?.()
+  }
+
+  /** One compaction round, in the store's queue: drops covered files, then merges this device's small segments. */
+  compact(): Promise<CompactStats> {
+    return this.enqueue(() => this.compactor.compactRound())
+  }
+  /** Starts a segment transfer (a peer is being sent files, or pushed to): compaction removes no file while one is open. */
+  beginTransfer(): Promise<string> {
+    return this.compactor.beginTransfer()
+  }
+
+  /** [beginTransfer] as a function: call the result when the transfer is over. */
+  async hold(): Promise<() => void> {
+    const token = await this.beginTransfer()
+    return () => this.endTransfer(token)
+  }
+
+  endTransfer(token: string): void {
+    this.compactor.endTransfer(token)
+  }
+
 
   // ------------------------------------------------------------------ membership (network spec 9.1 #1 and #2)
 
@@ -1071,7 +1047,9 @@ export class KeepfinStore {
     return this.enqueue(async () => {
       if (this.closed) return
       let changed = false
-      for (const segment of await listSegments(this.opsDir)) {
+      let fresh = false
+      const listed = await listSegments(this.opsDir)
+      for (const segment of listed) {
         const key = `${segment.actor}/${segment.name}`
         if (this.processed.has(key)) continue
         const retry = this.retries.get(key)
@@ -1088,6 +1066,7 @@ export class KeepfinStore {
           continue
         }
         this.processed.add(key)
+        fresh = true
         this.retries.delete(key)
         this.problems.delete(key)
         this.flushedLast.set(segment.actor, Math.max(this.flushedLast.get(segment.actor) ?? 0, segment.last))
@@ -1106,6 +1085,8 @@ export class KeepfinStore {
         this.version++
         this.emit({remote: true})
       }
+      // a new file may cover older ones (a peer that sent both, a sync tool that brought an old pile back)
+      if (fresh && this.options.compact !== false) await this.compactor.dropSubsumed(listed).catch((error) => console.error('Could not drop covered library segments:', error))
       this.armRetry()
     })
   }
@@ -1118,11 +1099,15 @@ export class KeepfinStore {
     clearTimeout(this.retryTimer)
     clearTimeout(this.watchTimer)
     clearTimeout(this.checkpointTimer)
+    clearTimeout(this.compactTimer)
+    this.compactTimer = undefined
     this.watcher?.close()
     this.watcher = undefined
     await this.enqueue(async () => {
       await this.flushNow(true)
       await this.writeParts() // a due checkpoint is written now, so a new device opens fast
+      // enough small files and no compaction for a while: do it now rather than carry them to the next start
+      if (this.options.compact !== false && this.compactor.filesSinceCompact >= 8 && Date.now() - this.compactor.lastCompactAt >= (this.options.compactGapMs ?? 600_000)) await this.compactor.compactRound().catch((error) => console.error('Could not compact the library segments:', error))
     })
     this.closed = true
     this.closeState(true)
@@ -1146,6 +1131,7 @@ export class KeepfinStore {
     clearTimeout(this.retryTimer)
     clearTimeout(this.watchTimer)
     clearTimeout(this.checkpointTimer)
+    clearTimeout(this.compactTimer)
     this.watcher?.close()
     this.watcher = undefined
     this.closeState(false)

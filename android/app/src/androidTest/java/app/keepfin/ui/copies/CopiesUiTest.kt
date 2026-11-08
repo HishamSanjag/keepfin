@@ -126,6 +126,24 @@ class CopiesUiTest {
         rule.waitUntil(3000) { "syncAll" in rec.calls }
     }
 
+    @Test fun aCopyBeingRemovedSaysSoAndCannotBeRemovedAgainAndAFailedRemovalKeepsTheReasonAndRetries() {
+        val rec = Recorder()
+        val ui = androidx.compose.runtime.mutableStateOf(CopiesUi(true, listOf(card("a", CopyStatus.UP_TO_DATE).copy(removal = app.keepfin.copies.CopyRemovalUi(false, "Forgetting the copy…")))))
+        rule.setContent { KeepfinTheme { androidx.compose.foundation.layout.Column(androidx.compose.ui.Modifier.verticalScroll(androidx.compose.foundation.rememberScrollState())) { CopiesContent(ui.value, rec) } } }
+        rule.onNodeWithTag(CopiesTags.REMOVAL).performScrollTo().assertIsDisplayed()
+        rule.onNodeWithText("Removing this copy: Forgetting the copy…", useUnmergedTree = true).assertExists()
+        rule.onNodeWithText("Stop keeping this copy").assertIsNotEnabled()
+        rule.onNodeWithTag(CopiesTags.SYNC).assertIsNotEnabled()
+        // it fails: the copy stays, with the reason and a way to try again
+        ui.value = CopiesUi(true, listOf(card("a", CopyStatus.UP_TO_DATE).copy(removal = app.keepfin.copies.CopyRemovalUi(true, "The copy's folder could not be changed."))))
+        rule.onNodeWithText("This copy was not removed", useUnmergedTree = true).performScrollTo().assertIsDisplayed()
+        rule.onNodeWithText("The copy's folder could not be changed.", useUnmergedTree = true).assertExists()
+        rule.onNodeWithText("Stop keeping this copy").assertIsEnabled()
+        rule.onNodeWithTag(CopiesTags.REMOVE_RETRY).performClick()
+        rule.onNodeWithText("Stop").performClick()
+        rule.waitUntil(3000) { "remove:a" in rec.calls }
+    }
+
     @Test fun aCopyHoldsLyricsSubtitlesAndInfoFilesUntilTurnedOff() {
         val rec = Recorder()
         show(CopiesUi(true, listOf(card("a", CopyStatus.WAITING))), rec)

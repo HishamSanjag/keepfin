@@ -34,6 +34,8 @@ export interface Progress {
   doneBytes: number
   totalBytes: number
   current: string | null
+  /** The copy's own Keepfin data is moving (not the person's files): the counts stay zero so they are never shown as files. */
+  data?: boolean
 }
 
 export interface ExecConfig {

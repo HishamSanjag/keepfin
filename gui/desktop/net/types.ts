@@ -17,6 +17,11 @@ export interface NetLibrary {
   flush(): Promise<void>
   /** Reads segments that arrived in the folder and admits them. */
   rescan(): Promise<void>
+  /**
+   * Called before a transfer lists or reads segment files, and the result when it is over: the store removes no segment
+   * file (compaction) while one is held. Absent for a library that never compacts.
+   */
+  hold?(): Promise<() => void>
   /** A change in the library (own or remote): the peers are told. */
   onChange(listener: () => void): () => void
   membership(): Promise<SyncMembership>

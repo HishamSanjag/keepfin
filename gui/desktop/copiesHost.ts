@@ -619,25 +619,46 @@ export class CopiesHost {
    * the Keepfin folder or one around it) goes to the Recycle Bin first, so a folder that cannot move leaves the copy as it was.
    */
   private async remove(id: string, deleteFiles = false): Promise<CopiesState> {
-    this.pause(id)
-    if (deleteFiles) {
-      const local = this.local.places[id]
-      const folder = local && !local.cloud && !local.peer ? local.path : undefined
-      if (!folder || !this.deps.trash) throw new Error('Only a copy in a folder or on a drive can have its files moved to the Recycle Bin.')
-      if (isInFolder(folder, this.deps.mainRoot) || isInFolder(this.deps.mainRoot, folder)) throw new Error('This copy is inside or around your Keepfin folder, so its files stay.')
-      try {
-        if (await fs.stat(folder).catch(() => undefined)) await this.deps.trash(folder)
-      } catch {
-        throw new Error(`Keepfin could not move ${folder} to the Recycle Bin. Another program (often File Explorer) may have it open; close it and try again. The copy was not removed.`)
-      }
+    const rt = this.runtime(id)
+    // a second click, or the page opened again: the removal already running is the only one
+    if (rt.removal?.state === 'removing') return this.viewPart.build()
+    const wasPaused = rt.paused
+    const name = this.snap.places.find((p) => p.id === id)?.name || 'The copy'
+    const step = (text: string) => {
+      rt.removal = {state: 'removing', text}
+      this.schedulePush()
     }
-    await this.setRegisters(id, {removed: true})
-    delete this.local.places[id]
-    this.local.acks = this.local.acks.filter((k) => !k.startsWith(`${id}|`))
-    await this.saveLocal()
-    await fs.rm(this.stateDir(id), {recursive: true, force: true})
+    const local = this.local.places[id]
+    step(deleteFiles ? 'Moving its files to the Recycle Bin…' : 'Stopping the copy…')
+    try {
+      this.pause(id)
+      if (deleteFiles) {
+        const folder = local && !local.cloud && !local.peer ? local.path : undefined
+        if (!folder || !this.deps.trash) throw new Error('Only a copy in a folder or on a drive can have its files moved to the Recycle Bin.')
+        if (isInFolder(folder, this.deps.mainRoot) || isInFolder(this.deps.mainRoot, folder)) throw new Error('This copy is inside or around your Keepfin folder, so its files stay.')
+        try {
+          if (await fs.stat(folder).catch(() => undefined)) await this.deps.trash(folder)
+        } catch {
+          throw new Error(`Keepfin could not move ${folder} to the Recycle Bin. Another program (often File Explorer) may have it open; close it and try again. The copy was not removed.`)
+        }
+      }
+      step('Forgetting the copy…')
+      await this.setRegisters(id, {removed: true})
+      delete this.local.places[id]
+      this.local.acks = this.local.acks.filter((k) => !k.startsWith(`${id}|`))
+      await this.saveLocal()
+      await fs.rm(this.stateDir(id), {recursive: true, force: true})
+    } catch (error) {
+      rt.paused = wasPaused
+      rt.removal = {state: 'failed', text: error instanceof Error ? error.message : String(error)}
+      this.schedulePush()
+      throw error
+    }
     this.rt.delete(id)
     await this.refreshSnapshot()
+    const files = deleteFiles ? 'Its files are in the Recycle Bin.' : local && !local.cloud && !local.peer && local.path ? `Its files stay in ${local.path}.` : 'Its files stay where they are.'
+    this.report = {title: `${name} was removed`, detail: files, warn: false, at: this.deps.now()}
+    this.schedulePush()
     return this.viewPart.build()
   }
 
@@ -705,7 +726,7 @@ export class CopiesHost {
   /** Starts a sync of one place (queued: at most two copies run at once); resolves when it has finished. */
   syncPlace(placeId: string, flags: {previewConfirmed?: boolean; confirmHeld?: boolean; audit?: boolean}): Promise<RunSummary | undefined> {
     const rt = this.runtime(placeId)
-    if (rt.worker || this.queue.includes(placeId)) return Promise.resolve(undefined)
+    if (rt.worker || this.queue.includes(placeId) || rt.removal?.state === 'removing') return Promise.resolve(undefined)
     rt.paused = false
     return new Promise((resolve) => {
       const go = async () => {
@@ -749,6 +770,9 @@ export class CopiesHost {
       this.schedulePush()
       return undefined
     }
+    // Publish before copying: operations wait in the outbox for a while (batched flushes), and the copy must not lag them
+    // (dev-docs/plans/KEEPFIN-DATA-COMPACTION.md R7). A failed flush changes nothing: the ops are safe in the outbox.
+    await Promise.resolve().then(() => this.deps.store().flush()).catch(() => undefined)
     const stateDir = this.stateDir(placeId)
     await fs.mkdir(stateDir, {recursive: true})
     const deletesFile = path.join(stateDir, 'confirmed-deletes.json')

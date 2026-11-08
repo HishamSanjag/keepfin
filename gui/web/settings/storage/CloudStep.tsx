@@ -14,13 +14,15 @@ type Props = {
   onState: (state: CopiesState) => void
   /** A copy the library already knows was attached to this computer: the wizard is done. */
   onAttached: (state: CopiesState) => void
+  /** A sign-in started here has found no Keepfin copy on the new account: carry on to the next page, as if Continue was pressed. */
+  onContinue: () => void
 }
 
 /**
  * The first step of Add a copy when the copy lives in a cloud account: pick a provider (sign in in the browser, or connect a
  * WebDAV server), pick the account, name the folder on it, or use a copy another device already made there.
  */
-export function CloudStep({state, accountId, folder, onAccount, onFolder, onState, onAttached}: Props) {
+export function CloudStep({state, accountId, folder, onAccount, onFolder, onState, onAttached, onContinue}: Props) {
   const providers = (state.cloud?.providers ?? []).filter((p) => p.available)
   const accounts = state.cloud?.accounts ?? []
   const [adding, setAdding] = useState(accounts.length === 0)
@@ -31,6 +33,10 @@ export function CloudStep({state, accountId, folder, onAccount, onFolder, onStat
   const [looking, setLooking] = useState(false)
   const [attaching, setAttaching] = useState('')
   const cancelled = useRef(false)
+  // the account a sign-in from this step just made or renewed: once its copies are looked up, the step carries on by itself
+  const justSignedIn = useRef<string | null>(null)
+  const carryOn = useRef(onContinue)
+  carryOn.current = onContinue
   const account = accounts.find((a) => a.id === accountId)
 
   useEffect(() => {
@@ -39,8 +45,19 @@ export function CloudStep({state, accountId, folder, onAccount, onFolder, onStat
     if (!account || account.needsSignIn) return
     setLooking(true)
     findCloudCopies(account.id, account.provider === 'webdav' ? folder || undefined : undefined)
-      .then((list) => live && setFound(list))
-      .catch(() => live && setFound([]))
+      .then((list) => {
+        if (!live) return
+        setFound(list)
+        const fresh = justSignedIn.current === account.id
+        if (fresh) justSignedIn.current = null
+        // nothing there yet: straight on to the copy's setup. A copy that is there stays on screen to be chosen.
+        if (fresh && list.length === 0) carryOn.current()
+      })
+      .catch(() => {
+        if (!live) return
+        setFound([])
+        justSignedIn.current = null // not knowing is not "nothing there": the person decides
+      })
       .finally(() => live && setLooking(false))
     return () => {
       live = false
@@ -54,6 +71,7 @@ export function CloudStep({state, accountId, folder, onAccount, onFolder, onStat
     cancelled.current = false
     try {
       const result = await signInToCloud(provider)
+      justSignedIn.current = result.account.id
       onState(result.state)
       onAccount(result.account)
       setAdding(false)
@@ -62,6 +80,16 @@ export function CloudStep({state, accountId, folder, onAccount, onFolder, onStat
     } finally {
       setSigning(null)
     }
+  }
+
+  /** Not one of the copies found: a folder name nothing on the account uses yet, then on to the copy's setup. */
+  function makeNew() {
+    const taken = new Set((found ?? []).map((f) => f.folder.toLowerCase()))
+    const base = folder.trim() || 'Library'
+    let name = base
+    for (let n = 2; taken.has(name.toLowerCase()); n++) name = base + ' ' + n
+    if (name !== folder) onFolder(name)
+    onContinue()
   }
 
   async function cancel() {
@@ -126,6 +154,7 @@ export function CloudStep({state, accountId, folder, onAccount, onFolder, onStat
         <WebdavForm
           onCancel={() => setWebdav(false)}
           onConnected={(result) => {
+            justSignedIn.current = result.account.id
             onState(result.state)
             onAccount(result.account)
             setWebdav(false)
@@ -151,7 +180,7 @@ export function CloudStep({state, accountId, folder, onAccount, onFolder, onStat
           )}
           {found && found.length > 0 && (
             <div className="cloud-found" role="group" aria-label="Copies already on this account">
-              <h5>Already on this account</h5>
+              <h5>A Keepfin copy is already on this account</h5>
               <ul>
                 {found.map((f) => (
                   <li key={f.folder}>
@@ -161,16 +190,19 @@ export function CloudStep({state, accountId, folder, onAccount, onFolder, onStat
                     </span>
                     {f.placeId ? (
                       <Button size="sm" variant="secondary" loading={attaching === f.folder} disabled={!!attaching} onClick={() => void attach(f)}>
-                        Use on this computer
+                        Use it
                       </Button>
                     ) : (
                       <Button size="sm" variant="secondary" disabled={folder === f.folder} onClick={() => onFolder(f.folder)}>
-                        {folder === f.folder ? 'Chosen' : 'Use this folder'}
+                        {folder === f.folder ? 'Chosen' : 'Use it'}
                       </Button>
                     )}
                   </li>
                 ))}
               </ul>
+              <Button size="sm" variant="ghost" onClick={makeNew}>
+                Make a new one
+              </Button>
             </div>
           )}
         </div>

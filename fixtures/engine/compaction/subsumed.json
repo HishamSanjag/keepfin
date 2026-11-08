@@ -1,0 +1,10 @@
+{"description":"Files covered by a larger file of the same actor (design R5).","cases":[
+{"name":"merged-file-covers-the-pile","input":{"op":"subsumed","segments":[{"actor":"a","first":1,"last":2},{"actor":"a","first":3,"last":4},{"actor":"a","first":1,"last":4}]},"expected":{"subsumed":[[0,2],[1,2]]}},
+{"name":"partial-overlap-covers-nothing","input":{"op":"subsumed","segments":[{"actor":"a","first":1,"last":6},{"actor":"a","first":4,"last":9}]},"expected":{"subsumed":[]}},
+{"name":"never-across-actors","input":{"op":"subsumed","segments":[{"actor":"a","first":1,"last":4},{"actor":"b","first":1,"last":2}]},"expected":{"subsumed":[]}},
+{"name":"unreadable-file-skips-the-actor","input":{"op":"subsumed","segments":[{"actor":"a","first":1,"last":2},{"actor":"a","first":1,"last":4,"ok":false}]},"expected":{"subsumed":[]}},
+{"name":"blocked-actor-is-skipped","input":{"op":"subsumed","blocked":["a"],"segments":[{"actor":"a","first":1,"last":2},{"actor":"a","first":1,"last":4}]},"expected":{"subsumed":[]}},
+{"name":"a-named-file-stays","input":{"op":"subsumed","segments":[{"actor":"a","first":3,"last":4,"named":true},{"actor":"a","first":1,"last":4}]},"expected":{"subsumed":[]}},
+{"name":"the-covering-file-is-the-maximal-one","input":{"op":"subsumed","segments":[{"actor":"a","first":1,"last":2},{"actor":"a","first":1,"last":4},{"actor":"a","first":1,"last":8}]},"expected":{"subsumed":[[1,2],[0,2]]}},
+{"name":"same-last-smaller-first-covers","input":{"op":"subsumed","segments":[{"actor":"a","first":5,"last":10},{"actor":"a","first":1,"last":10}]},"expected":{"subsumed":[[0,1]]}}
+]}

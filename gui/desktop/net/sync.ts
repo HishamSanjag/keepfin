@@ -57,24 +57,38 @@ export async function pullSegments(client: PeerClient, lib: Pick<NetLibrary, 'ro
 /** Pushes the segments [remote] (the peer's vector) lacks. */
 export async function pushSegments(client: PeerClient, lib: NetLibrary, remote: ReadonlyMap<string, number>, signal?: AbortSignal): Promise<{pushed: number; denied: boolean}> {
   await lib.flush()
-  const missing = missingFor(await listSegments(lib.root, lib.records), remote)
-  if (!missing.length) return {pushed: 0, denied: false}
-  async function* frames() {
+  // The lease: while files are listed, measured and sent, compaction removes none of them (a file that vanished would break the
+  // declared length of the body).
+  const release = (await lib.hold?.()) ?? (() => undefined)
+  try {
+    const missing = missingFor(await listSegments(lib.root, lib.records), remote)
+    if (!missing.length) return {pushed: 0, denied: false}
+    // the length is needed up front: read the sizes first (files are immutable once written); a file already gone is left out
+    const sendable: {file: string; size: number}[] = []
     for (const segment of missing) {
-      const bytes = await fs.readFile(segment.file).catch(() => undefined)
-      if (bytes && bytes.length <= SEGMENT_MAX_BYTES) yield frame(bytes)
+      const stat = await fs.stat(segment.file).catch(() => undefined)
+      if (stat && stat.size > 0 && stat.size <= SEGMENT_MAX_BYTES) sendable.push({file: segment.file, size: stat.size})
     }
+    if (!sendable.length) return {pushed: 0, denied: false}
+    async function* frames() {
+      for (const entry of sendable) {
+        const bytes = await fs.readFile(entry.file).catch(() => undefined)
+        // the declared length counts this file: if it changed or vanished the body would be short, so the pass fails and the next one starts over
+        if (!bytes || bytes.length !== entry.size) throw new Error('A segment changed while it was sent.')
+        yield frame(bytes)
+      }
+    }
+    const total = sendable.reduce((sum, entry) => sum + 4 + entry.size, 0)
+    const response = await client.request('POST', `/v1/libraries/${lib.libraryId}/segments`, {body: Readable.from(frames()), contentLength: total, timeoutMs: 120_000, signal})
+    const chunks: Buffer[] = []
+    for await (const chunk of response.res) chunks.push(chunk as Buffer)
+    if (response.status === 403) return {pushed: 0, denied: true}
+    if (response.status !== 200) throw new PeerHttpError(response.status, 'push', `The device answered ${response.status}.`)
+    const result = JSON.parse(Buffer.concat(chunks).toString('utf8')) as {stored?: number}
+    return {pushed: result.stored ?? 0, denied: false}
+  } finally {
+    release()
   }
-  // the length is needed up front: read the sizes first (files are immutable once written)
-  let total = 0
-  for (const segment of missing) total += 4 + ((await fs.stat(segment.file).catch(() => ({size: 0}))).size ?? 0)
-  const response = await client.request('POST', `/v1/libraries/${lib.libraryId}/segments`, {body: Readable.from(frames()), contentLength: total, timeoutMs: 120_000, signal})
-  const chunks: Buffer[] = []
-  for await (const chunk of response.res) chunks.push(chunk as Buffer)
-  if (response.status === 403) return {pushed: 0, denied: true}
-  if (response.status !== 200) throw new PeerHttpError(response.status, 'push', `The device answered ${response.status}.`)
-  const result = JSON.parse(Buffer.concat(chunks).toString('utf8')) as {stored?: number}
-  return {pushed: result.stored ?? 0, denied: false}
 }
 
 /** One full pass for one library: pull, then push what the peer lacks. */

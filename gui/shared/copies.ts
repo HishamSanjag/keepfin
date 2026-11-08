@@ -50,7 +50,8 @@ export type CopyRow = {key: string; kind: 'space' | 'playlist' | 'favourites'; i
 /** Derived files a copy on a folder or drive can carry besides the library's own files (spec 8). Never imported back. */
 export type CopyExports = {playlistFiles: boolean; flat: boolean; mp3: boolean}
 
-export type CopyProgress = {doneActions: number; totalActions: number; doneBytes: number; totalBytes: number; current: string | null}
+/** [data]: Keepfin's own bookkeeping is moving, not the person's files; the counts stay zero and the UI says so quietly. */
+export type CopyProgress = {doneActions: number; totalActions: number; doneBytes: number; totalBytes: number; current: string | null; data?: boolean}
 
 /** Why some files of a copy were not copied (words from the shared core: no codes, no temporary names). */
 export type CopyProblem = {
@@ -82,6 +83,8 @@ export type CopyPlaceView = {
   status: CopyStatus
   /** A plain sentence for the status when it needs one ("The drive is not connected"). */
   statusText?: string
+  /** Remove copy… is running (what it is doing) or stopped (why; the copy is still here and can be removed again). */
+  removal?: {state: 'removing' | 'failed'; text: string}
   progress?: CopyProgress
   lastVerifiedAt?: number
   /** Files verified on the copy / files still to copy / items that need a decision. */

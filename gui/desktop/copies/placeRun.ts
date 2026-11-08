@@ -7,7 +7,8 @@ import fs from 'node:fs/promises'
 import path from 'node:path'
 import type {PlanSummary, ReviewItem} from '../../shared/core/copies.js'
 import {deletedItems, desiredEntries, holdsKey, optionsKey, placeMusicVideos, type PlaceConfig} from '../sqlstate/desired.js'
-import {writeJsonAtomic} from '../store/atomic.js'
+import {readJson, writeJsonAtomic} from '../store/atomic.js'
+import {coveredByName, listOps, pruneCoveredSegments} from './segmentPrune.js'
 import type {MainHost, Progress, RemoteTally} from './executor.js'
 import type {RemoteMedia, RemoteStopState} from './remote.js'
 import {runCopy, type RunReport} from './run.js'
@@ -120,9 +121,15 @@ export function summarise(report: RunReport, now: number): RunSummary {
   }
 }
 
-/** Copies the library's data folders (`ops`, `checkpoints`, `art`) to the copy, files it lacks or holds shorter. Never deletes. */
+/**
+ * Copies the library's data folders (`ops`, `checkpoints`, `art`) to the copy, files it lacks or holds shorter. A segment file that a
+ * larger file of the main folder covers is not copied. Nothing is deleted from the copy except segment files that a larger file on the
+ * copy covers (op for op) and that the main folder no longer lists (dev-docs/plans/KEEPFIN-DATA-COMPACTION.md R5, R6).
+ */
 export async function copyMetadata(mainRoot: string, copyRoot: string): Promise<number> {
   let copied = 0
+  const mainOps = await listOps(path.join(mainRoot, '.keepfin', 'ops'))
+  const covered = new Set(coveredByName(mainOps).map((entry) => entry.covered.file))
   for (const dir of ['ops', 'checkpoints', 'art']) {
     const from = path.join(mainRoot, '.keepfin', dir)
     if (!(await exists(from))) continue
@@ -138,6 +145,7 @@ export async function copyMetadata(mainRoot: string, copyRoot: string): Promise<
         }
         if (e.name.endsWith('.tmp') || e.name.includes('.kftmp')) continue
         const src = path.join(from, ...r.split('/'))
+        if (dir === 'ops' && covered.has(src)) continue
         const dst = path.join(copyRoot, '.keepfin', dir, ...r.split('/'))
         const [a, b] = await Promise.all([fs.stat(src).catch(() => null), fs.stat(dst).catch(() => null)])
         if (!a) continue
@@ -149,6 +157,12 @@ export async function copyMetadata(mainRoot: string, copyRoot: string): Promise<
         copied++
       }
     }
+  }
+  // the copy's own pile: files a merged file on the copy covers, once the main folder has dropped them too
+  const folder = await readJson<{libraryId?: string}>(path.join(mainRoot, '.keepfin', 'folder.json')).catch(() => undefined)
+  if (folder?.libraryId) {
+    const listed = new Set(mainOps.map((file) => `${file.actor}/${file.name}`))
+    await pruneCoveredSegments(path.join(copyRoot, '.keepfin', 'ops'), folder.libraryId, (file) => listed.has(`${file.actor}/${file.name}`)).catch(() => 0)
   }
   return copied
 }
@@ -179,7 +193,8 @@ export async function runPlace(job: PlaceRunJob, host: MainHost | undefined, onP
       dryRun: job.dryRun,
       audit: job.audit,
       host,
-      parallelism: job.parallelism ?? 2,
+      // network latency, not the disk, is the wait on an account or a device; a local folder stays at 2 (spec 5.6: 2 on an HDD)
+      parallelism: job.parallelism ?? (job.remote ? 4 : 2),
       freeCopy: job.freeCopy,
       onProgress,
       signal,

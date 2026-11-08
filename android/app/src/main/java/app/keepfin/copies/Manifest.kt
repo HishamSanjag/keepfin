@@ -65,7 +65,24 @@ internal object Manifest {
             // another device wrote the same number first; the copy's own file stands
         }
         local.delete()
+        // Only the newest few are ever read (the latest one; coverage reads its header), so older ones are not kept: without this a library
+        // that runs a copy every day gains a manifest of the whole copy per run, for ever (dev-docs/plans/KEEPFIN-DATA-COMPACTION.md R4).
+        prune(copy, placeId)
+        prune(main, placeId)
         return ManifestResult(n, CONTENT_PREFIX + hexOf(digest.digest()), files, copyFile, mainFile)
+    }
+
+    /** How many manifests a place keeps on each side. */
+    const val KEPT = 3
+
+    /** Removes all but the newest [KEPT] manifests of a place on [access] (a hard removal: a manifest is a record, not user data). */
+    fun prune(access: FolderAccess, placeId: String) {
+        val numbers = try {
+            access.list(dir(placeId)).entries.mapNotNull { e -> NAME.matchEntire(e.name)?.let { it.groupValues[1].toInt() } }
+        } catch (e: FolderError) {
+            return
+        }
+        for (n in numbers.sortedDescending().drop(KEPT)) runCatching { access.prune("${dir(placeId)}/manifest-$n.jsonl") }
     }
 
     /** The latest manifest of a place on [root]: its header and its lines. Null when there is none. */

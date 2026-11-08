@@ -30,6 +30,8 @@ export type Runtime = {
   totalBytes?: number
   startedAt?: number
   error?: string
+  /** Remove copy…: what it is doing now, or why it stopped. Cleared with the runtime when the copy is gone. */
+  removal?: {state: 'removing' | 'failed'; text: string}
 }
 
 export type Pending = {draft: CopyDraft; placeId: string; replica: string; created: boolean; madeRoot?: boolean; root: string; cloud?: CloudPlaceSpec; peer?: PeerPlaceSpec}

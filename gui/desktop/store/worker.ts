@@ -25,7 +25,7 @@ export type WorkerStoreOptions = {
   /** This device's key as Base64 (network spec section 1): segments are signed and own operations admitted under its id. */
   signer?: {pkcs8: string; spki: string}
   /** The serialisable store options (timers, sizes, the watcher). */
-  tuning: Partial<Pick<StoreOptions, 'flushIdleMs' | 'flushOps' | 'checkpointEvery' | 'segmentMaxOps' | 'watch' | 'watchDebounceMs' | 'retryMs' | 'checkpointDelayMs'>>
+  tuning: Partial<Pick<StoreOptions, 'flushIdleMs' | 'flushMaxAgeMs' | 'flushOps' | 'compact' | 'compactDelayMs' | 'compactGapMs' | 'compactSoonMs' | 'leaseWaitMs' | 'checkpointEvery' | 'segmentMaxOps' | 'watch' | 'watchDebounceMs' | 'retryMs' | 'checkpointDelayMs'>>
   /** The caller wants to hear about a retired actor (an event) instead of the default profiles.json update. */
   customRotate: boolean
 }
@@ -78,6 +78,21 @@ const handlers: Record<string, (args: any, id: number) => Promise<unknown> | unk
   async flush() {
     await store!.flush()
     return {last: lastOf(), pending: store!.pendingOps}
+  },
+
+  /** A segment transfer starts: compaction removes no file until it ends (see KeepfinStore.beginTransfer). */
+  async beginTransfer() {
+    return {token: await store!.beginTransfer()}
+  },
+
+  endTransfer({token}: {token: string}) {
+    store!.endTransfer(token)
+    return {}
+  },
+
+  async compact() {
+    const stats = await store!.compact()
+    return {stats, last: lastOf(), pending: store!.pendingOps}
   },
 
   async rescan({force}: {force?: boolean}) {

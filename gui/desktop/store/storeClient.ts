@@ -9,7 +9,7 @@ import type {Collection, Space} from '../../shared/library.js'
 import type {LibraryEntry} from '../library/index.js'
 import type {OpDraft, Routes} from './mapping.js'
 import type {MergeMeta, ScanRow} from './mergeScan.js'
-import type {OpenStats} from './store.js'
+import type {CompactStats, OpenStats} from './store.js'
 import type {ProjectArgs, WorkerStoreOptions} from './worker.js'
 import type {CopyCover, WhereCounts, WhereItemFacts} from './where.js'
 import type {SyncJson, SyncSpace} from '../../shared/core/sync.js'
@@ -174,6 +174,24 @@ export class StoreClient {
 
   async flush(): Promise<void> {
     this.noteState(await this.request('flush'))
+  }
+
+  /** Holds off compaction's removals until the returned function is called (a segment transfer is in flight). */
+  async hold(): Promise<() => void> {
+    const {token} = await this.request<{token: string}>('beginTransfer')
+    let ended = false
+    return () => {
+      if (ended) return
+      ended = true
+      void this.request('endTransfer', {token}).catch(() => undefined)
+    }
+  }
+
+  /** One compaction round now (tests and the app's explicit request). */
+  async compact(): Promise<CompactStats> {
+    const out = await this.request<{stats: CompactStats; last: [string, number][]; pending: number}>('compact')
+    this.noteState(out)
+    return out.stats
   }
 
   async rescan(options: {force?: boolean} = {}): Promise<void> {

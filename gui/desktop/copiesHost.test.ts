@@ -320,6 +320,36 @@ test('Remove copy with its files moves the folder to the Recycle Bin; without, t
   }
 })
 
+test('Remove copy that fails keeps the copy with the reason; a second call during the work starts nothing; trying again finishes', async () => {
+  const w = await world()
+  try {
+    await w.addItem('a.mp3', 'AAA')
+    await w.host.refreshSnapshot()
+    const target = path.join(w.dir, 'Stuck')
+    await fs.mkdir(target)
+    const preview = (await w.host.handle('copiesPreview', {draft: everything('backup', target)})) as CopyPreview
+    await w.host.handle('copiesAdd', {placeId: preview.placeId})
+    await settle(w.host, preview.placeId, (s) => s.places.find((p) => p.id === preview.placeId)?.kept === 1)
+    // the Recycle Bin cannot be made (a file is in its place): the move fails
+    await fs.writeFile(path.join(w.dir, 'Recycle Bin'), 'in the way')
+    await assert.rejects(w.host.handle('copiesRemove', {placeId: preview.placeId, deleteFiles: true}), /could not move/)
+    const failed = ((await w.host.handle('copiesState', {})) as CopiesState).places.find((p) => p.id === preview.placeId)
+    assert.equal(failed?.removal?.state, 'failed')
+    assert.match(failed?.removal?.text ?? '', /The copy was not removed/)
+    assert.equal(await read(target, 'Music', 'a.mp3'), 'AAA', 'nothing was touched')
+    await fs.rm(path.join(w.dir, 'Recycle Bin'))
+    const first = w.host.handle('copiesRemove', {placeId: preview.placeId, deleteFiles: true})
+    const second = (await w.host.handle('copiesRemove', {placeId: preview.placeId, deleteFiles: true})) as CopiesState
+    assert.equal(second.places.find((p) => p.id === preview.placeId)?.removal?.state, 'removing', 'the second call joins nothing and starts nothing')
+    const done = (await first) as CopiesState
+    assert.equal(done.places.some((p) => p.id === preview.placeId), false)
+    assert.equal(done.report?.title.endsWith('was removed'), true)
+    assert.equal(await read(w.dir, 'Recycle Bin', 'Stuck', 'Music', 'a.mp3'), 'AAA')
+  } finally {
+    await w.cleanup()
+  }
+})
+
 test('files Keepfin did not put on a copy: leaving them settles each one for good, one after another and after the next sync', async () => {
   const w = await world()
   try {
