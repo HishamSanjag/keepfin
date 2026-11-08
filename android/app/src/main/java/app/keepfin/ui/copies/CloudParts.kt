@@ -233,7 +233,8 @@ internal fun CloudPlaceChooser(cloud: CloudActions, onAddress: (String?, String)
                                 message = null
                                 val r = withContext(Dispatchers.IO) { runCatching { cloud.connectWebdav(url, user, password) } }
                                 busy = false
-                                r.onSuccess { justSignedIn = it.account.id; accountId = it.account.id; password = "" }.onFailure { message = it.message }
+                                // a WebDAV server stays on this step: its folder is chosen here, after connecting
+                                r.onSuccess { accountId = it.account.id; password = "" }.onFailure { message = it.message }
                             }
                         },
                         modifier = Modifier.heightIn(min = 48.dp).testTag(CloudTags.WEBDAV_CONNECT),

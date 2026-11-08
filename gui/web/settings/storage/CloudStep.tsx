@@ -154,7 +154,7 @@ export function CloudStep({state, accountId, folder, onAccount, onFolder, onStat
         <WebdavForm
           onCancel={() => setWebdav(false)}
           onConnected={(result) => {
-            justSignedIn.current = result.account.id
+            // a WebDAV server stays on this step: the folder on the server is chosen here, after connecting
             onState(result.state)
             onAccount(result.account)
             setWebdav(false)
