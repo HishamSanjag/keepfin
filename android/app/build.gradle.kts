@@ -15,7 +15,7 @@ android {
         minSdk = 26
         targetSdk = 36
         versionCode = 28
-        versionName = "1.1.0-beta.1"
+        versionName = "1.1.0-beta.2"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         ndk { abiFilters += listOf("arm64-v8a", "x86_64") }
         // Cloud accounts: the public client ids of this build (build variables, never secrets; empty means the provider shows "Not available in this build").
