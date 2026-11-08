@@ -1,6 +1,6 @@
 // The three requests of Keepfin's own sign-in: its state, the sign-in window for one site, and signing out of one.
 // Electron's window and session arrive as dependencies so the rules (which sites, what is said) are tested without Electron.
-import {allSites, siteByKey} from '../../shared/core/signin.js'
+import {allSites, googleBlockedMessage, siteByKey} from '../../shared/core/signin.js'
 import type {Request, SignInOutcome, SignInState} from '../../shared/contracts.js'
 import type {SignInStore} from './store.js'
 import type {SignInResult} from './window.js'
@@ -23,12 +23,13 @@ function siteKeyOf(request: Request): string {
 
 export async function signInState(store: SignInStore): Promise<SignInState> {
   const signed = new Set(await store.signedSites())
-  return {canKeep: store.canKeep, sites: allSites().map((s) => ({key: s.key, name: s.name, signedIn: signed.has(s.key)}))}
+  return {canKeep: store.canKeep, sites: allSites().map((s) => ({key: s.key, name: s.name, signedIn: signed.has(s.key), ...(s.hint ? {hint: s.hint} : {})}))}
 }
 
 /** What to tell the person when the window closed without a sign-in being kept. */
 function messageFor(site: string, result: SignInResult): string | undefined {
   if (result.signedIn) return undefined
+  if (result.outcome === 'blockedByGoogle') return googleBlockedMessage()
   if (result.outcome === 'unavailable') return NOT_KEPT
   if (result.outcome === 'notSignedIn') return `Keepfin is not signed in to ${site}. The window was closed before the sign-in finished.`
   return `Keepfin could not finish signing in to ${site}.`

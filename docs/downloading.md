@@ -55,7 +55,7 @@ Keepfin can use your own sign-in, so a site shows it what your account can alrea
 
 - **When a link needs it:** the preview says the site shows the post only to signed-in people. Choose **Sign in to** that site, sign in in the window that opens, and Keepfin reads the link again by itself. **Not now** keeps the message.
 - **Android:** open **Settings › Downloads › Sign in to a site** and sign in inside Keepfin.
-- **Windows:** open **Settings › Downloads › Website sign-in › Sign in to a site…** and sign in in the window that opens. To undo it, choose **Sign out** beside the site. Keepfin never sees your password and keeps the sign-in encrypted on your computer. You can also use the browser you're signed in with, or import a cookies.txt file.
+- **Windows:** open **Settings › Downloads › Website sign-in › Sign in to a site…** and sign in in the window that opens. To undo it, choose **Sign out** beside the site. Keepfin never sees your password and keeps the sign-in encrypted on your computer. You can also use the browser you're signed in with, or import a cookies.txt file. Google does not allow signing in from Keepfin's window, so for YouTube sign in in Firefox and Keepfin uses that sign-in automatically.
 
 Downloads start signed out. Only when a site says it needs a sign-in does Keepfin try yours, once, and the download's row then says "Signed in" (or "Signed in with Firefox" on Windows). To keep every download signed out, turn off **Settings › Downloads › Website sign-in › Use a sign-in when a site asks for one**. On Windows, a cookie source you choose yourself is always used.
 

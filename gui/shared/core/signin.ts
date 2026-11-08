@@ -2,9 +2,9 @@
 // and the desktop's sign-in code. This is the only file that imports the core's signin package.
 //
 // The core owns the site table (links, cookie domains, session cookie names) and the decisions; it never sees cookie values.
-import {signInIsSignedIn, signInNotice, signInOrder, signInRetry, signInSite, signInSiteKeys, signInSiteOf, JsSignInSource} from '../../../build/core-js/keepfin-core.mjs'
+import {signInGoogleMessage, signInIsGoogle, signInIsSignedIn, signInNotice, signInOrder, signInRetry, signInSite, signInSiteKeys, signInSiteOf, JsSignInSource} from '../../../build/core-js/keepfin-core.mjs'
 
-export type SignInSite = {key: string; name: string; domains: string[]; sessionCookies: string[]; loginUrl: string}
+export type SignInSite = {key: string; name: string; domains: string[]; sessionCookies: string[]; loginUrl: string; hint?: string}
 
 /** A cookie as a store lists it, without its value. `expiry` is Unix seconds; 0 is a session cookie. */
 export type SignInCookie = {name: string; domain: string; expiry: number}
@@ -14,7 +14,7 @@ export type SignInSource = {kind: 'keepfin'} | {kind: 'browser'; browser: string
 
 type Site = NonNullable<ReturnType<typeof signInSite>>
 
-const site = (s: Site): SignInSite => ({key: s.key, name: s.name, domains: Array.from(s.domains), sessionCookies: Array.from(s.sessionCookies), loginUrl: s.loginUrl})
+const site = (s: Site): SignInSite => ({key: s.key, name: s.name, domains: Array.from(s.domains), sessionCookies: Array.from(s.sessionCookies), loginUrl: s.loginUrl, hint: s.hint ?? undefined})
 
 const toCore = (s: SignInSource) => (s.kind === 'keepfin' ? new JsSignInSource('keepfin', null, null, null) : new JsSignInSource('browser', s.browser, s.profile ?? null, s.label))
 
@@ -64,3 +64,9 @@ export function retrySource<T extends SignInSource>(
   const index = signInRetry(url, errorAction ?? null, rule.autoOn, rule.manualOverride, available.map(toCore), tried.map(toCore))
   return index < 0 ? undefined : available[index]
 }
+
+/** Whether the page is the Google sign-in page, which refuses app windows (also when another site's login redirects there). */
+export const isGoogleSignIn = (url: string): boolean => signInIsGoogle(url)
+
+/** What to tell the person when the sign-in window reaches the Google sign-in page. */
+export const googleBlockedMessage = (): string => signInGoogleMessage()

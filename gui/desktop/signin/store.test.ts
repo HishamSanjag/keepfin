@@ -178,7 +178,7 @@ test('the requests: state lists every site without cookie data; open reports the
     }
     const state = (await handleSignIn('signInState', {op: 'signInState'} as Request, deps)) as {canKeep: boolean; sites: {key: string; name: string; signedIn: boolean}[]}
     assert.equal(state.canKeep, true)
-    assert.ok(state.sites.length >= 9 && state.sites.every((s) => Object.keys(s).sort().join() === 'key,name,signedIn'))
+    assert.ok(state.sites.length >= 9 && state.sites.every((s) => ['key,name,signedIn', 'hint,key,name,signedIn'].includes(Object.keys(s).sort().join())), 'only a plain hint besides the name and state')
     const outcome = (await handleSignIn('signInOpen', {op: 'signInOpen', site: 'instagram'} as Request, deps)) as {signedIn: boolean; state: {sites: {key: string; signedIn: boolean}[]}}
     assert.equal(outcome.signedIn, true)
     assert.equal(outcome.state.sites.find((s) => s.key === 'instagram')!.signedIn, true)

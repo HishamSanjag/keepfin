@@ -1,0 +1,13 @@
+{"description":"Whether a page is the Google sign-in page, which refuses sign-in in app windows (Keepfin's sign-in window then says so instead of leaving the person at the refusal). Also true when another site's login redirects there; other single sign-on pages are not affected.","cases": [
+{"name":"google-accounts","input":{"googleUrl":"https://accounts.google.com/ServiceLogin?service=youtube"},"expected":{"google":true}},
+{"name":"google-accounts-v3","input":{"googleUrl":"https://accounts.google.com/v3/signin/identifier?continue=https%3A%2F%2Fwww.youtube.com%2F"},"expected":{"google":true}},
+{"name":"youtube-redirecting-to-google","input":{"googleUrl":"https://accounts.google.com/signin/v2/identifier?service=youtube&passive=true"},"expected":{"google":true}},
+{"name":"uppercase-host","input":{"googleUrl":"HTTPS://Accounts.Google.com/signin"},"expected":{"google":true}},
+{"name":"youtube-itself","input":{"googleUrl":"https://www.youtube.com/"},"expected":{"google":false}},
+{"name":"google-search","input":{"googleUrl":"https://www.google.com/search?q=a"},"expected":{"google":false}},
+{"name":"other-sso-apple","input":{"googleUrl":"https://appleid.apple.com/auth/authorize"},"expected":{"google":false}},
+{"name":"other-sso-facebook","input":{"googleUrl":"https://www.facebook.com/login/"},"expected":{"google":false}},
+{"name":"look-alike","input":{"googleUrl":"https://accounts.google.com.evil.test/signin"},"expected":{"google":false}},
+{"name":"look-alike-prefix","input":{"googleUrl":"https://notaccounts.google.com/signin"},"expected":{"google":false}},
+{"name":"not-a-url","input":{"googleUrl":"not a url"},"expected":{"google":false}}
+]}

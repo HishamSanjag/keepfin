@@ -17,6 +17,8 @@ class SignInSite(
     /** Cookie names of which any one proves a live sign-in (tracking cookies do not). */
     val sessionCookies: List<String>,
     val loginUrl: String,
+    /** One plain line shown next to the site when its sign-in cannot happen in Keepfin's own window, or null. */
+    val hint: String? = null,
 )
 
 /** A cookie as stores list it, without its value. `expiry` is Unix seconds; 0 is a session cookie. */
@@ -32,7 +34,7 @@ object SignIn {
         SignInSite("x", "X", listOf("x.com", "twitter.com"), listOf(".x.com", ".twitter.com"), listOf("auth_token"), "https://x.com/i/flow/login"),
         SignInSite("tiktok", "TikTok", listOf("tiktok.com"), listOf(".tiktok.com"), listOf("sessionid"), "https://www.tiktok.com/login"),
         SignInSite("reddit", "Reddit", listOf("reddit.com", "redd.it"), listOf(".reddit.com"), listOf("reddit_session"), "https://www.reddit.com/login/"),
-        SignInSite("youtube", "YouTube", listOf("youtube.com", "youtu.be"), listOf(".youtube.com", ".google.com"), listOf("SAPISID", "__Secure-3PSID"), "https://accounts.google.com/ServiceLogin?service=youtube"),
+        SignInSite("youtube", "YouTube", listOf("youtube.com", "youtu.be"), listOf(".youtube.com", ".google.com"), listOf("SAPISID", "__Secure-3PSID"), "https://accounts.google.com/ServiceLogin?service=youtube", hint = "Needs Firefox: Google blocks sign-in here"),
         SignInSite("vimeo", "Vimeo", listOf("vimeo.com"), listOf(".vimeo.com"), listOf("vimeo"), "https://vimeo.com/log_in"),
         SignInSite("soundcloud", "SoundCloud", listOf("soundcloud.com"), listOf(".soundcloud.com"), listOf("oauth_token"), "https://soundcloud.com/signin"),
         SignInSite("pinterest", "Pinterest", listOf("pinterest.com", "pin.it"), listOf(".pinterest.com"), listOf("_pinterest_sess"), "https://www.pinterest.com/login/"),
@@ -52,6 +54,13 @@ object SignIn {
         c.name in site.sessionCookies && (c.expiry <= 0L || c.expiry > nowSeconds) &&
             site.domains.any { inDomain(c.domain.removePrefix("."), it.removePrefix(".")) }
     }
+
+    /** What Keepfin's sign-in window says when a page reaches Google's sign-in, which refuses sign-in in app windows. */
+    const val GOOGLE_BLOCKED_MESSAGE =
+        "Google doesn't allow signing in from this window. Sign in to YouTube in Firefox, and Keepfin will use that sign-in automatically."
+
+    /** Whether the page is Google's sign-in (accounts.google.com), also when another site's login redirects there. Other single sign-on pages are not affected. */
+    fun isGoogleSignIn(url: String): Boolean = Providers.host(url).removePrefix("www.") == "accounts.google.com"
 
     private fun inDomain(host: String, domain: String): Boolean = host == domain || host.endsWith(".$domain")
 

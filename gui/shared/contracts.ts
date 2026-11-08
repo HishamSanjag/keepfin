@@ -680,7 +680,7 @@ export type Operation =
 export type SignInState = {
   /** False where the operating system cannot encrypt a sign-in for storing (then signing in is not offered). */
   canKeep: boolean
-  sites: {key: string; name: string; signedIn: boolean}[]
+  sites: {key: string; name: string; signedIn: boolean; /** One plain line when the site sign-in cannot happen in Keepfin's own window. */ hint?: string}[]
 }
 
 /** What the sign-in window left behind when it was closed. */

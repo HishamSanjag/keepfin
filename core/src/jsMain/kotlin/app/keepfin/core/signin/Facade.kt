@@ -5,12 +5,12 @@ package app.keepfin.core.signin
 // The JavaScript surface of the sign-in core (see gui/shared/core/signin.ts). Cookies arrive as parallel arrays.
 
 @JsExport
-class JsSignInSite(val key: String, val name: String, val domains: Array<String>, val sessionCookies: Array<String>, val loginUrl: String)
+class JsSignInSite(val key: String, val name: String, val domains: Array<String>, val sessionCookies: Array<String>, val loginUrl: String, val hint: String?)
 
 @JsExport
 class JsSignInSource(val kind: String, val browser: String?, val profile: String?, val label: String?)
 
-private fun SignInSite.toJs() = JsSignInSite(key, name, domains.toTypedArray(), sessionCookies.toTypedArray(), loginUrl)
+private fun SignInSite.toJs() = JsSignInSite(key, name, domains.toTypedArray(), sessionCookies.toTypedArray(), loginUrl, hint)
 
 @JsExport
 fun signInSiteOf(url: String): JsSignInSite? = SignIn.siteOf(url)?.toJs()
@@ -46,3 +46,11 @@ fun signInRetry(url: String, errorAction: String?, autoOn: Boolean, manualOverri
     val chosen = SignIn.retry(url, errorAction, autoOn, manualOverride, list, tried.map(::core)) ?: return -1
     return list.indexOf(chosen)
 }
+
+/** Whether the page is Google's sign-in, which refuses app windows (see [SignIn.isGoogleSignIn]). */
+@JsExport
+fun signInIsGoogle(url: String): Boolean = SignIn.isGoogleSignIn(url)
+
+/** What to tell the person when the sign-in window reaches Google's sign-in. */
+@JsExport
+fun signInGoogleMessage(): String = SignIn.GOOGLE_BLOCKED_MESSAGE

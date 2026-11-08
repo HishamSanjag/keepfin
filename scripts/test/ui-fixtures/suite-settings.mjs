@@ -85,6 +85,18 @@ export async function registerSettingsSuite({test, sent}) {
     await region.getByText(/The window was closed before the sign-in finished/).waitFor()
   }, {fake: {signInWindow: 'closed'}})
 
+  await test('settings, Website sign-in: YouTube carries the Firefox hint, and the window reaching Google sign-in leaves the plain message here', async (page) => {
+    await open(page, 'Downloads')
+    const region = page.getByRole('region', {name: 'Website sign-in'})
+    await region.getByLabel('Site', {exact: true}).selectOption('youtube')
+    await region.getByText('Needs Firefox: Google blocks sign-in here').waitFor()
+    await region.getByLabel('Site', {exact: true}).selectOption('reddit')
+    assert.equal(await region.getByText('Needs Firefox: Google blocks sign-in here').count(), 0, 'other sites carry no hint')
+    await region.getByLabel('Site', {exact: true}).selectOption('youtube')
+    await region.getByRole('button', {name: 'Sign in…'}).click()
+    await region.getByText("Google doesn't allow signing in from this window. Sign in to YouTube in Firefox, and Keepfin will use that sign-in automatically.").waitFor()
+  }, {fake: {signInWindow: 'google'}})
+
   await test('settings, Website sign-in: with no password store on this PC Sign in… is off and says why', async (page) => {
     await open(page, 'Downloads')
     const region = page.getByRole('region', {name: 'Website sign-in'})

@@ -16,6 +16,7 @@ private fun str(o: JsonObject, key: String): String? = (o.members[key] as? JsonS
 private fun source(o: JsonObject) = SignInSource(str(o, "kind") ?: "", str(o, "browser"), str(o, "profile"), str(o, "label"))
 
 internal fun signinHandler(input: JsonObject): JsonValue {
+    str(input, "googleUrl")?.let { return obj("google" to app.keepfin.core.json.JsonBool(SignIn.isGoogleSignIn(it))) }
     if (input.members.containsKey("autoOn")) {
         fun list(key: String) = (input.members[key] as JsonArray).items.map { source(it as JsonObject) }
         fun flag(key: String) = (input.members.getValue(key) as app.keepfin.core.json.JsonBool).value

@@ -568,7 +568,7 @@
   // Keepfin's own sign-ins (the sign-in window). Option signInWindow: 'closed' = the window is closed before signing in; signedInTo: sites signed in at start.
   const signInSites = [['instagram', 'Instagram'], ['facebook', 'Facebook'], ['x', 'X'], ['tiktok', 'TikTok'], ['reddit', 'Reddit'], ['youtube', 'YouTube'], ['vimeo', 'Vimeo'], ['soundcloud', 'SoundCloud'], ['pinterest', 'Pinterest']]
   const signedIn = new Set(options.signedInTo || [])
-  const signInState = () => ({canKeep: options.canKeepSignIn !== false, sites: signInSites.map(([key, name]) => ({key, name, signedIn: signedIn.has(key)}))})
+  const signInState = () => ({canKeep: options.canKeepSignIn !== false, sites: signInSites.map(([key, name]) => ({key, name, signedIn: signedIn.has(key), ...(key === 'youtube' ? {hint: 'Needs Firefox: Google blocks sign-in here'} : {})}))})
   // options.signedIn: a download that used a sign-in the site asked for (its row says so quietly)
   if (options.signedIn)
     jobs.unshift(job({url: 'https://www.instagram.com/p/DfW56Yoim48/', title: 'Harbour photos', provider: 'Instagram', kind: 'gallery', label: '2 photos', status: 'downloading', percent: 30, signedIn: options.signedIn}))
@@ -2551,6 +2551,10 @@
         return signInState()
       case 'signInOpen': {
         const closed = options.signInWindow === 'closed'
+        if (options.signInWindow === 'google') {
+          await wait(200)
+          return {site: req.site, signedIn: false, message: "Google doesn't allow signing in from this window. Sign in to YouTube in Firefox, and Keepfin will use that sign-in automatically.", state: signInState()}
+        }
         await wait(closed ? 200 : 600)
         if (!closed) signedIn.add(req.site)
         const name = signInSites.find(([key]) => key === req.site)[1]

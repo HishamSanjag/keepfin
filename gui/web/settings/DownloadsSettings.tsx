@@ -61,6 +61,7 @@ function KeepfinSignIns({disabled}: {disabled: boolean}) {
   const signed = state.sites.filter((site) => site.signedIn)
   const open = state.sites.filter((site) => !site.signedIn)
   const chosen = open.some((site) => site.key === pick) ? pick : (open[0]?.key ?? '')
+  const hint = open.find((site) => site.key === chosen)?.hint
   const signIn = async () => {
     setBusy(true)
     setMessage('')
@@ -89,7 +90,7 @@ function KeepfinSignIns({disabled}: {disabled: boolean}) {
           title="Sign in to a site…"
           description={
             state.canKeep
-              ? "A window opens with the site's own sign-in page. Keepfin never sees your password, only that you are signed in."
+              ? `A window opens with the site's own sign-in page. Keepfin never sees your password, only that you are signed in.${hint ? ` ${hint}.` : ''}`
               : 'This computer has no password store to keep a sign-in in, so Keepfin cannot save one.'
           }
           control={

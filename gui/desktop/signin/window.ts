@@ -7,12 +7,13 @@
 //
 // Only main.ts imports Electron (scripts/check/check-boundaries.mjs), so the pieces used here arrive as `parts`, typed by
 // the small structural shapes below.
-import {siteByKey, signedIn, type SignInSite} from '../../shared/core/signin.js'
+import {siteByKey, signedIn, isGoogleSignIn, type SignInSite} from '../../shared/core/signin.js'
 import type {SaveOutcome, SignInStore, StoredCookie} from './store.js'
 
 export const SIGN_IN_PARTITION = 'persist:keepfin-signin'
 
-export type SignInResult = {signedIn: boolean; outcome: SaveOutcome | 'cancelled'}
+/** `blockedByGoogle`: the window reached the Google sign-in page, which refuses app windows, and was closed (ops.ts tells the person). */
+export type SignInResult = {signedIn: boolean; outcome: SaveOutcome | 'cancelled' | 'blockedByGoogle'}
 
 type ElectronCookie = {name: string; value: string; domain?: string; path?: string; secure?: boolean; httpOnly?: boolean; session?: boolean; expirationDate?: number}
 type Contents = {
@@ -56,11 +57,17 @@ const isWeb = (url: string) => {
 }
 
 /** Applies the window rules to a page and, recursively, to the pop-ups it opens. */
-function harden(contents: Contents) {
+function harden(contents: Contents, onGoogle: () => void) {
   contents.setWindowOpenHandler(({url}) =>
     isWeb(url) ? {action: 'allow', overrideBrowserWindowOptions: {width: 480, height: 680, autoHideMenuBar: true, webPreferences: {...secureWeb}}} : {action: 'deny'},
   )
-  contents.on('did-create-window', (child: {webContents: Contents}) => harden(child.webContents))
+  contents.on('did-create-window', (child: {webContents: Contents}) => harden(child.webContents, onGoogle))
+  // The Google sign-in page refuses app windows. Watching the address needs nothing inside the site's page (the window has no preload).
+  const watch = (event: {url?: string; isMainFrame?: boolean}, url?: unknown) => {
+    const target = typeof url === 'string' ? url : event.url
+    if (event.isMainFrame !== false && typeof target === 'string' && isGoogleSignIn(target)) onGoogle()
+  }
+  for (const name of ['did-start-navigation', 'did-redirect-navigation', 'did-navigate']) contents.on(name, watch)
   const onlyWeb = (event: {preventDefault(): void}, url: string) => {
     if (!isWeb(url)) event.preventDefault()
   }
@@ -127,7 +134,12 @@ export function signInWindows(parts: ElectronParts, store: SignInStore): SignInW
           show: true,
           webPreferences: {...secureWeb},
         })
-        harden(win.webContents)
+        let blocked = false
+        harden(win.webContents, () => {
+          if (blocked || win.isDestroyed()) return
+          blocked = true
+          win.close()
+        })
         // The title stays Keepfin's: a login page cannot rename the window that says whose sign-in this is.
         win.on('page-title-updated', (event: {preventDefault(): void}) => event.preventDefault())
         let autoClose: ReturnType<typeof setTimeout> | undefined
@@ -146,6 +158,7 @@ export function signInWindows(parts: ElectronParts, store: SignInStore): SignInW
           ses.cookies.removeListener('changed', onChange)
           void (async () => {
             try {
+              if (blocked) return resolve({signedIn: false, outcome: 'blockedByGoogle'})
               await ses.cookies.flushStore()
               const outcome = await store.save(site.key, await readSiteCookies(ses, site))
               resolve({signedIn: outcome === 'saved', outcome})
