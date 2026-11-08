@@ -12,6 +12,25 @@ class CookieExportTest {
         assertTrue(CookieExport.parse(null, ".x.com", 1).isEmpty())
     }
 
+    @Test fun sitesComeFromTheCoreTable() {
+        assertTrue("https://www.instagram.com" to ".instagram.com" in CookieExport.sites)
+        assertTrue("https://x.com" to ".x.com" in CookieExport.sites && "https://twitter.com" to ".twitter.com" in CookieExport.sites)
+        assertTrue("https://www.google.com" to ".google.com" in CookieExport.sites)
+    }
+
+    @Test fun signedInSitesNeedALiveSessionCookie() {
+        val file = CookieExport.HEADER +
+            ".instagram.com\tTRUE\t/\tTRUE\t5000\tsessionid\tsecret\n" +
+            ".instagram.com\tTRUE\t/\tTRUE\t5000\tcsrftoken\tx\n" +
+            "#HttpOnly_.reddit.com\tTRUE\t/\tTRUE\t5000\treddit_session\tsecret\n" +
+            ".tiktok.com\tTRUE\t/\tTRUE\t999\tsessionid\tsecret\n" +
+            ".google.com\tTRUE\t/\tTRUE\t5000\tSAPISID\tsecret\n" +
+            ".vimeo.com\tTRUE\t/\tTRUE\t5000\tpref\tx\n" +
+            "broken line\n"
+        assertEquals(setOf("instagram", "reddit", "youtube"), CookieExport.signedInSites(file, 1000))
+        assertTrue(CookieExport.signedInSites("", 1000).isEmpty())
+    }
+
     @Test fun netscapeLinesAreTabSeparated() {
         val line = CookieExport.line(CookieExport.Cookie(".youtube.com", "SID", "abc", true, 123))
         assertEquals(listOf(".youtube.com", "TRUE", "/", "TRUE", "123", "SID", "abc"), line.split('\t'))

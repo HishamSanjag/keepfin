@@ -23,6 +23,8 @@ internal data class JobRecord(
     val findVideo: Boolean = false,
     /** "Add to playlist" chosen in the review: when the job is saved, its library item joins this playlist (PlaylistJoin). */
     val joinPlaylist: String? = null,
+    /** A photo post: the private file name -> the public copy it was saved as. What "Save again" skips, and what the already-saved check reads. */
+    val photoSaves: Map<String, String> = emptyMap(),
 ) {
     val id get() = job.id
     val status get() = job.status
@@ -95,10 +97,12 @@ internal object JobCodec {
         is FormatRequest.Video -> JSONObject().put("type", "video").put("maxHeight", format.maxHeight).put("formatId", format.formatId)
             .put("audioFormatId", format.audioFormatId).put("fps", format.fps).put("codec", format.codec).put("container", format.container)
         is FormatRequest.Audio -> JSONObject().put("type", "audio").put("target", format.target).put("quality", format.quality).put("formatId", format.formatId)
+        is FormatRequest.Gallery -> JSONObject().put("type", "gallery").put("count", format.count).put("items", format.items?.let { JSONArray(it) })
     }
 
     fun decodeFormat(json: JSONObject?): FormatRequest = when (json?.optString("type")) {
         "audio" -> FormatRequest.Audio(json.optString("target", "mp3"), json.optString("quality", "best"), json.str("formatId"))
+        "gallery" -> FormatRequest.Gallery(json.optInt("count", 1), json.optJSONArray("items")?.let { items -> (0 until items.length()).map { items.getInt(it) } })
         else -> FormatRequest.Video(json?.optInt("maxHeight")?.takeIf { it > 0 }, json?.str("formatId"), json?.str("audioFormatId"),
             json?.optInt("fps")?.takeIf { it > 0 }, json?.optString("codec", "auto") ?: "auto", json?.optString("container", "mp4") ?: "mp4")
     }
@@ -165,11 +169,11 @@ internal object JobCodec {
             .put("attempt", job.attempt).put("match", encodeMatch(job.match))
             .put("group", encodeGroup(job.group)).put("retryCount", job.retryCount).put("retryAt", job.retryAt).put("errorDetail", job.errorDetail)
             .put("space", job.space).put("force", job.force).put("filesRemoved", job.filesRemoved)
-            .put("collectionId", job.collectionId).put("collectionIndex", job.collectionIndex).put("tags", JSONArray(job.tags))
+            .put("collectionId", job.collectionId).put("collectionIndex", job.collectionIndex).put("tags", JSONArray(job.tags)).put("signedIn", job.signedIn)
             .put("existing", job.existing?.let { JSONObject().put("itemId", it.itemId).put("uri", it.uri).put("space", it.space).put("by", it.by) })
             .put("format", encodeFormat(record.format)).put("options", encodeOptions(record.options))
             .put("outputTemplate", record.outputTemplate).put("publicFiles", JSONArray(record.publicFiles))
-            .put("galleryRepairError", record.galleryRepairError).put("attachTo", record.attachTo).put("attachToJob", record.attachToJob).put("findVideo", record.findVideo).put("joinPlaylist", record.joinPlaylist)
+            .put("galleryRepairError", record.galleryRepairError).put("attachTo", record.attachTo).put("attachToJob", record.attachToJob).put("findVideo", record.findVideo).put("joinPlaylist", record.joinPlaylist).put("photoSaves", JSONObject(record.photoSaves))
             // the one phase a finished job keeps: a music video waiting for its song is settled again after a restart
             .put("phase", job.phase?.takeIf { it == MusicVideoLink.WAITING })
             .put("source", record.source?.let { JSONObject().put("title", it.title).put("artist", it.artist).put("album", it.album).put("track", it.track).put("year", it.year).put("trackCount", it.trackCount) })
@@ -194,14 +198,15 @@ internal object JobCodec {
             // Absent in 0.4.x records: no space (today's folders), nothing existing, no override.
             space = json.str("space"), force = json.optBoolean("force"), filesRemoved = json.optBoolean("filesRemoved"),
             collectionId = json.str("collectionId"), collectionIndex = if (json.has("collectionIndex") && !json.isNull("collectionIndex")) json.optInt("collectionIndex").takeIf { it > 0 } else null,
-            tags = json.optJSONArray("tags").strings(),
+            tags = json.optJSONArray("tags").strings(), signedIn = json.str("signedIn"),
             existing = json.optJSONObject("existing")?.let { e -> json.optJSONObject("existing")?.str("uri")?.let { uri -> ExistingMatch(e.str("itemId"), uri, e.str("space") ?: "", e.str("by") ?: "metadata") } },
         )
         val source = json.optJSONObject("source")?.let {
             SourceTags(it.optString("title"), it.str("artist"), it.str("album"), it.optInt("track").takeIf { n -> n > 0 }, it.optInt("year").takeIf { n -> n > 0 }, it.optInt("trackCount").takeIf { n -> n > 0 })
         }
         return JobRecord(job, decodeFormat(json.optJSONObject("format")), decodeOptions(json.optJSONObject("options")), json.str("outputTemplate"),
-            json.optJSONArray("publicFiles").strings(), source, json.str("galleryRepairError"), json.str("attachTo"), json.str("attachToJob"), json.optBoolean("findVideo"), json.str("joinPlaylist"))
+            json.optJSONArray("publicFiles").strings(), source, json.str("galleryRepairError"), json.str("attachTo"), json.str("attachToJob"), json.optBoolean("findVideo"), json.str("joinPlaylist"),
+            photoSaves = json.optJSONObject("photoSaves")?.let { saves -> saves.keys().asSequence().mapNotNull { name -> saves.optString(name).takeIf(String::isNotEmpty)?.let { name to it } }.toMap() } ?: emptyMap())
     }
 }
 

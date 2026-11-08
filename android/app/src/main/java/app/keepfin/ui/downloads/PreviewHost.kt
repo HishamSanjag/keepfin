@@ -14,11 +14,9 @@ import app.keepfin.MediaInfo
 import app.keepfin.MusicVideoLookup
 import app.keepfin.ui.Capture
 import app.keepfin.ui.CollectionReview
-import app.keepfin.ui.Destination
 import app.keepfin.ui.FormatChoice
 import app.keepfin.ui.StudioViewModel
 import app.keepfin.ui.UiTags
-import app.keepfin.ui.SubPage
 import app.keepfin.ui.devices.DownloadTarget
 import app.keepfin.ui.devices.SendJob
 import app.keepfin.ui.devices.rememberDownloadTargets
@@ -43,15 +41,20 @@ fun PreviewHost(vm: StudioViewModel) {
     val showing = review != null || (vm.reviewOpen && capture !is Capture.Empty)
     if (!showing) return
     val targets = rememberDownloadTargets()
+    val scope = rememberCoroutineScope()
     // Decided when called: the sheet keeps the first lambda it gets for swipe and Back, and it opens while the link is still read
     PreviewSheet(onClose = { if (vm.collectionOpen) vm.collectionOpen = false else if (vm.capture is Capture.Inspecting) vm.cancelInspection() else vm.closeReview() }) { close ->
         when {
             review != null -> Column(Modifier.fillMaxSize().testTag(UiTags.COLLECTION)) { ListPreview(vm, review, targets, close) }
+            capture is Capture.Single && capture.media.gallery != null -> PhotoPreview(
+                capture.media, vm.choice, { vm.choice = it }, vm.saveToFor(capture.media.webpageUrl ?: capture.media.url, capture.media.uploader), vm.adding, { vm.download() }, close,
+                targets, { target -> scope.sendTo(vm, target, listOf(SendJob(capture.media.webpageUrl ?: capture.media.url, vm.choice.request(capture.media))), vm.options, capture.media.title) { vm.clearDraft() } },
+            )
             capture is Capture.Single -> SinglePreview(vm, capture.media, targets, close)
             capture is Capture.Batch -> LinksPreview(vm, capture, targets, close)
             capture is Capture.Inspecting -> ReadingMoment(ReviewReading(capture.urls, null, vm::cancelInspection, vm::inspect) {}, close)
             capture is Capture.Failed -> ReadingMoment(
-                ReviewReading(listOf(capture.url), capture.message, vm::closeReview, vm::inspect) { vm.navigate(Destination.SETTINGS); vm.open(SubPage.SIGN_IN) }, close,
+                ReviewReading(listOf(capture.url), capture.message, vm::closeReview, vm::inspect, capture.signInSite) { vm.signInTo(capture.signInKey) }, close,
             )
         }
     }

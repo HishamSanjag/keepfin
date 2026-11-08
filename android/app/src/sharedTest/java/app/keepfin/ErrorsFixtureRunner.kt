@@ -54,6 +54,7 @@ object ErrorsFixtureRunner {
                 if (!noToolNames) throw AssertionError("$name: a user-facing message names an external tool: ${analysis.message}")
                 obj("class" to analysis.errorClass.wire, "retry" to analysis.retry.wire, "noToolNames" to noToolNames)
             }
+            "suggestsGallery" -> obj("suggests" to Errors.suggestsGallery(text))
             "retry" -> {
                 val decision = RetryPolicy.next(input.optInt("retriesUsed", 0), text, input.optBoolean("crashed", false))
                 if (decision == null) JSONObject.NULL

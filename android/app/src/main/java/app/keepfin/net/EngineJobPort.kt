@@ -6,6 +6,7 @@ import app.keepfin.EngineApi
 import app.keepfin.FormatRequest
 import app.keepfin.InspectResult
 import app.keepfin.MediaInfo
+import app.keepfin.PhotoPosts
 import app.keepfin.SubtitleOptions
 import app.keepfin.VideoOption
 import java.util.concurrent.ConcurrentHashMap
@@ -74,6 +75,8 @@ class EngineJobPort(
 
     override fun create(jobId: String, url: String, format: JSONObject, options: JSONObject?, space: String?) {
         if (recs.containsKey(jobId)) return
+        // a malformed photo choice is refused here; the positions are checked against the post once it is read
+        if (format.optString("type") == "gallery") itemsOf(format)
         val rec = Rec(jobId, url, format, options, space, now())
         recs[jobId] = rec
         pool.execute { prepare(rec) }
@@ -89,8 +92,8 @@ class EngineJobPort(
                 val media = result.media
                 rec.media = media
                 rec.title = media.title.ifEmpty { null }
-                val request = formatOf(rec.format)
-                rec.label = labelOf(request)
+                val request = formatOf(rec.format, media)
+                rec.label = labelOf(request, media)
                 rec.expected = estimate(media, request)
             }
             if (!rec.consented) {
@@ -114,7 +117,7 @@ class EngineJobPort(
     private fun start(rec: Rec) {
         val media = rec.media ?: return
         val before = engine.jobs.value.map { it.id }.toSet()
-        engine.enqueue(media, formatOf(rec.format), optionsOf(rec.options), rec.space)
+        engine.enqueue(media, formatOf(rec.format, media), optionsOf(rec.options), rec.space)
         // the engine makes its own id: the job is the new one for this link
         val deadline = System.currentTimeMillis() + 8000
         while (System.currentTimeMillis() < deadline) {
@@ -177,7 +180,16 @@ class EngineJobPort(
 
     // ---- translating the request ----------------------------------------------------------------------------------------------
 
-    private fun formatOf(f: JSONObject): FormatRequest = when (f.optString("type")) {
+    /** The photos a device chose from a post (positions, null = every photo); anything but a list of whole numbers is refused. */
+    private fun itemsOf(f: JSONObject): List<Int>? {
+        if (!f.has("items") || f.isNull("items")) return null
+        val array = f.optJSONArray("items") ?: throw IllegalArgumentException("Choose at least one photo from this post.")
+        if (array.length() == 0) throw IllegalArgumentException("Choose at least one photo from this post.")
+        return (0 until array.length()).map { i -> (array.get(i) as? Int) ?: throw IllegalArgumentException("Choose at least one photo from this post.") }
+    }
+
+    private fun formatOf(f: JSONObject, media: MediaInfo): FormatRequest = media.gallery?.let { PhotoPosts.fromDevice(it.count, if (f.optString("type") == "gallery") itemsOf(f) else null) } ?: when (f.optString("type")) {
+        "gallery" -> throw IllegalArgumentException("This link has no photos to download.")
         "audio" -> FormatRequest.Audio(f.optString("target", "mp3"), f.optString("quality", "best"), null)
         else -> FormatRequest.Video(
             maxHeight = if (f.has("maxHeight") && !f.isNull("maxHeight")) f.optInt("maxHeight") else null,
@@ -203,9 +215,10 @@ class EngineJobPort(
         )
     }
 
-    private fun labelOf(f: FormatRequest): String = when (f) {
+    private fun labelOf(f: FormatRequest, media: MediaInfo): String = when (f) {
         is FormatRequest.Audio -> f.target.uppercase()
         is FormatRequest.Video -> f.maxHeight?.let { "${it}p" } ?: "Best quality"
+        is FormatRequest.Gallery -> PhotoPosts.label(f, media)
     }
 
     private fun estimate(media: MediaInfo, f: FormatRequest): Long? = when (f) {
@@ -214,6 +227,7 @@ class EngineJobPort(
             val fit = media.video.filter { f.maxHeight == null || it.height <= f.maxHeight }
             (fit.maxByOrNull(VideoOption::height)?.size) ?: media.video.mapNotNull(VideoOption::size).minOrNull()
         }
+        is FormatRequest.Gallery -> null
     }
 }
 

@@ -164,3 +164,10 @@ test('a fresh library has Favorites; a library without it gets it once; a list w
   assert.throws(() => validateSpaces(without), /Downloads, Music, Videos and Favorites can be renamed but not removed/)
   assert.equal(validateSpaces(fresh.spaces).length, 4)
 })
+test('"Use a sign-in when a site asks for one" is on by default, validates, and old settings files load with it on', () => {
+  assert.equal(base().autoSignIn, true)
+  assert.equal(loadSettings(base(), {concurrency: 2}).autoSignIn, true)
+  assert.equal(mergeSettings(base(), {autoSignIn: false}).autoSignIn, false)
+  assert.equal(mergeSettings(mergeSettings(base(), {autoSignIn: false}), {autoSignIn: 'no' as never}).autoSignIn, false)
+  assert.equal(loadSettings(base(), {autoSignIn: false}).autoSignIn, false)
+})

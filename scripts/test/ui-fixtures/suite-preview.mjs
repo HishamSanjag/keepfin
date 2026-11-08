@@ -10,7 +10,10 @@ const YTM_SONG = 'https://music.youtube.com/watch?v=ytm1'
 const PLAYLIST = 'https://www.youtube.com/playlist?list=PLfocus'
 const ALBUM = 'https://open.spotify.com/album/1A2B3C4D5E6F'
 const GALLERY = 'https://www.instagram.com/p/C9harbour/'
+const CAROUSEL = 'https://www.instagram.com/p/C9carousel/'
 const PRIVATE = 'https://www.youtube.com/watch?v=private01'
+// an Instagram post that is only readable once Keepfin is signed in to Instagram (the fake bridge)
+const LOCKED = 'https://www.instagram.com/p/Locked01/'
 const V2 = {libraryScenario: 'v2'}
 
 export async function registerPreviewSuite({test, calls, last, sent, field, capture}) {
@@ -145,6 +148,42 @@ export async function registerPreviewSuite({test, calls, last, sent, field, capt
     assert.equal((await last(page, 'enqueue')).format.type, 'gallery')
   })
 
+  await test('preview, photo post: a photo left out is missing from the request and the button says the count', async (page) => {
+    await field(page).fill(GALLERY)
+    const dialog = win(page)
+    const button = page.locator('.download-btn')
+    await button.waitFor()
+    assert.equal(await dialog.getByRole('button', {name: /^Photo \d/}).count(), 8)
+    assert.match(await button.textContent(), /^Download 8 photos$/)
+    await dialog.getByRole('button', {name: 'Photo 3'}).click()
+    assert.equal(await dialog.getByRole('button', {name: 'Photo 3'}).getAttribute('aria-pressed'), 'false')
+    await dialog.getByText('7 of 8 chosen. Click a photo to leave it out.').waitFor()
+    assert.match(await button.textContent(), /^Download 7 photos$/)
+    await button.click()
+    await sent(page, 'enqueue')
+    assert.deepEqual((await last(page, 'enqueue')).format, {type: 'gallery', items: [1, 2, 4, 5, 6, 7, 8]})
+  })
+
+  await test('preview, photo post with a video: leaving a photo out says items; no photo chosen disables Download', async (page) => {
+    await field(page).fill(CAROUSEL)
+    const dialog = win(page)
+    const button = page.locator('.download-btn')
+    await button.waitFor()
+    assert.match(await button.textContent(), /^Download 7 items$/)
+    await dialog.getByRole('button', {name: 'Photo 2'}).click()
+    await dialog.getByText('6 of 7 chosen.').waitFor()
+    assert.match(await button.textContent(), /^Download 6 items$/)
+    for (const name of ['Photo 1', 'Video 4', 'Photo 3', 'Photo 5', 'Photo 6', 'Photo 7']) await dialog.getByRole('button', {name}).click()
+    await dialog.getByText('0 of 7 chosen.').waitFor()
+    assert.equal(await button.isDisabled(), true)
+    await dialog.getByRole('button', {name: 'Photo 2'}).click()
+    await dialog.getByRole('button', {name: 'Photo 3'}).click()
+    assert.match(await button.textContent(), /^Download 2 photos$/)
+    await button.click()
+    await sent(page, 'enqueue')
+    assert.deepEqual((await last(page, 'enqueue')).format, {type: 'gallery', items: [2, 3]})
+  })
+
   await test('preview, reading: the window opens at once with placeholders and Cancel; Cancel says it could not be read, and Try again reads it again', async (page) => {
     await field(page).fill(YT)
     const dialog = page.getByRole('dialog', {name: /^Reading formats from youtube\.com/})
@@ -160,14 +199,49 @@ export async function registerPreviewSuite({test, calls, last, sent, field, capt
   }, {fake: {latency: 4}})
 
   await test('preview, could not read: the message, Try again, and Sign in when that can help', async (page) => {
-    await field(page).fill(PRIVATE)
+    // example.com is no site Keepfin can sign in to: the plain message with Try again, no sign-in button for a site
+    await field(page).fill('https://example.com/not-media')
     const problem = page.getByRole('dialog', {name: 'This link could not be read'})
-    await problem.getByText(/Sign in required: this video is private/).waitFor()
+    await problem.getByText(/No video or images were found/).waitFor()
     assert.equal(await problem.getByRole('tab').count(), 0, 'no tabs on a link that could not be read')
     await problem.getByRole('button', {name: 'Try again'}).waitFor()
-    await problem.getByRole('button', {name: 'Sign in'}).click()
-    await page.getByRole('navigation', {name: 'Settings sections'}).waitFor()
-    assert.equal(await page.getByRole('dialog').count(), 0, 'the window goes away with the page')
+    assert.equal(await problem.getByRole('button', {name: /^Sign in to/}).count(), 0)
+  })
+
+  await test('preview, sign-in needed (design A): the site says so, Download is off, and Sign in to the site opens the window and reads the link again', async (page) => {
+    await field(page).fill(LOCKED)
+    const dialog = page.getByRole('dialog', {name: 'Instagram link'})
+    await dialog.getByText('Instagram shows this post only to signed-in people.').waitFor()
+    await dialog.getByText(/Your password stays with Instagram/).waitFor()
+    assert.equal(await dialog.getByRole('tab').count(), 0)
+    assert.equal(await dialog.locator('.download-btn').isDisabled(), true, 'Download stays off until signed in')
+    await dialog.getByRole('button', {name: 'Not now'}).waitFor()
+    await dialog.getByRole('button', {name: 'Sign in to Instagram'}).click()
+    assert.deepEqual((await last(page, 'signInOpen')).site, 'instagram', 'only the site key is sent')
+    // signed in: the link is read again by itself and the photos are shown
+    await page.getByRole('dialog').getByRole('tab', {name: /^Photos · \d+/}).waitFor()
+    assert.equal((await calls(page, 'inspect')).length, 2)
+    assert.equal(await page.locator('.download-btn').isEnabled(), true)
+  })
+
+  await test('preview, sign-in needed: Not now keeps the honest message; a window closed before signing in says so and keeps Download off', async (page) => {
+    await field(page).fill(LOCKED)
+    const dialog = page.getByRole('dialog', {name: 'Instagram link'})
+    await dialog.getByRole('button', {name: 'Sign in to Instagram'}).click()
+    await dialog.getByText(/The window was closed before the sign-in finished/).waitFor()
+    assert.equal(await dialog.locator('.download-btn').isDisabled(), true)
+    assert.equal((await calls(page, 'inspect')).length, 1, 'no new look when nothing was signed in')
+    await dialog.getByRole('button', {name: 'Not now'}).click()
+    const problem = page.getByRole('dialog', {name: 'This link could not be read'})
+    await problem.getByText(/Sign-in required/).waitFor()
+    await problem.getByRole('button', {name: 'Try again'}).waitFor()
+  }, {fake: {signInWindow: 'closed'}})
+
+  await test('preview, sign-in needed on a video link: the same design, for the site of the link', async (page) => {
+    await field(page).fill(PRIVATE)
+    const dialog = page.getByRole('dialog', {name: 'YouTube link'})
+    await dialog.getByText('YouTube shows this post only to signed-in people.').waitFor()
+    await dialog.getByRole('button', {name: 'Sign in to YouTube'}).waitFor()
   })
 
   await test('preview, several links: Quality for all changes every link, a link that failed has Try again, Dismiss all discards', async (page) => {

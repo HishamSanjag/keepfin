@@ -10,6 +10,7 @@ import {
   errorsDetail,
   errorsLastErrorLine,
   errorsRetryNext,
+  errorsSuggestsGallery,
   errorsScrub,
 } from '../../../build/core-js/keepfin-core.mjs'
 
@@ -76,3 +77,6 @@ export const botCheckBackoffMs: readonly number[] = [...constants.botCheckBackof
 export const unavailableMessage: string = constants.unavailableMessage
 export const restrictedMusicMessage: string = constants.restrictedMusicMessage
 export const restrictedMessage: string = constants.restrictedMessage
+
+/** True when the gallery engine might succeed where the download engine could not. */
+export const suggestsGallery = (text: string): boolean => errorsSuggestsGallery(text)

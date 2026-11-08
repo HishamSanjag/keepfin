@@ -207,7 +207,7 @@ const screens = [
     fake: {simulate: false},
     setup: async (page) => {
       await field(page).fill(PRIVATE)
-      await page.getByRole('dialog', {name: 'This link could not be read'}).getByRole('button', {name: 'Sign in'}).waitFor()
+      await page.getByRole('dialog', {name: 'YouTube link'}).getByRole('button', {name: 'Sign in to YouTube'}).waitFor()
     },
   },
   {

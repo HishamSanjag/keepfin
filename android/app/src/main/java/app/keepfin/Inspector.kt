@@ -1,9 +1,13 @@
 package app.keepfin
 
 import android.os.SystemClock
+import app.keepfin.core.errors.Errors
 import app.keepfin.core.formats.Title
+import app.keepfin.core.gallery.Gallery
+import app.keepfin.core.gallery.GalleryRead
 import app.keepfin.core.formats.Unavailable
 import app.keepfin.core.music.Match
+import app.keepfin.core.signin.SignIn
 import com.yausername.youtubedl_android.YoutubeDLRequest
 import org.json.JSONObject
 import java.io.File
@@ -79,8 +83,11 @@ internal class Inspector(private val engine: MediaEngine) {
         engine.useEngineCache(this)
     }
 
+    /** Whether the inspection running on this thread uses Keepfin's sign-in: requests go signed out first and the retry turns it on. */
+    private val signedIn = ThreadLocal.withInitial { false }
+
     private fun <T> withCookies(block: (File?) -> T): T {
-        val snapshot = engine.cookieSnapshot()
+        val snapshot = if (signedIn.get()) engine.cookieSnapshot() else null
         try { return block(snapshot) } finally { snapshot?.delete() }
     }
 
@@ -90,13 +97,13 @@ internal class Inspector(private val engine: MediaEngine) {
             cache[url]?.takeIf { SystemClock.elapsedRealtime() - it.second < CACHE_MS }?.let { return it.first }
         }
         val started = epoch.get()
-        val result = when {
-            Providers.musicSource(url) != null -> inspectMusic(url, session, timeoutMs)
-            Providers.isCollectionUrl(url) -> InspectResult.Collection(url, null)
-            else -> try { inspectMedia(url, url, session, timeoutMs) } catch (error: Exception) {
-                if (engine.metadata.cancelled(session) || !Restriction.isUnavailable(error.message)) throw error
-                inspectRestricted(url, session, timeoutMs, error)
-            }
+        val result = try { inspectOnce(url, session, timeoutMs) } catch (error: Exception) {
+            if (engine.metadata.cancelled(session)) throw error
+            // a site that asks for a sign-in gets one try with Keepfin's own; the media remembers it, so the download goes straight to it
+            val source = engine.signInFor(url, error.message.orEmpty(), alreadySigned = false, signInWall = error is SignInNeeded) ?: throw error
+            signedIn.set(true)
+            try { inspectOnce(url, session, timeoutMs).let { if (it is InspectResult.Media) InspectResult.Media(it.media.copy(signedIn = SignIn.notice(source))) else it } }
+            finally { signedIn.set(false) }
         }
         check(started == epoch.get()) { "Cookies changed during inspection. Inspect this link again." }
         synchronized(lock) {
@@ -104,6 +111,22 @@ internal class Inspector(private val engine: MediaEngine) {
             cache[url] = result to SystemClock.elapsedRealtime()
         }
         return result
+    }
+
+    private fun inspectOnce(url: String, session: String, timeoutMs: Long): InspectResult {
+        return when {
+            Providers.musicSource(url) != null -> inspectMusic(url, session, timeoutMs)
+            Providers.isGalleryHost(url) -> inspectGalleryHost(url, session, timeoutMs)
+            Providers.isCollectionUrl(url) -> InspectResult.Collection(url, null)
+            else -> try { inspectMedia(url, url, session, timeoutMs) } catch (error: Exception) {
+                if (engine.metadata.cancelled(session)) throw error
+                when {
+                    Restriction.isUnavailable(error.message) -> inspectRestricted(url, session, timeoutMs, error)
+                    Errors.suggestsGallery(error.message.orEmpty()) -> inspectPhotosAfter(url, session, error)
+                    else -> throw error
+                }
+            }
+        }
     }
 
     private fun inspectMedia(url: String, cacheKey: String, session: String, timeoutMs: Long): InspectResult = withCookies { cookies ->
@@ -122,6 +145,33 @@ internal class Inspector(private val engine: MediaEngine) {
             temporary.renameTo(target)
         } catch (_: Exception) { /* The info cache only speeds up downloads. */ }
         InspectResult.Media(media)
+    }
+
+    /** A photo post: the gallery engine lists its files and the shared core reads the listing. */
+    private fun inspectPhotos(url: String, session: String): InspectResult = withCookies { cookies ->
+        val listing = engine.galleryEngine.inspect(url, cookies?.absolutePath, cancelled = { engine.metadata.cancelled(session) })
+        check(!engine.metadata.cancelled(session)) { "Inspection cancelled. Ready items are kept." }
+        when (val read = Gallery.read(listing, url)) {
+            is GalleryRead.Post -> InspectResult.Media(PhotoPosts.media(read, url))
+            is GalleryRead.Failed -> throw PhotoPosts.failure(read.message, url)
+            GalleryRead.Empty -> throw IllegalStateException("This link has no downloadable video or images.")
+        }
+    }
+
+    /** Sites that mostly carry images: the gallery engine first, then the download engine (Imgur gifv and Tumblr videos are videos). */
+    private fun inspectGalleryHost(url: String, session: String, timeoutMs: Long): InspectResult = try {
+        inspectPhotos(url, session)
+    } catch (error: Exception) {
+        if (engine.metadata.cancelled(session) || error is SignInNeeded) throw error
+        try { inspectMedia(url, url, session, timeoutMs) } catch (_: Exception) { throw error }
+    }
+
+    /** The download engine found no video at [url]: its photos, if any. A sign-in wall there is a better answer than "no video". */
+    private fun inspectPhotosAfter(url: String, session: String, original: Exception): InspectResult = try {
+        inspectPhotos(url, session)
+    } catch (error: Exception) {
+        if (engine.metadata.cancelled(session) || error is SignInNeeded) throw error
+        throw original
     }
 
     /**
@@ -229,6 +279,7 @@ internal class Inspector(private val engine: MediaEngine) {
         var state = "completed"
         var error: String? = null
         var truncated = false
+        var rawFailure: String? = null
         if (Providers.musicSource(url) != null) {
             try {
                 val collection = resolver.resolve(url, start, end)
@@ -241,7 +292,14 @@ internal class Inspector(private val engine: MediaEngine) {
                 truncated = collection.total?.let { it > end } ?: (collection.source != "deezer" && collection.tracks.size > end)
             } catch (e: IllegalStateException) { if (e.message?.startsWith("Cookies changed") == true) throw e; state = "failed"; error = ErrorMessages.friendly(e.message) }
             catch (e: Exception) { state = "failed"; error = ErrorMessages.friendly(e.message) }
-        } else withCookies { cookies ->
+        } else for (pass in 0..1) {
+            // signed out first; a page that failed asking for a sign-in (and loaded nothing) is read once more with Keepfin's own
+            if (pass == 1) {
+                if (rawFailure == null || session.entries.isNotEmpty() || engine.signInFor(url, rawFailure, alreadySigned = false) == null) break
+                state = "completed"; error = null; truncated = false
+            }
+            signedIn.set(pass == 1)
+            try { withCookies { cookies ->
             val request = request(url, cookies)
             request.addOption("--flat-playlist"); request.addOption("--lazy-playlist"); request.addOption("--dump-json")
             request.addOption("--playlist-start", start.toString()); request.addOption("--playlist-end", (end + 1).toString())
@@ -267,10 +325,12 @@ internal class Inspector(private val engine: MediaEngine) {
             } catch (e: Exception) {
                 if (e.message?.startsWith("Cookies changed") == true) throw e
                 val message = e.message.orEmpty()
+                rawFailure = message
                 state = if (message.contains("cancelled")) "cancelled" else "failed"
                 error = if (message.contains("timed out")) "Discovery stopped after ${PAGE_DEADLINE_MS / 1000} s. Loaded items are kept; try Load more or retry."
                     else if (state == "cancelled") "Discovery cancelled. Loaded items are kept." else ErrorMessages.friendly(message)
             }
+            } } finally { signedIn.set(false) }
         }
         check(session.epoch == epoch.get()) { "Cookies changed. Inspect the playlist again." }
         return synchronized(lock) {

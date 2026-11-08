@@ -52,6 +52,10 @@ object SpaceLogic {
     fun folderPath(root: StorageRoot, space: Space, sub: String): String =
         listOf(root.dir, space.folder, sub).filter { it.isNotEmpty() }.joinToString("/")
 
+    /** Folder (no trailing slash) under Pictures for the photos of [space] and [sub], e.g. "Pictures/Keepfin/Instagram". */
+    fun picturesPath(space: Space, sub: String): String =
+        listOf("Pictures", space.folder, sub).filter { it.isNotEmpty() }.joinToString("/")
+
     /** The space owning a MediaStore RELATIVE_PATH ("Music/Keepfin Music/Album/") and the sub-folder inside it; longest folder wins. */
     fun spaceOf(relativePath: String, spaces: List<Space>): Pair<Space, String>? {
         val parts = relativePath.trim('/').split('/').filter { it.isNotEmpty() }

@@ -25,6 +25,7 @@ import {cleanSongTitle, lyricsOutcomeText, normalizeLyricsKey, type LyricsOutcom
 import {lookupMusicVideo} from '../engine/music.js'
 import type {StoredJob} from '../migrate.js'
 import type {QueueCore} from './core.js'
+import {earlierPhotos} from './photos.js'
 
 /** The id of a YouTube video the find step offered (11 characters), or an error. */
 export const musicVideoId = (input: unknown): string => {
@@ -130,7 +131,9 @@ export class MusicExtras {
   async existingRecording(job: StoredJob): Promise<ExistingMatch | undefined> {
     const library = this.core.options.library
     const space = this.core.jobSpace(job)
-    if (!library || !space?.skipExisting || job.force || job.format.type === 'gallery') return
+    // a photo post is "already there" when an earlier job of this app saved the same photos and every file is still on disk (Download anyway overrides)
+    if (library && space && !job.force && job.format.type === 'gallery') return (await earlierPhotos(job, this.core.jobs()))?.match
+    if (!library || !space?.skipExisting || job.force) return
     const hit = library.findExisting(space.id, this.probeFor(job))
     if (!hit) return
     // The match must still exist on disk, or the download would be skipped for a file that is gone.

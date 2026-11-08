@@ -1,6 +1,6 @@
 {
   "name": "keepfin",
-  "version": "1.0.2",
+  "version": "1.1.0",
   "description": "Keepfin: a desktop and Android companion for saving the media you choose",
   "productName": "Keepfin",
   "type": "module",
@@ -29,13 +29,14 @@
     "desktop": "npm run gui:build && electron .",
     "desktop:pack": "npm run gui:build && npm run tools:fetch && electron-builder --dir",
     "desktop:build": "npm run gui:build && npm run tools:fetch && electron-builder",
-    "android:build": "npm run icons:build && node scripts/build/android-build.mjs",
+    "android:build": "npm run icons:build && npm run gallery:fetch && node scripts/build/android-build.mjs",
     "releases:organize": "node scripts/release/organize-releases.mjs",
     "engine:test": "npm run core:build && tsx scripts/test/smoke-engine.ts",
     "desktop:test": "node scripts/test/smoke-desktop.mjs",
     "library:test": "node scripts/test/library-smoke.mjs",
     "check": "npm run sizes && npm run check:boundaries && npm run check:apis && npm run check:links && npm run gui:typecheck && npm run gui:test && npm run gui:build",
     "tools:fetch": "node scripts/build/fetch-tools.mjs",
+    "gallery:fetch": "node scripts/build/fetch-gallery-python.mjs",
     "gui:flows-test": "node scripts/test/smoke-ui-flows.mjs",
     "gui:progress-test": "node scripts/test/smoke-ui-progress.mjs",
     "gui:layout-test": "node scripts/test/smoke-ui-layout.mjs",
@@ -88,6 +89,10 @@
     "typescript": "^7.0.2",
     "vite": "^8.3.3",
     "webdav-server": "^2.6.3"
+  },
+  "overrides": {
+    "minimatch@^10.2.5": "^11.0.1",
+    "minimatch@^9.0.3": "^11.0.1"
   },
   "private": true,
   "contributors": [

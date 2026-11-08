@@ -177,4 +177,12 @@ class JobStoreTest {
     @Test fun v1RecordsHaveNoGroup() {
         assertTrue(JobCodec.decodeFile(v1).all { it.job.group == null })
     }
+
+    @Test fun signInRowTextSurvivesRoundTripAndOldRecordsHaveNone() {
+        val base = JobCodec.decodeFile(v1)[0]
+        val back = JobCodec.decodeFile(JobCodec.encodeFile(listOf(base.copy(job = base.job.copy(signedIn = "Signed in"))))).single()
+        assertEquals("Signed in", back.job.signedIn)
+        assertNull(JobCodec.decodeFile(JobCodec.encodeFile(listOf(base))).single().job.signedIn)
+        assertNull(JobCodec.decodeFile(v1).first().job.signedIn)
+    }
 }

@@ -56,7 +56,7 @@
           "id": "sign-in",
           "title": "Private, age-restricted or members-only videos",
           "summary": "Sign in once inside Keepfin and those downloads work like any other.",
-          "steps": ["Open Settings › Downloads and go to the sign-in settings.", "On Android, sign in to the site in Keepfin's browser. On Windows, pick the browser you are signed in with.", "Try the download again."],
+          "steps": ["Open Settings › Downloads and go to the sign-in settings.", "Sign in to the site in the window Keepfin opens (Settings › Downloads › Website sign-in › Sign in to a site…, or the Sign in button in the preview of a link that needs it). On Windows you can also pick the browser you are signed in with.", "Try the download again.", "Keepfin tries your sign-in by itself when a site asks for one, and the download says so. To turn that off: Settings › Downloads › Website sign-in › Use a sign-in when a site asks for one."],
           "try": "settings"
         },
         {

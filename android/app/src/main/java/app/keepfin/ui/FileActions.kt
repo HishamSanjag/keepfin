@@ -16,7 +16,7 @@ object FileActions {
     fun mime(job: Job, file: File?): String {
         val ext = file?.extension?.lowercase().orEmpty()
         return MimeTypeMap.getSingleton().getMimeTypeFromExtension(ext)
-            ?: if (job.kind == MediaKind.AUDIO) "audio/*" else "video/*"
+            ?: when (job.kind) { MediaKind.AUDIO -> "audio/*"; MediaKind.PHOTOS -> "image/*"; MediaKind.VIDEO -> "video/*" }
     }
 
     private fun resolve(context: Context, engine: EngineApi, job: Job): Pair<Uri, String> {

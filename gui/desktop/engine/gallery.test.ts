@@ -1,6 +1,7 @@
 import {test} from 'node:test'
 import assert from 'node:assert/strict'
-import {galleryInfo} from './gallery.js'
+import {galleryArgs, galleryInfo} from './gallery.js'
+import {chosenRange, validateGalleryRequest} from '../../shared/core/gallery.js'
 import {EngineError} from './ytdlp.js'
 
 const POST = 'https://www.instagram.com/p/DfW56Yoim48/'
@@ -26,4 +27,27 @@ test('images are read as before', () => {
   ]
   const media = galleryInfo(output, POST)
   assert.equal(media.gallery?.count, 2)
+})
+
+test('a gallery request names the chosen photos: checked against the post, an all-chosen list is dropped', () => {
+  assert.deepEqual(validateGalleryRequest({type: 'gallery'}, 5), {type: 'gallery'})
+  assert.deepEqual(validateGalleryRequest({type: 'gallery', items: [4, 1, 2]}, 5), {type: 'gallery', items: [4, 1, 2]})
+  assert.deepEqual(validateGalleryRequest({type: 'gallery', items: [3, 1, 2]}, 3), {type: 'gallery'})
+  for (const items of [[], [0], [6], [1, 1], [1.5], ['1'], 'all'])
+    assert.throws(() => validateGalleryRequest({type: 'gallery', items}, 5), /at least one photo/)
+  assert.throws(() => validateGalleryRequest({type: 'gallery', items: Array.from({length: 501}, (_, i) => i + 1)}), /at least one photo/)
+})
+
+test('the engine range is compact and sorted', () => {
+  assert.equal(chosenRange([5, 1, 3, 4, 2, 7]), '1-5,7')
+  assert.equal(chosenRange([2]), '2')
+})
+
+test('a Firefox profile reaches the gallery engine as firefox:<folder>; a browser alone stays a bare name', () => {
+  const network = {fragments: 1, rateLimit: 0, proxy: ''}
+  const base = {binary: 'gallery-dl', env: {}, network}
+  const profile = String.raw`C:\Users\a\AppData\Roaming\Mozilla\Firefox\Profiles\x.default`
+  assert.deepEqual(galleryArgs({...base, cookies: {browser: 'firefox', profile}}).slice(-2), ['--cookies-from-browser', `firefox:${profile}`])
+  assert.deepEqual(galleryArgs({...base, cookies: {browser: 'firefox'}}).slice(-2), ['--cookies-from-browser', 'firefox'])
+  assert.throws(() => galleryArgs({...base, cookies: {browser: 'chrome', profile}}))
 })

@@ -1,6 +1,10 @@
 package app.keepfin
 
 import android.content.Context
+import app.keepfin.core.errors.Errors
+import app.keepfin.core.errors.Platform
+import app.keepfin.core.signin.SignIn
+import app.keepfin.core.signin.SignInSource
 import android.content.pm.PackageManager
 import android.graphics.Bitmap
 import android.net.ConnectivityManager
@@ -119,6 +123,7 @@ class MediaEngine(internal val context: Context) : EngineApi, app.keepfin.setup.
     /** Shared with the application so the follow check, the app updater and this engine write into one list. */
     internal val activityStore: ActivityStore = (context.applicationContext as? KeepfinApplication)?.activity ?: ActivityStore(File(context.filesDir, "activity.json"))
     override val activity: ActivityFeed get() = activityStore
+    internal val galleryEngine = GalleryEngine(context, toolsUpdater::ensureInit)
     internal val inspector = Inspector(this)
     internal val follow = FollowEngine(EngineFollowHost(this))
     private val runner = DownloadRunner(this)
@@ -184,6 +189,9 @@ class MediaEngine(internal val context: Context) : EngineApi, app.keepfin.setup.
 
     internal fun record(id: String): JobRecord? = synchronized(lock) { records.firstOrNull { it.id == id } }
 
+    /** Every job of the queue and history, for checks that compare one job with the others. */
+    internal fun allRecords(): List<JobRecord> = synchronized(lock) { records }
+
     private fun find(id: String): JobRecord = records.firstOrNull { it.id == id } ?: error("Download not found.")
 
     /** Atomically replaces one record. Returning null from [transform] leaves it unchanged. */
@@ -240,7 +248,7 @@ class MediaEngine(internal val context: Context) : EngineApi, app.keepfin.setup.
                 options = JobCodec.decodeOptions(json.optJSONObject("options")), channel = json.optString("channel", "stable"),
                 autoUpdate = json.optBoolean("autoUpdate", true), wifiOnly = json.optBoolean("wifiOnly", false), turbo = json.optBoolean("turbo", false),
                 ytMusicAudio = json.optBoolean("ytMusicAudio", true), lyrics = LyricsLookup.enabledIn(json),
-                keepMusicVideos = json.optBoolean("keepMusicVideos", false),
+                keepMusicVideos = json.optBoolean("keepMusicVideos", false), autoSignIn = json.optBoolean("autoSignIn", true),
                 library = SpaceLogic.decode(json.optJSONObject("library")),
             )).also { loaded ->
                 // The one-time default change is written back with its marker, so a later explicit choice (even 2) sticks.
@@ -264,7 +272,7 @@ class MediaEngine(internal val context: Context) : EngineApi, app.keepfin.setup.
             val next = sanitize(transform(settingsFlow.value))
             settingsPrefs.edit().putString("json", JSONObject().put("organization", next.organization).put("concurrency", next.concurrency).put(Pacing.CONCURRENCY_MARKER, true)
                 .put("fragments", next.fragments).put("defaultPreset", next.defaultPreset.wire).put("options", JobCodec.encodeOptions(next.options))
-                .put("channel", next.channel).put("autoUpdate", next.autoUpdate).put("wifiOnly", next.wifiOnly).put("turbo", next.turbo).put("ytMusicAudio", next.ytMusicAudio).put("lyrics", next.lyrics).put("keepMusicVideos", next.keepMusicVideos)
+                .put("channel", next.channel).put("autoUpdate", next.autoUpdate).put("wifiOnly", next.wifiOnly).put("turbo", next.turbo).put("ytMusicAudio", next.ytMusicAudio).put("lyrics", next.lyrics).put("keepMusicVideos", next.keepMusicVideos).put("autoSignIn", next.autoSignIn)
                 .put("library", SpaceLogic.encode(next.library)).toString()).apply()
             context.getSharedPreferences("downloads", Context.MODE_PRIVATE).edit().putString("organization", next.organization).apply()
             val previous = settingsFlow.value
@@ -549,7 +557,7 @@ class MediaEngine(internal val context: Context) : EngineApi, app.keepfin.setup.
         // a video of a song you have joins that song (any space) instead of becoming a second item
         val join = songJoin(media, format, options)
         val job = newJob(downloadUrl, media.title, media.thumbnail, media.uploader, media.duration, media.provider, join?.format ?: format, media, match)
-            .copy(space = join?.space ?: spaceFor(space, media.url, media.uploader))
+            .copy(space = join?.space ?: spaceFor(space, media.url, media.uploader), signedIn = media.signedIn)
         add(listOf(JobRecord(job, join?.format ?: format, join?.options ?: options, source = source, attachTo = join?.itemId, joinPlaylist = playlist.takeIf { settingsFlow.value.library.enabled })))
         // the music video is its own job, linked to the song's job (its library item does not exist yet), queued after it: a full queue refuses only the video
         musicVideo?.let { runCatching { add(listOf(videoJob(it, job.space, job.id))) }.onFailure { e -> Log.w(TAG, "music video not queued", e) } }
@@ -746,7 +754,7 @@ class MediaEngine(internal val context: Context) : EngineApi, app.keepfin.setup.
                 job = record.job.copy(status = JobStatus.QUEUED, percent = 0f, attempt = record.job.attempt + 1, error = null, errorDetail = null, file = null,
                     publicUri = null, publicPath = null, filesRemoved = false, saveError = null, fileSize = null, completedAt = null, phase = null, speed = null, eta = null,
                     downloadedBytes = null, totalBytes = null, retryCount = 0, retryAt = null),
-                outputTemplate = if (keepPartials) record.outputTemplate else null, publicFiles = emptyList(), galleryRepairError = null,
+                outputTemplate = if (keepPartials) record.outputTemplate else null, publicFiles = emptyList(), photoSaves = emptyMap(), galleryRepairError = null,
             ))
             save()
         }
@@ -933,6 +941,31 @@ class MediaEngine(internal val context: Context) : EngineApi, app.keepfin.setup.
         // yt-dlp writes cookies back on exit; each run gets its own copy so imports never race running jobs.
         val copy = File(context.cacheDir, "cookies-${UUID.randomUUID()}.txt")
         return try { cookieFile.copyTo(copy, overwrite = true) } catch (_: Exception) { null }
+    }
+
+    /** Keepfin's own sign-in covers the site of [url]: a saved session with a live session cookie for it. */
+    private fun signInCovers(url: String): Boolean {
+        val site = SignIn.siteOf(url) ?: return false
+        val text = synchronized(lock) { if (cookieFile.isFile) cookieFile.readText() else null } ?: return false
+        return site.key in CookieExport.signedInSites(text, System.currentTimeMillis() / 1000)
+    }
+
+    /**
+     * The sign-in to retry [url] with after a failure (null: none). Requests go signed out first; only a sign-in failure is retried, once,
+     * with Keepfin's own sign-in when it covers the site and the setting is on. The decision is the shared core's ([SignIn.retry]).
+     * [signInWall] says the failure is already known to be a sign-in wall (a photo post's listing).
+     */
+    internal fun signInFor(url: String, failure: String, alreadySigned: Boolean, signInWall: Boolean = false): SignInSource? {
+        val action = if (signInWall) "signIn" else Errors.analyze(failure, Platform.ANDROID).action.wire
+        val available = if (signInCovers(url)) listOf(SignInSource("keepfin", null, null, null)) else emptyList()
+        return SignIn.retry(url, action, settingsFlow.value.autoSignIn, false, available, if (alreadySigned) available else emptyList())
+    }
+
+    /** A running job failed with [failure]: when a sign-in may be retried, the job records it (its row says so) and true is returned. */
+    internal fun useSignIn(id: String, failure: String): Boolean {
+        val job = record(id)?.job ?: return false
+        val source = signInFor(job.url, failure, alreadySigned = job.signedIn != null) ?: return false
+        return mutate(id, persist = true) { if (!it.status.active) null else it.copy(job = it.job.copy(signedIn = SignIn.notice(source))) } != null
     }
 
     internal fun stopped(id: String): Boolean = record(id)?.status?.active != true

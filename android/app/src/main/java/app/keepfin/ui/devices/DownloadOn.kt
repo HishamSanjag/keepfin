@@ -51,6 +51,7 @@ fun DownloadOnRow(targets: List<DownloadTarget>, onPick: (DownloadTarget) -> Uni
 
 /** What the other device needs to know about the format: structured intent only (the exact format ids belong to this phone's inspection). */
 fun formatJson(request: FormatRequest): JSONObject = when (request) {
+    is FormatRequest.Gallery -> JSONObject().put("type", "gallery").apply { request.items?.let { put("items", org.json.JSONArray(it)) } }
     is FormatRequest.Audio -> JSONObject().put("type", "audio").put("target", request.target).put("quality", request.quality)
     is FormatRequest.Video -> JSONObject().put("type", "video").put("codec", request.codec).put("container", request.container)
         .apply { request.maxHeight?.let { put("maxHeight", it) }; request.fps?.let { put("fps", it) } }

@@ -54,6 +54,13 @@ internal class EngineAfterSteps(private val engine: MediaEngine, private val id:
     /** Publishes the private original (+ sidecars): into the Keepfin folder library, else to MediaStore. Never claims success for a failed save. */
     override fun save(): String? = synchronized(engine.publishingLock) {
         val record = engine.record(id) ?: return null
+        if (record.format is FormatRequest.Gallery) {
+            // a photo post saves file by file: Save again (a save error is set) adds only the files that did not reach storage
+            if (record.job.publicUri != null && record.job.saveError == null) return null
+            val directory = File(record.job.file ?: return null).parentFile ?: return null
+            require(engine.inOutput(directory) && directory.isDirectory) { "The downloaded files are unavailable." }
+            return PhotoSaving(engine, id, ::cancelled).save(record, directory, ::saveContext, ::destination)
+        }
         if (record.job.publicUri != null) {
             if (record.job.publicPath?.startsWith("${engine.publicDownloads.folder}/") == true) engine.repairGallery()
             return null
@@ -190,6 +197,7 @@ internal class EngineAfterSteps(private val engine: MediaEngine, private val id:
         val sub = SpaceLogic.subfolder(space, context)
         return PublicDownloads.Placement(
             SpaceLogic.folderPath(StorageRoot.MUSIC, space, sub), SpaceLogic.folderPath(StorageRoot.MOVIES, space, sub), SpaceLogic.folderPath(StorageRoot.DOWNLOAD, space, sub),
+            SpaceLogic.picturesPath(space, sub),
         ) to SpaceLogic.fileStem(space, context)
     }
 

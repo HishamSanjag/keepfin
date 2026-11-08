@@ -49,6 +49,14 @@ object Errors {
         return Scrub.scrub(jsTrim(cleaned).take(300), platform).ifEmpty { Messages.BLANK_ANDROID }
     }
 
+    private val suggestsGalleryRule = Regex(
+        "unsupported url|no video formats found|no video could be found|there's no video in this|no video in this (post|tweet)|" +
+            "no media found|this post (does not|doesn't) contain (a )?video|requested format is not available",
+    )
+
+    /** True when the gallery engine might succeed where the download engine could not. */
+    fun suggestsGallery(text: String): Boolean = suggestsGalleryRule.containsMatchIn(matchingForm(text))
+
     fun classify(text: String, platform: Platform = Platform.DESKTOP): ErrorClass = analyze(text, platform).errorClass
 
     /** One clear sentence with the next step. */

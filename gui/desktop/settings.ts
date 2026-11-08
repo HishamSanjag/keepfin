@@ -53,6 +53,7 @@ export function defaultSettings(
     youtubeMusic: 'audio',
     options: {embedMetadata: true, embedThumbnail: true, embedChapters: true},
     cookies: {mode: 'none'},
+    autoSignIn: true,
     proxy: '',
     engine: {channel: 'stable', autoUpdate: true},
     updateChannel: 'stable',
@@ -175,6 +176,7 @@ export function mergeSettings(current: Settings, input: unknown): Settings {
     next.cookies =
       mode === 'browser' ? {mode, browser} : browser ? {mode, browser} : {mode}
   }
+  if (typeof patch.autoSignIn === 'boolean') next.autoSignIn = patch.autoSignIn
   if (patch.proxy !== undefined) next.proxy = validateProxy(patch.proxy)
   if (patch.engine !== undefined) {
     const engine = patch.engine as Record<string, unknown>

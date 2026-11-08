@@ -102,6 +102,7 @@ object SettingsIndex {
         SettingsEntry("Default download options", SettingsCategory.DOWNLOADS, SettingsGroups.DOWNLOADS, "subtitles sponsorblock thumbnail metadata chapters extras"),
         SettingsEntry("Working files", SettingsCategory.DOWNLOADS, SettingsGroups.DOWNLOADS, "folder per site one folder organise organize"),
         SettingsEntry("Add lyrics to songs", SettingsCategory.DOWNLOADS, SettingsGroups.DOWNLOADS, "lyrics lrc words", "setting-lyrics"),
+        SettingsEntry("Use a sign-in when a site asks for one", SettingsCategory.DOWNLOADS, SettingsGroups.SIGN_IN, "automatic sign in login cookies off switch", "setting-auto-sign-in"),
         SettingsEntry("Sign in to a site", SettingsCategory.DOWNLOADS, SettingsGroups.SIGN_IN, "account login cookies private age members"),
         SettingsEntry("Import cookies.txt", SettingsCategory.DOWNLOADS, SettingsGroups.SIGN_IN, "cookies netscape browser"),
         SettingsEntry("Clear sign-in", SettingsCategory.DOWNLOADS, SettingsGroups.SIGN_IN, "log out remove cookies"),

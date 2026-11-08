@@ -1,0 +1,22 @@
+{"description":"Photo posts that are already saved, and the job label as photos reach storage (issue #14). Rule 'already': the index of the earlier complete save of the same post that holds every photo asked for, else -1.","cases": [
+{"name":"label-one","input":{"rule":"label","count":1,"videos":false},"expected":{"label":"1 photo"}},
+{"name":"label-many","input":{"rule":"label","count":6,"videos":false},"expected":{"label":"6 photos"}},
+{"name":"label-with-a-video","input":{"rule":"label","count":3,"videos":true},"expected":{"label":"3 items"}},
+{"name":"saved-label-partial","input":{"rule":"savedLabel","saved":4,"expected":6,"label":"6 photos"},"expected":{"label":"4 of 6 photos"}},
+{"name":"saved-label-partial-again","input":{"rule":"savedLabel","saved":5,"expected":6,"label":"4 of 6 photos"},"expected":{"label":"5 of 6 photos"}},
+{"name":"saved-label-complete-again","input":{"rule":"savedLabel","saved":6,"expected":6,"label":"4 of 6 photos"},"expected":{"label":"6 photos"}},
+{"name":"saved-label-items","input":{"rule":"savedLabel","saved":2,"expected":3,"label":"3 items"},"expected":{"label":"2 of 3 items"}},
+{"name":"saved-label-none-lost","input":{"rule":"savedLabel","saved":6,"expected":6,"label":"6 photos"},"expected":{"label":"6 photos"}},
+{"name":"already-same-post-all","input":{"rule":"already","url":"https://www.instagram.com/p/AAA/","count":3,"earlier":[{"url":"https://www.instagram.com/p/AAA/","count":3,"complete":true}]},"expected":{"index":0}},
+{"name":"already-ignores-tracking-and-www","input":{"rule":"already","url":"https://instagram.com/p/AAA?igsh=xyz&utm_source=q","count":3,"earlier":[{"url":"https://www.instagram.com/p/AAA/","count":3,"complete":true}]},"expected":{"index":0}},
+{"name":"already-keeps-other-queries-apart","input":{"rule":"already","url":"https://example.com/gallery?id=2","count":2,"earlier":[{"url":"https://example.com/gallery?id=1","count":2,"complete":true}]},"expected":{"index":-1}},
+{"name":"already-another-post","input":{"rule":"already","url":"https://www.instagram.com/p/BBB/","count":3,"earlier":[{"url":"https://www.instagram.com/p/AAA/","count":3,"complete":true}]},"expected":{"index":-1}},
+{"name":"already-fewer-chosen-than-saved","input":{"rule":"already","url":"https://x.com/a/status/1","count":4,"items":[2,3],"earlier":[{"url":"https://x.com/a/status/1","count":4,"complete":true}]},"expected":{"index":0}},
+{"name":"already-more-chosen-than-saved","input":{"rule":"already","url":"https://x.com/a/status/1","count":4,"earlier":[{"url":"https://x.com/a/status/1","count":4,"items":[1,2],"complete":true}]},"expected":{"index":-1}},
+{"name":"already-same-chosen","input":{"rule":"already","url":"https://x.com/a/status/1","count":4,"items":[3,1],"earlier":[{"url":"https://x.com/a/status/1","count":4,"items":[1,3],"complete":true}]},"expected":{"index":0}},
+{"name":"already-incomplete-save-never-counts","input":{"rule":"already","url":"https://x.com/a/status/1","count":4,"earlier":[{"url":"https://x.com/a/status/1","count":4,"complete":false}]},"expected":{"index":-1}},
+{"name":"already-skips-incomplete-finds-later","input":{"rule":"already","url":"https://x.com/a/status/1","count":4,"earlier":[{"url":"https://x.com/a/status/1","count":4,"complete":false},{"url":"https://x.com/a/status/1","count":4,"complete":true}]},"expected":{"index":1}},
+{"name":"already-post-has-grown","input":{"rule":"already","url":"https://x.com/a/status/1","count":5,"earlier":[{"url":"https://x.com/a/status/1","count":4,"complete":true}]},"expected":{"index":-1}},
+{"name":"already-grown-but-old-photos-asked","input":{"rule":"already","url":"https://x.com/a/status/1","count":5,"items":[1,2],"earlier":[{"url":"https://x.com/a/status/1","count":4,"complete":true}]},"expected":{"index":0}},
+{"name":"already-no-earlier","input":{"rule":"already","url":"https://x.com/a/status/1","count":1,"earlier":[]},"expected":{"index":-1}}
+]}

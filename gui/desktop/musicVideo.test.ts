@@ -649,13 +649,13 @@ test('findVideo: a finished song looks once and queues one video linked to its j
     assert.equal(video.space, 'music')
     await until(async () => (await f.library.settled(), f.library.snapshot().items[0]?.musicVideo === true), 'the video beside the song')
     // a restart or a Retry of the same song job: a video job for it exists, and the song has its video, so there is no second look
-    const inner = f.manager as unknown as {lookForVideo(job: unknown): void; jobs: Job[]; videoLooks: Promise<void>}
-    inner.lookForVideo(inner.jobs.find((job) => job.id === song.id))
-    await inner.videoLooks
+    const inner = f.manager as unknown as {jobs: Job[]; videos: {lookFor(job: unknown): void; idle(): Promise<void>}}
+    inner.videos.lookFor(inner.jobs.find((job) => job.id === song.id))
+    await inner.videos.idle()
     assert.equal(looked.length, 1, 'a linked video job already exists')
     inner.jobs = inner.jobs.filter((job) => job.id !== video.id)
-    inner.lookForVideo(inner.jobs.find((job) => job.id === song.id))
-    await inner.videoLooks
+    inner.videos.lookFor(inner.jobs.find((job) => job.id === song.id))
+    await inner.videos.idle()
     assert.equal(looked.length, 1, 'the song already has its music video')
     assert.equal(videos(f.manager).length, 0)
   } finally {
@@ -688,10 +688,10 @@ test('findVideo: a finished look ends the mark, a restart resumes only looks tha
     const markedItem = f.library.snapshot().items.find((item) => item.path === marked.file)!
     await assert.rejects(f.manager.getMusicVideo(markedItem.id, 'zyxwvutsrqp'), /already downloading/)
     // a song still marked when Keepfin closed (its look never ran): the next start looks once
-    const inner = f.manager as unknown as {jobs: Job[]; videoLooks: Promise<void>}
+    const inner = f.manager as unknown as {jobs: Job[]; videos: {idle(): Promise<void>}}
     inner.jobs.find((job) => job.id === plain.id)!.findVideo = true
     f.manager.resumeVideoLooks()
-    await inner.videoLooks
+    await inner.videos.idle()
     assert.deepEqual(looked, ['Song 1', 'Song 2'])
     assert.deepEqual(videos(f.manager).map((job) => job.attachVideo?.jobId).sort(), [marked.id, plain.id].sort())
   } finally {

@@ -92,14 +92,16 @@ object Labels {
         val request = when (format) {
             is FormatRequest.Video -> DownloadFormat.Video(format.maxHeight, format.formatId, format.audioFormatId, format.fps, format.codec, format.container)
             is FormatRequest.Audio -> DownloadFormat.Audio(format.target, format.quality, format.formatId)
+            is FormatRequest.Gallery -> throw IllegalArgumentException("A photo post has no quality label.")
         }
         val video = media?.video.orEmpty().map { LabelVideo(it.formatId, it.height, it.fps, it.hdr, it.size, it.sizeApprox, it.hasAudio) }
         val audio = media?.audio.orEmpty().map { LabelAudio(it.formatId, it.size, it.sizeApprox, it.codec) }
         return CoreLabels.quote(request, video, audio, media?.duration, withSize = false)
     }
 
-    fun label(format: FormatRequest, media: MediaInfo?): String = quote(format, media).label
+    fun label(format: FormatRequest, media: MediaInfo?): String =
+        if (format is FormatRequest.Gallery) PhotoPosts.label(format, media) else quote(format, media).label
 
     /** Estimated bytes at enqueue time; null when the inspection gave no usable size. */
-    fun expectedSize(format: FormatRequest, media: MediaInfo?): Long? = media?.let { quote(format, it).expectedSize }
+    fun expectedSize(format: FormatRequest, media: MediaInfo?): Long? = media?.takeIf { format !is FormatRequest.Gallery }?.let { quote(format, it).expectedSize }
 }

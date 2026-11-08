@@ -29,6 +29,30 @@ aria2
   License: GPL-2.0-or-later
   Source: https://github.com/aria2/aria2
 
+gallery-dl 1.32.19 (the gallery engine; run unmodified as a separate program by the bundled Python)
+  License: GPL-2.0-only (full text: gallery-dl-1.32.19-LICENSE.txt)
+  Source: https://github.com/mikf/gallery-dl (release 1.32.19; the packaged files are the unmodified PyPI wheel)
+
+requests 2.34.2
+  License: Apache-2.0 (full text: requests-2.34.2-LICENSE.txt)
+  Source: https://github.com/psf/requests
+
+urllib3 2.8.0
+  License: MIT (full text: urllib3-2.8.0-LICENSE.txt)
+  Source: https://github.com/urllib3/urllib3
+
+idna 3.20
+  License: BSD-3-Clause (full text: idna-3.20-LICENSE.txt)
+  Source: https://github.com/kjd/idna
+
+certifi 2026.10.23
+  License: MPL-2.0 (full text: certifi-2026.10.23-LICENSE.txt)
+  Source: https://github.com/certifi/python-certifi
+
+charset-normalizer 3.5.2
+  License: MIT (full text: charset-normalizer-3.5.2-LICENSE.txt)
+  Source: https://github.com/jawah/charset_normalizer
+
 AndroidX, Jetpack Compose and Material 3
   License: Apache-2.0
   Source: https://developer.android.com/jetpack

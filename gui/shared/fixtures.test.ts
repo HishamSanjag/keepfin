@@ -14,7 +14,7 @@ import {audioCodec, estimateSize, heightLabel, mediaInfoFromYtDlp, subtitleTrack
 import {formatArgs, jobQuote, metadataArgs, PROGRESS_PREFIX, presetFormat, validateFormatRequest, validateOptions} from './policy.js'
 import {formatByteText} from './core/args.js'
 import {errorDetailText, scrubToolNames} from './errors.js'
-import {analyze, nextRetry} from './core/errors.js'
+import {analyze, nextRetry, suggestsGallery} from './core/errors.js'
 import {
   isCollectionUrl, isGalleryHost, musicLink, platformFolder, playlistContext, prefersAudio, providerName, startsAsVideo,
 } from './providers.js'
@@ -280,6 +280,7 @@ function errors(input: Obj): Json {
     return {noToolNames: !toolNames.test(scrubbed) && !toolNames.test(detail)}
   }
   if (input.op === 'retry') return plain(nextRetry(input.retriesUsed ?? 0, text, input.crashed === true, 'desktop') ?? null)
+  if (input.op === 'suggestsGallery') return {suggests: suggestsGallery(text)}
   assert.equal(input.op, 'classify')
   const result = analyze(text, 'desktop')
   return {
@@ -758,7 +759,7 @@ for (const category of categories) {
         // FIXTURES_DUMP=1 prints what the desktop logic returns, to help write `expected` for a new case.
         if (process.env.FIXTURES_DUMP) return void console.log(`DUMP ${label}: ${item.name}\n${JSON.stringify(actual)}`)
         // No user-facing text may ever name an external tool, whatever else a case checks.
-        if (category === 'errors' && item.input.op !== 'retry') assert.equal((actual as Obj).noToolNames, true, 'a user-facing message names an external tool')
+        if (category === 'errors' && item.input.op !== 'retry' && item.input.op !== 'suggestsGallery') assert.equal((actual as Obj).noToolNames, true, 'a user-facing message names an external tool')
         if (category === 'progress') assertProgress(actual, item.expected, item.name)
         else if (category === 'music') assertMusic(actual, item.expected, item.name)
         else assertSubset(actual, item.expected, item.name)

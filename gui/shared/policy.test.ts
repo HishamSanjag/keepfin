@@ -2,6 +2,7 @@ import {test} from 'node:test'
 import assert from 'node:assert/strict'
 import {
   buildDownloadArgs,
+  cookieArgs,
   formatArgs,
   formatLabel,
   jobQuote,
@@ -223,4 +224,13 @@ test('embedded metadata carries the clean title and keeps the original wording a
   assert.ok(buildDownloadArgs({...base, options: {embedMetadata: true}}).includes('%(description,title)s:%(meta_description)s'))
   assert.ok(!buildDownloadArgs({...base, options: {}}).includes('--parse-metadata'))
   assert.ok(!buildDownloadArgs({...base, options: {embedMetadata: true}, preview: true}).includes('--parse-metadata'))
+})
+
+test('cookies from a Firefox profile: absolute folder only, Firefox only, no container separator', () => {
+  const profile = String.raw`C:\Users\a\AppData\Roaming\Mozilla\Firefox\Profiles\x.default`
+  assert.deepEqual(cookieArgs({browser: 'firefox', profile}), ['--cookies-from-browser', `firefox:${profile}`])
+  assert.deepEqual(cookieArgs({browser: 'firefox', profile: '/home/a/.mozilla/firefox/x.default'}), ['--cookies-from-browser', 'firefox:/home/a/.mozilla/firefox/x.default'])
+  assert.deepEqual(cookieArgs({browser: 'firefox'}), ['--cookies-from-browser', 'firefox'])
+  for (const bad of ['', 'x.default', String.raw`..\x`,'C:x', `${profile}::work`, `${profile}\nx`]) assert.throws(() => cookieArgs({browser: 'firefox', profile: bad}), /profile/, bad)
+  assert.throws(() => cookieArgs({browser: 'chrome', profile}), /profile/)
 })

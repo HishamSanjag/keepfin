@@ -76,6 +76,8 @@ class FakeEngine(private val context: Context? = null) : EngineApi {
     @Volatile var inspectDelayMs = 350L
     val inspectResults = ConcurrentHashMap<String, InspectResult>()
     @Volatile var inspectFailure: String? = null
+    /** A site (for example "Instagram") that shows every link only to signed-in people: inspection fails as it does on the real engine. */
+    @Volatile var inspectSignInSite: String? = null
     @Volatile var collectionSize = 60
     @Volatile var discoverEntryDelayMs = 25L
     private val cancelled = ConcurrentHashMap.newKeySet<String>()
@@ -165,6 +167,7 @@ class FakeEngine(private val context: Context? = null) : EngineApi {
             Thread.sleep(10)
         }
         inspectFailure?.let { error(it) }
+        inspectSignInSite?.let { throw app.keepfin.SignInNeeded(it, "$it shows this post only to signed-in people.") }
         inspectResults[url]?.let { return it }
         return when {
             "list=" in url && "watch" !in url -> InspectResult.Collection(url, "Blender Open Movies")
@@ -199,12 +202,13 @@ class FakeEngine(private val context: Context? = null) : EngineApi {
     override fun enqueue(media: MediaInfo, format: FormatRequest, options: DownloadOptions, space: String?) {
         enqueued.add(Triple(media, format, options)); enqueuedSpaces.add(space)
         val id = "j-new-${counter.incrementAndGet()}"
-        val audio = format is FormatRequest.Audio
         val label = when (format) {
             is FormatRequest.Video -> listOfNotNull(format.maxHeight?.let { "${it}p" } ?: "Best", format.container.uppercase()).joinToString(" · ")
             is FormatRequest.Audio -> format.target.uppercase()
+            is FormatRequest.Gallery -> app.keepfin.PhotoPosts.label(format, media)
         }
-        _jobs.update { listOf(Fixtures.job(id, media.title, media.thumbnail, JobStatus.QUEUED, label = label, kind = if (audio) MediaKind.AUDIO else MediaKind.VIDEO, url = media.url, duration = media.duration)) + it }
+        val kind = when (format) { is FormatRequest.Audio -> MediaKind.AUDIO; is FormatRequest.Gallery -> MediaKind.PHOTOS; is FormatRequest.Video -> MediaKind.VIDEO }
+        _jobs.update { listOf(Fixtures.job(id, media.title, media.thumbnail, JobStatus.QUEUED, label = label, kind = kind, url = media.url, duration = media.duration)) + it }
     }
 
     override fun enqueueEntries(session: String, entries: List<PlaylistEntry>, preset: DownloadPreset, options: DownloadOptions, group: JobGroup?, space: String?, sync: app.keepfin.SyncRequest?, findVideo: Boolean, playlist: String?): Int {

@@ -1,0 +1,16 @@
+{"description":"Whether a set of cookies (names, domains and expiry, never values) holds a live sign-in for a site.","cases": [
+{"name":"instagram-session","input":{"site":"instagram","now":1000,"cookies":[{"name":"sessionid","domain":".instagram.com","expiry":5000}]},"expected":{"signedIn":true}},
+{"name":"only-tracking-cookies","input":{"site":"instagram","now":1000,"cookies":[{"name":"csrftoken","domain":".instagram.com","expiry":5000},{"name":"mid","domain":".instagram.com","expiry":5000}]},"expected":{"signedIn":false}},
+{"name":"expired-session","input":{"site":"instagram","now":1000,"cookies":[{"name":"sessionid","domain":".instagram.com","expiry":999}]},"expected":{"signedIn":false}},
+{"name":"session-cookie-without-expiry","input":{"site":"reddit","now":1000,"cookies":[{"name":"reddit_session","domain":".reddit.com","expiry":0}]},"expected":{"signedIn":true}},
+{"name":"wrong-domain","input":{"site":"instagram","now":1000,"cookies":[{"name":"sessionid","domain":".example.com","expiry":5000}]},"expected":{"signedIn":false}},
+{"name":"look-alike-domain","input":{"site":"instagram","now":1000,"cookies":[{"name":"sessionid","domain":".notinstagram.com","expiry":5000}]},"expected":{"signedIn":false}},
+{"name":"subdomain-host-cookie","input":{"site":"facebook","now":1000,"cookies":[{"name":"c_user","domain":"www.facebook.com","expiry":5000}]},"expected":{"signedIn":true}},
+{"name":"x-on-twitter-domain","input":{"site":"x","now":1000,"cookies":[{"name":"auth_token","domain":".twitter.com","expiry":5000}]},"expected":{"signedIn":true}},
+{"name":"youtube-google-sapisid","input":{"site":"youtube","now":1000,"cookies":[{"name":"SAPISID","domain":".google.com","expiry":5000}]},"expected":{"signedIn":true}},
+{"name":"youtube-secure-3psid","input":{"site":"youtube","now":1000,"cookies":[{"name":"__Secure-3PSID","domain":".youtube.com","expiry":5000}]},"expected":{"signedIn":true}},
+{"name":"youtube-tracking-only","input":{"site":"youtube","now":1000,"cookies":[{"name":"VISITOR_INFO1_LIVE","domain":".youtube.com","expiry":5000},{"name":"PREF","domain":".youtube.com","expiry":5000}]},"expected":{"signedIn":false}},
+{"name":"cookie-name-is-case-sensitive","input":{"site":"tiktok","now":1000,"cookies":[{"name":"SessionID","domain":".tiktok.com","expiry":5000}]},"expected":{"signedIn":false}},
+{"name":"one-live-of-several","input":{"site":"vimeo","now":1000,"cookies":[{"name":"vimeo","domain":".vimeo.com","expiry":10},{"name":"vimeo","domain":"vimeo.com","expiry":5000}]},"expected":{"signedIn":true}},
+{"name":"no-cookies","input":{"site":"soundcloud","now":1000,"cookies":[]},"expected":{"signedIn":false}}
+]}

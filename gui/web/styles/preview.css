@@ -207,6 +207,56 @@
 .preview .gallery-grid .thumb {
   border-radius: var(--r-md);
 }
+/* One photo of a post: chosen shows a check, left out is dimmed with an empty box. */
+.gallery-tile {
+  position: relative;
+  padding: 0;
+  border: 0;
+  border-radius: var(--r-md);
+  background: none;
+  cursor: pointer;
+}
+.gallery-tile:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+.gallery-tile .thumb {
+  width: 100%;
+  transition: opacity 0.12s;
+}
+.gallery-tile.is-out .thumb {
+  opacity: 0.35;
+}
+.gallery-check,
+.gallery-play {
+  position: absolute;
+  display: grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+}
+.gallery-check {
+  top: 6px;
+  right: 6px;
+  background: var(--accent);
+  color: var(--on-accent);
+}
+.gallery-tile.is-out .gallery-check {
+  background: transparent;
+  box-shadow: inset 0 0 0 2px var(--text-2);
+}
+.gallery-play {
+  bottom: 6px;
+  left: 6px;
+  background: rgba(0, 0, 0, 0.6);
+  color: #fff;
+}
+@media (prefers-reduced-motion: reduce) {
+  .gallery-tile .thumb {
+    transition: none;
+  }
+}
 
 /* A line of context above the sizes: a note, a hint, the video that Both keeps. */
 .preview-note {
@@ -320,6 +370,19 @@
   margin: 0;
   max-width: 52ch;
   color: var(--text-2);
+}
+.preview-signin .preview-lock {
+  display: grid;
+  place-items: center;
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: var(--line);
+  color: var(--text-2);
+}
+.preview-signin .preview-signin-title {
+  color: var(--text);
+  font-weight: 600;
 }
 .preview-problem-actions {
   display: flex;

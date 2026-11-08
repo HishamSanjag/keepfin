@@ -1,5 +1,7 @@
 package app.keepfin
 
+import app.keepfin.core.signin.SignIn
+import app.keepfin.core.signin.SignInCookie
 import java.io.File
 
 /**
@@ -10,14 +12,10 @@ import java.io.File
 object CookieExport {
     data class Cookie(val domain: String, val name: String, val value: String, val secure: Boolean = true, val expires: Long)
 
-    /** Sign-in sites: page URLs to query and the cookie domain written for them. */
-    val sites: List<Pair<String, String>> = listOf(
-        "https://www.youtube.com" to ".youtube.com", "https://music.youtube.com" to ".youtube.com", "https://m.youtube.com" to ".youtube.com",
-        "https://accounts.google.com" to ".google.com", "https://www.google.com" to ".google.com",
-        "https://www.instagram.com" to ".instagram.com", "https://x.com" to ".x.com", "https://twitter.com" to ".twitter.com",
-        "https://www.facebook.com" to ".facebook.com", "https://m.facebook.com" to ".facebook.com", "https://www.tiktok.com" to ".tiktok.com",
-        "https://www.reddit.com" to ".reddit.com", "https://vimeo.com" to ".vimeo.com", "https://soundcloud.com" to ".soundcloud.com",
-    )
+    /** Sign-in sites from the shared core table: page URLs to query and the cookie domain written for them. */
+    val sites: List<Pair<String, String>> = SignIn.sites.flatMap { site ->
+        site.domains.flatMap { domain -> listOf("www.", "", "m.").map { "https://$it${domain.removePrefix(".")}" to domain } }
+    }
 
     const val HEADER = "# Netscape HTTP Cookie File\n# Exported by Keepfin from in-app sign-in. Keep private.\n"
 
@@ -33,6 +31,16 @@ object CookieExport {
     }
 
     fun line(cookie: Cookie) = listOf(cookie.domain, "TRUE", "/", if (cookie.secure) "TRUE" else "FALSE", cookie.expires.toString(), cookie.name, cookie.value).joinToString("\t")
+
+    /** The keys of the sites a cookies.txt holds a live sign-in for (the core decides; only names, domains and expiry are used). */
+    fun signedInSites(cookiesFileText: String, nowSeconds: Long): Set<String> {
+        val cookies = cookiesFileText.lineSequence().mapNotNull { line ->
+            val parts = line.removePrefix("#HttpOnly_").split('\t')
+            val expiry = parts.getOrNull(4)?.toLongOrNull()
+            if (line.startsWith("#") && !line.startsWith("#HttpOnly_") || parts.size < 7 || expiry == null) null else SignInCookie(parts[5], parts[0], expiry)
+        }.toList()
+        return SignIn.sites.filter { SignIn.signedIn(it, cookies, nowSeconds) }.map { it.key }.toSet()
+    }
 
     /** Merges exported cookies with an existing file: lines for exported domains are replaced, others are kept. */
     fun merge(existing: String?, cookies: List<Cookie>): String {

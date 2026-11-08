@@ -138,7 +138,7 @@ fun JobRow(job: Job, actions: JobActions, modifier: Modifier = Modifier, highlig
             Spacer(Modifier.width(12.dp))
             Column(Modifier.weight(1f).padding(top = 1.dp)) {
                 Text(job.title, style = MaterialTheme.typography.titleSmall, maxLines = 2, overflow = TextOverflow.Ellipsis)
-                val meta = listOfNotNull(job.provider ?: Format.host(job.url), job.label.takeIf { it.isNotBlank() })
+                val meta = listOfNotNull(job.provider ?: Format.host(job.url), job.label.takeIf { it.isNotBlank() }, job.signedIn)
                 Text(
                     meta.joinToString(" · "), style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1, overflow = TextOverflow.Ellipsis,

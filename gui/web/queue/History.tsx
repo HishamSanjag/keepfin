@@ -90,7 +90,7 @@ const LibraryRow = memo(function LibraryRow({id}: {id: string}) {
         <span className="lib-meta">
           <StatusTag job={job} gone={gone} />
           <span className="sep-list">
-            {[provider, job.label, formatDuration(job.duration)].filter(Boolean).map((part, index) => (
+            {[provider, job.label, formatDuration(job.duration), job.signedIn].filter(Boolean).map((part, index) => (
               <span key={index}>{part}</span>
             ))}
           </span>

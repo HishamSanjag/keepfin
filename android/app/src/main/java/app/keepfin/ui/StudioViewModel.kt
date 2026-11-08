@@ -26,7 +26,10 @@ import app.keepfin.EngineSettings
 import app.keepfin.FollowUpdate
 import app.keepfin.InspectResult
 import app.keepfin.CollectionLogic
+import app.keepfin.FormatRequest
 import app.keepfin.JobStatus
+import app.keepfin.PhotoPosts
+import app.keepfin.SignInNeeded
 import app.keepfin.Providers
 import app.keepfin.MediaInfo
 import app.keepfin.PlaylistEntry
@@ -105,7 +108,8 @@ sealed interface Capture {
     data class Inspecting(val urls: List<String>, val done: Int = 0) : Capture
     data class Single(val media: MediaInfo) : Capture
     data class Batch(val items: List<BatchItem>, val running: Boolean) : Capture
-    data class Failed(val url: String, val message: String) : Capture
+    /** [signInSite]: the site (for example "Instagram") that shows this link only to signed-in people; the preview then offers to sign in. */
+    data class Failed(val url: String, val message: String, val signInSite: String? = null, val signInKey: String? = null) : Capture
 }
 
 data class BatchItem(val url: String, val media: MediaInfo? = null, val error: String? = null)
@@ -734,7 +738,7 @@ class StudioViewModel(
     }
 
     fun open(page: SubPage) { subPage = page; saved["subPage"] = page.name }
-    fun closeSubPage() { subPage = null; saved["subPage"] = null }
+    fun closeSubPage() { subPage = null; saved["subPage"] = null; signInRequest = null }
 
     /** System Back: sub-page → its parent; secondary destination → Downloads; otherwise the system. */
     fun back(): Boolean {
@@ -1036,6 +1040,7 @@ class StudioViewModel(
 
     private fun refreshExisting(media: MediaInfo) {
         captureExisting = null; songVideo.lookForSong(media)
+        if (media.gallery != null) return
         val target = targetSpace(media.webpageUrl ?: media.url, media.uploader) ?: return
         if (engine.settings.value.library.spaces.firstOrNull { it.id == target }?.skipExisting != true) return
         val token = generation
@@ -1099,7 +1104,7 @@ class StudioViewModel(
 
     private suspend fun inspectSingle(url: String, token: Int) {
         val result = try { inspectOne(url) } catch (e: CancellationException) { throw e } catch (e: Exception) {
-            if (token == generation) capture = Capture.Failed(url, friendly(e))
+            if (token == generation) capture = failedCapture(url, e)
             return
         }
         if (token != generation) return
@@ -1110,6 +1115,32 @@ class StudioViewModel(
                 collections.startCollection(result.url, result.title)
             }
         }
+    }
+
+    /** A link that could not be read; one the site shows only to signed-in people offers "Sign in to [site]" (any site Keepfin has a sign-in page for). */
+    private fun failedCapture(url: String, error: Throwable): Capture.Failed {
+        val wall = PhotoPosts.signInWall(url, error)
+        if (error is SignInNeeded) return Capture.Failed(url, error.message.orEmpty(), error.site, wall?.key)
+        if (wall != null) return Capture.Failed(url, PhotoPosts.signInMessage(wall.name), wall.name, wall.key)
+        return Capture.Failed(url, friendly(error))
+    }
+
+    /** The site (a core key) whose sign-in page opens first, and the link that is read again once the sign-in is done. */
+    var signInRequest by mutableStateOf<String?>(null)
+        private set
+
+    /** "Sign in to [site]" in a preview: opens the in-app sign-in at that site's login page; finishing it reads the link again. */
+    fun signInTo(key: String?) {
+        navigate(Destination.SETTINGS)
+        open(SubPage.SIGN_IN)
+        signInRequest = key
+    }
+
+    /** The sign-in for a link was saved: leave the sign-in page and read the same link again. */
+    fun signedInForLink() {
+        closeSubPage()
+        navigate(Destination.DOWNLOADS)
+        inspect()
     }
 
     private fun showMedia(media: MediaInfo) {
@@ -1234,7 +1265,7 @@ class StudioViewModel(
             try {
                 withContext(Dispatchers.IO) {
                     StudioEngine.withServiceWork(getApplication()) {
-                        for (media in ready) { engine.enqueue(media, FormatChoice.forPreset(preset), chosenOptions, space, null, playlist); added++ }
+                        for (media in ready) { engine.enqueue(media, media.gallery?.let { FormatRequest.Gallery(it.count) } ?: FormatChoice.forPreset(preset), chosenOptions, space, null, playlist); added++ }
                     }
                 }
             } catch (e: CancellationException) { throw e } catch (e: Exception) {

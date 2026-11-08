@@ -232,7 +232,36 @@
       audio: [],
       subtitles: [],
       chapters: 0,
-      gallery: {count: 8, previews: Array.from({length: 8}, (_, i) => `https://instagram.fcdn/harbour-${i}.jpg`), truncated: false},
+      gallery: {
+        count: 8,
+        previews: Array.from({length: 8}, (_, i) => `https://instagram.fcdn/harbour-${i}.jpg`),
+        items: Array.from({length: 8}, (_, i) => ({position: i + 1, url: `https://instagram.fcdn/harbour-${i}.jpg`, photo: true})),
+        truncated: false,
+      },
+    },
+    // A carousel of seven: six photos and a video (the fourth).
+    'https://www.instagram.com/p/C9carousel/': {
+      url: 'https://www.instagram.com/p/C9carousel/',
+      title: 'Market day — 7 slides',
+      uploader: 'saltandsilver',
+      thumbnail: 'https://instagram.fcdn/market-0.jpg',
+      extractor: 'gallery-dl:instagram',
+      provider: 'Instagram',
+      engine: 'gallery-dl',
+      video: [],
+      audio: [],
+      subtitles: [],
+      chapters: 0,
+      gallery: {
+        count: 7,
+        previews: Array.from({length: 6}, (_, i) => `https://instagram.fcdn/market-${i}.jpg`),
+        items: Array.from({length: 7}, (_, i) => ({
+          position: i + 1,
+          url: i === 3 ? 'https://instagram.fcdn/market-3.mp4' : `https://instagram.fcdn/market-${i}.jpg`,
+          photo: i !== 3,
+        })),
+        truncated: false,
+      },
     },
     'https://www.tiktok.com/@kitchenlab/video/7391': {
       url: 'https://www.tiktok.com/@kitchenlab/video/7391',
@@ -508,6 +537,7 @@
     startPage: options.startPage || 'downloads',
     lyrics: options.lyrics ?? true,
     musicVideos: options.musicVideos ?? false,
+    autoSignIn: options.autoSignIn ?? true,
     appIcon: '',
     turbo: {enabled: false, connections: 8},
   }
@@ -535,6 +565,13 @@
     engine.tools = engine.tools.map((tool) => (tool.name === 'gallery-dl' ? {name: 'gallery-dl', state: 'missing'} : tool))
   }
   let hasCookieFile = false
+  // Keepfin's own sign-ins (the sign-in window). Option signInWindow: 'closed' = the window is closed before signing in; signedInTo: sites signed in at start.
+  const signInSites = [['instagram', 'Instagram'], ['facebook', 'Facebook'], ['x', 'X'], ['tiktok', 'TikTok'], ['reddit', 'Reddit'], ['youtube', 'YouTube'], ['vimeo', 'Vimeo'], ['soundcloud', 'SoundCloud'], ['pinterest', 'Pinterest']]
+  const signedIn = new Set(options.signedInTo || [])
+  const signInState = () => ({canKeep: options.canKeepSignIn !== false, sites: signInSites.map(([key, name]) => ({key, name, signedIn: signedIn.has(key)}))})
+  // options.signedIn: a download that used a sign-in the site asked for (its row says so quietly)
+  if (options.signedIn)
+    jobs.unshift(job({url: 'https://www.instagram.com/p/DfW56Yoim48/', title: 'Harbour photos', provider: 'Instagram', kind: 'gallery', label: '2 photos', status: 'downloading', percent: 30, signedIn: options.signedIn}))
   const snapshot = () => clone({jobs, settings, engine, platform: 'desktop', hasCookieFile})
   fake.jobs = () => clone(jobs)
 
@@ -1840,9 +1877,26 @@
         if (typeof args.musicVideos === 'boolean') place.musicVideos = args.musicVideos
         return copiesView()
       }
-      case 'copiesRemove':
+      case 'copiesRemove': {
+        // the work goes on after the click: the row says what it is doing; window.__copiesRemove = 'hold' waits for window.__finishRemove(), 'fail' ends in an error
+        const place = find(args.placeId)
+        if (place.removal?.state === 'removing') return copiesView()
+        place.removal = {state: 'removing', text: args.deleteFiles ? 'Moving its files to the Recycle Bin…' : 'Stopping the copy…'}
+        copiesPush()
+        await new Promise((resolve) => {
+          window.__finishRemove = resolve
+          if (window.__copiesRemove !== 'hold') setTimeout(resolve, 300 * options.latency)
+        })
+        if (window.__copiesRemove === 'fail') {
+          const why = 'Keepfin could not move E:\\ to the Recycle Bin. Another program may have it open; close it and try again. The copy was not removed.'
+          place.removal = {state: 'failed', text: why}
+          copiesPush()
+          throw new Error(why)
+        }
         data.places = data.places.filter((p) => p.id !== args.placeId)
+        data.report = {title: `${place.name} was removed`, detail: args.deleteFiles ? 'Its files are in the Recycle Bin.' : 'Its files stay where they are.', warn: false, at: Date.now()}
         return copiesView()
+      }
       case 'copiesResolve': {
         const item = data.review.find((r) => r.id === args.reviewId)
         if (!item) throw new Error('This was already settled.')
@@ -2493,8 +2547,25 @@
         const square = source ? source.kind === 'audio' : /scdn|googleusercontent|img\.fixture|spotify/.test(req.url || '')
         return artwork(source ? source.url : req.url, square)
       }
+      case 'signInState':
+        return signInState()
+      case 'signInOpen': {
+        const closed = options.signInWindow === 'closed'
+        await wait(closed ? 200 : 600)
+        if (!closed) signedIn.add(req.site)
+        const name = signInSites.find(([key]) => key === req.site)[1]
+        return {site: req.site, signedIn: !closed, message: closed ? `Keepfin is not signed in to ${name}. The window was closed before the sign-in finished.` : undefined, state: signInState()}
+      }
+      case 'signInRemove':
+        signedIn.delete(req.site)
+        return signInState()
       case 'inspect': {
         await wait(/private|not-media/.test(req.url) ? 500 : 900)
+        // a post Instagram shows only to signed-in people: readable once Keepfin is signed in to Instagram
+        if (/instagram\.com\/p\/Locked01/.test(req.url)) {
+          if (!signedIn.has('instagram')) throw new Error('Sign-in required: this post is only shown to signed-in people.')
+          return {type: 'media', media: {...clone(media['https://www.instagram.com/p/C9harbour/']), url: req.url}}
+        }
         if (errors[req.url]) throw new Error(errors[req.url])
         if (collections[req.url]) return {type: 'collection', url: req.url, title: collections[req.url].title, uploader: collections[req.url].uploader}
         if (/plain-file\.mp4$/.test(req.url)) return {type: 'media', media: {url: req.url, title: 'plain-file', provider: 'cdn.example.net', extractor: 'Generic', engine: 'yt-dlp', video: [], audio: [], subtitles: [], chapters: 0}}

@@ -1,10 +1,12 @@
 // Jobs another device sends: the capture rules, the consent step and what the device is told. Moved out of manager.ts;
 // everything it needs from the queue comes through `QueueCore`.
 import {validateUrl} from '../../shared/contracts.js'
+import {validateGalleryRequest} from '../../shared/core/gallery.js'
 import {jobQuote, validateFormatRequest} from '../../shared/policy.js'
 import type {StoredJob} from '../migrate.js'
 import type {RemoteJobView} from '../manager.js'
 import {errorText, type QueueCore} from './core.js'
+import {photoLabel} from './photos.js'
 
 export class RemoteJobs {
   // jobs from other devices: waiting for the person here, allowed, declined, and the ones whose link was already checked and inspected
@@ -119,20 +121,30 @@ export class RemoteJobs {
         job.duration = media.duration
         job.provider = media.provider
         if (media.engine === 'gallery-dl') {
-          job.format = {type: 'gallery'}
+          // the photos chosen on the other device are checked against the post read here like a local request; a plain video request takes every photo
+          try {
+            job.format = validateGalleryRequest(job.format.type === 'gallery' ? job.format : undefined, media.gallery?.count)
+          } catch {
+            throw new Error('The photos chosen on the other device are not in this post.')
+          }
           job.kind = 'gallery'
-        }
-        try {
-          const quote = jobQuote(job.format, {video: media.video, audio: media.audio, duration: media.duration})
-          job.label = quote.label
-          job.expectedSize = quote.expectedSize
-        } catch {
-          // a format this link does not offer: the download engine picks the closest, the size is unknown
+          job.label = photoLabel(media, job.format)
+          job.expectedCount = job.format.items ? job.format.items.length : media.gallery?.count
+        } else if (job.format.type === 'gallery') {
+          throw new Error('This link has no photos to download.')
+        } else {
+          try {
+            const quote = jobQuote(job.format, {video: media.video, audio: media.audio, duration: media.duration})
+            job.label = quote.label
+            job.expectedSize = quote.expectedSize
+          } catch {
+            // a format this link does not offer: the download engine picks the closest, the size is unknown
+          }
+          job.expectedCount = media.gallery?.count
         }
         job.match = media.match
         job.music = media.music ? {...media.music} : undefined
         job.tags = media.tags
-        job.expectedCount = media.gallery?.count
         this.prepared.add(job.id)
       }
       if (!this.consented.has(job.id)) {

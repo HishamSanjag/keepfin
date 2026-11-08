@@ -1,6 +1,11 @@
 // The two moments around a preview: the link is being read, and the link could not be read. These are plain functions that return
 // the window, not components, so the window stays the same one as the link goes from being read to being shown.
+import {useState} from 'react'
+import {siteOf} from '../../shared/core/signin'
+import {native} from '../bridge'
 import {navigate} from '../nav'
+import {signInTo} from '../signin'
+import {Icon} from '../ui/Icon'
 import type {CaptureEntry} from '../capture/useCapture'
 import {hostOf} from '../format'
 import {Button} from '../ui/controls'
@@ -51,7 +56,80 @@ export function readingWindow({entry, open, onClose, onCancel}: {entry: CaptureE
   )
 }
 
-export function problemWindow({entry, open, onClose, onRetry}: {entry: CaptureEntry; open: boolean; onClose: () => void; onRetry: () => void}) {
+/** Approved design A: where the formats or photos would be, the site says it shows this only to signed-in people. */
+function SignInNeeded({site, onSignedIn, onNotNow}: {site: {key: string; name: string}; onSignedIn: () => void; onNotNow: () => void}) {
+  const [busy, setBusy] = useState(false)
+  const [message, setMessage] = useState('')
+  async function signIn() {
+    setBusy(true)
+    setMessage('')
+    const outcome = await signInTo(site.key)
+    setBusy(false)
+    if (outcome.signedIn) onSignedIn()
+    else setMessage(outcome.message ?? `Keepfin is not signed in to ${site.name}.`)
+  }
+  return (
+    <div className="preview-problem preview-signin" role="alert">
+      <span className="preview-lock" aria-hidden="true">
+        <Icon name="lock" size={28} />
+      </span>
+      <p className="preview-signin-title">{site.name} shows this post only to signed-in people.</p>
+      <p>Sign in once and Keepfin uses it for {site.name} links from now on. Your password stays with {site.name}.</p>
+      {message && (
+        <p className="field-error" role="status">
+          {message}
+        </p>
+      )}
+      <div className="preview-problem-actions">
+        <Button variant="primary" icon="key" loading={busy} onClick={() => void signIn()}>
+          Sign in to {site.name}
+        </Button>
+        <Button variant="ghost" disabled={busy} onClick={onNotNow}>
+          Not now
+        </Button>
+      </div>
+    </div>
+  )
+}
+
+export function problemWindow({
+  entry,
+  open,
+  onClose,
+  onRetry,
+  signInDeclined,
+  onNotNow,
+}: {
+  entry: CaptureEntry
+  open: boolean
+  onClose: () => void
+  onRetry: () => void
+  /** The person chose "Not now" for this link: the plain message is shown. */
+  signInDeclined?: boolean
+  onNotNow?: () => void
+}) {
+  const site = native && needsSignIn(entry.error) ? siteOf(entry.url) : undefined
+  if (site && !signInDeclined) {
+    // Download stays off until the link can be read.
+    return (
+      <PreviewWindow
+        open={open}
+        onClose={onClose}
+        title={`${site.name} link`}
+        facts={shortLink(entry.url)}
+        footer={
+          <>
+            <span className="foot-gap" />
+            <Button variant="primary" size="lg" icon="download" disabled className="download-btn">
+              Download
+            </Button>
+          </>
+        }
+      >
+        <SignInNeeded site={site} onSignedIn={onRetry} onNotNow={() => onNotNow?.()} />
+      </PreviewWindow>
+    )
+  }
   return (
     <PreviewWindow open={open} onClose={onClose} title="This link could not be read" facts={shortLink(entry.url)}>
       <div className="preview-problem" role="alert">

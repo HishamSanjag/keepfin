@@ -21,7 +21,6 @@ import {
 } from '../shared/contracts.js'
 import {platformFolder, safeName} from '../shared/output.js'
 import {
-  channelArtist,
   defaultSpaceFor,
   folderSpaces,
   isKeptSpace,
@@ -40,19 +39,23 @@ import {
   validateOptions,
   type CookieSource,
 } from '../shared/policy.js'
+import {validateGalleryRequest} from '../shared/core/gallery.js'
+import {photoLabel} from './manager/photos.js'
 import {isYouTube} from '../shared/providers.js'
 import type {DownloadTask, Engine} from './engine/index.js'
-import {lookupMusicVideo} from './engine/music.js'
 import {settleOutputs} from './engine/outputs.js'
 import {legacySettings, migrateJob, type StoredJob} from './migrate.js'
+import type {SignInSource} from '../shared/core/signin.js'
+import {findSignIns, withSignIn, type SignInFinder} from './signin/auto.js'
 import {defaultSettings, KEPT_SPACES_MESSAGE, legacyFromDownloads, loadSettings} from './settings.js'
 import {renameWithRetry} from './fsutil.js'
 import {Collections} from './manager/collections.js'
-import {errorText, PAGE_SIZE, playlistOf, sizeOf, type QueueCore} from './manager/core.js'
+import {errorText, PAGE_SIZE, playlistOf, publicJob, sizeOf, stemOf, type QueueCore} from './manager/core.js'
 import {FileRefs} from './manager/fileRefs.js'
 import {ManagerSettings} from './manager/settings.js'
 import {QueueAfterDownload} from './manager/afterSteps.js'
 import {MusicExtras, musicVideoId} from './manager/musicExtras.js'
+import {VideoLooks} from './manager/videoLooks.js'
 import {RemoteJobs} from './manager/remote.js'
 
 export {PAGE_SIZE}
@@ -83,6 +86,8 @@ export type ManagerOptions = {
   findMusicVideo?: (artist: string, title: string) => Promise<MusicVideoFound>
   /** Jobs other devices ask for (dev-docs/plans/KEEPFIN-NETWORK-SPEC.md 6): absent, the queue takes none. */
   remote?: RemoteOptions
+  /** The sign-ins that exist for a site; defaults to the Firefox profiles signed in on this PC (tests pass their own). */
+  signIns?: SignInFinder
 }
 
 export type RemoteOptions = {
@@ -127,7 +132,7 @@ type Run = {
   mode?: 'pause' | 'cancel' | 'close'
   done: Promise<void>
 }
-type Inspected = {result: InspectResult; at: number}
+type Inspected = {result: InspectResult; at: number; signIn?: SignInSource}
 
 /** After any YouTube rate limit, grouped YouTube jobs are capped at this many app-wide for the cooldown below. */
 const YOUTUBE_BATCH_LIMIT = 2
@@ -156,7 +161,6 @@ export class DownloadManager {
   private lastProgress = 0
   private readonly dirty = new Set<string>()
   // music video lookups for finished collection songs, one at a time
-  private videoLooks: Promise<void> = Promise.resolve()
   // metadata concurrency
   private metadataActive = 0
   private metadataWaiting: (() => void)[] = []
@@ -170,6 +174,7 @@ export class DownloadManager {
   private readonly remoteJobs: RemoteJobs
   private readonly managerSettings: ManagerSettings
   private readonly refs: FileRefs
+  private readonly videos: VideoLooks
 
   constructor(private readonly options: ManagerOptions) {
     this.settings = defaultSettings(options.defaultOutDir, options.libraryFolders)
@@ -197,6 +202,7 @@ export class DownloadManager {
       cancelOne: (job) => this.cancelOne(job),
       inspect: (input, session, guarded) => this.inspect(input, session, guarded),
       inspectedMedia: (url) => this.inspectedMedia(url),
+      withSignIn: (url, signal, first, run) => this.withSignIn(url, signal, first, run),
       jobSpace: (job) => this.jobSpace(job),
       clearLive: (job) => this.clearLive(job),
       entriesOf: (id) => this.collections.entriesOf(id),
@@ -216,7 +222,8 @@ export class DownloadManager {
     }
     this.collections = new Collections(core)
     this.musicExtras = new MusicExtras(core)
-    this.afterDownload = new QueueAfterDownload(core, this.musicExtras, (song) => this.lookForVideo(song))
+    this.videos = new VideoLooks(core, this.musicExtras)
+    this.afterDownload = new QueueAfterDownload(core, this.musicExtras, (song) => this.videos.lookFor(song))
     this.remoteJobs = new RemoteJobs(core)
     this.managerSettings = new ManagerSettings(core)
     this.refs = new FileRefs(core)
@@ -476,6 +483,19 @@ export class DownloadManager {
     return
   }
 
+  /** One engine request, signed out first; a site that then asks for a sign-in gets one try with a sign-in Keepfin can use (see signin/auto.ts). */
+  private withSignIn<T>(url: string, signal: AbortSignal | undefined, first: SignInSource | undefined, run: (cookies?: CookieSource) => Promise<T>) {
+    return withSignIn({
+      url,
+      signal,
+      first,
+      run,
+      autoOn: this.settings.autoSignIn,
+      manual: !!this.cookieSource(),
+      find: this.options.signIns ?? findSignIns,
+    })
+  }
+
   async inspect(
     input: unknown,
     session: string = randomUUID(),
@@ -498,8 +518,11 @@ export class DownloadManager {
       INSPECT_TIMEOUT,
     )
     try {
-      const result = await this.withMetadataSlot(controller.signal, () =>
-        this.options.engine.inspect(url, this.context(controller.signal, guarded)),
+      const {value: result, used} = await this.withMetadataSlot(controller.signal, () =>
+        this.withSignIn(url, controller.signal, undefined, (cookies) => {
+          const ctx = this.context(controller.signal, guarded)
+          return this.options.engine.inspect(url, cookies ? {...ctx, cookies} : ctx)
+        }),
       )
       controller.signal.throwIfAborted()
       if (epoch !== this.epoch)
@@ -508,7 +531,7 @@ export class DownloadManager {
         )
       if (result.type === 'media') result.media = {...result.media, url}
       this.inspections.delete(url)
-      this.inspections.set(url, {result, at: this.now()})
+      this.inspections.set(url, {result, at: this.now(), signIn: used})
       while (this.inspections.size > INSPECTION_RETAIN)
         this.inspections.delete(this.inspections.keys().next().value!)
       return structuredClone(result)
@@ -524,6 +547,10 @@ export class DownloadManager {
   private inspectedMedia(url: string): MediaInfo | undefined {
     const found = this.inspections.get(url)?.result
     return found?.type === 'media' ? found.media : undefined
+  }
+
+  private inspectedSignIn(url: string): SignInSource | undefined {
+    return this.inspections.get(url)?.signIn
   }
 
   thumbnailSource(id?: string, url?: string): {url?: string; file?: string} {
@@ -583,7 +610,7 @@ export class DownloadManager {
     this.checkCapacity(1)
     const format: FormatRequest =
       media.engine === 'gallery-dl'
-        ? {type: 'gallery'}
+        ? validateGalleryRequest(formatInput, media.gallery?.count)
         : validateFormatRequest(formatInput)
     const options = this.resolveOptions(optionsInput)
     const videoId = videoInput === undefined ? undefined : musicVideoId(videoInput)
@@ -601,7 +628,7 @@ export class DownloadManager {
       uploader: media.uploader,
       duration: media.duration,
       provider: media.provider,
-      label: quote.label,
+      label: format.type === 'gallery' ? photoLabel(media, format) : quote.label,
       kind: format.type,
       format,
       options,
@@ -611,9 +638,10 @@ export class DownloadManager {
       match: media.match,
       music: media.music ? {...media.music} : undefined,
       tags: media.tags,
-      expectedCount: media.gallery?.count,
+      expectedCount: format.type === 'gallery' && format.items ? format.items.length : media.gallery?.count,
       space,
       playlist: space ? playlistOf(playlistInput) : undefined,
+      signIn: this.inspectedSignIn(url),
       createdAt: this.now(),
       ...joins,
     }
@@ -1152,9 +1180,9 @@ export class DownloadManager {
       }
       await this.save().catch(() => {})
       signal.throwIfAborted()
-      const outcome = await this.options.engine.download(
-        task,
-        this.context(signal, this.isRemote(job.id)),
+      const {value: outcome, used} = await this.withSignIn(job.url, signal, job.signIn, (cookies) => {
+        const ctx = this.context(signal, this.isRemote(job.id))
+        return this.options.engine.download(task, cookies ? {...ctx, cookies} : ctx,
         {
           onStage: (stage, phase) => {
             if (signal.aborted) return
@@ -1183,8 +1211,9 @@ export class DownloadManager {
             job.match = match
             this.touch()
           },
-        },
-      )
+        })
+      })
+      job.signIn = used
       signal.throwIfAborted()
       // The reported files must exist. A damaged report is resolved from the job's output name, then from the folder;
       // when nothing can be found with certainty the job fails rather than saving a path that points nowhere.
@@ -1216,40 +1245,9 @@ export class DownloadManager {
     )
   }
 
-  // ------------------------------------------------------------------ music videos of collection songs
-
-  /** A finished song marked `findVideo`: looks once for its official video, one lookup at a time (a long playlist never fires them all at once). */
-  private lookForVideo(song: StoredJob) {
-    if (!song.findVideo || song.status !== 'completed' || song.format.type !== 'audio') return
-    this.videoLooks = this.videoLooks
-      .then(() => this.queueVideoOf(song))
-      .catch((error) => console.warn('No music video looked up:', error instanceof Error ? error.message : error))
-      .then(() => {
-        // the look is over, whatever it found: the job stops asking, so the next start resumes only looks that never ran
-        if (this.closing || !song.findVideo || !this.jobs.includes(song)) return
-        song.findVideo = undefined
-        return this.save().catch(() => undefined)
-      })
-  }
-
   /** Looks that never ran (Keepfin closed with some still waiting): called once the library is open. */
   resumeVideoLooks() {
-    for (const job of this.jobs) this.lookForVideo(job)
-  }
-
-  private async queueVideoOf(song: StoredJob) {
-    const library = this.options.library
-    if (!library || this.closing || !song.file || !this.jobs.includes(song)) return
-    const entry = library.entryAt(song.file)
-    // already has its video, or one is queued (or was) for this very job: a Retry or a restart never looks twice
-    if (entry?.videoPath || this.jobs.some((job) => job.attachVideo?.jobId === song.id)) return
-    // the song's real artist and title: its saved tags, else what the inspected media said
-    const artist = entry?.artist ?? song.music?.artist ?? channelArtist(song.uploader)
-    const title = entry?.title ?? song.music?.track ?? song.title
-    if (!artist || !title) return
-    const found = await (this.options.findMusicVideo ?? lookupMusicVideo)(artist, title)
-    if ('none' in found || this.closing) return
-    await this.musicExtras.queueMusicVideo(found.videoId, {jobId: song.id}, song.space)
+    this.videos.resume()
   }
 
   // ------------------------------------------------------------------ music extras (see manager/musicExtras.ts)
@@ -1443,13 +1441,4 @@ export class DownloadManager {
     this.touch()
     void this.pump()
   }
-}
-
-function stemOf(template: string) {
-  return path.basename(template).replace(/\.%\(ext\)s$/, '')
-}
-
-function publicJob(job: StoredJob) {
-  const {music: _music, expectedCount: _count, autoRetries: _retries, tags: _tags, followed: _followed, remote: _remote, ...rest} = job
-  return rest
 }

@@ -47,6 +47,9 @@ object Providers {
     /** The first value of a query parameter, decoded; null when it is missing or empty. */
     fun queryParameter(url: String, name: String): String? = Url.parse(url)?.queryParam(name)?.takeIf { it.isNotEmpty() }
 
+    /** Hosts whose posts are mostly images: the gallery engine reads them first. */
+    fun isGalleryHost(url: String): Boolean = Core.isGallery(url)
+
     fun isYouTubeHost(url: String): Boolean = Core.isYouTube(url)
 
     /** A watch link inside a playlist/mix: the collection URL the user may want instead. */

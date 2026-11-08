@@ -42,6 +42,7 @@ internal fun errorsHandler(input: JsonObject, platform: Platform): JsonValue {
                 "noToolNames" to JsonBool(clean),
             )
         }
+        "suggestsGallery" -> obj("suggests" to JsonBool(Errors.suggestsGallery(text)))
         "retry" -> {
             val decision = Retry.next(input.int("retriesUsed") ?: 0, text, (input.members["crashed"] as? JsonBool)?.value ?: false, platform)
             if (decision == null) {

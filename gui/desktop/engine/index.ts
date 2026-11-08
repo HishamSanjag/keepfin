@@ -526,7 +526,7 @@ export class StudioEngine implements Engine {
     if (task.format.type === 'gallery') {
       const folder = path.join(task.folder, task.stem)
       events.onStage('downloading')
-      const {files} = await downloadGallery(await this.gallery(ctx), task.url, folder, task.expectedCount, (done, total) =>
+      const {files} = await downloadGallery(await this.gallery(ctx), task.url, folder, task.expectedCount, task.format.items, (done, total) =>
         events.onProgress({percent: total ? Math.min(99, (done / total) * 100) : 0, downloadedBytes: undefined}),
       )
       return {file: files[0], files: files.slice(1)}

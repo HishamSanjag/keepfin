@@ -4,6 +4,7 @@ import {native} from '../bridge'
 import {ExtrasGroups} from '../preview/Extras'
 import {validateOptions} from '../preview/extrasModel'
 import {act, updateSettings, useMeta} from '../store'
+import {signInTo, signOutOf, useSignIns} from '../signin'
 import {Button, InlineAlert, Segmented, Select, Stepper, Switch} from '../ui/controls'
 import {Group, SettingCard, SettingExpander} from '../ui/SettingCard'
 
@@ -50,6 +51,66 @@ const browsers: {value: CookieBrowser; label: string}[] = [
   {value: 'chromium', label: 'Chromium'},
 ]
 
+/** The sites Keepfin itself is signed in to (through its sign-in window), with Sign out, and a way to sign in to another. */
+function KeepfinSignIns({disabled}: {disabled: boolean}) {
+  const state = useSignIns()
+  const [pick, setPick] = useState('')
+  const [busy, setBusy] = useState(false)
+  const [message, setMessage] = useState('')
+  if (!state) return null
+  const signed = state.sites.filter((site) => site.signedIn)
+  const open = state.sites.filter((site) => !site.signedIn)
+  const chosen = open.some((site) => site.key === pick) ? pick : (open[0]?.key ?? '')
+  const signIn = async () => {
+    setBusy(true)
+    setMessage('')
+    const outcome = await signInTo(chosen)
+    setBusy(false)
+    if (outcome.message) setMessage(outcome.message)
+  }
+  return (
+    <>
+      {signed.map((site) => (
+        <SettingCard
+          key={site.key}
+          icon="lock"
+          title={`Signed in to ${site.name}`}
+          description="Kept encrypted on this computer. Keepfin uses it when a link on this site asks for a sign-in."
+          control={
+            <Button variant="ghost" disabled={disabled} onClick={() => void signOutOf(site.key)} aria-label={`Sign out of ${site.name}`}>
+              Sign out
+            </Button>
+          }
+        />
+      ))}
+      {open.length > 0 && (
+        <SettingCard
+          icon="globe"
+          title="Sign in to a site…"
+          description={
+            state.canKeep
+              ? "A window opens with the site's own sign-in page. Keepfin never sees your password, only that you are signed in."
+              : 'This computer has no password store to keep a sign-in in, so Keepfin cannot save one.'
+          }
+          control={
+            <div className="inline-form">
+              <Select<string> label="Site" value={chosen} disabled={disabled || busy || !state.canKeep} onChange={setPick} options={open.map((site) => ({value: site.key, label: site.name}))} />
+              <Button icon="key" loading={busy} disabled={disabled || !state.canKeep || !chosen} onClick={() => void signIn()}>
+                Sign in…
+              </Button>
+            </div>
+          }
+        />
+      )}
+      {message && (
+        <p className="field-error" role="status">
+          {message}
+        </p>
+      )}
+    </>
+  )
+}
+
 function WebsiteSignIn() {
   const {settings, hasCookieFile} = useMeta()
   const disabled = !native
@@ -63,6 +124,13 @@ function WebsiteSignIn() {
         title="Website sign-in"
         description="Cookies let the engine save private, age-restricted or members-only media that you can already watch while signed in. They never leave this computer."
       >
+        <SettingCard
+          icon="key"
+          title="Use a sign-in when a site asks for one"
+          description="Downloads stay signed out. Only when a site says it needs a sign-in does Keepfin try one it can use, and the download's row says so."
+          control={<Switch label="Use a sign-in when a site asks for one" checked={settings.autoSignIn} disabled={disabled} onChange={(autoSignIn) => void updateSettings({autoSignIn})} />}
+        />
+        <KeepfinSignIns disabled={disabled} />
         <SettingCard
           icon="key"
           title="Use cookies from"

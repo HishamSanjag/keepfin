@@ -8,6 +8,7 @@ import type {
   MusicMetadata,
 } from '../shared/contracts.js'
 import type {ExistingMatch} from '../shared/library.js'
+import type {SignInSource} from '../shared/core/signin.js'
 
 /** A persisted job plus engine-only hints that never reach the renderer. */
 export type StoredJob = Job & {
@@ -19,6 +20,8 @@ export type StoredJob = Job & {
   tags?: string[]
   /** Queued by a follow check: the library marks the finished item as new in its collection. */
   followed?: true
+  /** The sign-in a site asked for, found when the link was inspected: the download uses it from the first try. */
+  signIn?: SignInSource
 }
 
 type V1Choice = {kind?: unknown; label?: unknown; args?: unknown}
@@ -141,6 +144,17 @@ export function optionsFromV1(extras: V1Extras | undefined): DownloadOptions {
   return options
 }
 
+/** A stored sign-in source, or undefined when it is not a valid one (the queue file may be edited by hand). */
+function signInOf(raw: unknown): SignInSource | undefined {
+  if (!raw || typeof raw !== 'object') return
+  const input = raw as Record<string, unknown>
+  if (input.kind === 'keepfin') return {kind: 'keepfin'}
+  const browser = str(input.browser, 40)
+  const label = str(input.label, 100)
+  if (input.kind !== 'browser' || !browser || !label) return
+  return {kind: 'browser', browser, label, ...(str(input.profile, 1024) ? {profile: str(input.profile, 1024)} : {})}
+}
+
 /** Converts one stored job (v1 or v2) into a valid v2 job, or undefined when unusable. */
 export function migrateJob(raw: unknown): StoredJob | undefined {
   if (!raw || typeof raw !== 'object') return
@@ -227,6 +241,7 @@ export function migrateJob(raw: unknown): StoredJob | undefined {
     collectionIndex: num(input.collectionIndex),
     tags: Array.isArray(input.tags) ? input.tags.filter((tag): tag is string => typeof tag === 'string').slice(0, 15) : undefined,
     followed: input.followed === true ? true : undefined,
+    signIn: signInOf(input.signIn),
   }
   for (const key of Object.keys(job) as (keyof StoredJob)[])
     if (job[key] === undefined) delete job[key]

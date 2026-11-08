@@ -195,7 +195,7 @@ export const JobRow = memo(function JobRow({id, canMoveUp = false}: {id: string;
           </span>
         </div>
         <div className="job-meta sep-list">
-          {[job.remote ? `From ${job.remote.device}` : '', provider, job.label, job.uploader].filter(Boolean).map((part, index) => (
+          {[job.remote ? `From ${job.remote.device}` : '', provider, job.label, job.uploader, job.signedIn].filter(Boolean).map((part, index) => (
             <span key={index}>{part}</span>
           ))}
         </div>

@@ -61,7 +61,7 @@ test('a direct file has no height to read: the request asks for no height', () =
 })
 
 test('a link with nothing of the kind keeps its choice', () => {
-  const photos = media('https://www.instagram.com/p/abc/', {video: [], audio: [], engine: 'gallery-dl', gallery: {count: 4, previews: [], truncated: false}})
+  const photos = media('https://www.instagram.com/p/abc/', {video: [], audio: [], engine: 'gallery-dl', gallery: {count: 4, previews: [], items: [], truncated: false}})
   const base = defaultChoice(photos, 'best')
   assert.deepEqual(choiceForPreset(photos, base, 'audio-mp3'), base)
 })

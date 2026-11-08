@@ -1,0 +1,8 @@
+{"description":"The order sign-in sources are tried in (Keepfin's own first, then browsers with Firefox first) and the row text of a source.","cases": [
+{"name":"keepfin-before-browsers","input":{"sources":[{"kind":"browser","browser":"firefox","profile":"a","label":"Firefox"},{"kind":"keepfin"}]},"expected":{"order":["Signed in","Signed in with Firefox [a]"]}},
+{"name":"firefox-first","input":{"sources":[{"kind":"browser","browser":"edge","label":"Edge"},{"kind":"browser","browser":"firefox","profile":"x","label":"Firefox"},{"kind":"browser","browser":"chrome","label":"Chrome"}]},"expected":{"order":["Signed in with Firefox [x]","Signed in with Chrome","Signed in with Edge"]}},
+{"name":"same-browser-keeps-order","input":{"sources":[{"kind":"browser","browser":"firefox","profile":"b","label":"Firefox (b)"},{"kind":"browser","browser":"firefox","profile":"a","label":"Firefox (a)"}]},"expected":{"order":["Signed in with Firefox (b) [b]","Signed in with Firefox (a) [a]"]}},
+{"name":"empty","input":{"sources":[]},"expected":{"order":[]}},
+{"name":"notice-browser","input":{"source":{"kind":"browser","browser":"firefox","label":"Firefox"}},"expected":{"notice":"Signed in with Firefox"}},
+{"name":"notice-keepfin","input":{"source":{"kind":"keepfin"}},"expected":{"notice":"Signed in"}}
+]}

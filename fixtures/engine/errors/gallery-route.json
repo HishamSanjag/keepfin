@@ -1,0 +1,18 @@
+{
+  "description": "Failure texts that make the apps try the gallery engine after the download engine could not read a link (the routing rule shared by both apps).",
+  "cases": [
+    {"name": "unsupported url", "input": {"op": "suggestsGallery", "text": "ERROR: Unsupported URL: https://imgur.com/a/x"}, "expected": {"suggests": true}},
+    {"name": "no video formats", "input": {"op": "suggestsGallery", "text": "ERROR: [generic] No video formats found!"}, "expected": {"suggests": true}},
+    {"name": "no video could be found", "input": {"op": "suggestsGallery", "text": "ERROR: [twitter] 1: No video could be found in this tweet"}, "expected": {"suggests": true}},
+    {"name": "typographic apostrophe", "input": {"op": "suggestsGallery", "text": "ERROR: [Instagram] C: There’s no video in this post"}, "expected": {"suggests": true}},
+    {"name": "straight apostrophe", "input": {"op": "suggestsGallery", "text": "ERROR: [Instagram] C: There's no video in this post"}, "expected": {"suggests": true}},
+    {"name": "no video in this tweet", "input": {"op": "suggestsGallery", "text": "ERROR: no video in this tweet"}, "expected": {"suggests": true}},
+    {"name": "no media found", "input": {"op": "suggestsGallery", "text": "ERROR: No media found"}, "expected": {"suggests": true}},
+    {"name": "post has no video", "input": {"op": "suggestsGallery", "text": "ERROR: This post does not contain a video"}, "expected": {"suggests": true}},
+    {"name": "post has no video (contraction)", "input": {"op": "suggestsGallery", "text": "ERROR: This post doesn't contain video"}, "expected": {"suggests": true}},
+    {"name": "format not available", "input": {"op": "suggestsGallery", "text": "ERROR: Requested format is not available"}, "expected": {"suggests": true}},
+    {"name": "a 403 is not a photo post", "input": {"op": "suggestsGallery", "text": "ERROR: HTTP Error 403: Forbidden"}, "expected": {"suggests": false}},
+    {"name": "a bot check is not a photo post", "input": {"op": "suggestsGallery", "text": "ERROR: [youtube] abc: Sign in to confirm you’re not a bot"}, "expected": {"suggests": false}},
+    {"name": "empty text", "input": {"op": "suggestsGallery", "text": ""}, "expected": {"suggests": false}}
+  ]
+}

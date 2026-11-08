@@ -6,6 +6,7 @@ import app.keepfin.FormatRequest
 import app.keepfin.Job
 import app.keepfin.JobStatus
 import app.keepfin.MediaInfo
+import app.keepfin.PhotoPosts
 import app.keepfin.VideoOption
 import app.keepfin.core.choice.Choice
 import app.keepfin.core.choice.ChoiceAudio
@@ -128,7 +129,11 @@ object Format {
             if (parts.size >= 2) return parts.takeLast(2).joinToString("/")
             if (parent.isNotBlank()) return parent
         }
-        return if (job.kind == app.keepfin.MediaKind.AUDIO) "Music/Keepfin" else "Movies/Keepfin"
+        return when (job.kind) {
+            app.keepfin.MediaKind.AUDIO -> "Music/Keepfin"
+            app.keepfin.MediaKind.PHOTOS -> "Pictures/Keepfin"
+            app.keepfin.MediaKind.VIDEO -> "Movies/Keepfin"
+        }
     }
 }
 
@@ -159,6 +164,8 @@ data class FormatChoice(
     /** best | 320 | 256 | 192 | 128 */
     val audioQuality: String = "best",
     val audioFormatId: String? = null,
+    /** A photo post: the 1-based positions left out (empty = every file is chosen). */
+    val leftOut: List<Int> = emptyList(),
 ) {
     fun video(media: MediaInfo): VideoOption? = media.video.firstOrNull { it.id == videoId } ?: media.video.firstOrNull()
     /** The source stream an Original download takes: the picked one, else the first (best, as the core ranks them). */
@@ -182,12 +189,15 @@ data class FormatChoice(
     }
 
     /** What the choice sends to the engine, from the shared choice module. */
-    fun request(media: MediaInfo): FormatRequest = media.forChoice().let { core ->
+    fun request(media: MediaInfo): FormatRequest = media.gallery?.let { PhotoPosts.request(it.count, PhotoPosts.chosen(it.count, leftOut)) } ?: media.forChoice().let { core ->
         when (val format = DownloadChoice.request(core, toCore(core))) {
             is DownloadFormat.Video -> FormatRequest.Video(format.maxHeight, format.formatId, format.audioFormatId, format.fps, format.codec, format.container)
             is DownloadFormat.Audio -> FormatRequest.Audio(format.target, format.quality, format.formatId)
         }
     }
+
+    /** The photo post with [position] left out, or back in when it was. */
+    fun toggled(position: Int): FormatChoice = copy(leftOut = if (position in leftOut) leftOut - position else leftOut + position)
 
     /** The size of what the choice downloads, from the shared choice module (one rule for the preview and the job). */
     fun size(media: ChoiceMedia): Size = DownloadChoice.size(media, toCore(media))

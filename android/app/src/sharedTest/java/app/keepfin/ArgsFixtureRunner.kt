@@ -120,6 +120,7 @@ object ArgsFixtureRunner {
     private fun toCore(r: FormatRequest): DownloadFormat = when (r) {
         is FormatRequest.Video -> DownloadFormat.Video(r.maxHeight, r.formatId, r.audioFormatId, r.fps, r.codec, r.container)
         is FormatRequest.Audio -> DownloadFormat.Audio(r.target, r.quality, r.formatId)
+        is FormatRequest.Gallery -> error("a photo request has no download plan")
     }
 
     private fun valid(block: () -> Unit) = obj("valid" to runCatching { block() }.isSuccess)
@@ -133,6 +134,7 @@ object ArgsFixtureRunner {
         "preset" -> when (val r = ArgsPolicy.preset(DownloadPreset.of(input.getString("preset")), input.str("container") ?: "mp4")) {
             is FormatRequest.Video -> obj("type" to "video", "maxHeight" to r.maxHeight, "codec" to r.codec, "container" to r.container)
             is FormatRequest.Audio -> obj("type" to "audio", "target" to r.target, "quality" to r.quality)
+            is FormatRequest.Gallery -> error("a preset is never a photo request")
         }
         "presetValid" -> valid { require(DownloadPreset.entries.any { it.wire == input.getString("preset") }) { "unknown preset" } }
         "metadata" -> arr(ArgsPolicy.metadata(input.str("title")).flatMap { listOfNotNull(it.name, it.value) })

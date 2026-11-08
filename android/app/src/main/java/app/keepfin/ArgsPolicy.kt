@@ -26,6 +26,7 @@ object ArgsPolicy {
     private fun core(request: FormatRequest): DownloadFormat = when (request) {
         is FormatRequest.Video -> DownloadFormat.Video(request.maxHeight, request.formatId, request.audioFormatId, request.fps, request.codec, request.container)
         is FormatRequest.Audio -> DownloadFormat.Audio(request.target, request.quality, request.formatId)
+        is FormatRequest.Gallery -> throw IllegalArgumentException("A photo post has no download plan.")
     }
 
     /**
@@ -41,6 +42,7 @@ object ArgsPolicy {
 
     /** Throws [IllegalArgumentException] with the message to show when the request is not acceptable. */
     fun validate(request: FormatRequest): FormatRequest {
+        if (request is FormatRequest.Gallery) { PhotoPosts.validate(request); return request }
         DownloadPlan.validate(core(request))
         return request
     }
@@ -57,7 +59,11 @@ object ArgsPolicy {
         is DownloadFormat.Audio -> FormatRequest.Audio(f.target, f.quality)
     }
 
-    fun kind(request: FormatRequest) = if (request is FormatRequest.Audio) MediaKind.AUDIO else MediaKind.VIDEO
+    fun kind(request: FormatRequest) = when (request) {
+        is FormatRequest.Audio -> MediaKind.AUDIO
+        is FormatRequest.Gallery -> MediaKind.PHOTOS
+        is FormatRequest.Video -> MediaKind.VIDEO
+    }
 
     /**
      * The format selection and the options of a download, in the order the engine receives them. [squareCover] is a YouTube or

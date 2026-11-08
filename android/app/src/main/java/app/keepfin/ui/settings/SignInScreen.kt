@@ -49,6 +49,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
+import app.keepfin.core.signin.SignIn
 import app.keepfin.ui.StudioViewModel
 import app.keepfin.ui.UiTags
 import app.keepfin.ui.components.NavRow
@@ -56,16 +57,20 @@ import app.keepfin.ui.components.RowSeparator
 import app.keepfin.ui.components.SettingsGroup
 import app.keepfin.ui.components.SupportingText
 
-/** Sites whose cookies the engine exports after sign-in (see EngineApi.importSignInSession). */
-enum class SignInSite(val label: String, val url: String, val desktop: Boolean = false) {
-    YOUTUBE("YouTube · Google", "https://accounts.google.com/ServiceLogin?service=youtube&continue=https%3A%2F%2Fwww.youtube.com%2F", desktop = true),
-    INSTAGRAM("Instagram", "https://www.instagram.com/accounts/login/"),
-    X("X", "https://x.com/i/flow/login"),
-    FACEBOOK("Facebook", "https://www.facebook.com/login/"),
-    TIKTOK("TikTok", "https://www.tiktok.com/login"),
-    REDDIT("Reddit", "https://www.reddit.com/login/"),
-    VIMEO("Vimeo", "https://vimeo.com/log_in"),
-    SOUNDCLOUD("SoundCloud", "https://soundcloud.com/signin"),
+/** Sites whose cookies the engine exports after sign-in (see EngineApi.importSignInSession). [key] is the shared core's site key; its table holds the login page. */
+enum class SignInSite(val label: String, val key: String, val desktop: Boolean = false) {
+    YOUTUBE("YouTube · Google", "youtube", desktop = true),
+    INSTAGRAM("Instagram", "instagram"),
+    X("X", "x"),
+    FACEBOOK("Facebook", "facebook"),
+    TIKTOK("TikTok", "tiktok"),
+    REDDIT("Reddit", "reddit"),
+    VIMEO("Vimeo", "vimeo"),
+    SOUNDCLOUD("SoundCloud", "soundcloud"),
+    PINTEREST("Pinterest", "pinterest");
+
+    /** The site's own login page, from the shared core's table. */
+    val url: String get() = SignIn.site(key)!!.loginUrl
 }
 
 /** Google refuses embedded browsers that identify as WebView; it gets a desktop-class Chrome UA. */
@@ -74,7 +79,8 @@ private const val DESKTOP_UA = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleW
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SignInScreen(vm: StudioViewModel, onClose: () -> Unit) {
-    var site by rememberSaveable { mutableStateOf<SignInSite?>(null) }
+    // Opened from a preview that needs a sign-in ("Sign in to Instagram"): straight to that site's login page.
+    var site by rememberSaveable { mutableStateOf(SignInSite.entries.firstOrNull { it.key == vm.signInRequest }) }
     var progress by remember { mutableIntStateOf(0) }
     var web by remember { mutableStateOf<WebView?>(null) }
     var canGoBack by remember { mutableStateOf(false) }
@@ -87,7 +93,8 @@ fun SignInScreen(vm: StudioViewModel, onClose: () -> Unit) {
                 navigationIcon = { IconButton(onClick = onClose) { Icon(Icons.AutoMirrored.Outlined.ArrowBack, contentDescription = "Back to Settings") } },
                 actions = {
                     Button(
-                        onClick = { vm.finishSignIn { count -> if (count > 0) onClose() } },
+                        // A link waiting for this sign-in is read again by itself; otherwise back to Settings.
+                        onClick = { val waiting = vm.signInRequest != null; vm.finishSignIn { count -> if (count > 0) { if (waiting) vm.signedInForLink() else onClose() } } },
                         enabled = !vm.signingIn, modifier = Modifier.padding(end = 8.dp).testTag(UiTags.SIGN_IN_DONE),
                     ) {
                         if (vm.signingIn) CircularProgressIndicator(Modifier.size(16.dp), strokeWidth = 2.dp) else Text("Done")

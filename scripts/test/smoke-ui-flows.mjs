@@ -223,6 +223,14 @@ await test('Both (Capture): the setting "Keep music videos automatically" starts
   assert.equal((await last(page, 'enqueue')).videoId, undefined, 'Audio alone for this download')
 }, {fake: {musicVideos: true}})
 
+await test('a download that used a sign-in says so quietly on its row', async (page) => {
+  await page.getByRole('navigation', {name: 'Main navigation'}).getByRole('button', {name: 'Downloads'}).click()
+  const row = page.getByRole('listitem', {name: 'Harbour photos'})
+  await row.waitFor()
+  assert.match(await row.locator('.job-meta').textContent(), /Signed in with Firefox/)
+  assert.equal(await page.getByRole('alert').count(), 0, 'nothing pops up')
+}, {fake: {signedIn: 'Signed in with Firefox'}})
+
 await test('Both (Capture): only a song or a YouTube link has Both; a YouTube link uses the link itself and searches nothing', async (page) => {
   await capture(page, 'https://www.youtube.com/watch?v=dQw4w9WgXcQ')
   assert.equal((await calls(page, 'findMusicVideo')).length, 0, 'a plain video link never looks')
@@ -451,7 +459,13 @@ await test('settings: groups send updateSettings; engine, cookies, proxy', async
   assert.equal((await lastSettings()).turbo.enabled, true)
   await page.getByRole('switch', {name: 'Limit download speed'}).click()
   assert.equal((await lastSettings()).rateLimit, 5 * 1048576)
-  // Website sign-in
+  // Website sign-in: the switch for using a sign-in when a site asks for one (on by default)
+  const autoSignIn = page.getByRole('switch', {name: 'Use a sign-in when a site asks for one'})
+  assert.equal(await autoSignIn.isChecked(), true)
+  await autoSignIn.click()
+  assert.equal((await lastSettings()).autoSignIn, false)
+  await autoSignIn.click()
+  assert.equal((await lastSettings()).autoSignIn, true)
   await page.getByRole('radio', {name: 'Browser'}).click()
   assert.equal((await lastSettings()).cookies.mode, 'browser')
   await page.getByRole('radio', {name: 'cookies.txt'}).click()

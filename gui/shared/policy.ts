@@ -44,7 +44,8 @@ export function validateProxy(value: unknown): string {
   return url.href.replace(/\/$/, '')
 }
 
-export type CookieSource = {file?: string; browser?: CookieBrowser}
+/** A cookies file, or a browser's cookies; `profile` (Firefox only) is the absolute path of one profile folder. */
+export type CookieSource = {file?: string; browser?: CookieBrowser; profile?: string}
 
 export type NetworkSettings = Pick<Settings, 'fragments' | 'rateLimit' | 'proxy'>
 
@@ -75,10 +76,25 @@ const oneOf = <T extends string>(value: unknown, allowed: readonly T[], message:
   throw new Error(message)
 }
 
+/**
+ * The `--cookies-from-browser` value both engines read: `BROWSER` or `firefox:<profile folder>`. The profile must be an
+ * absolute path (a Windows drive path or a POSIX path) without control characters or the engines' `::` container separator.
+ */
+export function cookieBrowserSpec(cookies?: CookieSource): string | undefined {
+  if (!cookies?.browser) return undefined
+  const browser = oneOf(cookies.browser, cookieBrowsers, 'Choose a supported browser.')
+  const profile = cookies.profile
+  if (profile === undefined) return browser
+  const absolute = /^[A-Za-z]:[\\/]/.test(profile) || profile.startsWith('/')
+  if (browser !== 'firefox' || !absolute || profile.length > 1024 || profile.includes('::') || /[\u0000-\u001f]/.test(profile))
+    throw new Error('Choose a supported browser profile.')
+  return `${browser}:${profile}`
+}
+
 export function cookieArgs(cookies?: CookieSource): string[] {
   if (cookies?.file) return ['--cookies', cookies.file]
-  if (cookies?.browser) return ['--cookies-from-browser', oneOf(cookies.browser, cookieBrowsers, 'Choose a supported browser.')]
-  return []
+  const spec = cookieBrowserSpec(cookies)
+  return spec ? ['--cookies-from-browser', spec] : []
 }
 
 export type ToolArgs = {ffmpeg?: string; jsRuntime?: string; cacheDir?: string}

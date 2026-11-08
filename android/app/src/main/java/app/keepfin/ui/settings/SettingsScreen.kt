@@ -129,7 +129,7 @@ private fun CategoryPage(
     val sections: List<Section> = when (category) {
         SettingsCategory.DOWNLOADS -> listOf(
             Section(SettingsGroups.DOWNLOADS) { DownloadsGroup(vm, settings, onOptions) },
-            Section(SettingsGroups.SIGN_IN) { AccountsGroup(vm, hasCookies) },
+            Section(SettingsGroups.SIGN_IN) { AccountsGroup(vm, settings, hasCookies) },
             Section(SettingsGroups.SPEED) { SpeedGroup(vm, settings, speedOpen) { speedOpen = !speedOpen } },
         )
         SettingsCategory.LIBRARY -> listOf(
@@ -287,10 +287,13 @@ private fun StepSlider(title: String, value: Int, range: IntRange, subtitle: Str
 }
 
 @Composable
-private fun AccountsGroup(vm: StudioViewModel, hasCookies: Boolean) {
+private fun AccountsGroup(vm: StudioViewModel, settings: EngineSettings, hasCookies: Boolean) {
     val importer = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri -> uri?.let(vm::importCookies) }
     var confirm by remember { mutableStateOf(false) }
     SettingsGroup("Website sign-in", tag = UiTags.setting("accounts")) {
+        SwitchRow("Use a sign-in when a site asks for one", settings.autoSignIn, { value -> vm.updateSettings { it.copy(autoSignIn = value) } },
+            subtitle = "Downloads stay signed out. Only when a site says it needs a sign-in does Keepfin try yours, and the download's row says so.", tag = UiTags.AUTO_SIGN_IN_SWITCH)
+        RowSeparator()
         Row(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 12.dp), verticalAlignment = Alignment.CenterVertically) {
             Column(Modifier.weight(1f)) {
                 Text(if (hasCookies) "Signed in" else "Not signed in", style = MaterialTheme.typography.bodyLarge)

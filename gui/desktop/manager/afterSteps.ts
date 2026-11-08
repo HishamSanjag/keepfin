@@ -6,7 +6,9 @@ import type {ExistingMatch} from '../../shared/library.js'
 import {noSaving, runAfterDownload, SAVING, type AfterDownloadSteps} from '../afterDownload.js'
 import type {StoredJob} from '../migrate.js'
 import {errorText, type QueueCore} from './core.js'
+import {PartlySaved} from '../library/partial.js'
 import type {MusicExtras} from './musicExtras.js'
+import {filesOf, relabel} from './photos.js'
 
 export class QueueAfterDownload {
   constructor(
@@ -19,6 +21,8 @@ export class QueueAfterDownload {
   /** Runs the plan for a finished job. `existing` is the recording that was already in the library (nothing was downloaded). */
   async run(job: StoredJob, options: {existing?: ExistingMatch; only?: readonly AfterKind[]; signal?: AbortSignal} = {}) {
     const {existing, only, signal} = options
+    // fewer files than asked for arrived: "4 of 6 photos"
+    if (job.format.type === 'gallery' && !existing && !only) relabel(job, filesOf(job).length)
     const library = this.core.options.library
     const saving = (await library?.savingPlan(job, existing)) ?? {
       facts: {audio: job.kind === 'audio', hasFile: !!job.file && !existing, existing: !!existing, playlist: !!job.playlist},
@@ -30,9 +34,16 @@ export class QueueAfterDownload {
       ...saving.steps,
       lyrics: () => this.extras.addLyrics(job, signal),
       save: async () => {
-        const items = await saving.steps.save()
-        job.saveError = undefined
-        return items
+        try {
+          const items = await saving.steps.save()
+          job.saveError = undefined
+          // every photo is in the library now ("4 of 6 photos" becomes "6 photos")
+          if (job.format.type === 'gallery') relabel(job, filesOf(job).length)
+          return items
+        } catch (error) {
+          if (error instanceof PartlySaved) relabel(job, error.saved)
+          throw error
+        }
       },
       attachVideo: async () => {
         const items = await saving.steps.attachVideo()

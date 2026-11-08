@@ -9,7 +9,7 @@ import type {
   VideoOption,
 } from '../../shared/contracts'
 import {containerAfterPick, modesOf, openingPicks, picksForPreset, requestOf, sizeOf, type ChoicePicks} from '../../shared/core/choice'
-import {audioCodecLabel, formatBytes, videoLabel} from '../format'
+import {audioCodecLabel, formatBytes, plural, videoLabel} from '../format'
 
 export type ChoiceTab = 'video' | 'audio' | 'gallery'
 export type Choice = {
@@ -22,6 +22,8 @@ export type Choice = {
   quality: AudioQuality
   /** Specific source audio stream for the Audio tab; default best. */
   audioSource?: string
+  /** Gallery tab: the 1-based positions left out; empty or absent when every photo is chosen. */
+  leftOut?: number[]
 }
 
 export const audioTargets: {value: AudioTarget; label: string; lossless?: boolean}[] = [
@@ -89,8 +91,22 @@ export function selectedVideo(media: MediaInfo, choice: Choice) {
   return media.video.find((option) => option.id === choice.videoId) || media.video[0]
 }
 
+/** The positions of a gallery post that the choice downloads (all of them unless some are left out). */
+export function galleryChosen(media: MediaInfo, choice: Choice): number[] {
+  const out = new Set(choice.leftOut)
+  return Array.from({length: media.gallery?.count ?? 0}, (_, i) => i + 1).filter((position) => !out.has(position))
+}
+
+/** "6 photos", or "6 items" when a video of the post is among them. */
+export function galleryChosenLabel(media: MediaInfo, choice: Choice): string {
+  const chosen = new Set(galleryChosen(media, choice))
+  const videos = media.gallery?.items.some((item) => !item.photo && chosen.has(item.position))
+  return plural(chosen.size, videos ? 'item' : 'photo')
+}
+
 export function formatRequest(media: MediaInfo, choice: Choice): FormatRequest {
-  return choice.tab === 'gallery' ? {type: 'gallery'} : requestOf(media, picksOf(choice))
+  if (choice.tab !== 'gallery') return requestOf(media, picksOf(choice))
+  return choice.leftOut?.length ? {type: 'gallery', items: galleryChosen(media, choice)} : {type: 'gallery'}
 }
 
 /** The size of what the choice downloads, from the shared choice module; a gallery has none. */

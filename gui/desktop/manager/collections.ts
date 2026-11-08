@@ -14,6 +14,7 @@ import {
 import {formatLabel, presetFormat} from '../../shared/policy.js'
 import {prefersAudio, providerName} from '../../shared/providers.js'
 import {sanitizeGroup, type StoredJob} from '../migrate.js'
+import type {SignInSource} from '../../shared/core/signin.js'
 import {errorText, PAGE_SIZE, playlistOf, type QueueCore} from './core.js'
 
 type Session = {
@@ -25,6 +26,8 @@ type Session = {
   queued: Set<string>
   page: number
   group?: JobGroup
+  /** The sign-in the site asked for while listing; the jobs made from the review carry it. */
+  signIn?: SignInSource
 }
 const sessionId = /^[a-zA-Z0-9_-]{1,100}$/
 
@@ -142,25 +145,29 @@ export class Collections {
       epoch === this.core.epoch()
     const before = session.discovery.entries.length
     try {
-      const result = await this.core.withMetadataSlot(controller.signal, () =>
-        this.core.options.engine.discover(
-          session.url,
-          {start, end},
-          this.core.context(controller.signal),
-          (entry: PlaylistEntry) => {
-            if (!live() || session.seen.has(entry.url)) return
-            session.seen.add(entry.url)
-            session.discovery.entries.push(entry)
-            this.pushDiscovery(session)
-          },
-          (meta) => {
-            if (!live()) return
-            session.discovery.title ??= meta.title
-            session.discovery.uploader ??= meta.uploader
-          },
-        ),
+      const {value: result, used} = await this.core.withMetadataSlot(controller.signal, () =>
+        this.core.withSignIn(session.url, controller.signal, session.signIn, (cookies) => {
+          const ctx = this.core.context(controller.signal)
+          return this.core.options.engine.discover(
+            session.url,
+            {start, end},
+            cookies ? {...ctx, cookies} : ctx,
+            (entry: PlaylistEntry) => {
+              if (!live() || session.seen.has(entry.url)) return
+              session.seen.add(entry.url)
+              session.discovery.entries.push(entry)
+              this.pushDiscovery(session)
+            },
+            (meta) => {
+              if (!live()) return
+              session.discovery.title ??= meta.title
+              session.discovery.uploader ??= meta.uploader
+            },
+          )
+        }),
       )
       if (!live()) return
+      session.signIn = used
       session.discovery.truncated = result.truncated
       const note =
         [result.partialError, result.notice].filter(Boolean).join(' ') ||
@@ -287,6 +294,7 @@ export class Collections {
           collection: collection && {id: collection.id, index: entry.position - 1},
           findVideo,
           playlist: spaces.get(entry.url) ? playlistOf(playlistInput) : undefined,
+          signIn: session.signIn,
         }),
       )
     }
@@ -329,6 +337,7 @@ export class Collections {
       followed?: boolean
       findVideo?: boolean
       playlist?: string
+      signIn?: SignInSource
     },
   ): StoredJob {
     return {
@@ -363,6 +372,7 @@ export class Collections {
       followed: input.followed ? true : undefined,
       findVideo: input.findVideo ? true : undefined,
       playlist: input.playlist,
+      signIn: input.signIn,
       createdAt: this.core.now(),
     }
   }

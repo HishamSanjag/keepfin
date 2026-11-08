@@ -45,6 +45,7 @@ export const previewSettings: Settings = {
   youtubeMusic: 'audio',
   options: {embedMetadata: true, embedThumbnail: true, embedChapters: true, sponsorBlock: 'off'},
   cookies: {mode: 'none'},
+  autoSignIn: true,
   proxy: '',
   updateChannel: 'stable',
   startPage: 'last',

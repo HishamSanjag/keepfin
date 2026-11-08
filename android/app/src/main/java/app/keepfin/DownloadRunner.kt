@@ -14,6 +14,7 @@ import java.io.File
 internal class DownloadRunner(private val engine: MediaEngine) {
     private data class Attempt(val useInfo: Boolean, val aria2c: Boolean, val cover: Boolean = true, val coverRetried: Boolean = false, val sourceCover: File? = null)
     private class Stopped : RuntimeException()
+    private val photos = PhotoDownload(engine)
 
     /** Outcome of looking for another upload after an "unavailable" failure. */
     private sealed interface Recovery {
@@ -28,6 +29,7 @@ internal class DownloadRunner(private val engine: MediaEngine) {
         var record = initial
         var sourceCover: File? = null
         try {
+            (record.format as? FormatRequest.Gallery)?.let { photos.run(record, it); return }
             // "Already in <space>": a recording that is already there completes the job without downloading.
             engine.existingMatch(record)?.let { EngineAfterSteps(engine, id, it).finish(); return }
             if (Providers.musicSource(record.job.url) != null) {
@@ -45,6 +47,8 @@ internal class DownloadRunner(private val engine: MediaEngine) {
             while (true) {
                 var outcome: String = execute(engine.record(id) ?: return, attempt) ?: run { finish(id); return }
                 if (engine.stopped(id)) { stoppedCleanup(id); return }
+                // A site that asks for a sign-in gets one try with Keepfin's own (the first try went without it).
+                if (engine.useSignIn(id, outcome)) { attempt = attempt.copy(useInfo = false); continue }
                 // "Video unavailable" can be a regional restriction YouTube never lifts: check once, and for songs use another upload.
                 if (!restrictionChecked && Restriction.isUnavailable(outcome)) {
                     restrictionChecked = true
@@ -232,7 +236,7 @@ internal class DownloadRunner(private val engine: MediaEngine) {
         }
         Log.i(TAG, "${id.take(8)} run attempt=$attempt args=${args.joinToString(" ") { listOfNotNull(it.name, it.value?.take(80)).joinToString(" ") }}")
         args.forEach { if (it.value == null) request.addOption(it.name) else request.addOption(it.name, it.value) }
-        val cookies = engine.cookieSnapshot()
+        val cookies = if (record.job.signedIn != null) engine.cookieSnapshot() else null
         cookies?.let { request.addOption("--cookies", it.absolutePath) }
         val parser = ProgressParser(record.job.expectedSize)
         val process = "dl-$id-${System.nanoTime()}"

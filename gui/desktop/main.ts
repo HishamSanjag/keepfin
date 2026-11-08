@@ -45,6 +45,10 @@ import {loadProfiles} from './store/profiles.js'
 import {launchHelper, planStartOver, takeResult as takeStartOverResult} from './startOver.js'
 import {bootKeepfinFolder, flagOffState, type KeepfinBoot} from './keepfinBoot.js'
 import {safeStorageBox} from './cloud/accounts.js'
+import {findSignIns} from './signin/auto.js'
+import {SignInStore} from './signin/store.js'
+import {handleSignIn} from './signin/ops.js'
+import {signInWindows} from './signin/window.js'
 import {windowsFirewall} from './net/firewall.js'
 import {unavailableState} from './net/ops.js'
 import type {PushEvent, Request, Snapshot} from '../shared/contracts.js'
@@ -223,7 +227,12 @@ else {
       library = index
       playCache = new PlayCache(path.join(userData, 'play-cache'), ffmpegPath)
       await index.init()
+      // Keepfin's own sign-ins: encrypted with the OS, decrypted into a private temp file only for the length of one engine run.
+      const signInStore = new SignInStore({dir: path.join(userData, 'signin'), vault: {available: () => safeStorage.isEncryptionAvailable(), encrypt: (text) => safeStorage.encryptString(text), decrypt: (data) => safeStorage.decryptString(data)}})
+      void signInStore.sweepTemp()
+      const signInWindow = signInWindows({BrowserWindow, session, parent: () => window}, signInStore)
       const queue = new DownloadManager({
+        signIns: signInStore.finder(findSignIns),
         store: path.join(userData, 'queue.json'),
         defaultOutDir: path.join(app.getPath('downloads'), 'Keepfin'),
         engine,
@@ -570,6 +579,14 @@ else {
             keepLayoutWidth(scale)
             return null
           }
+          case 'signInState':
+          case 'signInOpen':
+          case 'signInRemove':
+            return handleSignIn(request.op, request, {
+              store: signInStore,
+              open: signInWindow.open,
+              clear: signInWindow.clear,
+            })
           case 'startOverResult':
             return takeStartOverResult()
           case 'startOver': {

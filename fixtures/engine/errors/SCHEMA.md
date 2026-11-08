@@ -22,3 +22,9 @@ Every `classify` and `scrub` case also asserts that the user-facing message (and
 At most three retries. Delays: 5/15/30 s (`retryable`, `engine`), 60/180/300 s (`rateLimited`), one retry after 120 s (`botCheck`). `refreshEngine` is true from the second retry of an engine failure (and at once for the failures that only get one retry). Platform differences are data: Android refreshes the engine on a 403 (ERR-3) and gives an unrecognised failure or "no formats found" one engine refresh and one retry (`platforms` cases); the desktop keeps the full budget. `retry` cases do not carry `noToolNames`.
 
 The core also classifies the text the Android app adds after it confirmed a regional restriction (`keepfin-restricted:music` / `:other`) as `regionBlocked`, permanent.
+
+## `suggestsGallery` (gallery-route.json)
+
+| `input.op` | input | expected |
+|---|---|---|
+| `suggestsGallery` | `text` (the download engine's failure text) | `{suggests: true/false}`: whether the gallery engine is worth trying next (unsupported link, no video in a post, no media) |

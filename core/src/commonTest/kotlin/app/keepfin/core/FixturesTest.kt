@@ -44,7 +44,16 @@ class FixturesTest {
     fun playback() = check("playback", runCategory("playback", ::playbackHandler))
 
     @Test
-    fun lyrics() = check("lyrics", runCategory("lyrics", ::lyricsHandler))
+    fun gallery() = check("gallery", runCategory("gallery", ::galleryHandler))
+
+    @Test
+    fun signin() = check("signin", runCategory("signin", ::signinHandler))
+
+    @Test
+    fun compaction() = check("compaction", runCategory("compaction", ::compactionHandler))
+
+    @Test
+    fun lyrics() =check("lyrics", runCategory("lyrics", ::lyricsHandler))
 
     @Test
     fun choice() = check("choice", runCategory("choice", ::choiceHandler, platforms = setOf("desktop", "android")))

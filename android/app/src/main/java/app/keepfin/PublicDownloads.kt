@@ -19,16 +19,19 @@ internal class PublicDownloads(private val context: Context) {
     val folder = "${Environment.DIRECTORY_DOWNLOADS}/Keepfin"
     val videoFolder = "${Environment.DIRECTORY_MOVIES}/Keepfin"
     val audioFolder = "${Environment.DIRECTORY_MUSIC}/Keepfin"
+    val imageFolder = "${Environment.DIRECTORY_PICTURES}/Keepfin"
 
     /**
      * Where a job's files go inside a space: one root-relative folder per storage root, e.g.
      * music = "Music/Keepfin Music/Album", movies = "Movies/Keepfin Music/Album", download = "Download/Keepfin Music/Album".
      */
-    data class Placement(val music: String, val movies: String, val download: String) {
+    data class Placement(val music: String, val movies: String, val download: String, val pictures: String? = null) {
         fun folderFor(root: StorageRoot) = when (root) { StorageRoot.MUSIC -> music; StorageRoot.MOVIES -> movies; StorageRoot.DOWNLOAD -> download }
     }
 
-    fun folderFor(source: File, placement: Placement? = null): String {
+    /** [photos]: the file is one of a photo post, so an image belongs in Pictures (a cover or other sidecar image stays with its download). */
+    fun folderFor(source: File, placement: Placement? = null, photos: Boolean = false): String {
+        if (photos && mimeFor(source).startsWith("image/")) return placement?.pictures ?: imageFolder
         val root = StorageRoot.ofMime(mimeFor(source))
         if (placement != null) return placement.folderFor(root)
         return when (root) { StorageRoot.MOVIES -> videoFolder; StorageRoot.MUSIC -> audioFolder; StorageRoot.DOWNLOAD -> folder }
@@ -44,9 +47,10 @@ internal class PublicDownloads(private val context: Context) {
         else -> MimeTypeMap.getSingleton().getMimeTypeFromExtension(source.extension.lowercase()) ?: "application/octet-stream"
     }
 
-    internal fun collectionFor(source: File): Uri = when {
+    internal fun collectionFor(source: File, photos: Boolean = false): Uri = when {
         mimeFor(source).startsWith("video/") -> MediaStore.Video.Media.getContentUri(MediaStore.VOLUME_EXTERNAL_PRIMARY)
         mimeFor(source).startsWith("audio/") -> MediaStore.Audio.Media.getContentUri(MediaStore.VOLUME_EXTERNAL_PRIMARY)
+        photos && mimeFor(source).startsWith("image/") -> MediaStore.Images.Media.getContentUri(MediaStore.VOLUME_EXTERNAL_PRIMARY)
         else -> MediaStore.Downloads.getContentUri(MediaStore.VOLUME_EXTERNAL_PRIMARY)
     }
 
@@ -85,15 +89,16 @@ internal class PublicDownloads(private val context: Context) {
     /**
      * Publishes [files] into [placement] (legacy Keepfin folders when null). [fromStem] is the stem the private files carry;
      * [stem] is the public file name stem. Name collisions get " (2)" suffixes across all files of one publish.
+     * [photos]: the files are a photo post's (images go to Pictures/Keepfin, a video to Movies/Keepfin).
      */
     fun publish(files: List<File>, stem: String = files.first().nameWithoutExtension, placement: Placement? = null, fromStem: String = stem,
-                cancelled: () -> Boolean = { false }): Map<File, Saved> {
+                photos: Boolean = false, cancelled: () -> Boolean = { false }): Map<File, Saved> {
         val saved = linkedMapOf<File, Saved>()
         try {
-            val names = files.distinctBy { folderFor(it, placement) }.flatMap { source ->
-                val targetFolder = folderFor(source, placement)
+            val names = files.distinctBy { folderFor(it, placement, photos) }.flatMap { source ->
+                val targetFolder = folderFor(source, placement, photos)
                 if (Build.VERSION.SDK_INT >= 29) context.contentResolver.query(
-                    collectionFor(source), arrayOf(MediaStore.MediaColumns.DISPLAY_NAME),
+                    collectionFor(source, photos), arrayOf(MediaStore.MediaColumns.DISPLAY_NAME),
                     "${MediaStore.MediaColumns.RELATIVE_PATH} = ?", arrayOf("$targetFolder/"), null
                 )?.use { cursor -> buildList { while (cursor.moveToNext()) add(cursor.getString(0)) } } ?: emptyList()
                 else {
@@ -107,7 +112,7 @@ internal class PublicDownloads(private val context: Context) {
             while (files.any { name(it) in names }) suffix++
             files.forEach {
                 check(!cancelled()) { "Download cancelled." }
-                saved[it] = publishOne(it, name(it), cancelled, placement)
+                saved[it] = publishOne(it, name(it), cancelled, placement, photos)
             }
             check(!cancelled()) { "Download cancelled." }
             return saved
@@ -117,6 +122,9 @@ internal class PublicDownloads(private val context: Context) {
             throw error
         }
     }
+
+    /** Whether the saved copy at [uri] (a MediaStore or Keepfin folder document) can still be opened. */
+    fun exists(uri: String): Boolean = try { context.contentResolver.openFileDescriptor(Uri.parse(uri), "r")?.use { true } ?: false } catch (_: Exception) { false }
 
     fun discard(saved: Collection<Saved>) {
         saved.forEach {
@@ -139,10 +147,10 @@ internal class PublicDownloads(private val context: Context) {
         }
     }
 
-    private fun publishOne(source: File, requestedName: String, cancelled: () -> Boolean, placement: Placement?): Saved {
+    private fun publishOne(source: File, requestedName: String, cancelled: () -> Boolean, placement: Placement?, photos: Boolean): Saved {
         require(source.isFile) { "The downloaded file is unavailable." }
         val mime = mimeFor(source)
-        val targetFolder = folderFor(source, placement)
+        val targetFolder = folderFor(source, placement, photos)
         if (Build.VERSION.SDK_INT >= 29) {
             val resolver = context.contentResolver
             val values = ContentValues().apply {
@@ -154,7 +162,7 @@ internal class PublicDownloads(private val context: Context) {
                     putAll(LocalMediaPreview.metadata(source, mime))
                 }
             }
-            val uri = resolver.insert(collectionFor(source), values)
+            val uri = resolver.insert(collectionFor(source, photos), values)
                 ?: error("Android could not create the download in $targetFolder.")
             try {
                 resolver.openOutputStream(uri, "w")?.use { out -> copy(source, out, cancelled) }

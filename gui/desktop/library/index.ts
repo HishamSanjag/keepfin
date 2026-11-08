@@ -49,6 +49,7 @@ import {Relinker} from './parts/relink.js'
 import {isInside, itemIdFor, keyOf, publicItem, relativeFolder, sanitizeCollection, sanitizeEntry, sanitizePlaylist, titleFromName} from './parts/sanitize.js'
 import {Scanner} from './parts/scanner.js'
 import {type AfterFacts, noSaving, runAfterDownload, SAVING} from '../afterDownload.js'
+import {addEach} from './partial.js'
 
 /** A library item plus bookkeeping that never reaches the renderer. */
 export type LibraryEntry = LibraryItem & {
@@ -1034,21 +1035,19 @@ export class LibraryIndex {
 
   /** Adds a finished job's media files (a gallery's images too) and returns their items. Throws when a file is gone or cannot be added. */
   private async saveJobFiles(job: Job): Promise<string[]> {
-    const added: string[] = []
     this.adopting++
     try {
-      for (const file of new Set([job.file, ...(job.files ?? [])])) {
+      // a photo post saves file by file: one failure never loses the others, and Save again adds only what is missing
+      return await addEach(job.format.type === 'gallery', new Set([job.file, ...(job.files ?? [])]), async (file) => {
         const kind = file && mediaKindOf(file)
         const space = file && kind && path.isAbsolute(file) && (job.format.type === 'gallery' || kind !== 'image') ? this.spaceForJob(job, file) : undefined
-        if (!file || !space) continue
+        if (!file || !space) return
         if (!(await fs.stat(file).catch(() => undefined))) throw new Error('The downloaded file is no longer there.')
-        const entry = await this.addFile(file, {space, managed: true, job, addedAt: job.completedAt})
-        if (entry) added.push(entry.id)
-      }
+        return (await this.addFile(file, {space, managed: true, job, addedAt: job.completedAt}))?.id
+      })
     } finally {
       this.adopting--
     }
-    return added
   }
 
   /** "Add to playlist" from the review: the items a finished download made (or already was) join that playlist, in order. A playlist deleted since is skipped. */

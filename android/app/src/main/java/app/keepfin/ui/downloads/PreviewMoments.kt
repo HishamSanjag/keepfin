@@ -41,7 +41,12 @@ import app.keepfin.ui.UiTags
 import app.keepfin.ui.theme.Studio
 
 /** A link (or several) being read, or one that could not be read: what the preview shows until there is a result. */
-class ReviewReading(val urls: List<String>, val error: String?, val onCancel: () -> Unit, val onRetry: () -> Unit, val onSignIn: () -> Unit)
+class ReviewReading(
+    val urls: List<String>, val error: String?, val onCancel: () -> Unit, val onRetry: () -> Unit,
+    /** The site that shows this link only to signed-in people: the failure then offers "Sign in to [site]" and "Not now" instead of Try again. */
+    val signInSite: String? = null,
+    val onSignIn: () -> Unit,
+)
 
 private val signInHint = Regex("sign in|signin|cookies|login|private|members", RegexOption.IGNORE_CASE)
 
@@ -74,6 +79,10 @@ fun ColumnScope.ReadingMoment(reading: ReviewReading, onClose: () -> Unit) {
                         modifier = Modifier.weight(1f).semantics { liveRegion = LiveRegionMode.Polite }, maxLines = 2,
                     )
                     TextButton(onClick = reading.onCancel, modifier = Modifier.heightIn(min = 48.dp).testTag(UiTags.CANCEL_INSPECTION)) { Text("Cancel") }
+                } else if (reading.signInSite != null) {
+                    Spacer(Modifier.weight(1f))
+                    TextButton(onClick = reading.onCancel, modifier = Modifier.heightIn(min = 48.dp).testTag(UiTags.SIGN_IN_NOT_NOW)) { Text("Not now") }
+                    FilledTonalButton(onClick = reading.onSignIn, modifier = Modifier.heightIn(min = 48.dp).testTag(UiTags.SIGN_IN_SITE)) { Text("Sign in to ${reading.signInSite}") }
                 } else {
                     Spacer(Modifier.weight(1f))
                     if (signInHint.containsMatchIn(reading.error.orEmpty())) OutlinedButton(onClick = reading.onSignIn, modifier = Modifier.heightIn(min = 48.dp)) { Text("Sign in") }
@@ -93,9 +102,13 @@ fun ColumnScope.ReadingMoment(reading: ReviewReading, onClose: () -> Unit) {
                 repeat(2) {
                     Box(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 4.dp).height(56.dp).alpha(pulse).clip(MaterialTheme.shapes.medium).background(block))
                 }
-            } else Column(Modifier.padding(16.dp).testTag(UiTags.CAPTURE_ERROR)) {
-                Text("Couldn't read this link", style = MaterialTheme.typography.titleSmall)
+            } else Column(Modifier.padding(16.dp).testTag(if (reading.signInSite != null) UiTags.SIGN_IN_NEEDED else UiTags.CAPTURE_ERROR)) {
+                Text(if (reading.signInSite != null) "Sign-in needed" else "Couldn't read this link", style = MaterialTheme.typography.titleSmall)
                 Text(reading.error.orEmpty(), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.semantics { liveRegion = LiveRegionMode.Polite })
+                reading.signInSite?.let { site ->
+                    Spacer(Modifier.height(8.dp))
+                    Text("Sign in once and Keepfin uses it for $site links from now on. Your password stays with $site.", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                }
             }
         }
     }

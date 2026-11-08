@@ -13,6 +13,7 @@ import {
   restrictedMessage,
   restrictedMusicMessage,
   scrub,
+  suggestsGallery as coreSuggestsGallery,
   unavailableMessage,
 } from './core/errors.js'
 
@@ -87,12 +88,8 @@ export function friendlyError(stderr: string): FriendlyError {
   }
 }
 
-/** True when the gallery engine might succeed where the main engine could not. */
-export function suggestsGallery(stderr: string): boolean {
-  return /unsupported url|no video formats found|no video could be found|there(’|')s no video in this|no video in this (post|tweet)|no media found|this post (does not|doesn't) contain (a )?video|requested format is not available/i.test(
-    stderr,
-  )
-}
+/** True when the gallery engine might succeed where the main engine could not (the shared core's rule). */
+export const suggestsGallery = coreSuggestsGallery
 
 /** Delays before automatic retries 1..3 (ms): 5 s, 15 s, 30 s. */
 export const retryBackoff = backoffMs

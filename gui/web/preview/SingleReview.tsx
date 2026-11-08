@@ -1,5 +1,6 @@
 // The preview of one link: a video, a song, a song you already have, a photo post, and the two moments around them
 // (reading the link, and a link that could not be read). One window for all of them, so it never closes and reopens as the link is read.
+import {useState} from 'react'
 import type {MediaInfo} from '../../shared/contracts'
 import {bothWords, isVideoSongKind, musicVideoWords} from '../../shared/library'
 import {prefersAudio} from '../../shared/providers'
@@ -7,7 +8,7 @@ import {native} from '../bridge'
 import {GalleryPreview} from '../capture/FormatPicker'
 import {MatchLine} from '../capture/MatchLine'
 import {SaveTo, useDefaultSpace} from '../capture/SaveTo'
-import {availableTabs, estimateLabel, formatRequest, type Choice} from '../capture/choice'
+import {availableTabs, estimateLabel, formatRequest, galleryChosen, galleryChosenLabel, type Choice} from '../capture/choice'
 import type {CaptureEntry, CaptureModel} from '../capture/useCapture'
 import {DownloadOn} from '../devices/DownloadOn'
 import {formatDuration, plural} from '../format'
@@ -76,6 +77,7 @@ function Note({children, action}: {children: string; action?: {label: string; on
 
 export function SingleReview({capture: c, entry, open, onClose}: {capture: CaptureModel; entry: CaptureEntry; open: boolean; onClose: () => void}) {
   const meta = useMeta()
+  const [notNow, setNotNow] = useState<string[]>([])
   const libraryOn = useLibraryEnabled()
   const librarySettings = useLibrarySettings()
   const media = entry.media
@@ -88,7 +90,7 @@ export function SingleReview({capture: c, entry, open, onClose}: {capture: Captu
   const own = useSongOfLink(media?.url, native && libraryOn && !!media && (mode === 'video' || mode === 'both'))
   const defaultSpace = useDefaultSpace(media?.url)
   if (entry.state === 'waiting' || entry.state === 'inspecting') return readingWindow({entry, open, onClose, onCancel: c.cancel})
-  if (!media || !choice) return problemWindow({entry, open, onClose, onRetry: () => c.retry(entry.url)})
+  if (!media || !choice) return problemWindow({entry, open, onClose, onRetry: () => c.retry(entry.url), signInDeclined: notNow.includes(entry.url), onNotNow: () => setNotNow((list) => [...list, entry.url])})
 
   const found = c.existing[media.url]
   const setChoice = (next: Choice) => c.setChoice(entry.url, next)
@@ -99,6 +101,7 @@ export function SingleReview({capture: c, entry, open, onClose}: {capture: Captu
   const keptAsSong = libraryOn && mode === 'video' && isVideoSongKind('video', target?.kind)
   const joined = mode === 'video' || mode === 'both' ? own : null
   const downloadAnyway = !!found && !joined
+  const noPhotos = choice.tab === 'gallery' && !galleryChosen(media, choice).length
 
   const pick = (next: Mode) => {
     if (next === 'both') {
@@ -164,15 +167,18 @@ export function SingleReview({capture: c, entry, open, onClose}: {capture: Captu
             </span>
           )}
           <span className="foot-gap" />
-          <DownloadOn jobs={() => [{url: media.url, format: formatRequest(media, choice), options: c.options}]} onSent={c.dismiss} disabled={!!optionError} />
-          <Button variant="primary" size="lg" icon="download" loading={adding} disabled={!!optionError} onClick={() => void c.enqueue([entry])} className="download-btn">
+          <DownloadOn jobs={() => [{url: media.url, format: formatRequest(media, choice), options: c.options}]} onSent={c.dismiss} disabled={!!optionError || noPhotos} />
+          <Button variant="primary" size="lg" icon="download" loading={adding} disabled={!!optionError || noPhotos} onClick={() => void c.enqueue([entry])} className="download-btn">
             {downloadAnyway ? 'Download anyway' : 'Download'}
-            {(size || choice.tab === 'gallery') && (
-              <>
-                {' '}
-                <span className="btn-sep">·</span>{' '}
-                <span className="tabular">{size || (media.gallery ? plural(media.gallery.count, 'item') : 'Gallery')}</span>
-              </>
+            {choice.tab === 'gallery' && media.gallery ? (
+              <> {galleryChosenLabel(media, choice)}</>
+            ) : (
+              size && (
+                <>
+                  {' '}
+                  <span className="btn-sep">·</span> <span className="tabular">{size}</span>
+                </>
+              )
             )}
           </Button>
         </>
@@ -203,7 +209,7 @@ export function SingleReview({capture: c, entry, open, onClose}: {capture: Captu
           <p className="preview-hint">{song.own ? bothWords.link : bothWords.found}</p>
         </>
       )}
-      {mode === 'gallery' ? <GalleryPreview media={media} /> : <SizeList key={media.url} media={media} choice={choice} onChange={setChoice} />}
+      {mode === 'gallery' ? <GalleryPreview media={media} choice={choice} onChange={setChoice} /> : <SizeList key={media.url} media={media} choice={choice} onChange={setChoice} />}
       {keptAsSong && !joined && <p className="preview-hint">Kept in {target?.name ?? 'Music'} as a song you can also watch: one file with the picture and the sound.</p>}
       {entry.error && <InlineAlert title="Couldn’t add this download">{entry.error}</InlineAlert>}
     </PreviewWindow>

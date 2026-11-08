@@ -1,5 +1,7 @@
 package app.keepfin
 
+import app.keepfin.core.gallery.GalleryItem
+
 // Studio 2 typed engine model shared by the engine, service, notifications and Compose UI.
 // Mirrors gui/shared/contracts.ts so desktop and Android speak the same product language.
 
@@ -11,8 +13,8 @@ enum class JobStatus(val wire: String) {
 }
 
 enum class MediaKind(val wire: String) {
-    VIDEO("video"), AUDIO("audio");
-    companion object { fun of(value: String?) = if (value == "audio") AUDIO else VIDEO }
+    VIDEO("video"), AUDIO("audio"), PHOTOS("gallery");
+    companion object { fun of(value: String?) = entries.firstOrNull { it.wire == value } ?: VIDEO }
 }
 
 data class VideoOption(
@@ -69,7 +71,14 @@ data class MediaInfo(
     val playlistUrl: String?,
     /** Set for Spotify/Apple Music/Deezer links matched to YouTube Music. */
     val match: MusicMatch? = null,
+    /** Set for a photo post (images, a carousel): the files the gallery engine found. [video] and [audio] are empty then. */
+    val gallery: GalleryPost? = null,
+    /** Set when a site asked for a sign-in and Keepfin's own was used to inspect the link: the row text ("Signed in"). The download then uses it from the first try. */
+    val signedIn: String? = null,
 )
+
+/** The files of a photo post, in the gallery engine's order ([GalleryItem.position] is 1-based and is what a range selects). */
+data class GalleryPost(val count: Int, val previews: List<String>, val items: List<GalleryItem>, val truncated: Boolean)
 
 data class MusicMatch(
     /** spotify | apple-music | deezer */
@@ -116,6 +125,8 @@ sealed interface FormatRequest {
         val quality: String = "best",
         val formatId: String? = null,
     ) : FormatRequest
+    /** The photos of a post: [items] are the chosen 1-based positions (null = all [count]). */
+    data class Gallery(val count: Int, val items: List<Int>? = null) : FormatRequest
 }
 
 data class SubtitleOptions(val enabled: Boolean = false, val languages: String = "en.*", val auto: Boolean = false, val embed: Boolean = true)
@@ -201,6 +212,8 @@ data class Job(
     val collectionIndex: Int? = null,
     /** Tags captured from the source metadata when the download ran (normalised, empty while "Import tags" is off). */
     val tags: List<String> = emptyList(),
+    /** The row text when the download used a sign-in a site asked for ("Signed in"); its presence also tells the runner to use Keepfin's sign-in from the first try. */
+    val signedIn: String? = null,
 )
 
 /** Collection a job belongs to when the user chose "Keep together". Immutable and shared by every child. */
@@ -271,6 +284,8 @@ data class EngineSettings(
     val lyrics: Boolean = true,
     /** "Keep music videos automatically": the Capture and collection "music video" boxes start checked. It never starts a download by itself. */
     val keepMusicVideos: Boolean = false,
+    /** Downloads go signed out first; when a site then asks for a sign-in, Keepfin's own is tried once. Off: they stay signed out. */
+    val autoSignIn: Boolean = true,
     /** Spaces, gallery and player settings; 0.4.x installs migrate to the defaults. */
     val library: LibrarySettings = LibrarySettings(),
 )

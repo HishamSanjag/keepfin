@@ -124,7 +124,7 @@ export type MediaInfo = {
   subtitles: SubtitleTrack[]
   chapters: number
   /** Present when the engine is gallery-dl (images / mixed posts). */
-  gallery?: {count: number; previews: string[]; truncated: boolean}
+  gallery?: {count: number; previews: string[]; items: {position: number; url: string; photo: boolean}[]; truncated: boolean}
   /** Present when the link is a single item inside a playlist (watch?v=…&list=…). */
   playlist?: {url: string; title?: string}
   /** Genre, tags and categories from the source, normalised (see normalizeTags). Kept on the file when the library imports tags. */
@@ -165,7 +165,8 @@ export type FormatRequest =
       quality: AudioQuality
       formatId?: string
     }
-  | {type: 'gallery'}
+  /** [items]: the 1-based positions to download (all when absent). */
+  | {type: 'gallery'; items?: number[]}
 
 export type SponsorBlockMode = 'off' | 'mark' | 'remove'
 
@@ -318,6 +319,8 @@ export type Job = {
   totalBytes?: number
   /** Estimated size at enqueue time (from inspection). */
   expectedSize?: number
+  /** Row text when the download used a sign-in a site asked for: "Signed in" or "Signed in with Firefox". */
+  signedIn?: string
   /** Final size on disk once completed. */
   fileSize?: number
   /** Human phase while processing, e.g. "Merging", "Converting to MP3", "Embedding thumbnail". */
@@ -411,6 +414,8 @@ export type Settings = {
   /** Defaults applied to new downloads. */
   options: DownloadOptions
   cookies: {mode: 'none' | 'file' | 'browser'; browser?: CookieBrowser}
+  /** Downloads go without any sign-in first; when a site then asks for one, a sign-in Keepfin can use is tried once. Off: they stay signed out. A manual cookie source above is always used and keeps this rule from acting. On by default. */
+  autoSignIn: boolean
   /** Optional proxy URL (http, https, socks5). Empty = direct. */
   proxy: string
   engine: {channel: 'stable' | 'nightly'; autoUpdate: boolean}
@@ -666,6 +671,20 @@ export type Operation =
   | 'startOver'
   /** The outcome of a Start over from the previous run, once (null when there is none). */
   | 'startOverResult'
+  // Keepfin's own sign-ins (Settings > Downloads > Website sign-in): the state, the sign-in window for a site (`site` is a site key), signing out of a site
+  | 'signInState'
+  | 'signInOpen'
+  | 'signInRemove'
+
+/** The websites Keepfin can sign in to and which of them it is signed in to. No cookie data, ever. */
+export type SignInState = {
+  /** False where the operating system cannot encrypt a sign-in for storing (then signing in is not offered). */
+  canKeep: boolean
+  sites: {key: string; name: string; signedIn: boolean}[]
+}
+
+/** What the sign-in window left behind when it was closed. */
+export type SignInOutcome = {site: string; signedIn: boolean; message?: string; state: SignInState}
 
 export type StartOverOutcome = {
   deleteFolder: boolean
@@ -683,6 +702,8 @@ export type Request = {
   op: Operation
   /** startOver: also delete the Keepfin folder. Main decides which folder; the renderer never sends a path. */
   deleteFolder?: boolean
+  /** signInOpen, signInRemove: a site key from the sign-in table (e.g. `instagram`). */
+  site?: string
   /** windowScale: the UI scale in percent (80–140); main keeps the window at least 560 px of layout wide. */
   scale?: number
   url?: string

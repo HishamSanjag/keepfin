@@ -53,6 +53,9 @@ fun errorsDetail(text: String, limit: Int, platform: String): String = Errors.de
 fun errorsLastErrorLine(text: String): String? = Errors.lastErrorLine(text)
 
 @JsExport
+fun errorsSuggestsGallery(text: String): Boolean = Errors.suggestsGallery(text)
+
+@JsExport
 fun errorsAllMessages(platform: String): Array<String> = Errors.allMessages(Platform.fromWire(platform)).toTypedArray()
 
 @JsExport

@@ -61,6 +61,37 @@ export async function registerSettingsSuite({test, sent}) {
     await page.getByRole('switch', {name: 'Turbo transfer'}).waitFor()
   })
 
+  await test('settings, Website sign-in: Keepfin lists its own sign-ins with Sign out, and Sign in… opens the window for a chosen site', async (page) => {
+    await open(page, 'Downloads')
+    const region = page.getByRole('region', {name: 'Website sign-in'})
+    await region.getByText('Sign in to a site…').waitFor()
+    assert.equal(await region.getByText(/^Signed in to /).count(), 1, 'only the site that was signed in at start')
+    await region.getByText('Signed in to Reddit').waitFor()
+    await region.getByLabel('Site', {exact: true}).selectOption('instagram')
+    await region.getByRole('button', {name: 'Sign in…'}).click()
+    await region.getByText('Signed in to Instagram').waitFor()
+    const open1 = await page.evaluate(() => window.__calls.filter((c) => c.op === 'signInOpen'))
+    assert.deepEqual(open1.map((c) => c.site), ['instagram'], 'only a site key is sent, never a link or a path')
+    await region.getByRole('button', {name: 'Sign out of Reddit'}).click()
+    await page.waitForFunction(() => !document.body.textContent.includes('Signed in to Reddit'))
+    assert.equal((await page.evaluate(() => window.__calls.filter((c) => c.op === 'signInRemove'))).pop().site, 'reddit')
+    await region.getByLabel('Site', {exact: true}).selectOption('reddit')
+  }, {fake: {signedInTo: ['reddit']}})
+
+  await test('settings, Website sign-in: a window closed before signing in says so; no password store means no Sign in…', async (page) => {
+    await open(page, 'Downloads')
+    const region = page.getByRole('region', {name: 'Website sign-in'})
+    await region.getByRole('button', {name: 'Sign in…'}).click()
+    await region.getByText(/The window was closed before the sign-in finished/).waitFor()
+  }, {fake: {signInWindow: 'closed'}})
+
+  await test('settings, Website sign-in: with no password store on this PC Sign in… is off and says why', async (page) => {
+    await open(page, 'Downloads')
+    const region = page.getByRole('region', {name: 'Website sign-in'})
+    await region.getByText(/no password store/).waitFor()
+    assert.equal(await region.getByRole('button', {name: 'Sign in…'}).isDisabled(), true)
+  }, {fake: {canKeepSignIn: false}})
+
   await test('settings search: Proxy opens Downloads > Speed and connections and highlights the setting', async (page) => {
     await open(page, 'Appearance')
     await search(page).fill('Proxy')

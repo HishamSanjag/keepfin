@@ -20,6 +20,7 @@ import {
   type JsOptions,
   type JsRequest,
 } from '../../../build/core-js/keepfin-core.mjs'
+import {validateGalleryRequest} from './gallery.js'
 import type {
   AudioOption,
   AudioQuality,
@@ -68,7 +69,7 @@ function optionsOf(o: JsOptions): DownloadOptions {
 export function validateFormatRequest(value: unknown): FormatRequest {
   if (!value || typeof value !== 'object') throw new Error('Choose a download format.')
   // A gallery post has no download plan: it is fetched by the gallery engine.
-  if ((value as {type?: unknown}).type === 'gallery') return {type: 'gallery'}
+  if ((value as {type?: unknown}).type === 'gallery') return validateGalleryRequest(value)
   const checked = argsValidateFormat(toJson(value))
   if (checked.error != null || !checked.request) throw new Error(checked.error ?? 'Choose a download format.')
   return requestOf(checked.request)
