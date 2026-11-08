@@ -219,7 +219,7 @@ export const ACTION_LABELS: Record<DeviceAction, string> = {
 export function parseAddress(text: string): {host: string; port: number} | null {
   const value = text.trim()
   if (!value || value.length > 255 || /\s|\//.test(value)) return null
-  const v6 = /^\[([0-9a-fA-F:.%a-zA-Z0-9]+)\](?::(\d{1,5}))?$/.exec(value)
+  const v6 = /^\[([0-9a-zA-Z:.%]+)\](?::(\d{1,5}))?$/.exec(value)
   let host: string
   let portText: string | undefined
   if (v6) {

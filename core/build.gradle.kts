@@ -1,5 +1,6 @@
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import org.jetbrains.kotlin.gradle.targets.js.nodejs.NodeJsEnvSpec
+import org.jetbrains.kotlin.gradle.targets.js.npm.NpmExtension
 
 plugins {
     kotlin("multiplatform") version "2.4.20"
@@ -42,6 +43,12 @@ kotlin {
 
 // Use the Node.js on PATH instead of downloading one.
 rootProject.extensions.configure<NodeJsEnvSpec> { download.set(false) }
+
+// Test-runner tooling (security alerts): the overrides lift transitive copies of serialize-javascript and minimatch
+rootProject.extensions.configure<NpmExtension> {
+    override("serialize-javascript", "^7.1.3")
+    override("minimatch", "^11.0.1")
+}
 
 tasks.withType<Test>().configureEach {
     systemProperty("keepfin.fixtures", fixturesRoot)

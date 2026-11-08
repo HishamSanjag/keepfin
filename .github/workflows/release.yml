@@ -26,8 +26,8 @@ jobs:
       prerelease: ${{ steps.version.outputs.prerelease }}
       tested: ${{ steps.checks.outputs.tested }}
     steps:
-      - uses: actions/checkout@v7
-      - uses: actions/setup-node@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version: '24'
           package-manager-cache: false
@@ -134,21 +134,21 @@ jobs:
       PRERELEASE: ${{ needs.validate.outputs.prerelease }}
       GH_TOKEN: ${{ github.token }}
     steps:
-      - uses: actions/checkout@v7
-      - uses: actions/setup-node@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version: '24'
           package-manager-cache: false
       # Builds hand their files over through the Actions cache: private artifact storage is billed and small.
       - name: Receive Windows files
-        uses: actions/cache/restore@v6
+        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: handoff/windows
           key: keepfin-windows-${{ github.run_id }}
           enableCrossOsArchive: true
           fail-on-cache-miss: true
       - name: Receive signed Android APK
-        uses: actions/cache/restore@v6
+        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: handoff/android
           key: keepfin-android-${{ github.run_id }}

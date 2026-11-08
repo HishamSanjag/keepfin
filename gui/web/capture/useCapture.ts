@@ -156,7 +156,7 @@ export function useCapture() {
   // Auto-inspect once a complete link is present (debounced; immediate after paste).
   useEffect(() => {
     const text = input.trim()
-    if (!text || inspected.current === input || !/^(https?:\/\/\S+\s*)+$/i.test(text)) return
+    if (!text || inspected.current === input || !/^https?:\/\/\S+(?:\s+https?:\/\/\S+)*$/i.test(text)) return
     if (!native) return
     const delay = immediate.current ? 0 : 650
     immediate.current = false
