@@ -3,7 +3,6 @@
 // transfer lease.
 import {test} from 'node:test'
 import assert from 'node:assert/strict'
-import {execFileSync} from 'node:child_process'
 import {randomUUID} from 'node:crypto'
 import fs from 'node:fs/promises'
 import {mkdirSync, rmSync, writeFileSync, cpSync, readdirSync, readFileSync} from 'node:fs'
@@ -77,11 +76,13 @@ const viewsOf = (store: KeepfinStore) => JSON.stringify(store.views().items.map(
 
 // ---- the released reader ------------------------------------------------------------------------------------------------------
 
-/** The 1.0.2 store, as released (the file at the v1.0.2 tag), written next to the current one so its imports resolve. */
+/**
+ * The 1.0.2 store, as released: a frozen copy of the file at the v1.0.2 tag (testdata/, so the test needs no git history), written
+ * next to the current one so its imports resolve.
+ */
 async function releasedStore() {
   const here = path.dirname(fileURLToPath(import.meta.url))
-  const repo = path.resolve(here, '..', '..', '..')
-  const text = execFileSync('git', ['show', 'v1.0.2:gui/desktop/store/store.ts'], {cwd: repo, encoding: 'utf8', maxBuffer: 64 * 1024 * 1024})
+  const text = readFileSync(path.join(here, 'testdata', 'store-v1.0.2.ts.txt'), 'utf8')
   const file = path.join(here, `store.released.${process.pid}.tmp.ts`)
   writeFileSync(file, text)
   const module = (await import(`file:///${file.replace(/\\/g, '/')}`)) as {KeepfinStore: typeof KeepfinStore}
