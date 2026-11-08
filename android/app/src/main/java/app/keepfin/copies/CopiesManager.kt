@@ -908,6 +908,7 @@ internal class CopiesManager(
             runCatching {
                 if (place.mode == CopyMode.Backup) Versions.pruneVersions(access, now(), place.options.versionsKeepDays) else Versions.purgeTrash(access, now())
             }
+            runCatching { CatalogueCompaction.compactAll(access) }
             runCatching { copyMetadata(b.folder, access, b.libraryId) }
             if (place.options.playlistFiles || place.options.flat || place.options.mp3 || access.stat(Exports.RECORD) != null) {
                 runCatching {

@@ -12,6 +12,7 @@ import {coveredByName, listOps, pruneCoveredSegments} from './segmentPrune.js'
 import type {MainHost, Progress, RemoteTally} from './executor.js'
 import type {RemoteMedia, RemoteStopState} from './remote.js'
 import {runCopy, type RunReport} from './run.js'
+import {compactCatalogues} from './catalogueCompact.js'
 import {purgeTrash, pruneVersions} from './versions.js'
 import {exportsFile, syncExports, type ExportsReport} from './exports.js'
 import {exists} from './util.js'
@@ -208,6 +209,7 @@ export async function runPlace(job: PlaceRunJob, host: MainHost | undefined, onP
       if (!job.remote) {
         if (place.mode === 'backup') await pruneVersions(job.copyRoot, now(), place.options.versionsKeepDays).catch(() => 0)
         else await purgeTrash(job.copyRoot, now()).catch(() => 0)
+        await compactCatalogues(job.copyRoot).catch(() => 0)
       }
       await copyMetadata(job.mainRoot, job.copyRoot).catch(() => 0)
     }
