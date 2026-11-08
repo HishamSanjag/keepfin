@@ -46,7 +46,7 @@ async function env(): Promise<Env> {
         compact: false,
         ...extra,
       }),
-    cleanup: () => fs.rm(dir, {recursive: true, force: true}),
+    cleanup: () => fs.rm(dir, {recursive: true, force: true, maxRetries: 10, retryDelay: 200}),
   }
 }
 
@@ -103,7 +103,7 @@ async function readWithReleased(released: {KeepfinStore: typeof KeepfinStore}, f
 
 /** Copies the folder's .keepfin (ops only is enough for a reader) so a state can be read later. */
 function snapshotOf(folder: KeepfinFolder, into: string) {
-  rmSync(into, {recursive: true, force: true})
+  rmSync(into, {recursive: true, force: true, maxRetries: 10, retryDelay: 200})
   mkdirSync(path.join(into, 'root'), {recursive: true})
   cpSync(dataDir(folder.root), dataDir(path.join(into, 'root')), {recursive: true})
 }
