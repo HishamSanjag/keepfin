@@ -1,7 +1,7 @@
 // Home (full mode): the paste/search box first, then what to pick up next. Videos, music and photos get equal
 // weight; every row hides when it has nothing to show.
-import {useMemo, type MouseEvent} from 'react'
-import {listeningRows} from '../../shared/listening'
+import {useMemo, useState, type MouseEvent} from 'react'
+import {homeMixes, type Mix} from '../../shared/core/home'
 import type {LibraryItem} from '../../shared/library'
 import {navigate} from '../nav'
 import {usePreference} from '../prefs'
@@ -21,6 +21,9 @@ import {Skeleton} from './Skeleton'
 import {ContinueRemove} from './LibraryHome'
 import {MusicVideoShelf} from './musicVideos/MusicVideoShelf'
 import {useMusicVideoRows} from './musicVideos/rows'
+import {ManageFollowing, MixSection, ReleaseSection} from './HomeFollow'
+import {useFollowing} from './following'
+import {SongList} from './SongList'
 
 type Filter = 'all' | 'video' | 'audio' | 'image'
 const filters: {id: Filter; label: string}[] = [
@@ -159,6 +162,10 @@ export function Home() {
   const all = lib.snapshot.items
   // a song's music video is a video: it shows with the Videos
   const musicVideos = useMusicVideoRows()
+  const following = useFollowing()
+  const [managing, setManaging] = useState(false)
+  const [selecting, setSelecting] = useState(false)
+  const [mixView, setMixView] = useState<{type: 'mix'; id: Mix['id']} | {type: 'all'} | null>(null)
   const rows = useMemo(() => {
     const playable = all.filter((item) => item.kind !== 'other' && !item.missing)
     const wanted = (item: LibraryItem) => filter === 'all' || item.kind === filter
@@ -170,11 +177,17 @@ export function Home() {
         seen.add(item.id)
         quick.push(item)
       }
+    const music = filter === 'all' || filter === 'audio'
+    const songs = music ? playable.filter((item) => item.kind === 'audio') : []
+    const byId = new Map(songs.map((item) => [item.id, item]))
+    const mixes = homeMixes(songs.map((item) => ({id: item.id, artist: item.artist || item.albumArtist, plays: item.plays, lastPlayedAt: item.lastPlayedAt, addedAt: item.addedAt, favorite: item.favorite})))
     return {
       playable,
+      songs,
+      byId,
+      mixes,
       quick,
       resume: filter === 'all' || filter === 'video' ? continueWatching(all) : [],
-      listening: filter === 'all' || filter === 'audio' ? listeningRows(all) : [],
       added: filter === 'audio' ? [] : sortItems(playable.filter((item) => (item.kind === 'video' || item.kind === 'image') && wanted(item)), 'added'),
     }
   }, [all, filter])
@@ -202,9 +215,33 @@ export function Home() {
         </InlineAlert>
       </div>
     )
+  if (mixView) {
+    const back = (
+      <Button onClick={() => setMixView(null)}>
+        Back to Home
+      </Button>
+    )
+    if (mixView.type === 'all')
+      return (
+        <div className="screen home">
+          <PageHeader title="Made from your listening" caption="Mixes update as you play" actions={back} />
+          {rows.mixes.map((mix) => (
+            <Shelf key={mix.id} title={mix.title} blurb={mix.blurb} items={mix.ids.map((id) => rows.byId.get(id)).filter((item): item is LibraryItem => !!item)} />
+          ))}
+        </div>
+      )
+    const mix = rows.mixes.find((entry) => entry.id === mixView.id)
+    if (mix)
+      return (
+        <div className="screen home">
+          <PageHeader title={mix.title} caption={mix.blurb} actions={back} />
+          <SongList selecting={selecting} onSelectingChange={setSelecting} items={mix.ids.map((id) => rows.byId.get(id)).filter((item): item is LibraryItem => !!item)} label={mix.title} />
+        </div>
+      )
+  }
   const empty = !rows.playable.length
   const videoRows = filter === 'video' ? musicVideos : []
-  const nothingForFilter = !empty && !rows.quick.length && !rows.resume.length && !rows.listening.length && !rows.added.length && !videoRows.length
+  const nothingForFilter = !empty && !rows.quick.length && !rows.resume.length && !rows.mixes.length && !rows.added.length && !videoRows.length
   return (
     <div className="screen home">
       <PageHeader title="Home" caption={`${greeting()}. Paste a link in the search bar to keep something, or find what you already have.`} />
@@ -227,6 +264,13 @@ export function Home() {
           {problem.message}
         </InlineAlert>
       ))}
+      {(filter === 'all' || filter === 'audio') && (
+        <>
+          {!empty && <MixSection mixes={rows.mixes} hasSongs={rows.songs.length > 0} onOpen={(mix) => setMixView({type: 'mix', id: mix.id})} onSeeAll={() => setMixView({type: 'all'})} />}
+          <ReleaseSection state={following} songs={rows.songs} onManage={() => setManaging(true)} />
+        </>
+      )}
+      <ManageFollowing open={managing} onClose={() => setManaging(false)} />
       {empty ? (
         <EmptyState
           icon="library"
@@ -246,14 +290,6 @@ export function Home() {
         <>
           <QuickGrid items={rows.quick} />
           <Shelf title="Continue watching" items={rows.resume} removable />
-          {rows.listening.length > 0 && (
-            <section className="home-group" aria-label="Made from your listening">
-              <h3 className="group-title">Made from your listening</h3>
-              {rows.listening.map((row) => (
-                <Shelf key={row.id} title={row.title} blurb={row.blurb} items={row.items} />
-              ))}
-            </section>
-          )}
           <DownloadingNow />
           <MusicVideoShelf rows={videoRows} onSeeAll={() => (setLibView({type: 'musicVideos'}), navigate('Library'))} />
           <Shelf title="New videos and photos" items={rows.added} />

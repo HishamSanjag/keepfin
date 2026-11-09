@@ -14,6 +14,7 @@ import {DevicesGuide, type GuidePart} from './HowDevicesWork'
 import {LibraryOffers} from './LibraryOffers'
 import {AvailableDevices} from './Nearby'
 import {QrCard} from './QrCard'
+import {TypeCode} from './TypeCode'
 import {allowFirewall, connectTo, openPairing, renameThisDevice, turnDevicesOff, turnDevicesOn} from './devicesApi'
 import {useDeviceCopies} from './useDeviceCopies'
 import {useDevices} from './useDevices'
@@ -238,6 +239,11 @@ export function DevicesSettings() {
         />
         <QrCard state={state} onState={set} />
       </div>
+      {state.enabled && state.port !== undefined && (
+        <Group id="type-code" cards hideHeading title="Type a code">
+          <TypeCode onState={set} />
+        </Group>
+      )}
       <Group id="paired" cards title="Your devices" description={state.paired.length ? plural(state.paired.length, 'device') : undefined}>
         {state.paired.length === 0 ? (
           <EmptyState icon="layers" title="No other devices yet">

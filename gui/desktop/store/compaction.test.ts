@@ -452,7 +452,9 @@ test('a flush that leaves eight small segments compacts them on its own, soon', 
   try {
     const store = await e.open('dev', A, {compact: true, compactGapMs: 0, compactSoonMs: 50, compactDelayMs: 3_600_000})
     currentLibrary = e.folder.libraryId
-    await pile(store, 10)
+    // exactly eight: the eighth flush starts the timer, and nothing is written after it. (With ten, a timer firing between the
+    // eighth and tenth flush would leave a merged file plus two, below the threshold of eight, until the next start or close.)
+    await pile(store, 8)
     const end = Date.now() + 20_000
     while ((await names(e.folder.root, A)).length > 1 && Date.now() < end) await delay(50)
     assert.equal((await names(e.folder.root, A)).length, 1)

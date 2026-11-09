@@ -41,7 +41,9 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.BoxWithConstraints
+import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -157,7 +159,7 @@ import app.keepfin.ui.theme.tabular
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
-private enum class Pane { COVER, LYRICS, QUEUE }
+internal enum class Pane { COVER, LYRICS, QUEUE }
 
 private const val NO_LYRICS = "No lyrics for this song"
 
@@ -172,7 +174,7 @@ internal fun previewLines(lyrics: app.keepfin.Lyrics, positionMs: Long): List<St
  * every song, with lyrics or without, so the cover never moves when the song changes; hiding it gives the space back for all songs.
  */
 @Composable
-private fun LyricsCard(vm: StudioViewModel, id: String?, onOpen: () -> Unit) {
+internal fun LyricsCard(vm: StudioViewModel, id: String?, onOpen: () -> Unit) {
     // cleared first, so a new song never shows the last one's line, and "No lyrics" waits until the answer is in
     var loading by remember(id) { mutableStateOf(true) }
     val lyrics by produceState<app.keepfin.Lyrics?>(null, id, vm.songVideo.lyricsStamp) {
@@ -247,6 +249,9 @@ fun FullPlayer(vm: StudioViewModel, motionOrNull: PlayerMotion? = null) {
     val context = LocalContext.current
     val current = state.current
     var pane by rememberSaveable { mutableStateOf(Pane.COVER) }
+    // Cinema's side panel and Afterglow's centre area: Up next or Lyrics (kept while the player is open)
+    var side by rememberSaveable { mutableStateOf(Pane.LYRICS) }
+    val style = vm.prefs.playerStyle
     var sheet by rememberSaveable { mutableStateOf<String?>(null) }
     var librarySheet by remember { mutableStateOf<LibrarySheet?>(null) }
     var menu by remember { mutableStateOf(false) }
@@ -257,10 +262,10 @@ fun FullPlayer(vm: StudioViewModel, motionOrNull: PlayerMotion? = null) {
     LaunchedEffect(current == null) { if (current == null) vm.fullPlayer = false }
 
     // The overlay paints the surface; dragging down anywhere that nothing else claims follows the finger and releases with its velocity.
-    // The player is always dark: a blurred, darkened wash of the artwork, with the controls on an opaque layer, so every pair keeps AA.
-    app.keepfin.ui.theme.KeepfinTheme(mode = app.keepfin.ui.theme.ThemeMode.DARK) {
-    val scheme = MaterialTheme.colorScheme
-    MaterialTheme(colorScheme = scheme.copy(onSurface = OnWash, onBackground = OnWash, onSurfaceVariant = OnWashDim), typography = MaterialTheme.typography, shapes = MaterialTheme.shapes) {
+    // The player follows the app's theme (as on the PC): dark is a blurred, darkened wash of the artwork, light a pale one; the controls sit on
+    // an opaque layer either way, so every pair keeps AA.
+    val light = !Studio.colors.dark
+    PlayerTheme(light) {
     Surface(
         Modifier.fillMaxSize().testTag(UiTags.FULL_PLAYER).nestedScroll(sheetScroll).verticalFling(
             onStart = { motion.beginDrag() },
@@ -272,20 +277,24 @@ fun FullPlayer(vm: StudioViewModel, motionOrNull: PlayerMotion? = null) {
                 motion.settle(!close, reduced, velocity)
             },
         ),
-        color = Color.Transparent, contentColor = OnWash,
+        color = Color.Transparent, contentColor = MaterialTheme.colorScheme.onSurface,
     ) {
         Box(Modifier.fillMaxSize()) {
-        ArtworkWash(art, Modifier.fillMaxSize().graphicsLayer { alpha = (motion.p.value * 2f - 0.4f).coerceIn(0f, 1f) }.testTag("player-wash"))
+        // Afterglow paints the cover's glow instead of the blurred artwork
+        val backdrop = Modifier.fillMaxSize().graphicsLayer { alpha = (motion.p.value * 2f - 0.4f).coerceIn(0f, 1f) }.testTag("player-wash")
+        if (style == PlayerStyles.AFTERGLOW) AfterglowGlow(art, reduced, backdrop, light) else ArtworkWash(art, backdrop, light)
         Column(Modifier.fillMaxSize().statusBarsPadding()) {
             Row(Modifier.fillMaxWidth().padding(horizontal = 4.dp).stage(motion, 0.25f, 0.6f), verticalAlignment = Alignment.CenterVertically) {
                 IconButton(onClick = { vm.fullPlayer = false }, modifier = Modifier.size(48.dp).testTag(UiTags.FULL_COLLAPSE)) { Icon(Icons.Outlined.KeyboardArrowDown, contentDescription = "Close the player") }
-                Column(Modifier.weight(1f), horizontalAlignment = Alignment.CenterHorizontally) {
+                if (style == PlayerStyles.AFTERGLOW) Box(Modifier.weight(1f), contentAlignment = Alignment.Center) { SidePick(side, { side = it }, queueFirst = false) }
+                else Column(Modifier.weight(1f), horizontalAlignment = Alignment.CenterHorizontally) {
                     Text(
-                        when (pane) { Pane.COVER -> "Now playing"; Pane.LYRICS -> "Lyrics"; Pane.QUEUE -> "Queue" },
+                        when (if (style == PlayerStyles.CINEMA) Pane.COVER else pane) { Pane.COVER -> "Now playing"; Pane.LYRICS -> "Lyrics"; Pane.QUEUE -> "Queue" },
                         style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.semantics { heading() },
                     )
                     item?.let { Text(vm.spaceName(it.space).orEmpty(), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1) }
                 }
+                PlayerStyleButton(vm)
                 Box {
                     IconButton(onClick = { menu = true }, modifier = Modifier.size(48.dp).testTag("full-menu")) { Icon(Icons.Outlined.MoreVert, contentDescription = "More player actions") }
                     DropdownMenu(menu, { menu = false }) {
@@ -321,71 +330,14 @@ fun FullPlayer(vm: StudioViewModel, motionOrNull: PlayerMotion? = null) {
                 val now = vm.player.ui.value.current
                 if (now != null && now.resolved && !now.musicVideo && now.id == current.id && vm.prefs.musicVideo) vm.musicVideoMissing()
             }
-            Box(Modifier.weight(1f).fillMaxWidth().stage(motion, 0.3f, 0.75f, riseDp = 0f)) {
-                when (pane) {
-                    Pane.COVER -> {
-                        // Swipe the cover left/right for next/previous, down to close. Lyrics and the queue scroll, so they keep their own gestures.
-                        val swipe = rememberSwipeState(Studio.reducedMotion)
-                        val actions = SwipeActions(state.hasPrevious, state.hasNext, vm.player::previousItem, vm.player::next, { vm.fullPlayer = false }, onEdge = vm::sayQueueEdge)
-                        Box(Modifier.fillMaxSize().playerSwipe(swipe, actions, vertical = false).testTag("cover-swipe")) {
-                            CoverPane(art, current, motion, Modifier.swipeOffset(swipe), picture = if (pictureOn && vm.video == null) vm.player.player else null, pictureOn = pictureOn,
-                                switch = if (hasPicture) { { place ->
-                                    SongVideoSwitch(
-                                        video = pictureOn, onPicture = true, modifier = place,
-                                        onChange = { toVideo -> if (item?.musicVideo == true) vm.chooseSide(toVideo) else if (item != null) { if (toVideo) vm.showVideoSongPicture(item) else vm.listenToVideoSong(item) } },
-                                    )
-                                } } else null,
-                                onFullScreen = vm::openPictureFullScreen)
-                        }
-                    }
-                    Pane.LYRICS -> LyricsPane(vm, current?.id, item, reduced)
-                    Pane.QUEUE -> QueuePane(vm, state)
-                }
-            }
-            // The controls sit on an opaque layer, whatever the artwork is.
-            Surface(
-                shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp), color = MaterialTheme.colorScheme.surfaceContainer, shadowElevation = 8.dp,
-                modifier = Modifier.fillMaxWidth().testTag("player-controls"),
-            ) {
-            Column(Modifier.fillMaxWidth().navigationBarsPadding().padding(start = 24.dp, end = 24.dp, top = 16.dp, bottom = 4.dp)) {
-                if (current != null) {
-                    Row(Modifier.stage(motion, 0.35f, 0.75f), verticalAlignment = Alignment.CenterVertically) {
-                        Column(Modifier.weight(1f)) {
-                            Text(current.title, style = MaterialTheme.typography.headlineSmall, maxLines = 2, overflow = TextOverflow.Ellipsis)
-                            Text(listOfNotNull(current.artist, item?.album).joinToString(" · "), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1, overflow = TextOverflow.Ellipsis)
-                            fromDeviceLabel(current)?.let { from ->
-                                Text(from, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.testTag(UiTags.PLAYER_FROM_DEVICE))
-                            }
-                        }
-                        if (item != null) IconToggleButton(checked = item.favorite, onCheckedChange = { vm.libraryActions.favorite(item) }, modifier = Modifier.size(48.dp).testTag(UiTags.FULL_FAVORITE)) {
-                            Icon(if (item.favorite) Icons.Filled.Favorite else Icons.Outlined.FavoriteBorder, contentDescription = if (item.favorite) "Remove from favorites" else "Add to favorites",
-                                tint = if (item.favorite) app.keepfin.ui.theme.Studio.colors.accentText else MaterialTheme.colorScheme.onSurfaceVariant)
-                        }
-                    }
-                }
-                state.error?.let { Text(it, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.error, modifier = Modifier.padding(top = 4.dp).testTag("full-error")) }
-                SeekRow(vm, Modifier.stage(motion, 0.4f, 0.8f))
-                Transport(vm, state, Modifier.stage(motion, 0.45f, 0.85f))
-                Row(Modifier.fillMaxWidth().padding(vertical = 4.dp).stage(motion, 0.5f, 0.9f), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-                    TextButton(onClick = { sheet = "speed" }, modifier = Modifier.heightIn(min = 48.dp).testTag("full-speed")) {
-                        Icon(Icons.Outlined.Speed, null, Modifier.size(18.dp)); Spacer(Modifier.width(6.dp)); Text(speedLabel(state.speed), style = MaterialTheme.typography.labelLarge.tabular())
-                    }
-                    SleepButton(vm) { sheet = "sleep" }
-                    IconButton(onClick = { sheet = "eq" }, modifier = Modifier.size(48.dp).testTag("full-eq")) { Icon(Icons.Outlined.Equalizer, contentDescription = "Equalizer") }
-                    if (item != null) IconButton(onClick = { librarySheet = LibrarySheet.Info(item) }, modifier = Modifier.size(48.dp).testTag(UiTags.FULL_SONG_INFO)) { Icon(Icons.Outlined.Info, contentDescription = "Song info") }
-                    FilledTonalIconToggleButton(checked = pane == Pane.LYRICS, onCheckedChange = { pane = if (it) Pane.LYRICS else Pane.COVER }, modifier = Modifier.size(48.dp).testTag(UiTags.FULL_LYRICS_TOGGLE)) {
-                        Icon(Icons.Outlined.Lyrics, contentDescription = "Lyrics")
-                    }
-                    FilledTonalIconToggleButton(checked = pane == Pane.QUEUE, onCheckedChange = { pane = if (it) Pane.QUEUE else Pane.COVER }, modifier = Modifier.size(48.dp).testTag(UiTags.FULL_QUEUE_TOGGLE)) {
-                        Icon(Icons.AutoMirrored.Outlined.QueueMusic, contentDescription = "Queue")
-                    }
-                }
-                if (pane == Pane.COVER && vm.prefs.lyricsPreview) LyricsCard(vm, current?.id) { pane = Pane.LYRICS }
-            }
+            val scope = FullScope(vm, state, current, item, art, motion, reduced, hasPicture, pictureOn, { sheet = it }, { librarySheet = LibrarySheet.Info(it) })
+            when (style) {
+                PlayerStyles.CINEMA -> CinemaBody(scope, side) { side = it }
+                PlayerStyles.AFTERGLOW -> AfterglowBody(scope, side)
+                else -> StageBody(scope, pane) { pane = it }
             }
         }
         }
-    }
     }
     }
     when (sheet) {
@@ -399,19 +351,20 @@ fun FullPlayer(vm: StudioViewModel, motionOrNull: PlayerMotion? = null) {
 fun speedLabel(speed: Float): String = (if (speed == speed.toInt().toFloat()) "%.1f" else "%.2f").format(java.util.Locale.ROOT, speed).trimEnd('0').trimEnd('.').let { "$it×" }
 
 @Composable
-private fun CoverPane(
+internal fun CoverPane(
     art: Any?, current: QueueEntry?, motion: PlayerMotion, modifier: Modifier = Modifier,
     /** The playback to draw in the cover's place while the entry plays its video side; null shows the cover. */
     picture: androidx.media3.common.Player? = null, pictureOn: Boolean = false,
     /** The Song | Video pill for the cover's corner (a song that has a picture), given the modifier that places it. */
     switch: (@Composable (Modifier) -> Unit)? = null, onFullScreen: () -> Unit = {},
+    /** Cinema's wide 16:9 stage instead of the square cover; [overlay] is laid over it (the line being sung). */
+    wide: Boolean = false, overlay: @Composable BoxScope.() -> Unit = {},
 ) {
     // The rectangle the artwork flies to; forgotten when this pane leaves so a closing player does not fly to a pane that is not shown.
     DisposableEffect(motion) { onDispose { motion.cover = Rect.Zero } }
-    BoxWithConstraints(modifier.fillMaxSize().padding(24.dp), contentAlignment = Alignment.Center) {
-        val side = minOf(maxWidth, maxHeight)
+    val face: @Composable (Modifier) -> Unit = { size ->
         Box(
-            Modifier.size(side).onGloballyPositioned { motion.cover = it.boundsInRoot() }.graphicsLayer { if (motion.flying()) alpha = 0f }
+            size.onGloballyPositioned { motion.cover = it.boundsInRoot() }.graphicsLayer { if (motion.flying()) alpha = 0f }
                 .shadow(8.dp, MaterialTheme.shapes.large, clip = false),
         ) {
             if (pictureOn) {
@@ -423,6 +376,7 @@ private fun CoverPane(
                 art, current?.title.orEmpty(), LibraryItemKind.AUDIO, Modifier.fillMaxSize(),
                 MaterialTheme.shapes.large, iconSize = 96.dp, fixedPx = PLAYER_ART_PX,
             )
+            overlay()
             switch?.invoke(Modifier.align(Alignment.TopStart).padding(8.dp))
             if (pictureOn) IconButton(
                 onClick = onFullScreen,
@@ -434,6 +388,8 @@ private fun CoverPane(
             }
         }
     }
+    if (wide) Box(modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 4.dp)) { face(Modifier.fillMaxWidth().aspectRatio(16f / 9f)) }
+    else BoxWithConstraints(modifier.fillMaxSize().padding(24.dp), contentAlignment = Alignment.Center) { face(Modifier.size(minOf(maxWidth, maxHeight))) }
 }
 
 /**
@@ -441,7 +397,7 @@ private fun CoverPane(
  * finger; releasing commits the seek and everything springs back. Only transform, opacity and a single canvas change per frame.
  */
 @Composable
-private fun SeekRow(vm: StudioViewModel, modifier: Modifier = Modifier) {
+internal fun SeekRow(vm: StudioViewModel, modifier: Modifier = Modifier) {
     val position by vm.player.position.collectAsStateWithLifecycle()
     var dragging by remember { mutableStateOf<Float?>(null) }
     val duration = position.durationMs.coerceAtLeast(1L)
@@ -526,7 +482,7 @@ private fun SeekRow(vm: StudioViewModel, modifier: Modifier = Modifier) {
 }
 
 @Composable
-private fun Transport(vm: StudioViewModel, state: PlayerUi, modifier: Modifier = Modifier) {
+internal fun Transport(vm: StudioViewModel, state: PlayerUi, modifier: Modifier = Modifier) {
     val port = vm.player
     Row(modifier.fillMaxWidth().padding(vertical = 4.dp), horizontalArrangement = Arrangement.SpaceEvenly, verticalAlignment = Alignment.CenterVertically) {
         IconToggleButton(checked = state.shuffle, onCheckedChange = port::setShuffle, modifier = Modifier.size(48.dp).testTag("full-shuffle")) {
@@ -552,7 +508,7 @@ private fun Transport(vm: StudioViewModel, state: PlayerUi, modifier: Modifier =
 }
 
 @Composable
-private fun SleepButton(vm: StudioViewModel, onClick: () -> Unit) {
+internal fun SleepButton(vm: StudioViewModel, onClick: () -> Unit) {
     val sleep by vm.player.sleepTimer.collectAsStateWithLifecycle()
     TextButton(onClick = onClick, modifier = Modifier.heightIn(min = 48.dp).testTag("full-sleep")) {
         Icon(Icons.Outlined.Bedtime, if (sleep.active) null else "Sleep timer", Modifier.size(18.dp), tint = if (sleep.active) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant)
@@ -565,7 +521,7 @@ fun sleepClock(ms: Long): String { val total = (ms / 1000).coerceAtLeast(0); ret
 // ---- lyrics -------------------------------------------------------------------------------------------------
 
 @Composable
-private fun LyricsPane(vm: StudioViewModel, id: String?, item: app.keepfin.LibraryItem?, reduced: Boolean) {
+internal fun LyricsPane(vm: StudioViewModel, id: String?, item: app.keepfin.LibraryItem?, reduced: Boolean, big: Boolean = false) {
     // looked at again when "Find lyrics" has found some
     val lyrics by produceState<LyricsState>(LyricsState.Loading, id, vm.songVideo.lyricsStamp) {
         value = LyricsState.Loading
@@ -590,7 +546,7 @@ private fun LyricsPane(vm: StudioViewModel, id: String?, item: app.keepfin.Libra
                 app.keepfin.core.lyrics.Lyrics.UNTIMED, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.padding(horizontal = 24.dp, vertical = 12.dp).testTag(UiTags.LYRICS_UNTIMED),
             )
-            Box(Modifier.weight(1f)) { LyricsList(vm, shown.lyrics, reduced) }
+            Box(Modifier.weight(1f)) { LyricsList(vm, shown.lyrics, reduced, big) }
         }
     }
 }
@@ -607,7 +563,7 @@ private sealed interface LyricsState {
  * graphicsLayer reading one animated number, so a frame never relays out or recomposes the lines.
  */
 @Composable
-private fun LyricsList(vm: StudioViewModel, lyrics: app.keepfin.Lyrics, reduced: Boolean) {
+private fun LyricsList(vm: StudioViewModel, lyrics: app.keepfin.Lyrics, reduced: Boolean, big: Boolean) {
     val position by vm.player.position.collectAsStateWithLifecycle()
     val list = rememberLazyListState()
     val index by remember(lyrics) {
@@ -639,7 +595,7 @@ private fun LyricsList(vm: StudioViewModel, lyrics: app.keepfin.Lyrics, reduced:
             itemsIndexed(lyrics.lines) { i, line ->
                 val active = i == index
                 Text(
-                    line.text.ifBlank { "\u266a" }, style = MaterialTheme.typography.titleLarge, color = MaterialTheme.colorScheme.onSurface,
+                    line.text.ifBlank { "\u266a" }, style = if (big) MaterialTheme.typography.headlineMedium.copy(fontWeight = androidx.compose.ui.text.font.FontWeight.Bold) else MaterialTheme.typography.titleLarge, color = MaterialTheme.colorScheme.onSurface,
                     modifier = Modifier.fillMaxWidth()
                         .graphicsLayer {
                             if (lyrics.synced) {
@@ -661,7 +617,7 @@ private fun LyricsList(vm: StudioViewModel, lyrics: app.keepfin.Lyrics, reduced:
 // ---- queue --------------------------------------------------------------------------------------------------
 
 @Composable
-private fun QueuePane(vm: StudioViewModel, state: PlayerUi) {
+internal fun QueuePane(vm: StudioViewModel, state: PlayerUi) {
     val port = vm.player
     val list = rememberLazyListState()
     LaunchedEffect(state.index.coerceAtLeast(0) to (state.queue.size > 0)) { if (state.index >= 0) list.scrollToItem(state.index.coerceAtLeast(0)) }

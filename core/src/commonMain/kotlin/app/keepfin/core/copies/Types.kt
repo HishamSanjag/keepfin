@@ -231,6 +231,12 @@ enum class ReviewKind {
 
     /** the copy keeps a file the place no longer holds (backup, two-way) */
     NotHeld,
+
+    /** (executors) a file that is only in the cloud, not on the disk: left alone, never read or removed */
+    OnlineOnly,
+
+    /** (executors) a file larger than the copy's drive can hold (FAT, 4 GB): not copied */
+    TooLarge,
 }
 
 data class ReviewItem(val kind: ReviewKind, val path: String, val itemId: String? = null, val detail: String = "", val action: Action? = null)

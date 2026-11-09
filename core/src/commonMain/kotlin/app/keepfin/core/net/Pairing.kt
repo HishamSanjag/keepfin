@@ -154,3 +154,26 @@ fun parsePairCode(text: String): PairCode? {
     if (n != CODE_SYMBOLS) return null
     return PairCode(token, pinBits)
 }
+
+/**
+ * What is wrong with a typed code, in words for the person, or null when [parsePairCode] reads it. Checked before anything is sent,
+ * so a typo never costs one of the five tries a device allows.
+ */
+fun pairCodeProblem(text: String): String? {
+    var symbols = 0
+    var bad = false
+    for (raw in text) {
+        if (raw == '-' || isJsWhitespace(raw)) continue
+        var c = if (raw in 'a'..'z') raw - 32 else raw
+        if (c == 'O') c = '0' else if (c == 'I' || c == 'L') c = '1'
+        if (CODE_ALPHABET.indexOf(c) < 0) bad = true
+        symbols++
+    }
+    return when {
+        symbols == 0 -> "Type the code shown on the other device."
+        bad -> "That is not a Keepfin code. Codes use the numbers 0 to 9 and the letters A to Z, but never U, like 7Q4MX-2XKDP."
+        symbols < CODE_SYMBOLS -> "That code is too short. It has 10 characters, like 7Q4MX-2XKDP."
+        symbols > CODE_SYMBOLS -> "That code is too long. It has 10 characters, like 7Q4MX-2XKDP."
+        else -> null
+    }
+}

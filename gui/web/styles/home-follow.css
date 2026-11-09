@@ -1,0 +1,234 @@
+/* ---------- Made from your listening, and new releases from followed artists ---------- */
+.mix-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 8px;
+}
+.mix-tile {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  min-height: 56px;
+  padding: 0 12px 0 0;
+  border-radius: var(--r-md);
+  background: var(--surface);
+  text-align: left;
+  overflow: hidden;
+  box-shadow: inset 0 0 0 1px var(--line);
+  transition: background-color var(--t-fast) var(--ease);
+}
+.mix-tile:hover {
+  background: var(--raised);
+}
+.mix-art {
+  position: relative;
+  flex: none;
+  width: 56px;
+  height: 56px;
+  overflow: hidden;
+}
+.mix-text {
+  display: grid;
+  min-width: 0;
+  line-height: 1.3;
+}
+.mix-title,
+.mix-sub {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.mix-title {
+  font-weight: 600;
+}
+.mix-sub {
+  font-size: 12px;
+  color: var(--text-3);
+}
+.home-hint {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 16px 18px;
+  border: 1px dashed var(--line-strong);
+  border-radius: var(--r-md);
+}
+.home-hint-icon {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 40px;
+  height: 40px;
+  border-radius: var(--r-md);
+  background: var(--surface);
+  color: var(--text-3);
+}
+.home-hint-title {
+  font-weight: 600;
+}
+.home-follow {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 280px;
+  gap: 24px;
+  align-items: start;
+}
+.home-follow .follow-panel {
+  grid-column: 2;
+  grid-row: 1;
+}
+.feed {
+  display: grid;
+  gap: 14px;
+  min-width: 0;
+}
+.feed-label {
+  margin: 0 0 4px;
+  font-size: 11px;
+  font-weight: 650;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-3);
+}
+.release-list,
+.follow-list,
+.follow-manage {
+  display: grid;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.release-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 56px;
+  padding: 4px 0;
+  border-bottom: 1px solid var(--line);
+}
+.release-art {
+  flex: none;
+  width: 48px;
+  height: 48px;
+  border-radius: 6px;
+  overflow: hidden;
+}
+.release-art > * {
+  width: 100%;
+  height: 100%;
+}
+.release-text {
+  display: grid;
+  flex: 1;
+  min-width: 0;
+  line-height: 1.3;
+}
+.release-title,
+.release-sub {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.release-title {
+  font-weight: 600;
+}
+.release-sub {
+  font-size: 12px;
+  color: var(--text-3);
+}
+.follow-panel {
+  display: grid;
+  gap: 8px;
+  padding: 14px 16px;
+  border-radius: var(--r-md);
+  background: var(--surface);
+  box-shadow: inset 0 0 0 1px var(--line);
+}
+.follow-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 36px;
+}
+.follow-avatar {
+  position: relative;
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  color: #fff;
+  font-size: 12px;
+  font-weight: 650;
+}
+.follow-dot {
+  position: absolute;
+  top: -1px;
+  right: -1px;
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--accent);
+  box-shadow: 0 0 0 2px var(--surface);
+}
+.follow-name {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.follow-new {
+  flex: none;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--accent);
+}
+.dialog.side-panel {
+  position: fixed;
+  inset: 0 0 0 auto;
+  width: min(380px, 100vw);
+  max-height: none;
+  height: 100dvh;
+  margin: 0;
+  border-radius: 0;
+}
+.side-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.follow-add {
+  display: flex;
+  gap: 8px;
+}
+.follow-add input {
+  flex: 1;
+  min-width: 0;
+}
+.follow-manage-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 56px;
+  border-bottom: 1px solid var(--line);
+}
+.follow-manage-text {
+  display: grid;
+  flex: 1;
+  min-width: 0;
+}
+.follow-error {
+  color: var(--danger);
+}
+@media (max-width: 1000px) {
+  .home-follow {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .home-follow .follow-panel {
+    grid-column: 1;
+    grid-row: 1;
+  }
+}

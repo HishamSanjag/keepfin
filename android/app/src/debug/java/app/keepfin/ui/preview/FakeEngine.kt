@@ -46,6 +46,23 @@ class FakeEngine(private val context: Context? = null) : EngineApi {
     override val settings: StateFlow<EngineSettings> = _settings
     override val tools: StateFlow<List<ToolStatus>> = _tools
     override val hasCookies: StateFlow<Boolean> = _cookies
+
+    // Followed artists, kept in memory: tests seed [fakeFollowing] and read what the screens asked for.
+    val fakeFollowing = MutableStateFlow(app.keepfin.FollowingState())
+    override val following: StateFlow<app.keepfin.FollowingState> get() = fakeFollowing
+    val keptReleases = CopyOnWriteArrayList<String>()
+    val followChecks = CopyOnWriteArrayList<String?>()
+    override fun followArtist(name: String) {
+        val key = app.keepfin.core.home.ReleaseFeed.artistKey(name) ?: return
+        fakeFollowing.update { s -> if (s.artists.any { it.key == key }) s else s.copy(artists = s.artists + app.keepfin.FollowedArtist("f-${s.artists.size + 1}", name.trim(), key)) }
+    }
+    override fun unfollowArtist(id: String) { fakeFollowing.update { s -> s.copy(artists = s.artists.filterNot { it.id == id }, releases = s.releases.filterNot { it.artistId == id }) } }
+    override fun checkFollowing(id: String?) { followChecks += id }
+    override fun keepRelease(id: String): Int {
+        keptReleases += id
+        fakeFollowing.update { s -> s.copy(releases = s.releases.map { if (it.id == id) it.copy(kept = true) else it }) }
+        return 1
+    }
     val fakeLibrary = FakeLibrary({ _settings.value.library.spaces }) { transform -> _settings.update { s -> s.copy(library = s.library.copy(spaces = transform(s.library.spaces))) } }
     override val libraryApi: app.keepfin.LibraryApi get() = fakeLibrary
     /** The real Activity store, in memory only; scenes seed it and tests read or record into it. */

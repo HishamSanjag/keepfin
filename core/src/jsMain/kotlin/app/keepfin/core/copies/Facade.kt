@@ -82,11 +82,8 @@ private fun <T : Any> source(open: () -> (() -> String?), parse: (String) -> T):
     }
 }
 
-private fun rulesOf(name: String): NameRules = when (name) {
-    "exact" -> NameRules.exact
-    "ascii" -> NameRules.caseInsensitiveAscii
-    else -> throw IllegalArgumentException("Unknown name rules '$name' (exact or ascii)")
-}
+private fun rulesOf(name: String): NameRules =
+    NameRules.byId(name) ?: throw IllegalArgumentException("Unknown name rules '$name' (exact, ascii, nfc or unicode)")
 
 private fun modeOf(name: String): CopyMode = when (name) {
     "twoWay" -> CopyMode.TwoWay
@@ -402,3 +399,57 @@ class JsSyncReport(val title: String, val detail: String, val warn: Boolean)
 @JsExport
 fun copiesSyncReport(synced: Int, changed: Int, problems: Int, notReached: Array<String>, needOk: Array<String>): JsSyncReport =
     syncReport(synced, changed, problems, notReached.toList(), needOk.toList()).let { JsSyncReport(it.title, it.detail, it.warn) }
+
+// ---- Free up space… and Remove copy… (CopyActions.kt) ----
+
+@JsExport
+fun copiesFreeUpTitle(copy: String): String = CopyActions.freeUpTitle(copy)
+
+@JsExport
+fun copiesNothingToFree(versions: Int, deletedFiles: Int): Boolean = CopyActions.nothingToFree(versions, deletedFiles)
+
+@JsExport
+fun copiesFreeUpNothingWords(): String = CopyActions.NOTHING_TO_FREE
+
+@JsExport
+fun copiesFreeUpSummary(versions: Int, deletedFiles: Int): String = CopyActions.freeUpSummary(versions, deletedFiles)
+
+@JsExport
+fun copiesFreeUpKeeps(): String = CopyActions.FREE_UP_KEEPS
+
+@JsExport
+fun copiesRemoveTitle(copy: String): String = CopyActions.removeTitle(copy)
+
+@JsExport
+fun copiesRemoveLead(): String = CopyActions.REMOVE_LEAD
+
+@JsExport
+fun copiesRemoveFilesStay(): String = CopyActions.REMOVE_FILES_STAY
+
+// ---- safety checks of the executors (Checks.kt) ----
+
+/** The largest file a volume of [format] (FAT32, exFAT, NTFS...) can hold, or null when unlimited or unknown. */
+@JsExport
+fun copiesFileSizeLimit(format: String?): Double? = fileSizeLimit(format)?.toDouble()
+
+@JsExport
+fun copiesTooLargeWords(name: String, format: String?): String = fileTooLargeWords(name, format)
+
+/** Whether Windows attribute bits say the bytes of the file are not on the disk (a cloud placeholder). */
+@JsExport
+fun copiesIsOnlineOnly(attributes: Double): Boolean = isOnlineOnlyWindows(attributes.toLong())
+
+@JsExport
+fun copiesOnlineOnlyWords(name: String): String = onlineOnlyWords(name)
+
+@JsExport
+fun copiesAuditDue(lastAuditAtMs: Double?, nowMs: Double): Boolean = auditDue(lastAuditAtMs?.toLong(), nowMs.toLong())
+
+/** Detects a time zone or daylight saving shift over the files of a scan: feed [add] each file of the same size, then ask [detected]. */
+@JsExport
+class JsClockShift {
+    private val shift = ClockShift()
+    fun add(baselineMtimeMs: Double, currentMtimeMs: Double) = shift.add(baselineMtimeMs.toLong(), currentMtimeMs.toLong())
+    val detected: Boolean get() = shift.detected
+    val hours: Double get() = shift.hours.toDouble()
+}

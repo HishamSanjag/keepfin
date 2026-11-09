@@ -43,6 +43,7 @@ import app.keepfin.where.PlaceKind
 import app.keepfin.where.WhereFilesUi
 import app.keepfin.where.WherePlace
 import app.keepfin.where.WhereTap
+import app.keepfin.where.WhereSafety
 import app.keepfin.where.WhereWords
 
 object WhereTags {
@@ -51,6 +52,8 @@ object WhereTags {
     const val ONE_PLACE = "where-one-place"
     const val ONE_PLACE_KEEP = "where-one-place-keep"
     const val MUSIC_VIDEOS = "where-music-videos"
+    const val SAFETY = "where-safety"
+    const val SAFETY_KEEP = "where-safety-keep"
     fun row(id: String) = "where-row-$id"
     fun single(index: Int) = "where-single-$index"
     fun keep(index: Int) = "where-keep-$index"
@@ -58,8 +61,8 @@ object WhereTags {
 
 /** The group in Settings > Storage. */
 @Composable
-internal fun WhereFilesGroup(ui: WhereFilesUi, onOpen: (WhereTap) -> Unit, onKeepCopy: (Set<String>) -> Unit) {
-    app.keepfin.ui.components.SettingsGroup(WhereWords.TITLE, tag = "where-files-group") { WhereFilesBody(ui, onOpen, onKeepCopy) }
+internal fun WhereFilesGroup(ui: WhereFilesUi, onOpen: (WhereTap) -> Unit, onKeepCopy: (Set<String>) -> Unit, safety: Boolean = false) {
+    app.keepfin.ui.components.SettingsGroup(WhereWords.TITLE, tag = "where-files-group") { WhereFilesBody(ui, onOpen, onKeepCopy, safety) }
 }
 
 internal fun placeIcon(p: WherePlace): ImageVector = when (p.kind) {
@@ -75,23 +78,25 @@ internal fun placeIcon(p: WherePlace): ImageVector = when (p.kind) {
 
 /**
  * The rows and warnings of Where your files are. The same body sits in Settings > Storage and in Settings > Devices; the caller puts it in a
- * group or a pane. [onKeepCopy] gets the spaces to preselect in Add a copy.
+ * group or a pane. [onKeepCopy] gets the spaces to preselect in Add a copy. With [safety] (Settings > Storage) the shared core's one
+ * sentence ("Your library is in 3 places", "12 files have only one copy") leads the group and replaces the per-kind warnings, as on Windows.
  */
 @Composable
-fun WhereFilesBody(ui: WhereFilesUi, onOpen: (WhereTap) -> Unit, onKeepCopy: (Set<String>) -> Unit) {
+fun WhereFilesBody(ui: WhereFilesUi, onOpen: (WhereTap) -> Unit, onKeepCopy: (Set<String>) -> Unit, safety: Boolean = false) {
     val muted = MaterialTheme.colorScheme.onSurfaceVariant
     if (!ui.ready) {
         Text("Looking at where your files are…", fontSize = 14.sp, color = muted, modifier = Modifier.padding(16.dp).testTag(WhereTags.LOADING))
         return
     }
     Column(Modifier.fillMaxWidth().testTag(WhereTags.SECTION)) {
+        if (safety) WhereSafety.of(ui)?.let { LibrarySafetyCard(it) { onKeepCopy(WhereSafety.spacesToKeep(ui)) } }
         for ((i, p) in ui.places.withIndex()) {
             if (i > 0) RowSeparator(inset = 64)
             PlaceRow(p, onOpen)
         }
         if (ui.musicVideoBytes > 0L) Text("Music videos · ${Format.bytes(ui.musicVideoBytes)}", fontSize = 13.sp, color = muted, modifier = Modifier.padding(start = 64.dp, end = 16.dp, top = 4.dp, bottom = 8.dp).testTag(WhereTags.MUSIC_VIDEOS))
-        if (ui.singles.isNotEmpty() || ui.onePlaceOnly) RowSeparator()
-        for ((i, s) in ui.singles.withIndex()) {
+        if (!safety && (ui.singles.isNotEmpty() || ui.onePlaceOnly)) RowSeparator()
+        for ((i, s) in (if (safety) emptyList() else ui.singles).withIndex()) {
             Row(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 4.dp).testTag(WhereTags.single(i)), verticalAlignment = Alignment.Top, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                 Icon(Icons.Outlined.WarningAmber, contentDescription = null, tint = MaterialTheme.colorScheme.error, modifier = Modifier.padding(top = 2.dp).size(20.dp))
                 Column(Modifier.weight(1f)) {
@@ -100,7 +105,7 @@ fun WhereFilesBody(ui: WhereFilesUi, onOpen: (WhereTap) -> Unit, onKeepCopy: (Se
                 }
             }
         }
-        if (ui.onePlaceOnly) {
+        if (ui.onePlaceOnly && !safety) {
             Column(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
                 Text(WhereWords.ONE_PLACE, fontSize = 14.sp, lineHeight = 20.sp, color = muted, modifier = Modifier.testTag(WhereTags.ONE_PLACE))
                 OutlinedButton(onClick = { onKeepCopy(emptySet()) }, modifier = Modifier.heightIn(min = 48.dp).testTag(WhereTags.ONE_PLACE_KEEP)) { Text(WhereWords.KEEP) }

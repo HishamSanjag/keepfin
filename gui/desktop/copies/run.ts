@@ -3,8 +3,9 @@
 // baseline and write the coverage manifest. Nothing here is wired into the app yet.
 import fs from 'node:fs/promises'
 import path from 'node:path'
-import {fastKey, planCopies, type CopyMode, type DesiredEntry, type PlacementMove, type PlanSummary, type ReviewItem} from '../../shared/core/copies.js'
-import {foldCommits, baselineFile} from './baseline.js'
+import {fastKey, fileSizeLimit, onlineOnlyWords, planCopies, tooLargeWords, type NameRulesId, type CopyMode, type DesiredEntry, type PlacementMove, type PlanSummary, type ReviewItem} from '../../shared/core/copies.js'
+import {foldCommits, baselineFile, resortBaseline} from './baseline.js'
+import {detectClockShift} from './clock.js'
 import {executePlan, type ExecReport, type MainHost, type Progress, type RemoteTally} from './executor.js'
 import {bumpGeneration, compareGeneration, readGeneration, readLockToken, readRelationship, writeRelationship} from './generation.js'
 import {HashCache, hashRequests} from './hash.js'
@@ -17,6 +18,7 @@ import {NameMap} from './names.js'
 import {archiveJournal, recoverRemoteRun, recoverRun, type RecoveryReport} from './recovery.js'
 import {clearStaging, hashRemote, REMOTE_RULES, scanRemoteInventory, type RemoteMedia, type RemoteStopState} from './remote.js'
 import {DisconnectedError, RemoteStopError, exists, rootGone} from './util.js'
+import {onlineOnlyFiles, volumeFormat} from './winfacts.js'
 import {derivedFilter} from './exports.js'
 
 export interface RunConfig {
@@ -56,6 +58,10 @@ export interface RunConfig {
   parallelism?: number
   speedLimit?: number
   maxFileBytes?: number
+  /** The file system of the drive under a folder (tests supply it; the app asks Windows). FAT limits a file to 4 GiB. */
+  volumeFormat?: (dir: string) => Promise<string | null>
+  /** The cloud files under a folder whose bytes are not on the disk, relative with `/`; null when that could not be told. */
+  onlineOnlyFiles?: (root: string, signal?: AbortSignal) => Promise<string[] | null>
   maxRounds?: number
   now?: () => number
   runId?: string
@@ -96,6 +102,12 @@ export interface RunReport {
   remoteStop?: {state: RemoteStopState; message: string}
   /** A remote copy only: names the provider cannot tell apart (the planner sends them to Needs review). */
   collisions?: string[]
+  /** Every file on the copy was hashed this run: because it was asked for, or a time zone or daylight saving shift was seen (spec 3). */
+  audit?: {reason: 'asked' | 'clock'; hours?: number}
+  /** The file system of the copy's drive, when it is a lettered Windows drive. */
+  copyFormat?: string | null
+  /** Cloud files that were left alone, per side. */
+  onlineOnly?: {main: number; copy: number}
 }
 
 /** Refuses a copy root that nests with the Keepfin folder, is a link, or is not a Keepfin folder. */
@@ -119,7 +131,7 @@ export async function checkCopyRoot(mainRoot: string, copyRoot: string): Promise
   return null
 }
 
-async function writeDesired(entries: Iterable<DesiredEntry>, file: string, rules: 'exact' | 'ascii', tmpDir: string, chunk?: number): Promise<number> {
+async function writeDesired(entries: Iterable<DesiredEntry>, file: string, rules: NameRulesId, tmpDir: string, chunk?: number): Promise<number> {
   const sorter = new ExternalSorter(tmpDir, chunk ?? 50_000, 'desired')
   let seq = 0
   for (const e of entries) await sorter.add({key: fastKey(rules, e.path), path: e.path, seq: seq++, text: JSON.stringify(e)})
@@ -175,6 +187,17 @@ export async function runCopy(cfg: RunConfig): Promise<RunReport> {
     const rules = remote ? REMOTE_RULES : await probeNameRules(cfg.copyRoot)
     const names = remote ? NameMap.identity(cfg.copyRoot) : await NameMap.load(cfg.copyRoot)
     if (remote) await clearStaging(staging) // our own temporaries from a run that died
+    // the baseline file is sorted by the name rule it was written under: sort it again when the rule changed (or was never recorded)
+    {
+      const recorded = await readRelationship(cfg.stateDir)
+      if (recorded.rules !== rules && (await exists(baselineFile(cfg.stateDir)))) {
+        await resortBaseline({stateDir: cfg.stateDir, rules, tmpDir, chunk: cfg.sortChunk})
+        if (!cfg.dryRun) await writeRelationship(cfg.stateDir, {...recorded, rules})
+      }
+    }
+    const format = remote ? null : await (cfg.volumeFormat ?? volumeFormat)(cfg.copyRoot)
+    report.copyFormat = format
+    const sizeLimit = cfg.maxFileBytes ?? fileSizeLimit(format) ?? undefined
 
     // 1. an interrupted run: reconcile the files with its journal, then fold what it committed
     let t = Date.now()
@@ -216,6 +239,7 @@ export async function runCopy(cfg: RunConfig): Promise<RunReport> {
     const priorCopyCount = remote ? countLines(baselineFile(cfg.stateDir)) : 0
     const rounds = cfg.maxRounds ?? 3
     let bumped = false
+    let audited = false
     let lastScanStart = now()
     for (let round = 1; round <= rounds; round++) {
       report.rounds = round
@@ -228,7 +252,16 @@ export async function runCopy(cfg: RunConfig): Promise<RunReport> {
       lastScanStart = now()
       const mainInv = path.join(tmpDir, 'main.inv')
       const copyInv = path.join(tmpDir, 'copy.inv')
-      report.main = await scanInventory(cfg.mainRoot, mainInv, {rules, tmpDir, signal: cfg.signal, chunk: cfg.sortChunk})
+      // cloud files that are only in the cloud: never listed (so never hashed or read), the side is not fully known this run, and the
+      // executor refuses any action that touches their names
+      const listOnline = cfg.onlineOnlyFiles ?? onlineOnlyFiles
+      const mainOnline = await listOnline(cfg.mainRoot, cfg.signal)
+      const copyOnline = remote ? [] : await listOnline(cfg.copyRoot, cfg.signal)
+      const keysOf = (files: string[] | null, library: (p: string) => string) => new Set((files ?? []).map((p) => fastKey(rules, library(p))))
+      const mainOnlineKeys = keysOf(mainOnline, (p) => p)
+      const copyOnlineKeys = keysOf(copyOnline, (p) => names.library(p))
+      const except = (keys: Set<string>) => (keys.size ? (p: string) => !keys.has(fastKey(rules, p)) : undefined)
+      report.main = await scanInventory(cfg.mainRoot, mainInv, {rules, tmpDir, filter: except(mainOnlineKeys), signal: cfg.signal, chunk: cfg.sortChunk})
       if (remote) {
         const scanned = await scanRemoteInventory(remote, copyInv, {rules, tmpDir, priorCount: priorCopyCount, signal: cfg.signal, chunk: cfg.sortChunk})
         report.copy = scanned
@@ -240,8 +273,20 @@ export async function runCopy(cfg: RunConfig): Promise<RunReport> {
         }
       } else {
         // derived exports (playlist files, flat and MP3 versions) are not library content: never listed, never imported back
-        report.copy = await scanInventory(cfg.copyRoot, copyInv, {rules, tmpDir, names, filter: await derivedFilter(cfg.copyRoot), signal: cfg.signal, chunk: cfg.sortChunk})
+        const derived = await derivedFilter(cfg.copyRoot)
+        const online = except(copyOnlineKeys)
+        report.copy = await scanInventory(cfg.copyRoot, copyInv, {rules, tmpDir, names, filter: (p) => derived(p) && (online?.(p) ?? true), signal: cfg.signal, chunk: cfg.sortChunk})
       }
+      const unsure = (r: InventoryResult | null, files: string[] | null) => {
+        if (r && (files === null || files.length > 0)) {
+          r.complete = false
+          r.unreadable.push(files === null ? '(cloud files could not be checked)' : '(files only in the cloud)')
+        }
+      }
+      unsure(report.main, mainOnline)
+      unsure(report.copy, copyOnline)
+      const onlineKeys = new Set([...mainOnlineKeys, ...copyOnlineKeys])
+      report.onlineOnly = {main: mainOnline?.length ?? 0, copy: copyOnline?.length ?? 0}
       timer('inventory', t)
 
       // 4. plan; hash what the planner asks for; plan again
@@ -252,6 +297,17 @@ export async function runCopy(cfg: RunConfig): Promise<RunReport> {
         copy: readers.source(copyInv),
         baseline: readers.source(baselineFile(cfg.stateDir)),
       }
+      // a time zone or daylight saving shift makes every stat untrustworthy: hash everything this run (spec 3)
+      let audit = cfg.audit === true
+      if (audit) report.audit = {reason: 'asked'}
+      else if (!remote && (await exists(baselineFile(cfg.stateDir)))) {
+        const shift = detectClockShift(baselineFile(cfg.stateDir), copyInv, rules, 'copy')
+        if (shift.detected) {
+          audit = true
+          report.audit = {reason: 'clock', hours: shift.hours}
+        }
+      }
+      audited ||= audit
       const options = {
         mode: cfg.mode,
         rules,
@@ -259,7 +315,7 @@ export async function runCopy(cfg: RunConfig): Promise<RunReport> {
         mainComplete: report.main.complete,
         copyComplete: report.copy.complete,
         previewConfirmed,
-        audit: cfg.audit === true,
+        audit,
         timestampGranularityMs: cfg.timestampGranularityMs ?? 2000,
         deleteGuardPercent: cfg.deleteGuardPercent,
         companions: cfg.companions !== false,
@@ -313,6 +369,20 @@ export async function runCopy(cfg: RunConfig): Promise<RunReport> {
         if (report.review.length >= 200) break
         report.review.push(r)
       }
+      // what the executors know and the planner does not: cloud files left alone, files a FAT drive cannot hold
+      const note = (kind: 'OnlineOnly' | 'TooLarge', p: string, detail: string) => {
+        report.reviewCount++
+        if (report.review.length < 200) report.review.push({kind, path: p, itemId: null, detail, action: null})
+      }
+      for (const [files, side] of [[mainOnline, 'main'], [copyOnline, 'copy']] as const) {
+        void side
+        for (const f of files ?? []) note('OnlineOnly', f, onlineOnlyWords(f.slice(f.lastIndexOf('/') + 1)))
+      }
+      if (sizeLimit !== undefined) {
+        for (const a of plan.actions()) {
+          if (a.kind === 'CopyTo' && a.bytes > sizeLimit) note('TooLarge', a.path, tooLargeWords(a.path.slice(a.path.lastIndexOf('/') + 1), format))
+        }
+      }
       if (cfg.dryRun) {
         report.status = 'preview'
         break
@@ -345,7 +415,8 @@ export async function runCopy(cfg: RunConfig): Promise<RunReport> {
           host: cfg.host,
           parallelism: cfg.parallelism,
           speedLimit: cfg.speedLimit,
-          maxFileBytes: cfg.maxFileBytes,
+          maxFileBytes: sizeLimit,
+          onlineOnly: onlineKeys,
           now,
           fault: cfg.fault,
           signal: cfg.signal,
@@ -404,7 +475,9 @@ export async function runCopy(cfg: RunConfig): Promise<RunReport> {
     if (report.status === 'done' || report.status === 'paused' || report.status === 'disconnected' || report.status === 'held') {
       if (genState !== 'lower' && genState !== 'unknown') {
         const generation = bumped ? runGeneration : (await readGeneration(cfg.copyRoot)) ?? runGeneration
-        await writeRelationship(cfg.stateDir, {generation, previewConfirmed})
+        // the first completed run hashed everything it copied; a run that audited (or saw the clock change) is the new last audit
+        const auditedAt = report.status === 'done' && (audited || rel.auditedAt === undefined) ? now() : rel.auditedAt
+        await writeRelationship(cfg.stateDir, {generation, previewConfirmed, rules, ...(auditedAt !== undefined ? {auditedAt} : {})})
         report.generation.committedAt = generation
       }
       if (report.status === 'done' && genState !== 'lower' && genState !== 'unknown') {
@@ -483,5 +556,5 @@ async function remoteHash(remote: RemoteMedia, remotePath: string, staging: stri
 export async function acceptSameDrive(stateDir: string, copyRoot: string): Promise<void> {
   const rel = await readRelationship(stateDir)
   const gen = await readGeneration(copyRoot)
-  await writeRelationship(stateDir, {generation: gen, previewConfirmed: rel.previewConfirmed})
+  await writeRelationship(stateDir, {...rel, generation: gen})
 }

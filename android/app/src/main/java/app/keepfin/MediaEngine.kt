@@ -126,6 +126,12 @@ class MediaEngine(internal val context: Context) : EngineApi, app.keepfin.setup.
     internal val galleryEngine = GalleryEngine(context, toolsUpdater::ensureInit)
     internal val inspector = Inspector(this)
     internal val follow = FollowEngine(EngineFollowHost(this))
+    internal val artistFollowing = ArtistFollowing(EngineFollowingHost(this), FileFollowingStore(File(context.filesDir, "following.json")))
+    override val following: StateFlow<FollowingState> get() = artistFollowing.state
+    override fun followArtist(name: String) { artistFollowing.follow(name)?.let { FollowScheduler.rememberArtists(context, true); FollowScheduler.checkArtists(context, it.id) } }
+    override fun unfollowArtist(id: String) { artistFollowing.unfollow(id); FollowScheduler.rememberArtists(context, artistFollowing.any()) }
+    override fun checkFollowing(id: String?) = FollowScheduler.checkArtists(context, id, manual = true)
+    override fun keepRelease(id: String): Int = artistFollowing.keep(id)
     private val runner = DownloadRunner(this)
 
     private fun named(name: String) = ThreadFactory { task -> Thread(task, name).apply { isDaemon = true } }
@@ -693,6 +699,23 @@ class MediaEngine(internal val context: Context) : EngineApi, app.keepfin.setup.
                         publicFiles = r.publicFiles.map { if (it == oldUri) newUri else it },
                     )
                 } else r
+            }
+            if (changed) try { save() } catch (error: Exception) { Log.e(TAG, "queue save failed", error) }
+        }
+        if (changed) publish()
+    }
+
+    /** The Keepfin folder moved: history rows that name a file in the old place follow it ([newUri] answers null for any other address). Safe to repeat. */
+    internal fun relocateFolderFiles(newUri: (String) -> String?) {
+        var changed = false
+        synchronized(lock) {
+            records = records.map { r ->
+                val main = r.job.publicUri?.let(newUri)
+                val files = r.publicFiles.map { newUri(it) ?: it }
+                if (main == null && files == r.publicFiles) r else {
+                    changed = true
+                    r.copy(job = if (main != null) r.job.copy(publicUri = main) else r.job, publicFiles = files)
+                }
             }
             if (changed) try { save() } catch (error: Exception) { Log.e(TAG, "queue save failed", error) }
         }

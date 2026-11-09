@@ -19,6 +19,7 @@ import {
   type MatchTrack,
 } from '../../shared/core/music.js'
 import {validateUrl} from '../../shared/contracts.js'
+import {pickChannel} from '../../shared/core/home.js'
 import type {MusicVideoFound} from '../../shared/library.js'
 import {isShortMusicLink, isYouTubeMusic, musicLink, musicLinkUrl, youTubeVideoId, type MusicLink, type MusicService} from '../../shared/providers.js'
 
@@ -562,4 +563,11 @@ export async function lookupMusicVideo(artist: string, title: string): Promise<M
   }
   if (!hit) return {none: true}
   return {videoId: hit.videoId, title: hit.title, channel: hit.artists.map((a: {name: string}) => a.name).join(', '), views: hit.views, durationSec: hit.durationSec}
+}
+
+/** The YouTube Music channel (UC...) of an artist, found with the videos search (the same request the music video look uses); undefined when no result is surely that artist. */
+export async function findArtistChannel(name: string, key: string, fetcher: typeof fetch = fetch, signal?: AbortSignal): Promise<string | undefined> {
+  const request = musicVideoRequest([name], '')
+  const hits = parseMusicVideos(await postMusic(request, fetcher, signal, 'artist search'))
+  return pickChannel(hits.flatMap((hit) => hit.artists), key)
 }

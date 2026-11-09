@@ -8,7 +8,10 @@ import fs from 'node:fs/promises'
 import os from 'node:os'
 import path from 'node:path'
 import type {CopiesState, CopyDraft, CopyFolderCheck, CopyPreview} from '../shared/copies.js'
+import {DatabaseSync} from 'node:sqlite'
 import {CopiesHost} from './copiesHost.js'
+import {readRelationship, writeRelationship} from './copies/generation.js'
+import {readPlaces} from './sqlstate/desired.js'
 import {createKeepfinFolder} from './store/keepfinFolder.js'
 import {BUILTIN_SPACE_IDS} from './store/mapping.js'
 import {StoreLibrary} from './store/persistence.js'
@@ -526,6 +529,51 @@ test('Music videos is its own option: a copy of everything carries the video, a 
     await settle(w.host, second.placeId, (s) => s.places.find((p) => p.id === second.placeId)?.waiting === 0 && (s.places.find((p) => p.id === second.placeId)?.kept ?? 0) >= 2)
     assert.equal(await read(part, 'Music', 'song.video.mp4'), 'VIDEO')
     assert.equal((await w.host.state()).places.find((p) => p.id === second.placeId)?.musicVideos, true)
+  } finally {
+    await w.cleanup()
+  }
+})
+
+test('a copy that holds a smart space holds what its rules gather; a finished run writes the verified record once; an audit is due after 30 days', async () => {
+  const w = await world()
+  try {
+    const lofi = await w.addItem('rain.mp3', 'RAIN')
+    await w.addItem('loud.mp3', 'LOUD')
+    await w.session.store.apply([{kind: 'item.set', body: {item: lofi, field: 'tags', value: ['lofi']}}])
+    const space = randomUUID()
+    await w.session.store.apply([{kind: 'space.add', body: {space, fields: {name: 'Chill', type: 'smart', rules: {match: 'any', rules: [{field: 'tag', values: ['lofi']}]}}}}])
+    await w.host.refreshSnapshot()
+    const rows = (await w.host.state()).rows
+    assert.ok(rows.some((r) => r.kind === 'smart' && r.id === space && r.name === 'Chill'), 'the smart space is something a copy can hold')
+    const target = path.join(w.dir, 'ChillDrive')
+    await fs.mkdir(target)
+    const draft: CopyDraft = {path: target, name: 'Chill copy', mode: 'backup', holds: {all: false, spaces: [], playlists: [], favourites: false, smart: [space]}, schedule: {everyHours: 24, auto: false}}
+    const preview = (await w.host.handle('copiesPreview', {draft})) as CopyPreview
+    assert.equal(preview.status, 'ready')
+    assert.equal(preview.copyFiles, 1)
+    await w.host.handle('copiesAdd', {placeId: preview.placeId})
+    const state = await settle(w.host, preview.placeId, (s) => s.places[0].kept === 1 && s.places[0].waiting === 0)
+    assert.equal(await read(target, 'Music', 'rain.mp3'), 'RAIN')
+    assert.equal(await fs.access(path.join(target, 'Music', 'loud.mp3')).then(() => true, () => false), false, 'what the rules do not gather is not copied')
+    assert.deepEqual(state.places[0].holds.smart, [space])
+    assert.equal(state.places[0].cells[`smart:${space}`], 'kept')
+
+    // the verified record: written by the host after the completed run, pointing at the manifest in the Keepfin folder
+    const db = new DatabaseSync(path.join(w.dir, 'profile', 'state', 'library-state.v1.db'), {readOnly: true})
+    const place = readPlaces(db).find((p) => p.id === preview.placeId)
+    db.close()
+    assert.ok(place?.verified?.manifest && place.verified.sha256, 'place.set verified was written')
+
+    // thirty days after the last audit the host runs one by itself
+    const stateDir = path.join(w.dir, 'profile', 'copies', preview.placeId)
+    const rel = await readRelationship(stateDir)
+    assert.ok(rel.auditedAt, 'the first completed run counts as an audit')
+    await writeRelationship(stateDir, {...rel, auditedAt: Date.now() - 31 * 86_400_000})
+    await (w.host as unknown as {tick(): Promise<void>}).tick()
+    await settle(w.host, preview.placeId, () => true)
+    const deadline = Date.now() + 20_000
+    while (Date.now() < deadline && (await readRelationship(stateDir)).auditedAt! < Date.now() - 60_000) await new Promise((r) => setTimeout(r, 150))
+    assert.ok((await readRelationship(stateDir)).auditedAt! > Date.now() - 60_000, 'the background audit ran and renewed the date')
   } finally {
     await w.cleanup()
   }

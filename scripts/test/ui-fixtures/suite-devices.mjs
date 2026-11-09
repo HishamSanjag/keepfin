@@ -215,6 +215,41 @@ export async function registerDevicesSuite({test, sent}) {
     }, {theme: mode, height: 1200})
   }
 
+  // ---------------------------------------------------------------- typing a code (beside the QR)
+  const typeBox = (page) => page.getByRole('region', {name: 'Type a code', exact: true})
+  await test('devices: a code is typed beside the QR, forgiving of case, spaces and the dash, and connects like a scanned code', async (page) => {
+    await openDevices(page)
+    await sent(page, 'devicesQr')
+    const field = typeBox(page).getByRole('textbox', {name: 'Type a code from another device'})
+    await field.fill('7q4mx 2xkdp')
+    await typeBox(page).getByRole('button', {name: 'Connect with code', exact: true}).click()
+    const call = await got(page, 'devicesConnect')
+    assert.equal(call.devices.address, '7q4mx 2xkdp', 'the engine reads the code as it was typed')
+    await card(page, 'Pixel 9').waitFor()
+  })
+
+  await test('devices: a mistyped code is explained before anything is sent', async (page) => {
+    await openDevices(page)
+    const field = typeBox(page).getByRole('textbox', {name: 'Type a code from another device'})
+    const connect = typeBox(page).getByRole('button', {name: 'Connect with code', exact: true})
+    assert.equal(await connect.isDisabled(), true, 'nothing typed yet')
+    await field.fill('7Q4MX-2XKD')
+    await connect.click()
+    await typeBox(page).getByText('That code is too short. It has 10 characters, like 7Q4MX-2XKDP.').waitFor()
+    await field.fill('7Q4MU-2XKDP')
+    await connect.click()
+    await typeBox(page).getByText(/^That is not a Keepfin code\./).waitFor()
+    assert.equal(await page.evaluate(() => window.__calls.filter((c) => c.op === 'devicesConnect').length), 0, 'a code that cannot be one never reaches the engine')
+  })
+
+  await test('devices: a code nobody is showing comes back in plain words', async (page) => {
+    await openDevices(page)
+    await typeBox(page).getByRole('textbox', {name: 'Type a code from another device'}).fill('AAAAA-AAAAA')
+    await typeBox(page).getByRole('button', {name: 'Connect with code', exact: true}).click()
+    await typeBox(page).getByText(/^No device showing this code was found\./).waitFor()
+    assert.equal(await overflow(page), 0)
+  })
+
   await test('devices: no code is asked for while Devices is off', async (page) => {
     await openDevices(page)
     await page.getByText('Devices is off', {exact: true}).waitFor()

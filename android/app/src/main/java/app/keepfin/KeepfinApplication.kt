@@ -8,6 +8,7 @@ class KeepfinApplication : Application() {
         LyricsLookup.versionName = BuildConfig.VERSION_NAME
         registerActivityLifecycleCallbacks(foregroundTracker)
         recordAppUpdate()
+        app.keepfin.move.MoveRecovery.afterOpen(this)
         // Make the launcher icon match the stored choice (an update or restore can reset the component states).
         AppIcons.reconcile(this)
         // Hourly check of followed playlists (WorkManager keeps one schedule across restarts).
@@ -25,6 +26,10 @@ class KeepfinApplication : Application() {
 
     /** First start and setup of an earlier library (the Keepfin folder). */
     internal val storageSetup: app.keepfin.setup.StorageSetup by lazy { app.keepfin.setup.StorageSetup(this, engineApi as app.keepfin.setup.SetupEngine) }
+
+    /** Change location of the Keepfin folder, and Bring them in (Settings > Storage). */
+    internal val folderMove by lazy { app.keepfin.move.FolderMoveController(this) }
+    internal val bringIn by lazy { app.keepfin.move.BringInController(this) }
 
     /** The Activity list, shared by the engine, the follow check and the app updater (dev-docs/architecture/ACTIVITY.md). */
     val activity: ActivityStore by lazy { ActivityStore(java.io.File(filesDir, "activity.json")) }

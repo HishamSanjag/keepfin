@@ -1046,7 +1046,7 @@ class NetService(private val deps: NetServiceDeps) {
         val link = links[peer.deviceId]
         val offered = link?.lastHello?.libraries?.firstOrNull { it.libraryId == libraryId }
         val reachable = link?.online == true && offered != null
-        PlayCandidate(peer.name, reachable, offersMedia = if (reachable) "media.read" in offered!!.actions else true, lastSeen = peer.lastSeen)
+        PlayCandidate(peer.name, reachable, offersMedia = if (reachable) "media.read" in offered!!.actions else true, lastSeen = peer.lastSeen, deviceId = peer.deviceId, near = routeOfPeer(peer) != "tailscale")
     }
 
     /** [allowMetered]: the person asked for this file now, so it may stream on mobile data (the player says where it streams from). */

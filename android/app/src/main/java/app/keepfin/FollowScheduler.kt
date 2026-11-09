@@ -38,6 +38,7 @@ object FollowScheduler {
     const val KEY_REVIEW = "review"
     private const val PREFS = "follow"
     private const val ACTIVE = "active"
+    private const val ARTISTS = "artists"
 
     private val network = Constraints.Builder().setRequiredNetworkType(NetworkType.CONNECTED).build()
 
@@ -64,6 +65,22 @@ object FollowScheduler {
         context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit().putBoolean(ACTIVE, active).apply()
     }
 
+    /** "Check now" for one followed artist, or all of them when null. */
+    fun checkArtists(context: Context, id: String?, manual: Boolean = id != null) {
+        try {
+            val request = OneTimeWorkRequestBuilder<FollowArtistsWorker>().setConstraints(network)
+                .setInputData(Data.Builder().apply { if (id != null) putString(KEY_ID, id); putBoolean("manual", manual) }.build()).build()
+            WorkManager.getInstance(context).enqueueUniqueWork(if (id != null) "keepfin-artists-$id" else if (manual) "keepfin-artists-all" else "keepfin-artists", ExistingWorkPolicy.KEEP, request)
+        } catch (error: Exception) { Log.w(TAG, "artist check not queued", error) }
+    }
+
+    /** Whether any artist is followed: the hourly scan then also looks at the artists. */
+    fun rememberArtists(context: Context, any: Boolean) {
+        context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit().putBoolean(ARTISTS, any).apply()
+    }
+
+    internal fun anyArtists(context: Context) = context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).getBoolean(ARTISTS, false)
+
     internal fun anyActive(context: Context) = context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).getBoolean(ACTIVE, false)
 
     private const val TAG = "KeepfinFollow"
@@ -74,8 +91,11 @@ private fun Context.engine(): MediaEngine? = (applicationContext as? KeepfinAppl
 /** Hourly: starts a run only when a collection is due. */
 class FollowScanWorker(context: Context, params: WorkerParameters) : CoroutineWorker(context, params) {
     override suspend fun doWork(): Result {
-        if (!FollowScheduler.anyActive(applicationContext)) return Result.success()
+        val artists = FollowScheduler.anyArtists(applicationContext)
+        if (!FollowScheduler.anyActive(applicationContext) && !artists) return Result.success()
         val engine = applicationContext.engine() ?: return Result.success()
+        if (artists && withContext(Dispatchers.IO) { engine.artistFollowing.due().isNotEmpty() }) FollowScheduler.checkArtists(applicationContext, null)
+        if (!FollowScheduler.anyActive(applicationContext)) return Result.success()
         val due = withContext(Dispatchers.IO) { CollectionLogic.due(engine.collectionsNow(), System.currentTimeMillis(), engine.follow.metered()) }
         if (due.isNotEmpty()) FollowScheduler.checkNow(applicationContext, null, false)
         return Result.success()
@@ -121,5 +141,16 @@ class FollowRunWorker(context: Context, params: WorkerParameters) : CoroutineWor
         private const val POLL_MS = 3_000L
         /** Longer than any single run should take; Android 15 caps dataSync services at about six hours a day anyway. */
         private const val MAX_WAIT_MS = 2 * 60 * 60 * 1000L
+    }
+}
+
+/** Checks followed artists for new releases: one artist (Check now), or the ones that are due. Short, so it needs no foreground service. */
+class FollowArtistsWorker(context: Context, params: WorkerParameters) : CoroutineWorker(context, params) {
+    override suspend fun doWork(): Result {
+        val engine = applicationContext.engine() ?: return Result.success()
+        val id = inputData.getString(FollowScheduler.KEY_ID)
+        val found = withContext(Dispatchers.IO) { engine.artistFollowing.check(id, manual = inputData.getBoolean("manual", id != null)) }
+        Log.i("KeepfinFollow", "artist run: new releases=$found")
+        return Result.success()
     }
 }

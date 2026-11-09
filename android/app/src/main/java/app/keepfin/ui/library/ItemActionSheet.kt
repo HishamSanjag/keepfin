@@ -29,6 +29,8 @@ import androidx.compose.material.icons.outlined.Edit
 import androidx.compose.material.icons.outlined.FavoriteBorder
 import androidx.compose.material.icons.outlined.FindInPage
 import androidx.compose.material.icons.outlined.Person
+import androidx.compose.material.icons.outlined.PersonAdd
+import androidx.compose.material.icons.outlined.PersonRemove
 import androidx.compose.material.icons.outlined.Headphones
 import androidx.compose.material.icons.outlined.Lyrics
 import androidx.compose.material.icons.outlined.Videocam
@@ -116,6 +118,11 @@ fun itemActions(ui: LibraryUi, item: LibraryItem, from: OwnCollection? = null): 
         val hasAlbum = PlaybackItems.albumKey(item) != null
         add(ItemAction("album", "Go to album", Icons.Outlined.Album, enabled = hasAlbum, why = "No album tag".takeIf { !hasAlbum }) { vm.openAlbumOf(item) })
         add(ItemAction("artist", "Go to artist", Icons.Outlined.Person, enabled = artist != null, why = "No artist tag".takeIf { artist == null }) { vm.openArtistOf(item) })
+        // follow the artist: their new releases show on Home (nothing downloads until you keep one)
+        if (song && artist != null) {
+            val followed = vm.engine.following.value.isFollowing(artist)
+            add(ItemAction("follow", if (followed) "Unfollow $artist" else "Follow $artist", if (followed) Icons.Outlined.PersonRemove else Icons.Outlined.PersonAdd) { vm.following.toggle(artist) })
+        }
         add(ItemAction("showfile", "Show file", Icons.Outlined.FindInPage) { ui.sheet(LibrarySheet.Info(item)) })
         add(ItemAction("edit", "Edit info", Icons.Outlined.Edit, enabled = sound, why = "Photos and other files have no tags to edit. Use Rename for the file name.".takeIf { !sound }) { ui.sheet(LibrarySheet.EditInfo(item)) })
         add(ItemAction("move", "Move to space…", Icons.Outlined.DriveFileMove) { ui.sheet(LibrarySheet.MoveTo(listOf(item.id))) })

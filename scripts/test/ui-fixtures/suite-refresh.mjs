@@ -244,14 +244,14 @@ export async function registerRefreshSuite({test, calls, last, sent}) {
     await page.keyboard.press('Escape')
   }, {fake: {libraryScenario: 'v2'}})
 
-  await test('artist page: header, albums and a Follow button that says when it arrives', async (page) => {
+  await test('artist page: header, albums and a Follow button that follows', async (page) => {
     await goto(page, 'Search')
     await omni(page).fill('mira')
     await page.getByRole('region', {name: 'Artists'}).getByRole('button', {name: /^Mira Halden/}).click()
     await page.getByRole('heading', {name: 'Mira Halden'}).waitFor()
-    await page.getByRole('button', {name: /^More actions for Songs by Mira Halden/}).first().click()
-    assert.equal(await page.getByRole('menuitem', {name: /^Follow/}).isDisabled(), true)
-    await page.getByText(/arrives with online search/).first().waitFor()
-    await page.keyboard.press('Escape')
+    const follow = page.getByRole('button', {name: 'Follow Mira Halden', exact: true})
+    assert.equal(await follow.isEnabled(), true)
+    await follow.click()
+    await page.getByRole('button', {name: /^Following Mira Halden/}).waitFor()
   })
 }

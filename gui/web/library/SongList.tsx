@@ -33,6 +33,7 @@ export function SongList({
   onSelectingChange,
   empty,
   extra,
+  followButton,
   noActions = false,
   below,
   density = 'compact',
@@ -52,6 +53,8 @@ export function SongList({
   empty?: ReactNode
   /** Entries added to the hero's ⋯ menu after menu (Keep in sync, Download more, Follow). */
   extra?: MenuItem[]
+  /** The artist page's Follow button, shown beside Play and Shuffle. */
+  followButton?: ReactNode
   /** No Play / Shuffle row above the list: the page header owns Play all. */
   noActions?: boolean
   /** Content under the hero and its toolbar (an artist's albums). */
@@ -100,6 +103,7 @@ export function SongList({
       <Button icon="shuffle" disabled={!items.length} onClick={() => playAll(items, true)}>
         Shuffle
       </Button>
+      {followButton}
       {moreItems.length > 0 && <Menu label={`More actions for ${label}`} items={moreItems} />}
     </>
   ) : (

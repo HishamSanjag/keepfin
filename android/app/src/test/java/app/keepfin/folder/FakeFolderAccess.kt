@@ -14,6 +14,12 @@ class FakeFolderAccess : FolderAccess {
     /** The next [list] calls answer with an empty listing flagged incomplete. */
     @Volatile var emptyListings = false
 
+    /** Files the provider says are only in the cloud (a virtual document): listed with [FolderEntry.onlineOnly]. */
+    val onlineOnly = HashSet<String>()
+
+    /** Added to the modified time every file reports (a time zone change on a card that keeps local time). */
+    @Volatile var mtimeShiftMs = 0L
+
     /** Every call throws this. */
     @Volatile var failWith: FolderError? = null
 
@@ -39,7 +45,7 @@ class FakeFolderAccess : FolderAccess {
         }
         for ((p, b) in files) if (p.startsWith(prefix)) {
             val rest = p.substring(prefix.length)
-            if (!rest.contains('/')) out[rest] = FolderEntry(rest, false, b.size.toLong(), 0)
+            if (!rest.contains('/')) out[rest] = FolderEntry(rest, false, b.size.toLong(), mtimeShiftMs, p in onlineOnly)
         }
         return FolderListing(out.values.toList(), false)
     }
@@ -47,7 +53,7 @@ class FakeFolderAccess : FolderAccess {
     override fun stat(path: String): FolderEntry? {
         check()
         if (path in dirs) return FolderEntry(nameOf(path), true, -1, dirTimes[path] ?: 0)
-        return files[path]?.let { FolderEntry(nameOf(path), false, it.size.toLong(), 0) }
+        return files[path]?.let { FolderEntry(nameOf(path), false, it.size.toLong(), mtimeShiftMs, path in onlineOnly) }
     }
 
     override fun read(path: String): ByteArray {

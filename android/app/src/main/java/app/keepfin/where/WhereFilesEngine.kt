@@ -143,7 +143,7 @@ internal class WhereFilesEngine(
             if (replica == b.replicaId) continue
             val d = devs.firstOrNull { d -> d.libraries.any { it.actor.isNotEmpty() && it.actor == actor } }
             if (d == null) { if (seen.add("?")) out.add(ItemPlace("another device", true)); continue }
-            if (seen.add(d.deviceId)) out.add(ItemPlace(d.name, !d.online))
+            if (seen.add(d.deviceId)) out.add(ItemPlace(d.name, !d.online, deviceId = d.deviceId))
         }
         val c = content
         val p = path

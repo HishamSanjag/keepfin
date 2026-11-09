@@ -24,7 +24,26 @@ interface NameRules {
             override fun key(path: String): String = path
         }
 
-        /** A destination that ignores ASCII case (NTFS and FAT by default). Unicode equivalence is the host's to add. */
+        /** A case-sensitive destination that still never gets two spellings of one name (composed and decomposed accents: `nfc`). */
+        val composed: NameRules = object : NameRules {
+            override fun key(path: String): String = composedKey(path)
+        }
+
+        /** A destination that ignores letter case (NTFS, FAT, exFAT, cloud accounts), composed and decomposed accents alike (`unicode`). */
+        val folded: NameRules = object : NameRules {
+            override fun key(path: String): String = foldedKey(path)
+        }
+
+        /** The rule a host names by its id (`exact`, `ascii`, `nfc`, `unicode`), or null. */
+        fun byId(id: String): NameRules? = when (id) {
+            "exact" -> exact
+            "ascii" -> caseInsensitiveAscii
+            "nfc" -> composed
+            "unicode" -> folded
+            else -> null
+        }
+
+        /** A destination that ignores ASCII case only (the older rule; kept for relationships that were written with it). */
         val caseInsensitiveAscii: NameRules = object : NameRules {
             override fun key(path: String): String {
                 var needs = false

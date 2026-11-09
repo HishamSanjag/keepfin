@@ -101,7 +101,7 @@ class PlannerTest {
     fun aMoveByContentIsTakenOnlyWhenUnambiguous() {
         // main lost A.mp3 and gained B.mp3 with the same bytes; the library recorded no placement change
         fun rel(extraLost: Boolean): Rel {
-            val d = mutableListOf(want("B.mp3", "x", sha(1)))
+            val d = mutableListOf(want("B.mp3", "z", sha(1)))
             val m = mutableListOf(line("B.mp3"))
             val c = mutableListOf(line("A.mp3"))
             val l = mutableListOf(entry("A.mp3", "x", sha(1)))
@@ -112,7 +112,7 @@ class PlannerTest {
             return Rel(d = d, m = m, c = c.sortedBy { it.path }, l = l.sortedBy { it.path })
         }
         val one = rel(false).plan()
-        assertEquals(listOf(ActionKind.MoveOnCopy), kinds(one))
+        assertTrue(ActionKind.MoveOnCopy in kinds(one))
         val two = rel(true).plan()
         assertTrue(ActionKind.MoveOnCopy !in kinds(two), "an ambiguous match is not a move")
         assertEquals(listOf(ActionKind.CopyTo), kinds(two)) // B.mp3 is copied; the old files stay (not held, listed)
@@ -121,9 +121,99 @@ class PlannerTest {
 
     @Test
     fun withoutStableIdsOnlyLibraryPlacementsMove() {
-        val rel = Rel(d = listOf(want("B.mp3", "x", sha(1))), m = listOf(line("B.mp3")), c = listOf(line("A.mp3")), l = listOf(entry("A.mp3", "x", sha(1))))
+        val rel = Rel(d = listOf(want("B.mp3", "z", sha(1))), m = listOf(line("B.mp3")), c = listOf(line("A.mp3")), l = listOf(entry("A.mp3", "x", sha(1))))
         assertTrue(ActionKind.MoveOnCopy !in kinds(rel.plan(caps = Capabilities(stableIds = false))))
-        assertEquals(listOf(ActionKind.MoveOnCopy), kinds(rel.plan()))
+        assertTrue(ActionKind.MoveOnCopy in kinds(rel.plan()))
+    }
+
+    // ---- renames the library made, read from the baseline's item against the desired placement (issue #29) ----
+
+    private fun relMove(d: List<DesiredEntry>, c: List<InvLine>, l: List<BaselineEntry>, m: List<InvLine> = d.map { line(it.path) }, mode: CopyMode = CopyMode.TwoWay) =
+        Rel(mode = mode, d = d, m = m, c = c, l = l)
+
+    @Test
+    fun aRenameTravelsAsAMoveWithoutStableIdsOrAnyHistory() {
+        for (mode in CopyMode.values()) {
+            val p = relMove(listOf(want("B.mp3", "x", sha(1))), listOf(line("A.mp3")), listOf(entry("A.mp3", "x", sha(1))), mode = mode).plan(caps = Capabilities(stableIds = false))
+            assertEquals(listOf(ActionKind.MoveOnCopy), kinds(p), "$mode")
+            assertEquals("A.mp3" to "B.mp3", p.actions[0].path to p.actions[0].toPath)
+        }
+    }
+
+    @Test
+    fun aMoveToAnotherSpaceFolderIsAMove() {
+        val p = relMove(listOf(want("Videos/B.mp4", "x", sha(1))), listOf(line("Music/A.mp4")), listOf(entry("Music/A.mp4", "x", sha(1)))).plan()
+        assertEquals(listOf(ActionKind.MoveOnCopy), kinds(p))
+        assertEquals("Videos/B.mp4", p.actions[0].toPath)
+    }
+
+    @Test
+    fun renameThenEditIsMoveThenCopy() {
+        val p = relMove(listOf(want("B.mp3", "x", sha(2))), listOf(line("A.mp3")), listOf(entry("A.mp3", "x", sha(1)))).plan()
+        assertEquals(listOf(ActionKind.MoveOnCopy, ActionKind.CopyTo), kinds(p))
+        assertEquals(sha(1), p.actions[1].expect!!.contentId)
+    }
+
+    @Test
+    fun aChainOfRenamesIsOneMove() {
+        // the baseline knew A; the library renamed it to B and then to C before the copy was told
+        val p = relMove(listOf(want("C.mp3", "x", sha(1))), listOf(line("A.mp3")), listOf(entry("A.mp3", "x", sha(1)))).plan()
+        assertEquals(listOf(ActionKind.MoveOnCopy), kinds(p))
+        assertEquals("A.mp3" to "C.mp3", p.actions[0].path to p.actions[0].toPath)
+    }
+
+    @Test
+    fun aRenameBackIsNothing() {
+        val p = relMove(listOf(want("A.mp3", "x", sha(1))), listOf(line("A.mp3")), listOf(entry("A.mp3", "x", sha(1)))).plan()
+        assertTrue(p.isEmpty)
+    }
+
+    @Test
+    fun twoRenamedItemsMoveSeparately() {
+        val p = relMove(
+            listOf(want("B.mp3", "x", sha(1)), want("D.mp3", "y", sha(1))),
+            listOf(line("A.mp3"), line("C.mp3")),
+            listOf(entry("A.mp3", "x", sha(1)), entry("C.mp3", "y", sha(1))),
+        ).plan()
+        assertEquals(listOf(ActionKind.MoveOnCopy, ActionKind.MoveOnCopy), kinds(p))
+        assertEquals(setOf("A.mp3" to "B.mp3", "C.mp3" to "D.mp3"), p.actions.map { it.path to it.toPath }.toSet())
+    }
+
+    @Test
+    fun aRenamedItemWithItsCompanionMovesBothByContent() {
+        val p = relMove(
+            listOf(want("B.lrc", "x", sha(5)), want("B.mp3", "x", sha(1))),
+            listOf(line("A.lrc"), line("A.mp3")),
+            listOf(entry("A.lrc", "x", sha(5)), entry("A.mp3", "x", sha(1))),
+        ).plan()
+        assertEquals(listOf(ActionKind.MoveOnCopy, ActionKind.MoveOnCopy), kinds(p))
+    }
+
+    @Test
+    fun aRenameIsNotAMoveWhenTheCopyEditedTheFile() {
+        val rel = Rel(
+            d = listOf(want("B.mp3", "x", sha(1))), m = listOf(line("B.mp3")), c = listOf(line("A.mp3", 7_000_000)), l = listOf(entry("A.mp3", "x", sha(1))),
+            copyHashes = mapOf("A.mp3" to sha(5)),
+        )
+        assertTrue(ActionKind.MoveOnCopy !in kinds(rel.plan()))
+    }
+
+    @Test
+    fun aRenamedItemIsNotMovedOntoAnOccupiedName() {
+        val rel = Rel(
+            d = listOf(want("B.mp3", "x", sha(1))), m = listOf(line("B.mp3")), c = listOf(line("A.mp3"), line("B.mp3", 5_000_000)), l = listOf(entry("A.mp3", "x", sha(1))),
+            copyHashes = mapOf("B.mp3" to sha(9)),
+        )
+        assertTrue(ActionKind.MoveOnCopy !in kinds(rel.plan()))
+    }
+
+    @Test
+    fun aDeletedItemIsNotMovedAnywhere() {
+        val rel = Rel(
+            d = listOf(want("B.mp3", "x", sha(1))), m = listOf(line("B.mp3")), c = listOf(line("A.mp3")), l = listOf(entry("A.mp3", "x", sha(1))),
+            library = SimpleLibraryFacts(deleted = setOf("x")),
+        )
+        assertTrue(ActionKind.MoveOnCopy !in kinds(rel.plan()))
     }
 
     @Test

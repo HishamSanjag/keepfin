@@ -7,6 +7,7 @@ import {navigate} from '../nav'
 import {setLibView} from './libNav'
 import {findLyricsFromMenu, findLyricsWords} from './findLyrics'
 import {isVideoSong, toggleFavorite} from './libStore'
+import {followMenuItem, getFollowing} from './following'
 import {inProgress, norm, playableKind} from './model'
 
 /** The item context menu. The words and order are the same for one item and for a selection. */
@@ -65,6 +66,7 @@ export function itemMenu(items: LibraryItem[], options: {context?: LibraryItem[]
       onSelect: () => (setLibView({type: 'artist', key: norm(artistName)}), navigate('Library')),
     },
   )
+  if (item.kind === 'audio') menu.push(followMenuItem(getFollowing(), artistName))
   if (playable)
     menu.push({label: item.favorite ? 'Remove from favorites' : 'Add to favorites', icon: item.favorite ? 'heartFill' : 'heart', onSelect: () => void toggleFavorite(item.id)})
   if (item.kind === 'audio') menu.push(item.musicVideo ? {label: 'Remove music video…', icon: 'trash', onSelect: () => openDialog({type: 'removeMusicVideo', id: item.id})} : {label: 'Get the music video…', icon: 'video', onSelect: () => openDialog({type: 'musicVideo', id: item.id})})

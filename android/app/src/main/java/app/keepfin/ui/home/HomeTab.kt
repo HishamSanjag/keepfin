@@ -24,6 +24,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -108,6 +109,8 @@ fun HomeTab(vm: StudioViewModel, ui: LibraryUi, contentPadding: PaddingValues, m
     val loading = read == null || total == null || (snapshot.scanning && total == 0 && snapshot.scannedAt == null)
     val nothing = !loading && quick.isEmpty() && resume.isEmpty() && listening.isEmpty() && recent.isEmpty() && active.isEmpty() && musicVideos.isEmpty()
     val bottom = contentPadding.calculateBottomPadding()
+    val followState by vm.following.state.collectAsStateWithLifecycle()
+    var allMixes by androidx.compose.runtime.saveable.rememberSaveable { androidx.compose.runtime.mutableStateOf(false) }
 
     val listState = androidx.compose.foundation.lazy.rememberLazyListState()
     Column(modifier.fillMaxSize()) {
@@ -126,17 +129,9 @@ fun HomeTab(vm: StudioViewModel, ui: LibraryUi, contentPadding: PaddingValues, m
         if (resume.isNotEmpty()) shelf("continue", "Continue watching", { vm.openLibraryDeep(LibraryRoute.Section(HomeSection.CONTINUE)) }, Modifier.testTag(UiTags.homeRow("continue"))) {
             items(resume.take(12), key = { it.id }) { item -> ContinueCard(item, ui, resume) }
         }
-        listening.forEach { (row, songs) ->
-            val smart = when (row) {
-                ListeningRow.ON_REPEAT -> LibraryViews.Smart.MOST_PLAYED
-                ListeningRow.FORGOTTEN -> LibraryViews.Smart.FAVORITES
-                ListeningRow.RECENT -> LibraryViews.Smart.RECENTLY_ADDED
-                ListeningRow.NEVER_PLAYED -> LibraryViews.Smart.NEVER_PLAYED
-            }
-            shelf("listen-${row.name}", row.title, { vm.openLibraryDeep(LibraryRoute.SmartList(smart, null)) }, Modifier.testTag(UiTags.homeRow(row.name.lowercase()))) {
-                items(songs, key = { it.id }) { item -> ShelfCard(item, ui, songs) }
-            }
-        }
+        // Made from your listening (mix tiles), Following and New releases: for the All and Music chips
+        if ((kind == HomeKind.ALL || kind == HomeKind.MUSIC) && !loading && (!nothing || followState.artists.isNotEmpty()))
+            followSections(vm, listening, shelves.topArtists, showEmpty = !nothing, allMixes = allMixes, onAllMixes = { allMixes = !allMixes })
         if (active.isNotEmpty()) {
             item("head-downloading", contentType = "head") {
                 Row(Modifier.fillMaxWidth().padding(start = 16.dp, end = 8.dp, top = 20.dp).testTag(UiTags.homeRow("downloading")), verticalAlignment = Alignment.CenterVertically) {
@@ -158,6 +153,7 @@ fun HomeTab(vm: StudioViewModel, ui: LibraryUi, contentPadding: PaddingValues, m
             EmptyState(art = EmptyArt.LIBRARY, title = title, body = body, modifier = Modifier.fillMaxWidth().heightIn(min = 280.dp).testTag(UiTags.HOME_EMPTY))
         }
     }
+    FollowingSheet(vm)
     }
 }
 

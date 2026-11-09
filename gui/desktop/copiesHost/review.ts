@@ -2,7 +2,7 @@
 import fs from 'node:fs/promises'
 import path from 'node:path'
 import type {ReviewItem} from '../../shared/core/copies.js'
-import {conflictPath} from '../../shared/core/copies.js'
+import {conflictPath, onlineOnlyWords} from '../../shared/core/copies.js'
 import type {CopiesState, CopyReviewAction, CopyReviewItem, CopyReviewKind} from '../../shared/copies.js'
 import type {PlaceConfig} from '../sqlstate/desired.js'
 import {acceptSameDrive} from '../copies/run.js'
@@ -97,6 +97,12 @@ export class CopiesReview {
         break
       case 'Difference':
         make('difference', r.path, `${name} differs`, `${r.detail || 'The two versions differ.'} Confirming keeps both versions: nothing is lost.`, ['keepBoth'], r.itemId)
+        break
+      case 'OnlineOnly':
+        make('onlineOnly', r.path, `${name} is only in the cloud`, r.detail || onlineOnlyWords(name), ['dismiss'], r.itemId)
+        break
+      case 'TooLarge':
+        make('tooLarge', r.path, `${name} is too large for this drive`, r.detail, ['dismiss'], r.itemId)
         break
       case 'Suspended':
         make('suspended', r.path, 'Removals are paused', r.detail || 'Keepfin could not be sure what is on the copy, so it only added files.', ['dismiss'], r.itemId)

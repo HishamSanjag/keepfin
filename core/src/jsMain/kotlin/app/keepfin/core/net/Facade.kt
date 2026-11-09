@@ -115,3 +115,18 @@ fun netCheckRedirect(current: String, location: String, addressesJson: String, h
 /** Why the address is not a public destination (loopback, private, ...), or null when it is. */
 @JsExport
 fun netDeniedAddressClass(address: String): String? = deniedAddressClass(address)
+
+/**
+ * "Play from": which holder of an item plays it, and the line to show. The arrays are parallel, one entry per paired device that holds
+ * the item; lastSeen is epoch ms, or -1 when never. Returns {"kind", "index", "text"}.
+ */
+@JsExport
+fun netPlayHint(here: String, names: Array<String>, online: Array<Boolean>, offersMedia: Array<Boolean>, near: Array<Boolean>, lastSeen: Array<Double>): String {
+    val holders = names.indices.map { PlayHolder(names[it], online[it], offersMedia[it], near[it], lastSeen[it].takeIf { v -> v >= 0 }?.toLong()) }
+    val hint = PlayFrom.choose(holders)
+    return json(jObj("index" to JNum(hint.holder.toLong()), "kind" to JStr(hint.kind.id), "text" to JStr(PlayFrom.text(hint, holders, here))))
+}
+
+/** What is wrong with a typed pairing code in words, or null when it reads as one. */
+@JsExport
+fun netPairCodeProblem(text: String): String? = pairCodeProblem(text)

@@ -46,13 +46,22 @@ export interface Relationship {
   generation: number | null
   /** The user confirmed the first preview (the relationship may remove and replace). */
   previewConfirmed: boolean
+  /** The name rule the baseline file is sorted by (absent: written before the rule was recorded; the next run sorts it again). */
+  rules?: string
+  /** When the last full audit (every file hashed) finished, ms. The first completed run counts: it hashed everything new. */
+  auditedAt?: number
 }
 
 export const relationshipFile = (stateDir: string) => path.join(stateDir, 'relationship.json')
 
 export async function readRelationship(stateDir: string): Promise<Relationship> {
   const json = await readJson<Partial<Relationship>>(relationshipFile(stateDir)).catch(() => undefined)
-  return {generation: typeof json?.generation === 'number' ? json.generation : null, previewConfirmed: json?.previewConfirmed === true}
+  return {
+    generation: typeof json?.generation === 'number' ? json.generation : null,
+    previewConfirmed: json?.previewConfirmed === true,
+    ...(typeof json?.rules === 'string' ? {rules: json.rules} : {}),
+    ...(typeof json?.auditedAt === 'number' ? {auditedAt: json.auditedAt} : {}),
+  }
 }
 
 export async function writeRelationship(stateDir: string, rel: Relationship): Promise<void> {

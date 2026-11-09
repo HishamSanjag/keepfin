@@ -1,7 +1,23 @@
 package app.keepfin.setup
 
 /** What the app shows instead of itself: nothing, the first start, or the setup of an earlier library. */
-internal enum class Gate { NONE, FIRST_START, SETUP }
+internal enum class Gate {
+    NONE, FIRST_START, SETUP;
+
+    companion object {
+        /**
+         * The rule, like the PC's storage phases: the start pages show only while no Keepfin folder is chosen yet and no earlier
+         * library waits to be brought over. An unfinished setup resumes first; a chosen folder always means the app itself, so an
+         * update, its What's new or Settings never bring the first run back.
+         */
+        fun of(unfinishedRun: Boolean, folderChosen: Boolean, earlierLibrary: Boolean): Gate = when {
+            unfinishedRun -> SETUP
+            folderChosen -> NONE
+            earlierLibrary -> SETUP
+            else -> FIRST_START
+        }
+    }
+}
 
 /**
  * The screens of the flow. First start: WELCOME, WHERE. Setup of an earlier library: WHAT_YOU_HAVE, WHERE, MOVE_OR_LEAVE, REVIEW,

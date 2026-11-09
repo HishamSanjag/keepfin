@@ -183,10 +183,10 @@ class DevicesUiTest {
         rule.onNodeWithTag(DevicesTags.STATUS).assertIsDisplayed()
         rule.onNodeWithText("Visible on Home network").assertExists()
         rule.onNodeWithTag(DevicesTags.SWITCH).assertExists()
-        // the guide and Away from home are no longer on the page: one "?" at the top opens them; the address and code entries are in "Not seeing it?"
+        // the guide and Away from home are no longer on the page: one "?" at the top opens them; the address entry is in "Not seeing it?", the typed code has its own field
         rule.onNodeWithTag(DevicesTags.AWAY).assertDoesNotExist()
         rule.onNodeWithTag(DevicesTags.ADD).assertDoesNotExist()
-        rule.onNodeWithTag(DevicesTags.TYPE_CODE).assertDoesNotExist()
+        rule.onNodeWithTag(DevicesTags.TYPE_CODE).assertExists()
         fun top(tag: String) = rule.onNodeWithTag(tag).getUnclippedBoundsInRoot().top.value
         val order = listOf(DevicesTags.HOW, DevicesTags.STATUS, DevicesTags.AVAILABLE, DevicesTags.paired("dev1"), DevicesTags.paired("dev12"), DevicesTags.GET_LIBRARY, DevicesTags.ADVANCED).map(::top)
         assertEquals("the ? at the top, the switch, available devices, your devices, libraries on other devices, then Advanced", order.sorted(), order)
@@ -738,15 +738,26 @@ class DevicesUiTest {
 
     @Test fun theTypeACodeFieldSendsWhatWasTypedAndShowsTheAnswer() {
         val c = FakeController(state())
-        c.askError = "That is not an address."
+        c.askError = "No device showing this code was found. Check the code, and that both devices are on the same network or Tailscale."
         show(c)
-        openHelp()
         rule.onNodeWithTag(DevicesTags.TYPE_CODE_GO).performScrollTo().assertIsNotEnabled()
         rule.onNodeWithTag(DevicesTags.TYPE_CODE).performScrollTo().performTextInput("k7qpm 4x2ta")
         tap(DevicesTags.TYPE_CODE_GO)
         rule.waitUntil(5_000) { c.calls.contains("ask:k7qpm 4x2ta") }
-        rule.waitUntil(5_000) { rule.onAllNodesWithText("That is not an address.").fetchSemanticsNodes().isNotEmpty() }
+        rule.waitUntil(5_000) { rule.onAllNodesWithText("No device showing this code was found.", substring = true).fetchSemanticsNodes().isNotEmpty() }
         rule.onNodeWithTag(DevicesTags.TYPE_CODE_GO).assertHeightIsAtLeast(48.dp)
+    }
+
+    @Test fun aMistypedCodeIsExplainedAndNeverSent() {
+        val c = FakeController(state())
+        show(c)
+        rule.onNodeWithTag(DevicesTags.TYPE_CODE).performScrollTo().performTextInput("7Q4MX-2XKD")
+        tap(DevicesTags.TYPE_CODE_GO)
+        rule.waitUntil(5_000) { rule.onAllNodesWithText("That code is too short. It has 10 characters, like 7Q4MX-2XKDP.").fetchSemanticsNodes().isNotEmpty() }
+        rule.onNodeWithTag(DevicesTags.TYPE_CODE).performTextInput("PU")
+        tap(DevicesTags.TYPE_CODE_GO)
+        rule.waitUntil(5_000) { rule.onAllNodesWithText("That is not a Keepfin code", substring = true).fetchSemanticsNodes().isNotEmpty() }
+        assertTrue("nothing reached the engine", c.calls.none { it.startsWith("ask:") })
     }
 
     @Test fun theAddScreenFieldTakesACodeOrAnAddress() {

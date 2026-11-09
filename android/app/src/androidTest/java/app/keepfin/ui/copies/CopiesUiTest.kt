@@ -107,7 +107,7 @@ class CopiesUiTest {
         rule.onAllNodesWithTag(CopiesTags.SYNC)[0].performScrollTo().performClick()
         rule.waitUntil(3000) { rec.calls.isNotEmpty() }
         assertEquals(listOf("sync:a"), rec.calls.toList())
-        rule.onNodeWithTag(CopiesTags.RESTORE).assertExists() // only the connected backup offers Restore and Clean up
+        rule.onNodeWithTag(CopiesTags.RESTORE).assertExists() // only the connected backup offers Restore and Free up space
         rule.onNodeWithTag(CopiesTags.CLEANUP).assertExists()
     }
 
@@ -132,15 +132,15 @@ class CopiesUiTest {
         rule.setContent { KeepfinTheme { androidx.compose.foundation.layout.Column(androidx.compose.ui.Modifier.verticalScroll(androidx.compose.foundation.rememberScrollState())) { CopiesContent(ui.value, rec) } } }
         rule.onNodeWithTag(CopiesTags.REMOVAL).performScrollTo().assertIsDisplayed()
         rule.onNodeWithText("Removing this copy: Forgetting the copy…", useUnmergedTree = true).assertExists()
-        rule.onNodeWithText("Stop keeping this copy").assertIsNotEnabled()
+        rule.onNodeWithTag(CopyConfirmTags.REMOVE).assertIsNotEnabled()
         rule.onNodeWithTag(CopiesTags.SYNC).assertIsNotEnabled()
         // it fails: the copy stays, with the reason and a way to try again
         ui.value = CopiesUi(true, listOf(card("a", CopyStatus.UP_TO_DATE).copy(removal = app.keepfin.copies.CopyRemovalUi(true, "The copy's folder could not be changed."))))
         rule.onNodeWithText("This copy was not removed", useUnmergedTree = true).performScrollTo().assertIsDisplayed()
         rule.onNodeWithText("The copy's folder could not be changed.", useUnmergedTree = true).assertExists()
-        rule.onNodeWithText("Stop keeping this copy").assertIsEnabled()
+        rule.onNodeWithTag(CopyConfirmTags.REMOVE).assertIsEnabled()
         rule.onNodeWithTag(CopiesTags.REMOVE_RETRY).performClick()
-        rule.onNodeWithText("Stop").performClick()
+        rule.onNodeWithTag(CopyConfirmTags.REMOVE_CONFIRM).performClick()
         rule.waitUntil(3000) { "remove:a" in rec.calls }
     }
 
@@ -238,10 +238,10 @@ class CopiesUiTest {
         show(fullUi, Recorder())
         val onCards = assertEveryActionIs48dp()
         assertTrue("found $onCards actions", onCards >= 12)
-        // the confirmation that follows "Stop keeping this copy"
-        rule.onAllNodesWithText("Stop keeping this copy")[0].performScrollTo().performClick()
-        assertTarget48(rule.onAllNodesWithText("Stop")[0])
-        for (i in 0 until rule.onAllNodesWithText("Keep it").fetchSemanticsNodes().size) assertTarget48(rule.onAllNodesWithText("Keep it")[i].also { runCatching { it.performScrollTo() } })
+        // the confirmation that follows Remove copy…
+        rule.onAllNodesWithTag(CopyConfirmTags.REMOVE)[0].performScrollTo().performClick()
+        assertTarget48(rule.onAllNodesWithTag(CopyConfirmTags.REMOVE_CONFIRM)[0])
+        assertTarget48(rule.onAllNodesWithTag(CopyConfirmTags.CANCEL)[0])
         androidx.test.espresso.Espresso.pressBack()
         // the wizard, step by step
         rule.onNodeWithTag(CopiesTags.ADD).performScrollTo().performClick()
@@ -251,7 +251,7 @@ class CopiesUiTest {
 
     @Test fun atTwiceTheFontSizeNothingIsCutOff() {
         show(fullUi, Recorder(), scale = 2f)
-        for (text in listOf("Sync now", "Restore", "Clean up", "Pause", "Choose its folder", "Delete everywhere", "Keep it", "Keep both")) {
+        for (text in listOf("Sync now", "Restore", "Free up space…", "Pause", "Choose its folder", "Delete everywhere", "Keep it", "Keep both")) {
             rule.onAllNodesWithText(text)[0].performScrollTo().assertIsDisplayed()
         }
         rule.onNodeWithText("Backup: keeps earlier versions and what you delete").performScrollTo().assertIsDisplayed()

@@ -57,7 +57,8 @@ class HomeSearchUiTest {
         h.show(rule)
         rule.waitForTag(UiTags.HOME_EMPTY)
         rule.onNodeWithTag(UiTags.HOME_BOX).assertIsDisplayed()
-        for (row in listOf("continue", "recent", "on_repeat", "downloading")) assertFalse("$row hides when empty", rule.exists(UiTags.homeRow(row)))
+        for (row in listOf("continue", "recent", "downloading")) assertFalse("$row hides when empty", rule.exists(UiTags.homeRow(row)))
+        assertFalse("no mixes", rule.exists(UiTags.HOME_MIXES))
         assertFalse(rule.exists(UiTags.HOME_GRID))
     }
 
@@ -66,12 +67,12 @@ class HomeSearchUiTest {
         rule.waitForTag(UiTags.HOME_GRID)
         rule.waitForTag(UiTags.homeRow("continue"))
         // The fixtures hold five songs played lately and eight added: those two music rows show; fewer than five never-played and no forgotten ones do not.
-        rule.onNodeWithTag(UiTags.HOME_LIST).performScrollToNode(hasTestTag(UiTags.homeRow("on_repeat")))
-        rule.waitForTag(UiTags.homeRow("on_repeat"))
-        rule.onNodeWithTag(UiTags.HOME_LIST).performScrollToNode(hasTestTag(UiTags.homeRow("recent")))
-        rule.waitForTag(UiTags.homeRow("recent"))
-        assertFalse(rule.exists(UiTags.homeRow("never_played")))
-        assertFalse(rule.exists(UiTags.homeRow("forgotten")))
+        rule.onNodeWithTag(UiTags.HOME_LIST).performScrollToNode(hasTestTag(UiTags.homeMix("on-repeat")))
+        rule.waitForTag(UiTags.homeMix("on-repeat"))
+        rule.onNodeWithTag(UiTags.HOME_LIST).performScrollToNode(hasTestTag(UiTags.homeMix("recent")))
+        rule.waitForTag(UiTags.homeMix("recent"))
+        assertFalse(rule.exists(UiTags.homeMix("never")))
+        assertFalse(rule.exists(UiTags.homeMix("forgotten")))
         assertFalse("no transfers, no Downloading now", rule.exists(UiTags.homeRow("downloading")))
         assertFalse(rule.exists(UiTags.HOME_EMPTY))
     }
@@ -91,10 +92,10 @@ class HomeSearchUiTest {
         rule.onNodeWithTag(UiTags.homeChip("music")).performClick()
         rule.waitUntil(5_000) { !rule.exists(UiTags.homeRow("continue")) }
         assertEquals("music", h.prefs.homeFilter)
-        rule.onNodeWithTag(UiTags.HOME_LIST).performScrollToNode(hasTestTag(UiTags.homeRow("on_repeat")))
-        rule.waitForTag(UiTags.homeRow("on_repeat"))
+        rule.onNodeWithTag(UiTags.HOME_LIST).performScrollToNode(hasTestTag(UiTags.homeMix("on-repeat")))
+        rule.waitForTag(UiTags.homeMix("on-repeat"))
         rule.onNodeWithTag(UiTags.homeChip("videos")).performClick()
-        rule.waitUntil(5_000) { rule.exists(UiTags.homeRow("continue")) && !rule.exists(UiTags.homeRow("on_repeat")) }
+        rule.waitUntil(5_000) { rule.exists(UiTags.homeRow("continue")) && !rule.exists(UiTags.homeMix("on-repeat")) }
         rule.onNodeWithTag(UiTags.homeChip("photos")).performClick()
         rule.waitForTag(UiTags.HOME_EMPTY)
         rule.onNodeWithTag(UiTags.homeChip("all")).performClick()
@@ -172,7 +173,7 @@ class HomeSearchUiTest {
 
     // ---- one action sheet ----------------------------------------------------------------------------------
 
-    private val expectedActions = listOf("play", "getmusicvideo", "findlyrics", "next", "queue", "playlist", "favorite", "album", "artist", "showfile", "edit", "move", "copy", "rename", "external", "share", "delete").map(UiTags::itemAction)
+    private val expectedActions = listOf("play", "getmusicvideo", "findlyrics", "next", "queue", "playlist", "favorite", "album", "artist", "follow", "showfile", "edit", "move", "copy", "rename", "external", "share", "delete").map(UiTags::itemAction)
 
     private fun sheetActions(): List<String> {
         rule.waitForTag(UiTags.ACTION_SHEET)

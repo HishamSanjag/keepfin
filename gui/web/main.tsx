@@ -18,6 +18,7 @@ import './styles/settings.css'
 import './styles/setup.css'
 import './styles/activity.css'
 import './styles/home.css'
+import './styles/home-follow.css'
 import './styles/atelier.css'
 import './styles/player.css'
 

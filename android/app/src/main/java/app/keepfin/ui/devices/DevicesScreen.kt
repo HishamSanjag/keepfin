@@ -313,6 +313,7 @@ fun DevicesScreen(
                     onScan = { scanner.launch(ScanOptions().setDesiredBarcodeFormats(ScanOptions.QR_CODE).setPrompt("Scan the code on the other device").setBeepEnabled(false).setOrientationLocked(false)) },
                     onShowCode = { run { controller.openPairing(); controller.showQr(); null }; view = "add" },
                 )
+                TypeCodeField(controller, ::run)
                 AvailableSection(
                     state, viewStore, searching = searching, finished = expired && !stopped,
                     onStop = { stopped = true },
@@ -691,21 +692,28 @@ private fun DiscoveredRow(d: DiscoveredUi, onClick: () -> Unit) {
 
 
 /**
- * "Type a code": for a phone with no camera or a code read from the other screen. Accepts the code the other device shows under its
- * QR (any case, with or without the dash) or an address; the service decides which it is.
+ * "Type a code": for a phone with no camera or a code read from the other screen. Accepts the 10 characters the other device shows
+ * (any case, with or without the dash or spaces). A mistake is explained before anything is sent (the shared core reads the code); a
+ * code the other device does not accept, wrong or expired, comes back in words from the engine. Then the pairing is the same as a scan.
  */
 @Composable
 internal fun TypeCodeField(controller: DevicesController, run: (() -> String?) -> Unit) {
-    var text by remember { mutableStateOf("") }
+    var text by rememberSaveable { mutableStateOf("") }
     var error by remember { mutableStateOf<String?>(null) }
-    Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+    Column(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 4.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
         OutlinedTextField(
-            text, { text = it; error = null }, label = { Text("Enter the code or address shown on your other device") }, placeholder = { Text("K7QPM-4X2TA") },
-            singleLine = true, isError = error != null, supportingText = { error?.let { Text(it) } },
+            text, { text = it; error = null }, label = { Text("Type a code from another device") }, placeholder = { Text("7Q4MX-2XKDP") },
+            singleLine = true, isError = error != null, supportingText = { Text(error ?: "10 characters. Capitals or small letters, with or without the dash.") },
             keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(keyboardType = KeyboardType.Ascii, capitalization = androidx.compose.ui.text.input.KeyboardCapitalization.Characters),
             modifier = Modifier.fillMaxWidth().testTag(DevicesTags.TYPE_CODE),
         )
-        Button(onClick = { run { val e = controller.beginAsk(text); error = e; null } }, enabled = text.isNotBlank(), modifier = Modifier.heightIn(min = 48.dp).testTag(DevicesTags.TYPE_CODE_GO)) { Text("Connect") }
+        Button(
+            onClick = {
+                val problem = app.keepfin.core.net.pairCodeProblem(text)
+                if (problem != null) error = problem else run { val e = controller.beginAsk(text); error = e; null }
+            },
+            enabled = text.isNotBlank(), modifier = Modifier.heightIn(min = 48.dp).testTag(DevicesTags.TYPE_CODE_GO),
+        ) { Text("Connect with code") }
     }
 }
 

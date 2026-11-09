@@ -39,6 +39,8 @@ export function holdsText(holds: CopyHolds, rows: CopyRow[]): string {
   const parts: string[] = []
   const spaces = holds.spaces.map((id) => rows.find((r) => r.kind === 'space' && r.id === id)?.name).filter((n): n is string => !!n)
   parts.push(...spaces)
+  const smart = (holds.smart ?? []).map((id) => rows.find((r) => r.kind === 'smart' && r.id === id)?.name).filter((n): n is string => !!n)
+  parts.push(...smart)
   if (holds.favourites) parts.push('Favourites')
   if (holds.playlists.length) parts.push(plural(holds.playlists.length, 'playlist'))
   if (parts.length === 0) return 'Nothing yet'

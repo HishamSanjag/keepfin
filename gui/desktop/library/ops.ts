@@ -24,6 +24,7 @@ import {
   type FileDeps,
 } from './files.js'
 import type {FollowEngine} from './follow.js'
+import type {ArtistFollowing} from './artists.js'
 import type {LibraryIndex} from './index.js'
 import type {PlayCache} from './prepare.js'
 import type {UndoShelf} from './undo.js'
@@ -31,6 +32,7 @@ import type {UndoShelf} from './undo.js'
 export type LibraryDeps = {
   index: LibraryIndex
   follow: FollowEngine
+  artists: ArtistFollowing
   manager: DownloadManager
   cache: PlayCache
   ffmpeg: () => string | undefined
@@ -61,7 +63,7 @@ export const libraryOperations = new Set<string>([
   'libraryLyrics', 'libraryFindLyrics', 'songOfLink', 'libraryFindMusicVideo', 'libraryGetMusicVideo', 'libraryRemoveMusicVideo', 'librarySearchLyrics', 'libraryPrepare', 'libraryMatch', 'downloadAnyway', 'spaceSave',
   'spaceDelete', 'spaceReorder', 'libraryTag', 'libraryAddFrom', 'collectionSave', 'collectionDelete', 'collectionExport',
   'collectionAdd', 'collectionRemove', 'collectionReorder', 'collectionFollow', 'collectionCheck', 'collectionReview',
-  'collectionOpened', 'playlistSave', 'playlistDelete', 'playlistExport', 'libraryUndo', 'libraryEraseTrashed',
+  'collectionOpened', 'followingState', 'followArtist', 'unfollowArtist', 'followingCheck', 'keepRelease', 'playlistSave', 'playlistDelete', 'playlistExport', 'libraryUndo', 'libraryEraseTrashed',
   'libraryTrashList', 'libraryTrashRestore', 'libraryTrashErase', 'libraryTrashEmpty',
 ])
 
@@ -401,6 +403,16 @@ export async function handleLibraryRequest(request: Request, deps: LibraryDeps):
     case 'collectionReview':
       if (typeof request.id !== 'string') throw new Error('Choose a collection to review.')
       return deps.follow.review(request.id)
+    case 'followingState':
+      return deps.artists.current()
+    case 'followArtist':
+      return deps.artists.follow(String(request.text ?? ''))
+    case 'unfollowArtist':
+      return deps.artists.unfollow(String(request.id))
+    case 'followingCheck':
+      return deps.artists.check(typeof request.id === 'string' ? request.id : undefined, true)
+    case 'keepRelease':
+      return deps.artists.keep(String(request.id))
     case 'collectionOpened':
       index.markOpened(request.id)
       return null

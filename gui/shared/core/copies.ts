@@ -17,7 +17,21 @@ import {
   copiesVideoCompanionStem,
   copiesVideoCompanionSuffix,
   copiesNameKey,
+  copiesAuditDue,
+  copiesFileSizeLimit,
+  copiesIsOnlineOnly,
+  copiesOnlineOnlyWords,
+  copiesTooLargeWords,
+  JsClockShift,
+  copiesFreeUpKeeps,
+  copiesFreeUpNothingWords,
+  copiesFreeUpSummary,
+  copiesFreeUpTitle,
+  copiesNothingToFree,
   copiesProblemGroups,
+  copiesRemoveFilesStay,
+  copiesRemoveLead,
+  copiesRemoveTitle,
   copiesProblemRetry,
   copiesProblemShort,
   copiesProblemTitle,
@@ -27,7 +41,8 @@ import {
 } from '../../../build/core-js/keepfin-core.mjs'
 
 export type CopyMode = 'twoWay' | 'backup' | 'mirror'
-export type NameRulesId = 'exact' | 'ascii'
+/** exact: as spelled; ascii: ASCII case ignored (the older rule); nfc: composed accents, case sensitive; unicode: composed accents and case ignored. */
+export type NameRulesId = 'exact' | 'ascii' | 'nfc' | 'unicode'
 export type GenerationState = 'equal' | 'higher' | 'lower' | 'unknown'
 export type Side = 'Main' | 'Copy'
 
@@ -53,6 +68,8 @@ export type ReviewKind =
   | 'Difference'
   | 'Suspended'
   | 'NotHeld'
+  | 'OnlineOnly'
+  | 'TooLarge'
 
 /** `(relativePath, size, mtimeMs, fileId?)`; paths use `/`. */
 export interface InvLine {
@@ -255,7 +272,51 @@ export function copyNamePath(path: string, contentId: string): string {
 
 /** The same key as [nameKey], computed in JavaScript (sorting calls it millions of times; a test checks they agree). */
 export function fastKey(rules: NameRulesId, path: string): string {
-  return rules === 'exact' ? path : path.replace(/[A-Z]/g, (c) => String.fromCharCode(c.charCodeAt(0) + 32))
+  if (rules === 'exact') return path
+  if (rules === 'ascii') return path.replace(/[A-Z]/g, (c) => String.fromCharCode(c.charCodeAt(0) + 32))
+  const ascii = !/[^\u0000-\u007f]/.test(path)
+  if (rules === 'nfc') return ascii ? path : path.normalize('NFC')
+  if (ascii) return path.replace(/[A-Z]/g, (c) => String.fromCharCode(c.charCodeAt(0) + 32))
+  // as the core folds: one character at a time; a lower case that is not one character leaves the character as it is
+  let out = ''
+  for (const ch of path.normalize('NFC')) {
+    if (ch.length !== 1) out += ch
+    else {
+      const lower = ch.toLowerCase()
+      out += lower.length === 1 ? lower : ch
+    }
+  }
+  return out
+}
+
+// ---- safety checks of the executors (core/.../copies/Checks.kt) ----
+
+/** The largest file a volume of [format] can hold (FAT: 4 GiB - 1), or null when unlimited or unknown. */
+export const fileSizeLimit = (format: string | null | undefined): number | null => copiesFileSizeLimit(format ?? undefined) ?? null
+
+/** The words for a file the copy volume cannot hold. */
+export const tooLargeWords = (name: string, format: string | null | undefined): string => copiesTooLargeWords(name, format ?? undefined)
+
+/** True when Windows file attribute bits say the bytes are not on the disk (a cloud placeholder). */
+export const isOnlineOnly = (attributes: number): boolean => copiesIsOnlineOnly(attributes)
+
+export const onlineOnlyWords = (name: string): string => copiesOnlineOnlyWords(name)
+
+/** A full audit is due: the last one is 30 days old or more. */
+export const auditDue = (lastAuditAtMs: number | null | undefined, nowMs: number): boolean => copiesAuditDue(lastAuditAtMs ?? undefined, nowMs)
+
+/** Detects a time zone or daylight saving shift: add each file of unchanged size with its baseline and current time. */
+export class ClockShift {
+  private readonly shift = new JsClockShift()
+  add(baselineMtimeMs: number, currentMtimeMs: number): void {
+    this.shift.add(baselineMtimeMs, currentMtimeMs)
+  }
+  get detected(): boolean {
+    return this.shift.detected
+  }
+  get hours(): number {
+    return this.shift.hours
+  }
 }
 
 // ---- companions: the lyrics, subtitles and info file of an item (core/.../copies/Companions.kt) ----
@@ -355,6 +416,17 @@ export const problemShort = (count: number): string => copiesProblemShort(count)
 
 /** "Keepfin tries again at every sync." */
 export const problemRetry = (): string => copiesProblemRetry()
+
+// ---- Free up space and Remove copy (core/.../copies/CopyActions.kt) ----
+
+export const freeUpTitle = (copy: string): string => copiesFreeUpTitle(copy)
+export const nothingToFree = (versions: number, deletedFiles: number): boolean => copiesNothingToFree(versions, deletedFiles)
+export const freeUpNothing = (): string => copiesFreeUpNothingWords()
+export const freeUpSummary = (versions: number, deletedFiles: number): string => copiesFreeUpSummary(versions, deletedFiles)
+export const freeUpKeeps = (): string => copiesFreeUpKeeps()
+export const removeTitle = (copy: string): string => copiesRemoveTitle(copy)
+export const removeLead = (): string => copiesRemoveLead()
+export const removeFilesStay = (): string => copiesRemoveFilesStay()
 
 // ---- what a sync the person started did (core/.../copies/SyncReport.kt) ----
 

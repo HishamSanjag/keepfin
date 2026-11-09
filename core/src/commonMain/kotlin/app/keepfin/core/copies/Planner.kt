@@ -112,6 +112,11 @@ private class Run(private val input: PlannerInput, private val evidence: Evidenc
     private val deferred = ArrayList<Pos>()
     private val aCandidates = HashMap<String, ArrayList<Pos>>()
     private val bCandidates = HashMap<String, ArrayList<Pos>>()
+
+    // Renames the library made: an item the baseline recorded under one path that the desired set now places under another. Only
+    // candidate positions are listed (the copy still has the old name, nothing sits at the new one), keyed by item.
+    private val aItems = HashMap<String, ArrayList<Pos>>()
+    private val bItems = HashMap<String, ArrayList<Pos>>()
     private var deferredCount = 0
 
     fun run(): PlanOutcome {
@@ -207,22 +212,32 @@ private class Run(private val input: PlannerInput, private val evidence: Evidenc
 
     private fun maybeDefer(p: Pos): Pos? {
         if (historyKeys.isNotEmpty() && p.key in historyKeys && deferredCount < MAX_DEFERRED) return defer(p)
-        if (contentMoves && deferredCount < MAX_DEFERRED) {
-            val l = p.l
-            val c = p.c
-            val d = p.d
+        if (deferredCount >= MAX_DEFERRED) return p
+        val l = p.l
+        val c = p.c
+        val d = p.d
+        var held = false
+        // the library's own renames (spec 4.5): the same item, another placement. No file identity is needed.
+        if (l != null && d == null && c != null && !input.library.isDeleted(l.itemId)) {
+            aItems.getOrPut(l.itemId) { ArrayList() }.add(p)
+            held = true
+        } else if (d != null && l == null && c == null) {
+            bItems.getOrPut(d.itemId) { ArrayList() }.add(p)
+            held = true
+        }
+        if (contentMoves) {
             // A: the baseline has it, main lost it, the copy still holds it unchanged
             if (l != null && p.m == null && c != null && statSame(c, l.copy) && !input.library.isDeleted(l.itemId)) {
                 aCandidates.getOrPut(l.contentId) { ArrayList() }.add(p)
-                return defer(p)
+                held = true
             }
             // B: main has it under a name the baseline does not know, the copy has nothing there
             if (d != null && l == null && p.m != null && c == null) {
                 bCandidates.getOrPut(d.contentId) { ArrayList() }.add(p)
-                return defer(p)
+                held = true
             }
         }
-        return p
+        return if (held) defer(p) else p
     }
 
     private fun defer(p: Pos): Pos? {
@@ -242,6 +257,23 @@ private class Run(private val input: PlannerInput, private val evidence: Evidenc
             if (src === dst) continue
             if (src.l?.itemId != mv.itemId || dst.d?.itemId != mv.itemId) continue
             tryMove(src, dst)
+        }
+        // renames the library made without telling the planner: the same item at another placement. One candidate on each side, or
+        // (an item with several files: companions, conflict heads) one per content.
+        for ((item, srcs) in aItems) {
+            val dsts = bItems[item] ?: continue
+            if (srcs.size == 1 && dsts.size == 1) {
+                tryMove(srcs[0], dsts[0])
+                continue
+            }
+            val byContent = HashMap<String, ArrayList<Pos>>()
+            for (s in srcs) s.l?.let { byContent.getOrPut(it.contentId) { ArrayList() }.add(s) }
+            val dstByContent = HashMap<String, ArrayList<Pos>>()
+            for (d in dsts) d.d?.let { dstByContent.getOrPut(it.contentId) { ArrayList() }.add(d) }
+            for ((content, a) in byContent) {
+                val b = dstByContent[content] ?: continue
+                if (a.size == 1 && b.size == 1) tryMove(a[0], b[0])
+            }
         }
         // unexplained renames, by content, only when exactly one file lost its name and exactly one gained it
         for ((content, srcs) in aCandidates) {

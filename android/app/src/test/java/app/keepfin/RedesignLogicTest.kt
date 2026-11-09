@@ -7,6 +7,7 @@ import app.keepfin.ui.downloads.choiceSize
 import app.keepfin.ui.library.Shelves
 import app.keepfin.ui.library.ShelfShape
 import app.keepfin.ui.library.coverInitials
+import app.keepfin.ui.player.LIGHT_WASH_SCRIM
 import app.keepfin.ui.player.OnWash
 import app.keepfin.ui.player.OnWashDim
 import app.keepfin.ui.player.WASH_SCRIM
@@ -98,6 +99,14 @@ class RedesignLogicTest {
             0.7f * OnWash.red + 0.3f * worst.red, 0.7f * OnWash.green + 0.3f * worst.green, 0.7f * OnWash.blue + 0.3f * worst.blue,
         )
         assertTrue("dim lyric line ${contrast(dimmed, worst)}", contrast(dimmed, worst) >= 4.5)
+    }
+
+    @Test fun playerTextClearsAaOverTheDarkestPossibleLightWash() {
+        // Worst case in the light theme: a pure black cover under the surface-colour scrim; text colours are the light scheme's onSurface and onSurfaceVariant.
+        val surface = Color(0xFFF5F6F8)
+        val worst = Color(surface.red * LIGHT_WASH_SCRIM, surface.green * LIGHT_WASH_SCRIM, surface.blue * LIGHT_WASH_SCRIM)
+        assertTrue("primary text ${contrast(Color(0xFF151821), worst)}", contrast(Color(0xFF151821), worst) >= 4.5)
+        assertTrue("secondary text ${contrast(Color(0xFF4A5263), worst)}", contrast(Color(0xFF4A5263), worst) >= 4.5)
     }
 
     @Test fun aDirectFileHasNoHeightToAskFor() {

@@ -10,6 +10,13 @@ A **space** is a home for one kind of thing, such as Music or Videos. Open **Lib
 - **Smart spaces** fill themselves: choose **Smart**, add rules, and watch the live count.
 - **Show one kind at a time:** tap a chip such as Videos. Tap All to see everything again.
 
+## Home: mixes and new releases
+
+- **Made from your listening:** Home builds mixes from your own plays and library: On repeat, Forgotten favourites, Recently added music, Never played, Because you play an artist you play a lot, and a Late-night mix (songs you play after 10 pm). They are made on your device and never leave it. A mix appears once it has five songs. Tap a mix to open it, or **See all**.
+- **Follow an artist:** open an artist in Library and press **Follow**, or open a song's menu and choose the **Follow** entry with the artist's name. On a phone the same actions are on the artist page and the song's action sheet.
+- **New from artists you follow:** Keepfin looks about every 12 hours for new releases on YouTube Music and lists them on Home under **This week** and **Earlier this month**. Nothing downloads on its own: press **Keep it** to save a release with your usual settings.
+- **Manage:** beside **Following** on Home. Unfollow an artist, follow one by name, or press **Check now** to look straight away.
+
 ## Collections
 
 Collections are your playlists, plus the albums and playlists you've downloaded.

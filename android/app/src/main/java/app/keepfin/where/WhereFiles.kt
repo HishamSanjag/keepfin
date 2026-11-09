@@ -57,10 +57,12 @@ data class WhereFilesUi(
     val onePlaceOnly: Boolean = false,
     /** What the music videos beside songs take on this phone; the Storage list shows it as its own line when above 0. */
     val musicVideoBytes: Long = 0L,
+    /** The library's files (what the safety sentence is about; 0 means nothing to keep safe yet). */
+    val files: Long = 0L,
 )
 
 /** One place that holds an item, for its details: [offline] places still count (the library remembers them). */
-data class ItemPlace(val name: String, val offline: Boolean, val thisDevice: Boolean = false)
+data class ItemPlace(val name: String, val offline: Boolean, val thisDevice: Boolean = false, /** The paired device behind this place, when it is one (Play from names the holder with it). */ val deviceId: String? = null)
 
 /** The component's source: a state, and the places of one item (blocking: call off the main thread). */
 interface WhereFilesSource {
@@ -210,6 +212,6 @@ object WhereCompose {
         val singles = grouped.entries
             .sortedWith(compareBy({ if (it.value.third) 0 else 1 }, { nameOfReplica(it.key.first) }, { it.key.second.ordinal }))
             .map { (k, v) -> WhereSingle(k.second, v.first, nameOfReplica(k.first), v.third, v.second) }
-        return WhereFilesUi(true, places, singles, onePlaceOnly = places.size == 1 && selfItems > 0L, musicVideoBytes = i.musicVideoBytes)
+        return WhereFilesUi(true, places, singles, onePlaceOnly = places.size == 1 && selfItems > 0L, musicVideoBytes = i.musicVideoBytes, files = i.totalItems)
     }
 }

@@ -10,17 +10,19 @@ const glyph: Record<CopyCell, string> = {kept: 'check', waiting: 'refresh', revi
 
 /** The holds of a place after one cell is clicked: its row is added, or left out. `all` is spelled out first so one row can leave. */
 export function toggledHolds(place: Pick<CopyPlaceView, 'holds'>, row: CopyRow, rows: CopyRow[]): CopyHolds {
-  let h: CopyHolds = {...place.holds, spaces: [...place.holds.spaces], playlists: [...place.holds.playlists]}
+  let h: CopyHolds = {...place.holds, spaces: [...place.holds.spaces], playlists: [...place.holds.playlists], smart: [...(place.holds.smart ?? [])]}
   if (h.all) {
     h = {
       all: false,
       spaces: rows.filter((r) => r.kind === 'space').map((r) => r.id),
       playlists: rows.filter((r) => r.kind === 'playlist').map((r) => r.id),
       favourites: true,
+      smart: rows.filter((r) => r.kind === 'smart').map((r) => r.id),
     }
   }
   if (row.kind === 'favourites') h.favourites = !h.favourites
   else if (row.kind === 'space') h.spaces = h.spaces.includes(row.id) ? h.spaces.filter((id) => id !== row.id) : [...h.spaces, row.id]
+  else if (row.kind === 'smart') h.smart = (h.smart ?? []).includes(row.id) ? (h.smart ?? []).filter((id) => id !== row.id) : [...(h.smart ?? []), row.id]
   else h.playlists = h.playlists.includes(row.id) ? h.playlists.filter((id) => id !== row.id) : [...h.playlists, row.id]
   return h
 }
@@ -66,7 +68,7 @@ export function CopyMatrix({state, onState}: {state: CopiesState; onState: (stat
             <tr key={row.key}>
               <th scope="row">
                 <span className="copy-matrix-row">{row.name}</span>
-                <small className="muted">{row.kind === 'space' ? 'Space' : row.kind === 'playlist' ? 'Playlist' : 'Smart set'}</small>
+                <small className="muted">{row.kind === 'space' ? 'Space' : row.kind === 'playlist' ? 'Playlist' : row.kind === 'smart' ? 'Smart space' : 'Smart set'}</small>
               </th>
               {state.places.map((place) => {
                 const cell: CopyCell = place.cells[row.key] ?? (place.holds.all ? 'waiting' : 'notHeld')

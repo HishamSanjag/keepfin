@@ -265,6 +265,8 @@ class StudioViewModel(
         override fun saidRemovedFromHistory(ids: List<String>) = jobs.saidRemovedFromHistory(ids)
     }
     internal val libraryActions = LibraryActions(host)
+    /** Followed artists: Home's Following and New releases, the Follow buttons. */
+    val following by lazy { app.keepfin.ui.home.FollowingController(this) }
     internal val collections = CollectionFlow(host)
     internal val spaces = SpaceActions(host)
     internal val jobs = JobActions(host)
@@ -603,7 +605,18 @@ class StudioViewModel(
     private fun playChecked(items: List<LibraryItem>, item: LibraryItem, alive: Set<String>) {
         if (item.id !in alive) { say("This file is no longer in your library."); return }
         // not on this phone: it plays from a paired device that has it, or says plainly why it cannot
-        if (item.remote) app.keepfin.net.PeerPlayback.blockedMessage()?.let { say(it); return }
+        if (item.remote) {
+            // the holder is read from the library placements (a database read, off the main thread)
+            viewModelScope.launch {
+                val blocked = withContext(Dispatchers.IO) { app.keepfin.net.PeerPlayback.blockedMessage(whereSource, item.id) }
+                if (blocked != null) say(blocked) else playAllowed(items, item, alive)
+            }
+            return
+        }
+        playAllowed(items, item, alive)
+    }
+
+    private fun playAllowed(items: List<LibraryItem>, item: LibraryItem, alive: Set<String>) {
         if (!engine.settings.value.library.builtInPlayer && item.kind != LibraryItemKind.IMAGE && !item.remote) {
             ExternalOpen.open(getApplication(), item)?.let(::say)
             return

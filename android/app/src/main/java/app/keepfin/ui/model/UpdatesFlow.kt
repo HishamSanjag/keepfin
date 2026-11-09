@@ -39,7 +39,7 @@ internal interface UpdatesFlowHost : Notices {
 internal class UpdatesFlow(private val host: UpdatesFlowHost) {
     val updateAvailable: Boolean get() = host.updateState.hasUpdate(host.updates.currentVersion)
 
-    /** The release to announce in the one-time dialog, or null. Waits for What's new and Meet your library to close. */
+    /** The release to announce in the one-time dialog, or null. Waits for What's new to close. */
     val updateDialogVersion: String? get() {
         val state = host.updateState
         if (state.phase != "available" || !updateAvailable || state.version.isEmpty()) return null

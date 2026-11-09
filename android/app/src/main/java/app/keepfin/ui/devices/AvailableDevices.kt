@@ -160,7 +160,7 @@ internal fun platformIcon(platform: String?): ImageVector = when (platform) {
 /**
  * Devices found nearby that are not paired yet: a circle around this phone, or a searchable list. Connect starts the asking flow.
  * Under it one line says what the search is doing (with Stop / Search again) and holds "Not seeing it?", whose help carries Add by
- * address and Type a code.
+ * address.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -199,7 +199,7 @@ internal fun AvailableSection(
 
 /**
  * One line directly under the devices: what the search is doing ("Looking…", "Nothing found yet", "Search stopped"), Stop or Search
- * again, and "Not seeing it?" whose help holds the way to add a device by address or by a typed code.
+ * again, and "Not seeing it?" whose help holds the way to add a device by address.
  */
 @Composable
 private fun AvailableStatus(
@@ -232,7 +232,6 @@ private fun AvailableStatus(
             Text("Open Keepfin → Devices on the other device and turn Devices on.", fontSize = 13.sp, lineHeight = 18.sp, color = muted)
             Text("Make sure both are on the same Wi-Fi.", fontSize = 13.sp, lineHeight = 18.sp, color = muted)
             Text("Away from home, turn on Tailscale on both (the ? at the top has the steps).", fontSize = 13.sp, lineHeight = 18.sp, color = muted)
-            TypeCodeField(controller, run)
             TextButton(onClick = onAddByAddress, modifier = Modifier.heightIn(min = 48.dp).testTag(DevicesTags.ADD), contentPadding = LinePadding) { Text("Add by address") }
         }
     }

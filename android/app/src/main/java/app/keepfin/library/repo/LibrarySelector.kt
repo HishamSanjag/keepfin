@@ -32,6 +32,8 @@ internal object LibrarySelector {
         if (!forMigration && File(context.filesDir, "migration/active.json").isFile) return null
         // an unfinished combine or separate is settled before the profile is read: it decides which library this folder holds
         app.keepfin.merge.MergeRuntime.recoverBeforeOpen(context)
+        // a move that was killed after its last check finishes switching the profile to the new place
+        app.keepfin.move.MoveRecovery.beforeOpen(context)
         val profile = profiles.current() ?: return null
         val deviceDir = profiles.deviceDir(context.filesDir, profile.id)
         val appVersion = try { context.packageManager.getPackageInfo(context.packageName, 0).versionName.orEmpty() } catch (e: Exception) { "" }

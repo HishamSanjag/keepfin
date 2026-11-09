@@ -11,6 +11,8 @@ export type CopyHolds = {
   /** Playlist ids. */
   playlists: string[]
   favourites: boolean
+  /** Smart space ids: a copy holds whatever the space's rules gather. Absent means none. */
+  smart?: string[]
 }
 
 export type CopySchedule = {
@@ -45,7 +47,7 @@ export type CopyStatus =
 export type CopyCell = 'kept' | 'waiting' | 'review' | 'notHeld'
 
 /** A row of the Matrix: something a copy can hold. */
-export type CopyRow = {key: string; kind: 'space' | 'playlist' | 'favourites'; id: string; name: string}
+export type CopyRow = {key: string; kind: 'space' | 'playlist' | 'favourites' | 'smart'; id: string; name: string}
 
 /** Derived files a copy on a folder or drive can carry besides the library's own files (spec 8). Never imported back. */
 export type CopyExports = {playlistFiles: boolean; flat: boolean; mp3: boolean}
@@ -128,6 +130,10 @@ export type CopyReviewKind =
   | 'difference'
   | 'suspended'
   | 'notHeld'
+  /** A file that is only in the cloud: left alone. */
+  | 'onlineOnly'
+  /** A file the copy's drive cannot hold (FAT, 4 GB): not copied. */
+  | 'tooLarge'
   | 'held'
   | 'restoredDrive'
   /** A cloud account whose sign-in was refused or withdrawn. */

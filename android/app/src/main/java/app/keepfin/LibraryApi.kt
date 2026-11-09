@@ -52,6 +52,16 @@ interface LibraryApi {
      */
     fun move(itemIds: List<String>, spaceId: String): LibraryAccess
 
+    /** Spaces whose files live outside the Keepfin folder (a linked space), and how many files are still there. Empty where the library has none. */
+    fun outsideSpaces(): List<OutsideSpace> = emptyList()
+
+    /**
+     * "Bring them in": points the space at its default folder in the Keepfin folder and, when [move], brings its files in (each copied and checked
+     * before its original goes; Android may ask first). Not [move] leaves the files where they are. Blocking; call off the main thread.
+     */
+    fun bringIn(spaceId: String, move: Boolean, onProgress: (done: Int, total: Int, current: String) -> Unit = { _, _, _ -> }, cancelled: () -> Boolean = { false }): BringInResult =
+        throw IllegalStateException("This library keeps no files outside its folder.")
+
     /** Deletes the item's file (the UI confirms first) and its history entry's file reference. See [deleteItems]. */
     fun deleteItem(id: String): LibraryAccess = deleteItems(listOf(id))
 

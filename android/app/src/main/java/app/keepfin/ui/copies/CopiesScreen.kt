@@ -71,6 +71,7 @@ import app.keepfin.cloud.SignInStep
 import app.keepfin.core.copies.COPY_PROBLEM_RETRY
 import app.keepfin.core.copies.CopyMode
 import app.keepfin.core.copies.copyProblemTitle
+import app.keepfin.core.spaces.keepfinFolderFor
 import app.keepfin.copies.CopyProblemUi
 import app.keepfin.ui.Format
 import app.keepfin.ui.components.RowSeparator
@@ -104,6 +105,10 @@ object CopiesTags {
     /** The Music videos switch of a copy's settings and of the wizard's "What should it hold?" step. */
     const val MUSIC_VIDEOS = "copies-music-videos"
     const val WIZARD_MUSIC_VIDEOS = "copies-wizard-music-videos"
+    const val WIZARD_COMPANIONS = "copies-wizard-companions"
+
+    /** The wizard's note that Keepfin uses a folder as it is, for a folder that already holds other things. */
+    const val FOLDER_NOTE = "copies-folder-note"
 
     /** The wizard's "A paired device" choice, one row per device (`DEVICE_ROW-<deviceId>`), and the card's device line. */
     const val DEVICE = "copies-device"
@@ -121,6 +126,7 @@ object CopiesTags {
 }
 
 private const val MUSIC_VIDEOS_NOTE = "Each song's music video goes with it."
+private const val COMPANIONS_NOTE = "The files beside each song and video go with it"
 
 /** What the screens do. The manager implements them on a phone; tests pass fakes. */
 interface CopiesActions {
@@ -138,6 +144,9 @@ interface CopiesActions {
     fun versions(placeId: String): List<CopyVersionUi>
     fun restore(placeId: String, entryId: String)
     fun cleanup(placeId: String)
+
+    /** What Free up space… would delete (a fake without it counts the listed versions). */
+    fun versionStats(placeId: String): app.keepfin.copies.CopyVersionStats = versions(placeId).let { v -> app.keepfin.copies.CopyVersionStats(v.size, v.count { it.deleted }) }
 
     /** Lyrics, subtitles, info files and covers go with their items (a screen without it shows the switch and does nothing). */
     fun setCompanions(placeId: String, on: Boolean) {}
@@ -166,6 +175,7 @@ internal class ManagerActions(private val m: CopiesManager) : CopiesActions {
     override fun versions(placeId: String) = m.versions(placeId)
     override fun restore(placeId: String, entryId: String) = m.restore(placeId, entryId)
     override fun cleanup(placeId: String) = m.cleanup(placeId)
+    override fun versionStats(placeId: String) = m.versionStats(placeId)
     override val cloud get() = CopiesRuntime.cloud
 }
 
@@ -282,6 +292,7 @@ private fun ProblemBlock(p: CopyProblemUi, canRetry: Boolean, onRetry: () -> Uni
 private fun CopyCard(c: CopyCardUi, ui: CopiesUi, actions: CopiesActions, focused: Boolean, onVersions: () -> Unit, onError: (String?) -> Unit) {
     val scope = rememberCoroutineScope()
     var confirmRemove by remember { mutableStateOf(false) }
+    var confirmFreeUp by remember { mutableStateOf(false) }
     fun io(block: () -> Unit) = scope.launch { withContext(Dispatchers.IO) { runCatching(block).onFailure { onError(it.message) } } }
     val picker = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocumentTree()) { uri ->
         if (uri != null) scope.launch { onError(withContext(Dispatchers.IO) { runCatching { actions.reconnect(c.id, uri.toString()) }.getOrElse { it.message } }) }
@@ -349,7 +360,7 @@ private fun CopyCard(c: CopyCardUi, ui: CopiesUi, actions: CopiesActions, focuse
             else OutlinedButton(onClick = { picker.launch(null) }, modifier = Modifier.heightIn(min = 48.dp)) { Text("Choose its folder") }
             if (c.mode == CopyMode.Backup && c.connected && c.peer == null) {
                 OutlinedButton(onClick = onVersions, modifier = Modifier.heightIn(min = 48.dp).testTag(CopiesTags.RESTORE)) { Text("Restore") }
-                OutlinedButton(onClick = { io { actions.cleanup(c.id) } }, modifier = Modifier.heightIn(min = 48.dp).testTag(CopiesTags.CLEANUP)) { Text("Clean up") }
+                OutlinedButton(onClick = { confirmFreeUp = true }, enabled = !removing, modifier = Modifier.heightIn(min = 48.dp).testTag(CopiesTags.CLEANUP)) { Text(app.keepfin.core.copies.CopyActions.FREE_UP) }
             }
         }
         if (c.connected) {
@@ -364,17 +375,10 @@ private fun CopyCard(c: CopyCardUi, ui: CopiesUi, actions: CopiesActions, focuse
             if (c.cloud == null && c.peer == null) SwitchRow("One flat folder", c.flat, { v -> io { actions.edit(c.id, exports = Triple(c.playlistFiles, v, c.mp3)) } }, subtitle = "Every file again in one folder, for simple players")
             if (c.cloud == null && c.peer == null) SwitchRow("MP3 versions", c.mp3, { v -> io { actions.edit(c.id, exports = Triple(c.playlistFiles, c.flat, v)) } }, subtitle = "Songs in other formats, converted once to MP3")
         }
-        TextButton(onClick = { confirmRemove = true }, enabled = !removing, modifier = Modifier.heightIn(min = 48.dp)) { Text("Stop keeping this copy") }
+        TextButton(onClick = { confirmRemove = true }, enabled = !removing, modifier = Modifier.heightIn(min = 48.dp).testTag(CopyConfirmTags.REMOVE)) { Text(app.keepfin.core.copies.CopyActions.REMOVE) }
     }
-    if (confirmRemove) {
-        AlertDialog(
-            onDismissRequest = { confirmRemove = false },
-            title = { Text("Stop keeping ${c.name}?") },
-            text = { Text("The files on the copy stay exactly where they are. Keepfin just stops updating it.") },
-            confirmButton = { TextButton(onClick = { confirmRemove = false; io { actions.remove(c.id) } }) { Text("Stop") } },
-            dismissButton = { TextButton(onClick = { confirmRemove = false }) { Text("Keep it") } },
-        )
-    }
+    if (confirmFreeUp) FreeUpDialog(c, actions, onConfirm = { confirmFreeUp = false; io { actions.cleanup(c.id) } }, onClose = { confirmFreeUp = false })
+    if (confirmRemove) RemoveCopyDialog(c, onConfirm = { confirmRemove = false; io { actions.remove(c.id) } }, onClose = { confirmRemove = false })
     RowSeparator()
 }
 
@@ -459,6 +463,7 @@ private fun AddCopyWizard(ui: CopiesUi, actions: CopiesActions, preselect: Set<S
     var favourites by remember { mutableStateOf(false) }
     var mode by remember { mutableStateOf(CopyMode.Backup) }
     var musicVideos by remember { mutableStateOf<Boolean?>(null) }
+    var companions by remember { mutableStateOf(true) }
     var preview by remember { mutableStateOf<CopyPreview?>(null) }
     var busy by remember { mutableStateOf(false) }
     var error by remember { mutableStateOf<String?>(null) }
@@ -481,7 +486,7 @@ private fun AddCopyWizard(ui: CopiesUi, actions: CopiesActions, preselect: Set<S
             if (c != null && c.ok) { carryOn = false; step = Step.WHAT } else if (c != null) carryOn = false
         }
     }
-    fun draft() = CopyDraft(tree!!, name.trim().ifEmpty { "Copy" }, mode, CopyHoldsUi(all, if (all) emptySet() else spaces, if (all) emptySet() else playlists, !all && favourites), musicVideos = musicVideos)
+    fun draft() = CopyDraft(tree!!, name.trim().ifEmpty { "Copy" }, mode, CopyHoldsUi(all, if (all) emptySet() else spaces, if (all) emptySet() else playlists, !all && favourites), musicVideos = musicVideos, companions = companions)
     fun leave(cancel: Boolean) {
         val id = preview?.placeId
         if (cancel && !id.isNullOrEmpty()) scope.launch(Dispatchers.IO) { runCatching { actions.cancelPreview(id) } }
@@ -566,6 +571,10 @@ private fun AddCopyWizard(ui: CopiesUi, actions: CopiesActions, preselect: Set<S
                             if (!c.ok) Text(c.problem ?: "This folder cannot be used.", color = MaterialTheme.colorScheme.error, fontSize = 14.sp)
                             else {
                                 Text(if (PeerAddress.isPeer(tree)) "Keepfin will send the files that device is missing, and show you every difference before anything is replaced." else if (c.isCopy) "This folder already holds a copy of your library." else if (c.existingFiles > 0) "This folder already has ${c.existingFiles} items. Keepfin will only add files first, and show you every difference." else "An empty folder: a good place for a copy.", fontSize = 14.sp)
+                                // the PC makes a Keepfin folder inside any other folder (core keepfinFolderFor); a phone folder is used as picked, so the note says how to keep the copy apart
+                                if (c.existingFiles > 0 && !PeerAddress.isPeer(tree) && keepfinFolderFor(c.suggestedName, c.isCopy) != c.suggestedName) {
+                                    Text("Keepfin uses this folder as it is. To keep the copy apart from what is already here, choose or create a folder named Keepfin.", fontSize = 13.sp, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.testTag(CopiesTags.FOLDER_NOTE))
+                                }
                                 c.freeBytes?.let { Text("${Format.bytes(it)} free", fontSize = 13.sp, color = MaterialTheme.colorScheme.onSurfaceVariant) }
                                 OutlinedTextField(name, { name = it }, label = { Text("Name") }, singleLine = true, modifier = Modifier.fillMaxWidth().testTag(CopiesTags.NAME))
                             }
@@ -580,6 +589,7 @@ private fun AddCopyWizard(ui: CopiesUi, actions: CopiesActions, preselect: Set<S
                             Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.heightIn(min = 48.dp)) { Checkbox(favourites, { favourites = it }); Text("Favourites") }
                             for ((id, n) in ui.playlists) Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.heightIn(min = 48.dp)) { Checkbox(id in playlists, { v -> playlists = if (v) playlists + id else playlists - id }); Text("Playlist: $n") }
                         }
+                        SwitchRow("Lyrics, subtitles and info files", companions, { companions = it }, subtitle = COMPANIONS_NOTE, tag = CopiesTags.WIZARD_COMPANIONS)
                         SwitchRow("Music videos", musicVideos ?: all, { musicVideos = it }, subtitle = MUSIC_VIDEOS_NOTE, tag = CopiesTags.WIZARD_MUSIC_VIDEOS)
                     }
                     Step.HOW -> {

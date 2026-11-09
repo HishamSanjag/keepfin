@@ -245,6 +245,7 @@ internal class LibraryRepository(
     }
 
     private val linkedPart = RepoLinked(core)
+    private val bringInPart = RepoBringIn(core)
     private val trashPart = RepoTrash(core)
     private val importsPart = RepoImports(core)
     private val collectionsPart = RepoCollections(core)
@@ -656,6 +657,11 @@ internal class LibraryRepository(
     internal fun linkedReadable(): Boolean = linkedPart.linkedReadable()
 
     internal fun relinkLinked(): RelinkReport = linkedPart.relinkLinked()
+
+    override fun outsideSpaces(): List<app.keepfin.OutsideSpace> = bringInPart.outsideSpaces()
+
+    override fun bringIn(spaceId: String, move: Boolean, onProgress: (Int, Int, String) -> Unit, cancelled: () -> Boolean): app.keepfin.BringInResult =
+        bringInPart.bringIn(spaceId, move, onProgress, cancelled)
 
     override fun item(id: String): LibraryItem? = index?.item(id)
 
@@ -1222,6 +1228,9 @@ internal class LibraryRepository(
         val b = backend()
         return CopiesBackend(b.folder, b.replicaId, b.store.libraryId) { block -> block(app.keepfin.folder.sql.CopiesSql(rd()::rows)) }
     }
+
+    /** What the smart spaces [wireIds] gather (a copy that holds one): see [smartItemIdsOf]. */
+    internal fun smartItemIds(wireIds: Set<String>): Set<String> = smartItemIdsOf(small.spaces, browse, wireIds)
 
     /** Writes library operations on behalf of the copies engine (place registers, imports, revisions, deletions), then refreshes the screens. */
     internal fun applyCopiesOps(drafts: List<StoreDraft>) {

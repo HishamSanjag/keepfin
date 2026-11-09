@@ -115,10 +115,11 @@ internal fun StorageGroup(vm: StudioViewModel) {
                     is app.keepfin.where.WhereTap.Device -> vm.whereOpenDevice(tap.deviceId)
                     is app.keepfin.where.WhereTap.Copy -> focusCopy = tap.placeId
                 }
-            }, onKeepCopy = { keepSpaces = it })
+            }, onKeepCopy = { keepSpaces = it }, safety = true)
         }
         StorageContent(status, message, onCheck = { status = null; reload++ }, onRepick = { picker.launch(initial) },
             linkedCount = linkedCount, linkedMessage = linkedMessage, finding = finding, onFindLinked = onFindLinked, onEarlier = setup::openEarlier)
+        (status as? StorageStatus.Ok)?.let { FolderLocationGroup(it.label) }
         if (status is StorageStatus.Ok) app.keepfin.ui.copies.CopiesGroup(keepSpaces, onKeepHandled = { keepSpaces = null }, focusCopy = focusCopy)
     }
 }

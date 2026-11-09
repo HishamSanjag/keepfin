@@ -402,7 +402,7 @@ fun ItemRow(
                     }
                     Text(subtitle, style = MaterialTheme.typography.bodySmall.tabular(), color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1, overflow = TextOverflow.Ellipsis)
                 }
-                if (item.remote) RemoteHint(item.id)
+                if (item.remote) RemoteHint(item.id, ui.vm.whereSource)
             }
             extra()
             if (item.favorite) Icon(Icons.Filled.Favorite, contentDescription = "Favorite", tint = MaterialTheme.colorScheme.primary, modifier = Modifier.padding(horizontal = 6.dp).size(16.dp))

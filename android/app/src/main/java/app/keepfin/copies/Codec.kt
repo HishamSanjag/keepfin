@@ -15,7 +15,15 @@ import org.json.JSONObject
 /** The name-equivalence rule of a copy volume (probed once, spec 3). */
 internal enum class RulesId(val rules: NameRules) {
     EXACT(NameRules.exact),
+
+    /** ASCII case ignored: the rule relationships were first written with. */
     ASCII(NameRules.caseInsensitiveAscii),
+
+    /** Case sensitive, composed and decomposed accents are one name. */
+    NFC(NameRules.composed),
+
+    /** Case ignored, composed and decomposed accents are one name: a copy never holds two visually identical names. */
+    UNICODE(NameRules.folded),
     ;
 
     fun key(path: String): String = rules.key(path)

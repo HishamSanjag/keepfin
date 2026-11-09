@@ -6,7 +6,7 @@ import {plural, relativeTime} from '../../format'
 import {Button, InlineAlert, ProgressBar, SwitchRow, Tabs} from '../../ui/controls'
 import {Dialog} from '../../ui/Dialog'
 import {cleanUpCopy, editCopy, listVersions, pauseCopies, removeCopy, restoreVersion, signInToCloud, syncCopies} from './copiesApi'
-import {problemRetry, problemTitle} from '../../../shared/core/copies'
+import {freeUpKeeps, freeUpNothing, freeUpSummary, freeUpTitle, nothingToFree as nothingToFreeOf, problemRetry, problemTitle, removeFilesStay, removeLead, removeTitle} from '../../../shared/core/copies'
 import {holdsText, modeWords, scheduleText, statusWords} from './copyText'
 import {HoldsEditor} from './HoldsEditor'
 
@@ -67,7 +67,7 @@ export function CopyDialog({place, state, onState, onReview, onClose}: {place: C
   // Remove copy…: a copy in a folder or on a drive can take its files to the Recycle Bin; keeping them is the default
   const [withFiles, setWithFiles] = useState(false)
   const inFolder = !place.cloud && !place.device && !!place.path
-  const nothingToFree = !place.versions || (place.versions.files === 0 && place.versions.deletedFiles === 0)
+  const nothingToFree = !place.versions || nothingToFreeOf(place.versions.files, place.versions.deletedFiles)
   const status = statusWords[place.status]
   const words = modeWords[place.mode]
   const syncing = place.status === 'syncing'
@@ -313,7 +313,7 @@ export function CopyDialog({place, state, onState, onReview, onClose}: {place: C
         <Dialog
           labelledBy="copy-confirm-title"
           onClose={() => setConfirm(null)}
-          title={`Free up space on ${place.name}?`}
+          title={freeUpTitle(place.name)}
           footer={
             nothingToFree ? (
               <Button onClick={() => setConfirm(null)}>OK</Button>
@@ -335,14 +335,11 @@ export function CopyDialog({place, state, onState, onReview, onClose}: {place: C
           }
         >
           {nothingToFree ? (
-            <p>There is nothing to free up: this backup keeps no earlier versions, and nothing from files you deleted.</p>
+            <p>{freeUpNothing()}</p>
           ) : (
             <>
-              <p>
-                This deletes {[place.versions!.files ? plural(place.versions!.files, 'earlier version') : '', place.versions!.deletedFiles ? `${plural(place.versions!.deletedFiles, 'file')} kept after you deleted ${place.versions!.deletedFiles === 1 ? 'it' : 'them'} from your library` : ''].filter(Boolean).join(' and the ')}{' '}
-                from this backup.
-              </p>
-              <p>The backup keeps its copy of everything in your library. Nothing in your library is touched.</p>
+              <p>{freeUpSummary(place.versions!.files, place.versions!.deletedFiles)}</p>
+              <p>{freeUpKeeps()}</p>
             </>
           )}
         </Dialog>
@@ -351,7 +348,7 @@ export function CopyDialog({place, state, onState, onReview, onClose}: {place: C
         <Dialog
           labelledBy="copy-confirm-title"
           onClose={() => setConfirm(null)}
-          title={`Remove ${place.name}?`}
+          title={removeTitle(place.name)}
           footer={
             <>
               <Button onClick={() => setConfirm(null)}>Cancel</Button>
@@ -370,7 +367,7 @@ export function CopyDialog({place, state, onState, onReview, onClose}: {place: C
             </>
           }
         >
-          <p>Keepfin stops keeping this copy up to date.</p>
+          <p>{removeLead()}</p>
           {inFolder ? (
             <fieldset className="copy-holds">
               <legend className="sr-only">What happens to its files</legend>
@@ -390,7 +387,7 @@ export function CopyDialog({place, state, onState, onReview, onClose}: {place: C
               </label>
             </fieldset>
           ) : (
-            <p>Its files stay where they are.</p>
+            <p>{removeFilesStay()}</p>
           )}
           {error && <InlineAlert tone="error">{error}</InlineAlert>}
         </Dialog>

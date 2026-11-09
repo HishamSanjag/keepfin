@@ -6,7 +6,7 @@ import app.keepfin.core.copies.ProblemGroup
 /** What the Copies screens show (dev-docs/plans/KEEPFIN-COPIES-SPEC.md section 10). Immutable; the manager publishes a new one on every change. */
 enum class CopyStatus { NEW, PREVIEW, SYNCING, UP_TO_DATE, WAITING, REVIEW, PROBLEM, HELD, DISCONNECTED, PAUSED, REFUSED }
 
-data class CopyHoldsUi(val all: Boolean = true, val spaces: Set<String> = emptySet(), val playlists: Set<String> = emptySet(), val favourites: Boolean = false)
+data class CopyHoldsUi(val all: Boolean = true, val spaces: Set<String> = emptySet(), val playlists: Set<String> = emptySet(), val favourites: Boolean = false, val smart: Set<String> = emptySet())
 
 data class CopyProgressUi(val done: Int, val total: Int, val doneBytes: Long, val totalBytes: Long, val current: String?)
 
@@ -133,6 +133,8 @@ data class CopyDraft(
     val auto: Boolean = true,
     /** The person's choice of music videos, or null to leave it to what the copy holds. */
     val musicVideos: Boolean? = null,
+    /** Lyrics, subtitles and info files go with their items (on unless the person turned it off in the wizard). */
+    val companions: Boolean = true,
 )
 
 data class CopyFolderCheck(val ok: Boolean, val problem: String? = null, val suggestedName: String = "", val isCopy: Boolean = false, val existingFiles: Int = 0, val freeBytes: Long? = null)
@@ -157,3 +159,6 @@ data class CopyPreview(
 )
 
 data class CopyVersionUi(val id: String, val name: String, val path: String, val archivedAt: Long, val why: String, val deleted: Boolean)
+
+/** What Free up space… would delete from a backup: every kept entry, and how many of them are for files deleted since. */
+data class CopyVersionStats(val versions: Int, val deletedFiles: Int)

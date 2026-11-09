@@ -1,5 +1,6 @@
 package app.keepfin.ui.library
 
+import app.keepfin.ui.home.ArtistFollowButton
 import androidx.compose.material.icons.outlined.LibraryAdd
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.launch
@@ -557,6 +558,7 @@ fun ArtistScreen(ui: LibraryUi, route: LibraryRoute.Artist, padding: PaddingValu
                 CollectionHeaderBlock(
                     ui, route.name, "Artist", "${loaded.albums.size} albums · ${songs.size} songs · ${LibraryViews.spoken(LibraryViews.totalDuration(songs))}",
                     songs, route.space, circle = true,
+                    extra = { ArtistFollowButton(ui.vm, route.name) },
                 )
             }
             if (loaded.albums.isNotEmpty()) {

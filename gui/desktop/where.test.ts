@@ -189,7 +189,7 @@ test('the per-file line: this computer first, a phone that is away marked, a com
   const view = itemPlaces({mainReplica: MAIN, thisName: 'Desk PC', paired: [phone({online: false})], membership: membership('actor-phone', 'dev-phone'), copies: [drive, videos, waiting].map((v) => ({view: v, replica: null})), facts})
   assert.deepEqual(view.places, [
     {name: 'Desk PC', thisDevice: true, offline: false},
-    {name: 'Pixel 9', offline: true},
+    {name: 'Pixel 9', deviceId: 'dev-phone', offline: true},
     {name: 'Backup drive (E:)', offline: true},
   ])
   // only this computer has it

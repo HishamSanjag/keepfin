@@ -13,6 +13,8 @@ internal class InventoryResult(
     /** Folders or files that could not be read. */
     val unreadable: List<String>,
     val startedAtMs: Long,
+    /** Files only in the cloud (the provider says they have no bytes here): never listed as files, never read; the side is not fully known. */
+    val onlineOnly: List<String> = emptyList(),
 )
 
 private val SKIPPED_ROOT_DIRS = setOf(".keepfin", "keepfin exports")
@@ -39,6 +41,7 @@ internal object CopyInventory {
     ): InventoryResult {
         val startedAtMs = System.currentTimeMillis()
         val unreadable = ArrayList<String>()
+        val onlineOnly = ArrayList<String>()
         val sorter = ExternalSorter(tmpDir, chunk, "inv")
         var seq = 0L
         val stack = ArrayList<String>().apply { add("") }
@@ -97,6 +100,10 @@ internal object CopyInventory {
                 } else {
                     if (skippedFile(e.name)) continue
                     val physical = joinPath(dir, e.name)
+                    if (e.onlineOnly) {
+                        onlineOnly.add(names?.library(physical) ?: physical)
+                        continue
+                    }
                     if (e.size < 0) {
                         unreadable.add(physical)
                         continue
@@ -115,14 +122,15 @@ internal object CopyInventory {
         writer.finish(false)
         if (!tmp.renameTo(outFile)) { outFile.delete(); tmp.renameTo(outFile) }
         val marker = File(outFile.parentFile, outFile.name + ".complete")
-        val complete = unreadable.isEmpty()
+        val complete = unreadable.isEmpty() && onlineOnly.isEmpty()
         if (complete) marker.writeText(count.toString()) else marker.delete()
-        return InventoryResult(outFile, count, complete, unreadable, startedAtMs)
+        return InventoryResult(outFile, count, complete, unreadable, startedAtMs, onlineOnly)
     }
 
     /**
-     * Probes the name-equivalence rule of the volume holding [access] once: `EXACT` when `A` and `a` are different files, `ASCII` when
-     * the provider treats them as one name (FAT, exFAT and NTFS cards). An unreachable probe is treated conservatively as `ASCII`.
+     * Probes the name rule of the volume holding [access] once: `UNICODE` when `A` and `a` are one name to the provider (FAT, exFAT and NTFS
+     * cards), `NFC` when they are different files. Either way a composed and a decomposed accent are one name. An unreachable probe is
+     * treated conservatively as `UNICODE`.
      */
     fun probeRules(access: FolderAccess): RulesId {
         (access as? FixedRules)?.let { return it.fixedRules }
@@ -134,12 +142,12 @@ internal object CopyInventory {
             access.publish(upper, ByteArray(0))
             try {
                 access.publish(lower, ByteArray(0))
-                RulesId.EXACT
+                RulesId.NFC
             } catch (e: FolderError.NameConflict) {
-                RulesId.ASCII
+                RulesId.UNICODE
             }
         } catch (e: Exception) {
-            RulesId.ASCII
+            RulesId.UNICODE
         } finally {
             runCatching { access.remove(upper) }
             runCatching { access.remove(lower) }

@@ -484,6 +484,8 @@ private fun AppearanceGroup(vm: StudioViewModel) {
             }
         }
         RowSeparator()
+        PlayerStyleRow(vm)
+        RowSeparator()
         SwitchRow("Pure black", vm.prefs.pureBlack, vm.prefs::choosePureBlack,
             subtitle = "A true black background in the dark theme, easier on OLED screens", tag = UiTags.SETTING_PURE_BLACK)
         if (supportsDynamicColor()) {
@@ -494,6 +496,25 @@ private fun AppearanceGroup(vm: StudioViewModel) {
         RowSeparator()
         AppIconPicker()
         SupportingText("Text size follows your Android font size and display settings.")
+    }
+}
+
+/** Settings, Appearance, Player style: the same choice as the palette button in the full player header (the PC has both too). */
+@Composable
+private fun PlayerStyleRow(vm: StudioViewModel) {
+    val styles = app.keepfin.ui.player.PlayerStyles.all
+    Column(Modifier.padding(horizontal = 16.dp, vertical = 10.dp)) {
+        Text("Player style", style = MaterialTheme.typography.bodyLarge)
+        Spacer(Modifier.size(8.dp))
+        SingleChoiceSegmentedButtonRow(Modifier.fillMaxWidth()) {
+            styles.forEachIndexed { index, style ->
+                SegmentedButton(
+                    selected = vm.prefs.playerStyle == style.id, onClick = { vm.prefs.choosePlayerStyle(style.id) },
+                    shape = SegmentedButtonDefaults.itemShape(index, styles.size), modifier = Modifier.testTag(UiTags.setting("player-style-${style.id}")),
+                ) { Text(style.name, maxLines = 1) }
+            }
+        }
+        Text(app.keepfin.ui.player.PlayerStyles.byId(vm.prefs.playerStyle).summary, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(top = 6.dp))
     }
 }
 

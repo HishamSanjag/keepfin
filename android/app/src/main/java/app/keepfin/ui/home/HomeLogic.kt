@@ -4,6 +4,9 @@ import app.keepfin.ItemQuery
 import app.keepfin.LibraryCollection
 import app.keepfin.LibraryItem
 import app.keepfin.LibraryItemKind
+import app.keepfin.core.home.MixSong
+import app.keepfin.core.home.ReleaseFeed
+import app.keepfin.core.home.Mixes
 import app.keepfin.ui.library.LibraryViews
 
 /** Home's chips. [wire] is what UiPreferences remembers. */
@@ -19,10 +22,8 @@ sealed interface QuickTile {
     data class Collection(val collection: LibraryCollection, val cover: LibraryItem?) : QuickTile { override val key get() = "c-" + collection.id }
 }
 
-/** The four music rows of "Made from your listening". Each shows only when it has [HomeLogic.MIN_ROW] items. */
-enum class ListeningRow(val title: String) {
-    ON_REPEAT("On repeat"), FORGOTTEN("Forgotten favourites"), RECENT("Recently added music"), NEVER_PLAYED("Never played")
-}
+/** One tile of "Made from your listening": the shared core's mix and its songs, in the mix's order. */
+class HomeMix(val mix: app.keepfin.core.home.Mix, val songs: List<LibraryItem>)
 
 /**
  * What Home shows, computed from the library snapshot alone (no network, no account). Pure, so screens and tests agree.
@@ -75,20 +76,33 @@ object HomeLogic {
         if (kind == HomeKind.MUSIC) emptyList()
         else items.filter { (it.kind == LibraryItemKind.VIDEO || it.kind == LibraryItemKind.IMAGE) && matches(it, kind) }.sortedByDescending { it.addedAt }
 
-    /** The music rows, in order, each with at least [MIN_ROW] songs; hidden for the Videos and Photos chips. */
-    fun listening(items: List<LibraryItem>, kind: HomeKind, now: Long, musicSpaces: Set<String> = emptySet()): List<Pair<ListeningRow, List<LibraryItem>>> {
+    const val MIX_SONGS = 12
+    const val TOP_ARTISTS = 5
+
+    /** The artists with the most plays among [songs] (one per [ReleaseFeed.artistKey]), named as their most played single-credit song writes them. */
+    fun topArtists(songs: List<LibraryItem>, n: Int = TOP_ARTISTS): List<String> {
+        val totals = LinkedHashMap<String, Int>()
+        val names = HashMap<String, Pair<Int, String>>()
+        for (song in songs) {
+            val raw = (song.artist ?: song.albumArtist)?.trim().orEmpty()
+            val key = ReleaseFeed.artistKey(raw) ?: continue
+            totals[key] = (totals[key] ?: 0) + song.plays
+            val best = names[key]
+            if (best == null || song.plays > best.first) names[key] = song.plays to raw.removeSuffix(" - Topic").trim()
+        }
+        return totals.entries.sortedWith(compareByDescending<Map.Entry<String, Int>> { it.value }.thenBy { it.key }).take(n).mapNotNull { names[it.key]?.second }
+    }
+
+    /**
+     * "Made from your listening": the shared core's mixes (On repeat, Forgotten favourites, Recently added music, Never played, Because you play X,
+     * Late-night mix) over [items], each with at least [Mixes.MIN_ROW] songs; none for the Videos and Photos chips. [utcOffsetMinutes] is the local clock.
+     */
+    fun listening(items: List<LibraryItem>, kind: HomeKind, now: Long, musicSpaces: Set<String> = emptySet(), utcOffsetMinutes: Int = 0): List<HomeMix> {
         if (kind == HomeKind.VIDEOS || kind == HomeKind.PHOTOS) return emptyList()
         val songs = items.filter { isSong(it, musicSpaces) }
-        val rows = listOf(
-            ListeningRow.ON_REPEAT to songs.filter { it.plays > 0 && (it.lastPlayedAt ?: 0L) >= now - 30 * DAY }
-                .sortedWith(compareByDescending<LibraryItem> { it.plays }.thenByDescending { it.lastPlayedAt ?: 0L }),
-            // A favourite you never played is not "forgotten": it belongs to Never played.
-            ListeningRow.FORGOTTEN to songs.filter { (it.favorite || it.plays >= 5) && (it.lastPlayedAt ?: Long.MAX_VALUE) < now - 60 * DAY }
-                .sortedWith(compareBy<LibraryItem> { it.lastPlayedAt ?: 0L }.thenByDescending { it.plays }),
-            ListeningRow.RECENT to songs.sortedByDescending { it.addedAt },
-            ListeningRow.NEVER_PLAYED to songs.filter { it.plays == 0 && it.lastPlayedAt == null }.sortedByDescending { it.addedAt },
-        )
-        return rows.filter { it.second.size >= MIN_ROW }.map { it.first to it.second.take(12) }
+        val byId = songs.associateBy { it.id }
+        val mixSongs = songs.map { MixSong(it.id, it.artist ?: it.albumArtist, it.plays, it.lastPlayedAt, it.addedAt, it.favorite) }
+        return Mixes.build(mixSongs, now, utcOffsetMinutes, MIX_SONGS).map { mix -> HomeMix(mix, mix.ids.mapNotNull(byId::get)) }
     }
 }
 
@@ -96,8 +110,10 @@ object HomeLogic {
 class HomeShelves(
     val quick: List<QuickTile>,
     val resume: List<LibraryItem>,
-    val listening: List<Pair<ListeningRow, List<LibraryItem>>>,
+    val listening: List<HomeMix>,
     val recent: List<LibraryItem>,
+    /** The artists played most (names as tagged): "Follow your top artists" offers these when nobody is followed. */
+    val topArtists: List<String> = emptyList(),
 ) {
     companion object {
         val EMPTY = HomeShelves(emptyList(), emptyList(), emptyList(), emptyList())
@@ -127,31 +143,37 @@ class HomeShelves(
             val quick = HomeLogic.quickGrid(candidates, newest, kind, musicSpaces)
             val resume = HomeLogic.continueWatching(b.top(ItemQuery(resumable = true, order = app.keepfin.ItemOrder.RECENT), 24), kind)
             val recent = if (kind == HomeKind.MUSIC) emptyList() else b.top(ItemQuery(kinds = shown - LibraryItemKind.AUDIO, order = app.keepfin.ItemOrder.ADDED), 40).filterNot { HomeLogic.isSong(it, musicSpaces) }
-            val listening = if (kind == HomeKind.VIDEOS || kind == HomeKind.PHOTOS) emptyList() else {
-                val songs = ItemQuery(songs = true)
-                val since = now - 30 * HomeLogic.DAY
-                val stale = now - 60 * HomeLogic.DAY
-                val rows = listOf(
-                    ListeningRow.ON_REPEAT to b.top(songs.copy(played = true, playedSince = since, order = app.keepfin.ItemOrder.MOST_PLAYED), 24),
-                    // a favourite or a song played five times or more, untouched for two months: the oldest first
-                    ListeningRow.FORGOTTEN to (b.top(songs.copy(favorite = true, playedBefore = stale, order = app.keepfin.ItemOrder.STALE), 24) + b.top(songs.copy(minPlays = 5, playedBefore = stale, order = app.keepfin.ItemOrder.STALE), 24)).distinctBy { it.id },
-                    ListeningRow.RECENT to b.top(songs.copy(order = app.keepfin.ItemOrder.ADDED), 12),
-                    ListeningRow.NEVER_PLAYED to b.top(songs.copy(unplayed = true, order = app.keepfin.ItemOrder.ADDED), 40),
-                )
-                shapeListening(rows)
-            }
-            return HomeShelves(quick, resume, listening, recent)
+            val top = ArrayList<String>()
+            val listening = if (kind == HomeKind.VIDEOS || kind == HomeKind.PHOTOS) emptyList() else mixes(b, kind, now, musicSpaces, top)
+            return HomeShelves(quick, resume, listening, recent, top)
         }
 
-        private fun shapeListening(rows: List<Pair<ListeningRow, List<LibraryItem>>>): List<Pair<ListeningRow, List<LibraryItem>>> {
-            val sorted = rows.map { (row, list) ->
-                row to when (row) {
-                    ListeningRow.ON_REPEAT -> list.sortedWith(compareByDescending<LibraryItem> { it.plays }.thenByDescending { it.lastPlayedAt ?: 0L })
-                    ListeningRow.FORGOTTEN -> list.sortedWith(compareBy<LibraryItem> { it.lastPlayedAt ?: 0L }.thenByDescending { it.plays })
-                    else -> list
-                }
-            }
-            return sorted.filter { it.second.size >= HomeLogic.MIN_ROW }.map { it.first to it.second.take(12) }
+        /**
+         * The mixes as a few indexed queries (never the whole library): the most played, the longest untouched, the newest, the never played and what
+         * was played last make the pool the core reads; the songs of the artist the Because mix names are added when it shows.
+         */
+        private fun mixes(b: app.keepfin.LibraryBrowse, kind: HomeKind, now: Long, musicSpaces: Set<String>, topOut: MutableList<String>): List<HomeMix> {
+            val songs = ItemQuery(songs = true)
+            val since = now - 30 * HomeLogic.DAY
+            val stale = now - 60 * HomeLogic.DAY
+            val offset = java.util.TimeZone.getDefault().getOffset(now) / 60_000
+            val pool = LinkedHashMap<String, LibraryItem>()
+            fun take(list: List<LibraryItem>) = list.forEach { pool.putIfAbsent(it.id, it) }
+            take(b.top(songs.copy(played = true, playedSince = since, order = app.keepfin.ItemOrder.MOST_PLAYED), 24))
+            take(b.top(songs.copy(favorite = true, playedBefore = stale, order = app.keepfin.ItemOrder.STALE), 24))
+            take(b.top(songs.copy(minPlays = 5, playedBefore = stale, order = app.keepfin.ItemOrder.STALE), 24))
+            take(b.top(songs.copy(order = app.keepfin.ItemOrder.ADDED), HomeLogic.MIX_SONGS))
+            take(b.top(songs.copy(unplayed = true, order = app.keepfin.ItemOrder.ADDED), 40))
+            // the artists played most, and what was played last: the Because and Late-night mixes read these
+            val played = b.top(songs.copy(played = true, order = app.keepfin.ItemOrder.MOST_PLAYED), 60)
+            take(played)
+            topOut += HomeLogic.topArtists(played)
+            take(b.top(songs.copy(everPlayed = true, order = app.keepfin.ItemOrder.RECENT), 100))
+            val first = HomeLogic.listening(pool.values.toList(), kind, now, musicSpaces, offset)
+            val because = first.firstOrNull { it.mix.id == app.keepfin.core.home.Mixes.BECAUSE } ?: return first
+            // the songs by that artist that were never played belong to it too
+            take(b.top(songs.copy(text = because.mix.title.removePrefix("Because you play "), textColumns = "artist", order = app.keepfin.ItemOrder.STALE), 100))
+            return HomeLogic.listening(pool.values.toList(), kind, now, musicSpaces, offset)
         }
     }
 }

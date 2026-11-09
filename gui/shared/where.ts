@@ -72,6 +72,6 @@ export type WhereState = {
 export const emptyWhere: WhereState = {available: false, places: [], singles: []}
 
 /** One place a file is on (for the per-file line). */
-export type WhereItemPlace = {name: string; thisDevice?: boolean; /** The place is not reachable now (the library remembers it). */ offline: boolean}
+export type WhereItemPlace = {name: string; thisDevice?: boolean; /** The paired device behind this place, when it is one (Play from names the holder with it). */ deviceId?: string; /** The place is not reachable now (the library remembers it). */ offline: boolean}
 
 export type WhereItemView = {places: WhereItemPlace[]}

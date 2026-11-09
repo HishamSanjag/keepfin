@@ -9,6 +9,7 @@ import type {CombineArgs, CombineState} from './combine.js'
 import type {DevicesArgs, DevicesState} from './devices.js'
 import type {WhereState} from './where.js'
 import type {MoveProgress, SetupProgress, StorageArgs, StorageState} from './storage.js'
+import type {FollowingState} from './following.js'
 import type {CollectionFollow, CollectionKind, ExistingMatch, LibrarySettings, LibrarySnapshot, Space} from './library.js'
 export type * from './library.js'
 
@@ -552,6 +553,12 @@ export type Operation =
   | 'collectionCheck'
   | 'collectionReview'
   | 'collectionOpened'
+  /** Followed artists (Home): the state, follow or unfollow an artist (`text` = the name, `id`), check now (`id`, or all), keep a release (`id` = its link). */
+  | 'followingState'
+  | 'followArtist'
+  | 'unfollowArtist'
+  | 'followingCheck'
+  | 'keepRelease'
   | 'playlistSave'
   | 'playlistDelete'
   | 'playlistExport'
@@ -819,6 +826,8 @@ export type PushEvent =
   /** A whole library in bounded batches (resync, or a change of unknown extent on a big library). The last batch has index === total - 1. */
   | LibraryBatchPush
   /** An automatic follow check found new items (queued, or held for review when `pending`). */
+  /** The followed artists or their releases changed. */
+  | {type: 'following'; state: FollowingState}
   | {type: 'follow'; found: {id: string; name: string; added: number; pending?: number}}
   /** The Activity list changed (an entry was recorded, updated, read or removed). */
   | {type: 'activity'; activity: ActivityList}

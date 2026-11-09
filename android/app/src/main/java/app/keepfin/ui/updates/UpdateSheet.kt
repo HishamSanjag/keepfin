@@ -128,7 +128,7 @@ fun updateHighlights(notes: String, max: Int = 3): List<String> = Releases.highl
 /**
  * The one-time announcement of a new release: "Keepfin X is available", two or three highlights, its size, and a promise that
  * downloads and library stay. Update now starts the in-app update; Later asks again next launch; Skip this version never asks
- * again for that version. It waits behind What's new and Meet your library.
+ * again for that version. It waits behind What's new.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable

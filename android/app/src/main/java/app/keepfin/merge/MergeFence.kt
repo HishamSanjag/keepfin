@@ -87,4 +87,4 @@ object MergeFence {
 }
 
 /** A write was refused because the library is being combined or separated. */
-class LibraryBusyException : IllegalStateException("Keepfin is combining libraries. Try again when it has finished.")
+class LibraryBusyException : IllegalStateException("Keepfin is busy with your library right now. Try again when it has finished.")

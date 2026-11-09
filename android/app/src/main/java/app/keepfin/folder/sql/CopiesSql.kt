@@ -54,12 +54,12 @@ class CopiesSql(private val query: QueryFn) {
     /**
      * D for [holds], unsorted: every present item that the holds select (a space, a favourite, an item of a held playlist), each head of
      * its content at the item's placement under [mainReplica]; heads after the first sit at conflict names. Items without a placement for
-     * [mainReplica] cannot be copied yet and are skipped. Smart-space holds are not wired (spec 4.8 rule 12). With [companions] each item's
+     * [mainReplica] cannot be copied yet and are skipped. Smart-space holds are the [smart] ids the caller read from the library (what the smart spaces gather). With [companions] each item's
      * lyrics, subtitles and info file follow, after every media entry (the core decides which and where: `companionCandidate`,
      * `keptCompanionIndices`). A music video (`Song.video.mp4`) follows with [musicVideos], its own option (the place's effective value: what the person
      * chose, else a copy that holds everything has them and a part copy does not; dev-docs/plans/MUSIC-VIDEOS.md, decision 5).
      */
-    fun desiredEntries(mainReplica: String, holds: Holds, companions: Boolean = true, musicVideos: Boolean = holds.all): Sequence<DesiredEntry> = sequence {
+    fun desiredEntries(mainReplica: String, holds: Holds, companions: Boolean = true, musicVideos: Boolean = holds.all, smart: Set<String> = emptySet()): Sequence<DesiredEntry> = sequence {
         val favourites = if (holds.favourites) setMembers("favourites").toHashSet() else emptySet()
         val inPlaylists = HashSet<String>()
         for (pl in holds.playlists) inPlaylists.addAll(playlistItems(pl))
@@ -81,7 +81,7 @@ class CopiesSql(private val query: QueryFn) {
                 val id = r[0] as String
                 val space = r[1] as? String
                 val path = r[3] as? String
-                val selected = holds.all || (space != null && space in holds.spaces) || id in favourites || id in inPlaylists
+                val selected = holds.all || (space != null && space in holds.spaces) || id in favourites || id in inPlaylists || id in smart
                 if (!selected || path == null) continue
                 val heads = heads(r[2] as String)
                 for ((i, h) in heads.withIndex()) {

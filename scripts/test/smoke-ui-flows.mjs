@@ -22,6 +22,7 @@ import {registerUiFixesSuite} from './ui-fixtures/suite-ui-fixes.mjs'
 import {registerPlayerStylesSuite} from './ui-fixtures/suite-player-styles.mjs'
 import {registerSongVideosSuite} from './ui-fixtures/suite-song-videos.mjs'
 import {registerPreviewSuite} from './ui-fixtures/suite-preview.mjs'
+import {registerHomeFollowSuite} from './ui-fixtures/suite-home-follow.mjs'
 
 const YT = 'https://www.youtube.com/watch?v=lofoten8k'
 const MUSIC = 'https://music.youtube.com/watch?v=tidal88'
@@ -1047,6 +1048,7 @@ await registerUiFixesSuite({test, sent})
 await registerPlayerStylesSuite({test, calls})
 await registerSongVideosSuite({test, calls, last, sent, capture})
 await registerPreviewSuite({test, calls, last, sent, field, capture})
+await registerHomeFollowSuite({test, calls, last})
 
 await browser.close()
 await srv.close()

@@ -7,6 +7,7 @@ import fs from 'node:fs/promises'
 import path from 'node:path'
 import type {PlanSummary, ReviewItem} from '../../shared/core/copies.js'
 import {deletedItems, desiredEntries, holdsKey, optionsKey, placeMusicVideos, type PlaceConfig} from '../sqlstate/desired.js'
+import {heldSmart} from '../sqlstate/smart.js'
 import {readJson, writeJsonAtomic} from '../store/atomic.js'
 import {coveredByName, listOps, pruneCoveredSegments} from './segmentPrune.js'
 import type {MainHost, Progress, RemoteTally} from './executor.js'
@@ -174,6 +175,8 @@ export async function runPlace(job: PlaceRunJob, host: MainHost | undefined, onP
     db.exec('PRAGMA query_only = 1')
     const now = job.now ?? Date.now
     const place = job.place
+    // what the smart spaces this place holds gather, read once for the run
+    const smart = heldSmart(db, place.holds)
     const report = await runCopy({
       mainRoot: job.mainRoot,
       copyRoot: job.copyRoot,
@@ -181,7 +184,7 @@ export async function runPlace(job: PlaceRunJob, host: MainHost | undefined, onP
       placeId: place.id,
       mode: place.mode,
       device: job.device,
-      desired: desiredEntries(db, job.mainReplica, place.holds, place.options.companions, placeMusicVideos(place)),
+      desired: desiredEntries(db, job.mainReplica, place.holds, place.options.companions, placeMusicVideos(place), smart),
       deleted: deletedItems(db),
       confirmedDeletes: job.confirmedDeletes,
       holdsKey: holdsKey(place.holds),
@@ -215,7 +218,7 @@ export async function runPlace(job: PlaceRunJob, host: MainHost | undefined, onP
     }
     const summary = summarise(report, now())
     if (report.status === 'done' && !job.dryRun && !job.remote && (place.options.playlistFiles || place.options.flat || place.options.mp3 || (await exists(exportsFile(job.copyRoot))))) {
-      const made = await syncExports({db, copyRoot: job.copyRoot, place, entries: desiredEntries(db, job.mainReplica, place.holds, false, false), ffmpeg: job.ffmpeg, signal}).catch((error) => ({written: 0, converted: 0, removed: 0, moved: 0, skipped: [{path: '', reason: error instanceof Error ? error.message : String(error)}]}))
+      const made = await syncExports({db, copyRoot: job.copyRoot, place, entries: desiredEntries(db, job.mainReplica, place.holds, false, false, smart), ffmpeg: job.ffmpeg, signal}).catch((error) => ({written: 0, converted: 0, removed: 0, moved: 0, skipped: [{path: '', reason: error instanceof Error ? error.message : String(error)}]}))
       summary.exports = made
     }
     if (!job.dryRun) await writeJsonAtomic(path.join(job.stateDir, 'last-run.json'), summary).catch(() => undefined)

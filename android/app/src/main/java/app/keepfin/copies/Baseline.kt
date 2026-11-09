@@ -84,6 +84,42 @@ internal object Baseline {
         return applied
     }
 
+    /**
+     * Sorts the baseline file again under [rules] (the name rule changed since it was written). Entries are kept as they are; two that
+     * now share a name key stay side by side, and the planner reports them as a name collision instead of merging them.
+     */
+    fun resort(stateDir: File, rules: RulesId, tmpDir: File, chunk: Int = 50_000): Int {
+        val file = file(stateDir)
+        if (!file.isFile) return 0
+        val sorter = ExternalSorter(tmpDir, chunk, "resort")
+        var seq = 0L
+        val r = LineReader(file)
+        try {
+            while (r.hasNext()) {
+                val line = r.next()
+                val e = Codec.baselineOf(line)
+                sorter.add(SortRec(rules.key(e.path), e.path, seq++, line))
+            }
+        } finally {
+            r.close()
+        }
+        val tmp = File(stateDir, "baseline.jsonl.${java.util.UUID.randomUUID().toString().take(6)}.resort")
+        val writer = LineWriter(tmp)
+        try {
+            sorter.sorted().use { it.forEach { rec -> writer.write(rec.text) } }
+            writer.finish(true)
+        } catch (e: Throwable) {
+            writer.close()
+            tmp.delete()
+            throw e
+        }
+        if (!tmp.renameTo(file)) {
+            file.delete()
+            if (!tmp.renameTo(file)) throw java.io.IOException("The baseline could not be replaced.")
+        }
+        return seq.toInt()
+    }
+
     /** Streams the baseline entries. */
     fun read(stateDir: File): Sequence<BaselineEntry> = sequence {
         val r = LineReader(file(stateDir))

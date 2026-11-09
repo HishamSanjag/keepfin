@@ -26,6 +26,16 @@ interface EngineApi {
     /** The Activity list (dev-docs/architecture/ACTIVITY.md). The engine and application layer record into it; the UI only reads, marks read and removes. */
     val activity: ActivityFeed
 
+    /** The artists followed and the releases found for them (Home's "New from artists you follow"). */
+    val following: StateFlow<FollowingState> get() = FollowingState.NONE
+    /** Follows [name] and checks for releases in the background. Nothing downloads until [keepRelease]. */
+    fun followArtist(name: String) {}
+    fun unfollowArtist(id: String) {}
+    /** Checks [id], or every followed artist when null, in the background. */
+    fun checkFollowing(id: String?) {}
+    /** Downloads the release [id] with the default settings and marks it kept. Blocking: off the main thread. Returns how many downloads were queued. */
+    fun keepRelease(id: String): Int = 0
+
     // Inspection (blocking, cancellable through cancelInspection(session)).
     fun inspect(url: String, session: String): InspectResult
     fun cancelInspection(session: String)

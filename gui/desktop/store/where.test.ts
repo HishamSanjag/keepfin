@@ -222,7 +222,7 @@ test('a big library (200,000 items with KEEPFIN_SCALE): the counting is one pass
 test('whereItem is empty for an item nobody has a file for', () => {
   const sql = new SqlState(':memory:')
   try {
-    assert.deepEqual(whereItem(sql, 'nope'), {replicas: [], space: '', favourite: false, playlists: []})
+    assert.deepEqual(whereItem(sql, 'nope'), {replicas: [], space: '', favourite: false, playlists: [], smart: []})
   } finally {
     sql.close()
   }

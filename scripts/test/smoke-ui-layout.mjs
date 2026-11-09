@@ -308,6 +308,23 @@ const screens = [
     },
   },
   {
+    name: 'home-follow',
+    fake: {simulate: false, following: 'seeded'},
+    setup: async (page) => {
+      await nav(page, 'Home')
+      await page.getByRole('region', {name: 'New from artists you follow'}).getByRole('button', {name: 'Keep Salt Season'}).waitFor()
+    },
+  },
+  {
+    name: 'home-follow-manage',
+    fake: {simulate: false, following: 'seeded'},
+    setup: async (page) => {
+      await nav(page, 'Home')
+      await page.getByRole('region', {name: 'New from artists you follow'}).getByRole('button', {name: 'Manage'}).click()
+      await page.getByRole('dialog', {name: /^Following/}).getByRole('button', {name: 'Check now'}).waitFor()
+    },
+  },
+  {
     name: 'search-results',
     fake: {simulate: false},
     setup: async (page) => {

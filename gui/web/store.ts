@@ -21,6 +21,7 @@ import {showStartOverOutcome} from './startOverNotice'
 import {defaultLibrarySettings} from '../shared/library'
 import {applyLibraryBatch, applyLibraryDelta, setLibrary} from './library/libStore'
 import {flushSaved, notifySaved} from './library/saved'
+import {setFollowing} from './library/following'
 
 export type Meta = {
   ready: boolean
@@ -419,6 +420,7 @@ export function startStore() {
     else if (event.type === 'library') setLibrary(event.library)
     else if (event.type === 'libraryDelta') applyLibraryDelta(event)
     else if (event.type === 'libraryBatch') applyLibraryBatch(event)
+    else if (event.type === 'following') setFollowing(event.state)
     else if (event.type === 'follow') followListeners.forEach((listener) => listener(event.found))
     else if (event.type === 'reveal') revealListeners.forEach((listener) => listener(event.tab, event.group))
   })

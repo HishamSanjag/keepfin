@@ -167,12 +167,7 @@ internal class StorageSetup(
         val active = activeRun()
         // "Not now" on the folder steps is gone: an earlier skip no longer counts
         if (prefs.contains("skipped")) prefs.edit().remove("skipped").apply()
-        val gate = when {
-            active != null -> Gate.SETUP
-            profiles.current() != null -> Gate.NONE
-            hasLegacyLibrary() -> Gate.SETUP
-            else -> Gate.FIRST_START
-        }
+        val gate = Gate.of(unfinishedRun = active != null, folderChosen = profiles.current() != null, earlierLibrary = hasLegacyLibrary())
         if (gate == state.value.gate && gate == Gate.NONE) return
         when {
             gate == Gate.SETUP && active != null -> {

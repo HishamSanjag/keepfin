@@ -13,7 +13,7 @@ export interface Holds {
   spaces: string[]
   playlists: string[]
   favourites: boolean
-  /** Smart spaces need a predicate from the caller; none is wired yet (spec 4.8 rule 12). */
+  /** Smart space ids: the caller reads what they gather (`smartMembers`) and passes it to `desiredEntries`. */
   smart: string[]
 }
 
@@ -114,7 +114,7 @@ export function optionsKey(options: PlaceOptions): string {
 export const placeMusicVideos = (place: {holds: Holds; options: PlaceOptions}): boolean => place.options.musicVideos ?? (place.holds.all && place.options.companions)
 
 /** SQL for "this OR-set key has an add that no remove names" (the same text the SQL state uses). */
-const LIVE = (scope: string, k1: string, k2: string) =>
+export const LIVE = (scope: string, k1: string, k2: string) =>
   `EXISTS (SELECT 1 FROM tags a WHERE a.scope = ${scope} AND a.k1 = ${k1} AND a.k2 = ${k2} AND a.kind = 'a' ` +
   "AND NOT EXISTS (SELECT 1 FROM tags r WHERE r.scope = a.scope AND r.k1 = a.k1 AND r.k2 = a.k2 AND r.kind = 'r' AND r.actor = a.actor AND r.seq = a.seq))"
 
@@ -139,7 +139,7 @@ type Row = {id: string; space: string | null; heads: string; path: string | null
  * where: `companionCandidatesOf`, `keepCompanions`). With [musicVideos] each song's music video follows too; by default only a
  * copy that holds everything carries them (dev-docs/plans/MUSIC-VIDEOS.md decision 5).
  */
-export function* desiredEntries(db: DatabaseSync, mainReplica: string, holds: Holds, companions = true, musicVideos = holds.all): Generator<DesiredEntry> {
+export function* desiredEntries(db: DatabaseSync, mainReplica: string, holds: Holds, companions = true, musicVideos = holds.all, smart?: ReadonlySet<string>): Generator<DesiredEntry> {
   const favourites = holds.favourites ? new Set(setMembers(db, 'favourites')) : new Set<string>()
   const inPlaylists = new Set<string>()
   for (const pl of holds.playlists) for (const item of playlistItems(db, pl)) inPlaylists.add(item)
@@ -155,7 +155,7 @@ export function* desiredEntries(db: DatabaseSync, mainReplica: string, holds: Ho
   const mediaKeys = new Set<string>()
   const withCompanions: {itemId: string; path: string; heads: number; fields: Record<string, unknown>}[] = []
   for (const r of stmt.iterate(mainReplica) as Iterable<Row>) {
-    const selected = holds.all || (typeof r.space === 'string' && spaces.has(r.space)) || favourites.has(r.id) || inPlaylists.has(r.id)
+    const selected = holds.all || (typeof r.space === 'string' && spaces.has(r.space)) || favourites.has(r.id) || inPlaylists.has(r.id) || smart?.has(r.id) === true
     if (!selected || r.path === null) continue
     const heads = JSON.parse(r.heads) as SyncHead[]
     for (let i = 0; i < heads.length; i++) {
@@ -170,8 +170,8 @@ export function* desiredEntries(db: DatabaseSync, mainReplica: string, holds: Ho
 }
 
 /** D sorted the way the planner needs it: by (name key, path). */
-export function desiredSorted(db: DatabaseSync, mainReplica: string, holds: Holds, rules: NameRulesId, companions = true, musicVideos = holds.all): DesiredEntry[] {
-  const list = [...desiredEntries(db, mainReplica, holds, companions, musicVideos)]
+export function desiredSorted(db: DatabaseSync, mainReplica: string, holds: Holds, rules: NameRulesId, companions = true, musicVideos = holds.all, smart?: ReadonlySet<string>): DesiredEntry[] {
+  const list = [...desiredEntries(db, mainReplica, holds, companions, musicVideos, smart)]
   const keyed = list.map((e) => ({e, k: fastKey(rules, e.path)}))
   keyed.sort((a, b) => (a.k !== b.k ? (a.k < b.k ? -1 : 1) : a.e.path === b.e.path ? 0 : a.e.path < b.e.path ? -1 : 1))
   return keyed.map((x) => x.e)

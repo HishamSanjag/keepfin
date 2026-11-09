@@ -31,6 +31,8 @@ const titles: Record<CopyReviewItem['kind'], string> = {
   difference: 'Differs',
   suspended: 'Removals paused',
   notHeld: 'No longer held',
+  onlineOnly: 'Only in the cloud',
+  tooLarge: 'Too large for the drive',
   held: 'Large change',
   restoredDrive: 'Restored drive',
   signIn: 'Sign in',

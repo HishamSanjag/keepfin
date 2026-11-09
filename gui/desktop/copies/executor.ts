@@ -55,6 +55,8 @@ export interface ExecConfig {
   speedLimit?: number
   /** Files larger than this are skipped and reported (4 GiB - 1 on FAT32). */
   maxFileBytes?: number
+  /** Name keys (the run's rule) of cloud files that are only in the cloud: an action that touches one is skipped, never run. */
+  onlineOnly?: ReadonlySet<string>
   now?: () => number
   fault?: FaultHook
   /** Pause: the current actions finish and the run stops. */
@@ -285,6 +287,10 @@ class Runner {
 
   private async runAction(n: number, a: PlanAction): Promise<Outcome> {
     const remote = this.cfg.remote !== undefined
+    const online = this.cfg.onlineOnly
+    if (online && online.size > 0 && (online.has(fastKey(this.cfg.rules, a.path)) || (a.toPath && online.has(fastKey(this.cfg.rules, a.toPath))))) {
+      throw new SkipError('online-only', `${a.path} is only in the cloud, not on this device.`)
+    }
     switch (a.kind) {
       case 'CopyTo':
         return remote ? this.copyToRemote(n, a) : this.copyTo(n, a)

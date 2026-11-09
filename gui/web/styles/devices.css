@@ -196,6 +196,10 @@
   display: grid;
   min-width: 0;
 }
+.devices-typecode {
+  display: grid;
+  gap: 8px;
+}
 .devices-address {
   display: flex;
   flex-wrap: wrap;

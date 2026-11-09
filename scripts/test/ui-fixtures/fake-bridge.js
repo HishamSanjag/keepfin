@@ -805,6 +805,16 @@
     const known = new Set(before)
     return list.length === kept.length + list.filter((entry) => !known.has(entry.id)).length && kept.every((id, at) => list[at].id === id)
   }
+  // Followed artists (Home's "New from artists you follow"): SYNTHETIC artists and releases; `following: 'seeded'` starts with five followed.
+  const followKeyOf = (name) => String(name).toLowerCase().replace(/\s+/g, ' ').trim()
+  const followingFake = {artists: [], releases: [], checking: false}
+  if (options.following === 'seeded') {
+    const names = ['Lumen Harbor', 'Pale Cassette', 'Oren Vale', 'The Quiet Tides', 'Sable & Ash']
+    followingFake.artists = names.map((name, n) => ({id: `fa-${n}`, name, key: followKeyOf(name), seen: [], checkedOnce: true, url: `https://www.youtube.com/channel/UCfake${n}/releases`, checkedAt: now - hour}))
+    const release = (n, artistId, title, kind, days) => ({id: `https://music.youtube.com/playlist?list=OLAKfake${n}`, artistId, title, kind, url: `https://music.youtube.com/playlist?list=OLAKfake${n}`, foundAt: now - days * day, kept: false})
+    followingFake.releases = [release(1, 'fa-0', 'Salt Season', 'Album', 3), release(2, 'fa-2', 'Night Ferry', 'Single', 5), release(3, 'fa-4', 'Paper Moons', 'EP', 10), release(4, 'fa-1', 'Old Echoes', 'Album', 45)]
+  }
+  const followAnswer = () => clone(followingFake)
   const pushLibrary = () => {
     const snap = libSnapshot()
     if (!libSent || !followsOrder(libSent.ids, snap.items) || !followsOrder(libSent.collectionIds, snap.collections)) {
@@ -1204,6 +1214,30 @@
         found.follow = {...found.follow, pending: undefined, lastCheckedAt: Date.now()}
         pushLibrary()
         return {id: found.id, added: count, removed: 0}
+      }
+      case 'followingState':
+        return followAnswer()
+      case 'followArtist': {
+        const key = followKeyOf(req.text || '')
+        if (!key) throw new Error('This song has no artist to follow.')
+        if (!followingFake.artists.some((artist) => artist.key === key))
+          followingFake.artists.push({id: `fa-${followingFake.artists.length + 10}`, name: req.text, key, seen: [], checkedOnce: false})
+        return followAnswer()
+      }
+      case 'unfollowArtist':
+        followingFake.artists = followingFake.artists.filter((artist) => artist.id !== req.id)
+        followingFake.releases = followingFake.releases.filter((release) => release.artistId !== req.id)
+        return followAnswer()
+      case 'followingCheck': {
+        await wait(80)
+        followingFake.artists = followingFake.artists.map((artist) => (req.id && artist.id !== req.id ? artist : {...artist, checkedOnce: true, checkedAt: Date.now()}))
+        return followAnswer()
+      }
+      case 'keepRelease': {
+        const release = followingFake.releases.find((entry) => entry.id === req.id)
+        if (!release) throw new Error('This release is no longer in the list.')
+        release.kept = true
+        return {queued: 2, state: followAnswer()}
       }
       case 'collectionOpened': {
         const found = libDownloaded.find((entry) => entry.id === req.id)
@@ -2162,7 +2196,10 @@
       case 'devicesConnect': {
         const address = String(args.address || '').trim()
         if (!address || /\s/.test(address) || address === 'not an address') throw new Error('That is not an address. Use a name or number, like 192.168.1.20 or my-pc.tailnet.ts.net, with :port if it is not 47215.')
-        const qr = address.startsWith('keepfin://')
+        // a typed code (10 characters, any case, dash or not): AAAAA-AAAAA is a code nobody is showing; any other connects like a scanned one
+        const typed = /^[0-9a-z]{5}-?[0-9a-z]{5}$/i.test(address)
+        if (typed && /^a{5}-?a{5}$/i.test(address)) throw new Error('No device showing this code was found. Check the code, and that both devices are on the same network or Tailscale.')
+        const qr = address.startsWith('keepfin://') || typed
         d.pairing = newPairing('asking', qr ? 'qr' : 'sas', address.split(':')[0].slice(0, 30))
         setTimeout(() => {
           if (!d.pairing) return
@@ -2497,6 +2534,8 @@
       return whereView()
     }
     await wait(20)
+    // an item that is not on this PC (awayItem): the library says Laptop holds it, unless awayHolder is 'nobody' (no placement is known)
+    if (options.awayItem && req.id === 'a-far') return {places: options.awayHolder === 'nobody' ? [] : [{name: 'Laptop', deviceId: 'dev-laptop', offline: options.awayDevice === 'offline'}]}
     if (!options.where) return {places: []}
     const places = [{name: devicesData.name, thisDevice: true, offline: false}]
     if (options.where !== 'one') places.push({name: 'Pixel 9', offline: true}, {name: 'Backup drive (E:)', offline: false})

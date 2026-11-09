@@ -82,9 +82,9 @@ class RemoteItemsUiTest {
     @Test fun anItemNoDeviceHasSaysItIsNotOnThisPhone() {
         musicWithARemoteSong(PlayChoice.None)
         rule.waitForTag(UiTags.libRemoteHint(song))
-        assertEquals("Not on this phone", hintText())
+        assertEquals("Not on this phone. No paired device is known to have it.", hintText())
         rule.onNodeWithTag(UiTags.libItem(song)).performClick()
-        rule.waitUntil(5_000) { rule.hasText("no paired device that has it is available") }
+        rule.waitUntil(5_000) { rule.hasText("no paired device is known to have it") }
         assertFalse(rule.exists(UiTags.MINI_PLAYER))
     }
 

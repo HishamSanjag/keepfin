@@ -53,7 +53,14 @@ internal object Generations {
 }
 
 /** What this device last committed for one relationship, and whether the first preview was confirmed (device-local `relationship.json`). */
-internal class Relationship(val generation: Long?, val previewConfirmed: Boolean) {
+internal class Relationship(
+    val generation: Long?,
+    val previewConfirmed: Boolean,
+    /** The name rule the baseline file is sorted by (null: written before it was recorded; the next run sorts it again). */
+    val rules: String? = null,
+    /** When the last full audit finished, ms. The first completed run counts: it hashed everything new. */
+    val auditedAt: Long? = null,
+) {
     companion object {
         fun file(stateDir: File) = File(stateDir, "relationship.json")
 
@@ -62,7 +69,12 @@ internal class Relationship(val generation: Long?, val previewConfirmed: Boolean
             if (!f.isFile) return Relationship(null, false)
             return try {
                 val o = JSONObject(f.readText())
-                Relationship(if (o.has("generation") && !o.isNull("generation")) o.getLong("generation") else null, o.optBoolean("previewConfirmed"))
+                Relationship(
+                    if (o.has("generation") && !o.isNull("generation")) o.getLong("generation") else null,
+                    o.optBoolean("previewConfirmed"),
+                    if (o.has("rules") && !o.isNull("rules")) o.getString("rules") else null,
+                    if (o.has("auditedAt") && !o.isNull("auditedAt")) o.getLong("auditedAt") else null,
+                )
             } catch (e: Exception) {
                 Relationship(null, false)
             }
@@ -70,6 +82,8 @@ internal class Relationship(val generation: Long?, val previewConfirmed: Boolean
 
         fun write(stateDir: File, rel: Relationship) {
             val o = JSONObject().put("generation", rel.generation ?: JSONObject.NULL).put("previewConfirmed", rel.previewConfirmed)
+            rel.rules?.let { o.put("rules", it) }
+            rel.auditedAt?.let { o.put("auditedAt", it) }
             writeFileAtomic(file(stateDir), o.toString().toByteArray(Charsets.UTF_8))
         }
     }

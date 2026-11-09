@@ -114,9 +114,9 @@ export async function scanInventory(root: string, outFile: string, options: Scan
 }
 
 /**
- * Probes the name-equivalence rule of the volume holding [dir] once: `exact` when `A` and `a` are different files,
- * `ascii` when they are the same file (NTFS, FAT and exFAT by default, APFS case-insensitive). Unreachable probes are
- * treated conservatively as `ascii`. Unicode equivalence is not probed (NFC is used only to detect collisions, spec 3).
+ * Probes the name rule of the volume holding [dir] once: `unicode` when `A` and `a` are the same file (NTFS, FAT and exFAT by default,
+ * APFS case-insensitive), `nfc` when they are different. Either way a composed and a decomposed spelling of one accent count as one name
+ * (`Cafe\u0301` and `Caf\u00e9` look the same, so a copy never holds both). An unreachable probe is treated as `unicode`, the more careful rule.
  */
 export async function probeNameRules(dir: string): Promise<NameRulesId> {
   const base = path.join(dir, '.keepfin')
@@ -127,12 +127,12 @@ export async function probeNameRules(dir: string): Promise<NameRulesId> {
     await fs.writeFile(upper, '')
     try {
       await fs.lstat(lower)
-      return 'ascii'
+      return 'unicode'
     } catch {
-      return 'exact'
+      return 'nfc'
     }
   } catch {
-    return 'ascii'
+    return 'unicode'
   } finally {
     await fs.rm(upper, {force: true}).catch(() => undefined)
   }

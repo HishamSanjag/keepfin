@@ -16,7 +16,7 @@ import {Worker} from 'node:worker_threads'
 import {existsSync} from 'node:fs'
 import {fileURLToPath} from 'node:url'
 import type {SyncReport} from '../shared/core/copies.js'
-import {syncReport} from '../shared/core/copies.js'
+import {auditDue, syncReport} from '../shared/core/copies.js'
 import type {
   CloudAccountView,
   CopiesArgs,
@@ -30,7 +30,7 @@ import type {
 } from '../shared/copies.js'
 import {isInFolder} from '../shared/library.js'
 import {holdsKey, optionsKey, type PlaceConfig} from './sqlstate/desired.js'
-import {writeRelationship} from './copies/generation.js'
+import {readRelationship, writeRelationship} from './copies/generation.js'
 import type {RunSummary} from './copies/placeRun.js'
 import type {CloudJobPayload, FromHost, Snapshot, ToHost, WorkerJob} from './copiesWorker.js'
 import {CloudHost} from './cloud/host.js'
@@ -402,7 +402,7 @@ export class CopiesHost {
       ...(draft.device ? {device: {deviceId: this.deviceArg(draft.device.deviceId)}} : {}),
       name: String(draft.name ?? '').trim().slice(0, 80) || 'Copy',
       mode,
-      holds: {all: h.all === true, spaces: list(h.spaces), playlists: list(h.playlists), favourites: h.favourites === true},
+      holds: {all: h.all === true, spaces: list(h.spaces), playlists: list(h.playlists), favourites: h.favourites === true, smart: list(h.smart)},
       schedule: {everyHours: typeof every === 'number' && every >= 1 && every <= 24 * 30 ? Math.trunc(every) : null, auto: draft.schedule?.auto !== false},
       companions: draft.companions !== false,
       ...(typeof draft.musicVideos === 'boolean' ? {musicVideos: draft.musicVideos} : {}),
@@ -534,7 +534,7 @@ export class CopiesHost {
       name: draft.name,
       replica,
       mode: draft.mode,
-      holds: {...draft.holds, smart: []},
+      holds: {...draft.holds, smart: draft.holds.smart ?? []},
       options: {playlistFiles: false, flat: false, mp3: false, companions: draft.companions !== false, ...(draft.musicVideos !== undefined ? {musicVideos: draft.musicVideos} : {}), versionsKeepDays: 90, deleteGuardPercent: 10},
       schedule: draft.schedule,
       removed: false,
@@ -556,7 +556,7 @@ export class CopiesHost {
       name: draft.name,
       replica: entry.replica,
       mode: draft.mode,
-      holds: {all: draft.holds.all, spaces: draft.holds.spaces, playlists: draft.holds.playlists, favourites: draft.holds.favourites},
+      holds: {all: draft.holds.all, spaces: draft.holds.spaces, playlists: draft.holds.playlists, favourites: draft.holds.favourites, smart: draft.holds.smart ?? []},
       options: {playlistFiles: false, flat: false, mp3: false, companions: draft.companions !== false, ...(draft.musicVideos !== undefined ? {musicVideos: draft.musicVideos} : {}), versionsKeepDays: 90, deleteGuardPercent: 10},
       schedule: {everyHours: draft.schedule.everyHours, auto: draft.schedule.auto},
     })
@@ -590,7 +590,7 @@ export class CopiesHost {
     if (typeof args.name === 'string' && args.name.trim() && args.name.trim() !== place.name) fields.name = args.name.trim().slice(0, 80)
     if (args.holds) {
       const d = this.draftArg({path: this.local.places[id]?.path ?? os.homedir(), name: place.name, mode: place.mode, holds: args.holds, schedule: place.schedule})
-      if (holdsKey({...d.holds, smart: []}) !== holdsKey(place.holds)) fields.holds = d.holds
+      if (holdsKey({...d.holds, smart: d.holds.smart ?? []}) !== holdsKey(place.holds)) fields.holds = d.holds
     }
     if (args.schedule) {
       const d = this.draftArg({path: this.local.places[id]?.path ?? os.homedir(), name: place.name, mode: place.mode, holds: place.holds, schedule: args.schedule})
@@ -937,6 +937,17 @@ export class CopiesHost {
     return sum
   }
 
+  /** When each copy's last background audit was asked for in this session, so a failed one is not retried every few seconds. */
+  private readonly auditAsked = new Map<string, number>()
+
+  private async auditIsDue(placeId: string, now: number): Promise<boolean> {
+    if (now - (this.auditAsked.get(placeId) ?? 0) < 6 * 3_600_000) return false
+    const rel = await readRelationship(this.stateDir(placeId)).catch(() => undefined)
+    if (!rel || !auditDue(rel.auditedAt, now)) return false
+    this.auditAsked.set(placeId, now)
+    return true
+  }
+
   private async tick(): Promise<void> {
     if (this.closed) return
     if (!this.ready) {
@@ -969,6 +980,11 @@ export class CopiesHost {
       if (rt.last?.cloud?.state === 'needsSignIn' || rt.last?.cloud?.state === 'quota') continue
       if (!place.schedule.auto && !place.schedule.everyHours) continue
       const appeared = rt.connected && !was
+      // a full audit (every file hashed) by itself every 30 days, while the copy is here and nothing else is running (spec 3)
+      if (!local.cloud && !local.peer && (await this.auditIsDue(place.id, now))) {
+        void this.syncPlace(place.id, {audit: true})
+        continue
+      }
       const due = place.schedule.everyHours ? now - (local.lastRunAt ?? 0) >= place.schedule.everyHours * 3_600_000 : false
       const changed = place.schedule.auto && this.libraryChangedAt > (local.lastRunAt ?? 0) && now - this.libraryChangedAt >= debounce
       if ((place.schedule.auto && appeared) || due || changed) void this.syncPlace(place.id, {})

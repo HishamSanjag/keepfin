@@ -5,6 +5,10 @@ import app.keepfin.core.copies.Capabilities
 import app.keepfin.core.copies.CopyMode
 import app.keepfin.core.copies.DesiredEntry
 import app.keepfin.core.copies.Evidence
+import app.keepfin.core.copies.fileSizeLimit
+import app.keepfin.core.copies.fileTooLargeWords
+import app.keepfin.core.copies.onlineOnlyWords
+import app.keepfin.core.copies.ReviewKind
 import app.keepfin.core.copies.Generation
 import app.keepfin.core.copies.HashRequest
 import app.keepfin.core.copies.InvLine
@@ -77,6 +81,8 @@ internal class RunConfig(
     val host: MainHost? = null,
     val parallelism: Int = 2,
     val maxFileBytes: Long? = null,
+    /** The file system of the copy's volume (`vfat`, `exfat`, `ext4`...), when the host can tell: FAT limits a file to 4 GiB. */
+    val volumeFormat: String? = null,
     val maxRounds: Int = 3,
     val now: () -> Long = System::currentTimeMillis,
     val runId: String? = null,
@@ -119,6 +125,11 @@ internal class RunReport {
     var manifest: ManifestResult? = null
     var hashed = 0
     val timings = LinkedHashMap<String, Long>()
+
+    /** Why every file was hashed this run: `asked`, or `clock` (a time zone or daylight saving shift was seen). */
+    var auditReason: String? = null
+    var auditHours = 0L
+    var copyFormat: String? = null
 }
 
 /**
@@ -160,6 +171,16 @@ internal object CopyRunner {
             val journalFile = File(cfg.stateDir, "journal.jsonl")
             val rules = CopyInventory.probeRules(cfg.copy)
             val names = NameMap.load(cfg.copy)
+            // the baseline file is sorted by the name rule it was written under: sort it again when the rule changed (or was never recorded)
+            run {
+                val recorded = Relationship.read(cfg.stateDir)
+                if (recorded.rules != rules.name && Baseline.file(cfg.stateDir).isFile) {
+                    Baseline.resort(cfg.stateDir, rules, tmpDir, cfg.sortChunk)
+                    if (!cfg.dryRun) Relationship.write(cfg.stateDir, Relationship(recorded.generation, recorded.previewConfirmed, rules.name, recorded.auditedAt))
+                }
+            }
+            report.copyFormat = cfg.volumeFormat
+            val sizeLimit = cfg.maxFileBytes ?: fileSizeLimit(cfg.volumeFormat)
 
             // 1. an interrupted run: reconcile the files with its journal, then fold what it committed
             var t = System.currentTimeMillis()
@@ -178,7 +199,7 @@ internal object CopyRunner {
             if (recovery != null && copyGen != null && copyGen != rel.generation) {
                 val token = Generations.lockToken(cfg.copy)
                 if (recovery.runs.any { it.first == token && it.second == copyGen }) {
-                    rel = Relationship(copyGen, rel.previewConfirmed)
+                    rel = Relationship(copyGen, rel.previewConfirmed, rel.rules, rel.auditedAt)
                     Relationship.write(cfg.stateDir, rel)
                 }
             }
@@ -195,6 +216,7 @@ internal object CopyRunner {
             val freeMain = runCatching { cfg.main.freeBytes() }.getOrNull()
             val freeCopy = runCatching { cfg.copy.freeBytes() }.getOrNull()
             var bumped = false
+            var audited = false
             var lastScanStart = now()
             for (round in 1..cfg.maxRounds) {
                 report.rounds = round
@@ -210,6 +232,23 @@ internal object CopyRunner {
                 report.main = CopyInventory.scan(cfg.main, mainInv, rules, tmpDir, null, null, cfg.abort, cfg.sortChunk)
                 report.copy = CopyInventory.scan(cfg.copy, copyInv, rules, tmpDir, names, cfg.derivedFilter ?: derivedFilter(cfg.copy), cfg.abort, cfg.sortChunk)
                 timer("inventory", t)
+                // files only in the cloud were left out of the listings (so never hashed or read) and the side is not fully known this run:
+                // nothing destructive happens, and the executor refuses any action that touches their names
+                val onlineOnly = report.main!!.onlineOnly.map { it to "main" } + report.copy!!.onlineOnly.map { it to "copy" }
+                val onlineKeys = onlineOnly.mapTo(HashSet()) { rules.key(it.first) }
+
+                // a time zone or daylight saving shift makes every stat untrustworthy: hash everything this run (spec 3)
+                var audit = cfg.audit
+                if (audit) report.auditReason = "asked"
+                else if (Baseline.file(cfg.stateDir).isFile) {
+                    val shift = ClockCheck.detect(Baseline.file(cfg.stateDir), copyInv, rules)
+                    if (shift.detected) {
+                        audit = true
+                        report.auditReason = "clock"
+                        report.auditHours = shift.hours
+                    }
+                }
+                audited = audited || audit
 
                 // 4. plan; hash what the planner asks for; plan again
                 val readers = ReaderSet()
@@ -235,7 +274,7 @@ internal object CopyRunner {
                             // a document provider has no stable file ids: moves follow the library's placements only
                             caps = Capabilities(stableIds = false),
                             timestampGranularityMs = cfg.granularityMs,
-                            audit = cfg.audit,
+                            audit = audit,
                             freeMain = freeMain,
                             freeCopy = freeCopy,
                         )
@@ -264,6 +303,16 @@ internal object CopyRunner {
                 report.additiveOnly = ready.additiveOnly
                 report.reviewCount = ready.review.size
                 report.review = ready.review.take(200)
+                // what the executors know and the planner does not: cloud files left alone, files a FAT card cannot hold
+                val notes = ArrayList<ReviewItem>()
+                for ((p, _) in onlineOnly) notes.add(ReviewItem(ReviewKind.OnlineOnly, p, null, onlineOnlyWords(p.substringAfterLast('/'))))
+                if (sizeLimit != null) {
+                    for (a in ready.actions) if (a.kind == ActionKind.CopyTo && a.bytes > sizeLimit) notes.add(ReviewItem(ReviewKind.TooLarge, a.path, null, fileTooLargeWords(a.path.substringAfterLast('/'), cfg.volumeFormat)))
+                }
+                if (notes.isNotEmpty()) {
+                    report.reviewCount += notes.size
+                    report.review = (report.review + notes).take(200)
+                }
                 if (cfg.dryRun) {
                     report.status = "preview"
                     break
@@ -285,7 +334,7 @@ internal object CopyRunner {
                 t = System.currentTimeMillis()
                 val exec = CopyExecutor.execute(
                     ExecConfig(
-                        cfg.main, cfg.copy, cfg.mode, rules, "$runId.$round", runGeneration, names, journal, cfg.host, cfg.parallelism, cfg.maxFileBytes, now, cfg.fault, cfg.abort, cfg.onProgress, cfg.granularityMs,
+                        cfg.main, cfg.copy, cfg.mode, rules, "$runId.$round", runGeneration, names, journal, cfg.host, cfg.parallelism, sizeLimit, now, cfg.fault, cfg.abort, cfg.onProgress, cfg.granularityMs, onlineKeys,
                     ),
                     // a listing the provider could not vouch for says nothing about what the copy lacks: no baseline entry is forgotten on it
                     if (report.copy!!.complete && report.main!!.complete) ready.actions else ready.actions.filter { it.kind != ActionKind.ForgetBaseline },
@@ -335,7 +384,9 @@ internal object CopyRunner {
             if (report.status in setOf("done", "paused", "disconnected", "held", "diskFull")) {
                 if (genState != Generation.Lower && genState != Generation.Unknown) {
                     val generation = if (bumped) runGeneration else Generations.read(cfg.copy) ?: runGeneration
-                    Relationship.write(cfg.stateDir, Relationship(generation, previewConfirmed))
+                    // the first completed run hashed everything it copied; a run that audited (or saw the clock change) is the new last audit
+                    val auditedAt = if (report.status == "done" && (audited || rel.auditedAt == null)) now() else rel.auditedAt
+                    Relationship.write(cfg.stateDir, Relationship(generation, previewConfirmed, rules.name, auditedAt))
                     report.generation.committedAt = generation
                 }
                 if (report.status == "done" && genState != Generation.Lower && genState != Generation.Unknown) {

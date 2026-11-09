@@ -103,9 +103,9 @@ class SafFolderAccess private constructor(
         }
     }
 
-    private class Row(val name: String, val id: String, val dir: Boolean, val size: Long, val modified: Long)
+    private class Row(val name: String, val id: String, val dir: Boolean, val size: Long, val modified: Long, val virtual: Boolean = false)
 
-    private val columns = arrayOf(Document.COLUMN_DOCUMENT_ID, Document.COLUMN_DISPLAY_NAME, Document.COLUMN_MIME_TYPE, Document.COLUMN_SIZE, Document.COLUMN_LAST_MODIFIED)
+    private val columns = arrayOf(Document.COLUMN_DOCUMENT_ID, Document.COLUMN_DISPLAY_NAME, Document.COLUMN_MIME_TYPE, Document.COLUMN_SIZE, Document.COLUMN_LAST_MODIFIED, Document.COLUMN_FLAGS)
 
     private fun rowOf(c: android.database.Cursor) = Row(
         name = c.getString(1) ?: "",
@@ -113,6 +113,8 @@ class SafFolderAccess private constructor(
         dir = c.getString(2) == Document.MIME_TYPE_DIR,
         size = if (c.isNull(3)) -1L else c.getLong(3),
         modified = if (c.isNull(4)) 0L else c.getLong(4),
+        // a virtual document has no bytes of its own on this device (a cloud stub): reading it would fetch or fail
+        virtual = !c.isNull(5) && c.getInt(5) and Document.FLAG_VIRTUAL_DOCUMENT != 0,
     )
 
     private fun queryChildren(dirId: String, dirPath: String): List<Row> {
@@ -188,7 +190,7 @@ class SafFolderAccess private constructor(
         }
         synchronized(lock) { baseline[dir] = rows.size }
         val incomplete = previous != null && previous > 0 && rows.size < previous
-        FolderListing(rows.map { FolderEntry(it.name, it.dir, it.size, it.modified) }, incomplete)
+        FolderListing(rows.map { FolderEntry(it.name, it.dir, it.size, it.modified, it.virtual) }, incomplete)
     }
 
     /**
@@ -209,7 +211,7 @@ class SafFolderAccess private constructor(
         if (row == null) {
             dropPrefix(path)
             null
-        } else FolderEntry(row.name, row.dir, row.size, row.modified)
+        } else FolderEntry(row.name, row.dir, row.size, row.modified, row.virtual)
     }
 
     override fun openRead(path: String): InputStream = guard(path) {

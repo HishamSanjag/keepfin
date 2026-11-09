@@ -130,6 +130,11 @@ class UiPreferences(context: Context, name: String = "studio-ui") {
         private set
     fun chooseLyricsPreview(value: Boolean) { lyricsPreview = value; prefs.edit().putBoolean("lyricsPreview", value).apply() }
 
+    /** The full player's style (Stage, Cinema or Afterglow), remembered; the same choice as on Windows. An unknown saved id is the default. */
+    var playerStyle by mutableStateOf(app.keepfin.ui.player.PlayerStyles.byId(prefs.getString("playerStyle", null)).id)
+        private set
+    fun choosePlayerStyle(id: String) { val style = app.keepfin.ui.player.PlayerStyles.byId(id).id; playerStyle = style; prefs.edit().putString("playerStyle", style).apply() }
+
     fun chooseTheme(value: ThemeMode) { theme = value; prefs.edit().putString("theme", value.wire).apply() }
     fun chooseDynamicColor(value: Boolean) { dynamicColor = value; prefs.edit().putBoolean("dynamicColor", value).apply() }
     fun chooseLibraryGrid(value: Boolean) { libraryGrid = value; prefs.edit().putBoolean("libraryGrid", value).apply() }

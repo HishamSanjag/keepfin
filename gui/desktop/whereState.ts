@@ -28,14 +28,15 @@ export function isComplete(view: CopyPlaceView): boolean {
 
 /** The complete copies and what each holds, the way the counting wants them. */
 export function completeCovers(copies: readonly WhereCopy[]): CopyCover[] {
-  return copies.filter((c) => isComplete(c.view)).map((c) => ({id: c.view.id, holds: {all: c.view.holds.all, spaces: c.view.holds.spaces, playlists: c.view.holds.playlists, favourites: c.view.holds.favourites}}))
+  return copies.filter((c) => isComplete(c.view)).map((c) => ({id: c.view.id, holds: {all: c.view.holds.all, spaces: c.view.holds.spaces, playlists: c.view.holds.playlists, favourites: c.view.holds.favourites, ...(c.view.holds.smart?.length ? {smart: c.view.holds.smart} : {})}}))
 }
 
 const names = (ids: readonly string[], kind: CopyRow['kind'], rows: readonly CopyRow[]) => ids.map((id) => rows.find((r) => r.kind === kind && r.id === id)?.name).filter((n): n is string => !!n)
 
 /** What a copy holds, with the spaces and playlists named. */
 export function holdsOf(holds: CopyPlaceView['holds'], rows: readonly CopyRow[]): WhereHolds {
-  return {all: holds.all, spaces: names(holds.spaces, 'space', rows), playlists: names(holds.playlists, 'playlist', rows), favourites: holds.favourites}
+  // a smart space is named like a space: it is a place in the library a copy holds
+  return {all: holds.all, spaces: [...names(holds.spaces, 'space', rows), ...names(holds.smart ?? [], 'smart', rows)], playlists: names(holds.playlists, 'playlist', rows), favourites: holds.favourites}
 }
 
 function copyStatus(view: CopyPlaceView): WhereStatus {
@@ -197,14 +198,14 @@ export function itemPlaces(input: Pick<WhereInput, 'mainReplica' | 'thisName' | 
     const who = resolved.get(replica)
     if (!who || seen.has(who.id)) continue
     seen.add(who.id)
-    places.push({name: who.name, ...(who.thisDevice ? {thisDevice: true as const} : {}), offline: !!who.device && !who.device.online})
+    places.push({name: who.name, ...(who.thisDevice ? {thisDevice: true as const} : {}), ...(who.device ? {deviceId: who.device.deviceId} : {}), offline: !!who.device && !who.device.online})
   }
   // a copy holds the file when this computer has it and the copy is complete and selects it
   if (actors.has(input.mainReplica)) {
     for (const {view} of input.copies) {
       if (!isComplete(view)) continue
       const h = view.holds
-      const selected = h.all || h.spaces.includes(facts.space) || (h.favourites && facts.favourite) || facts.playlists.some((p) => h.playlists.includes(p))
+      const selected = h.all || h.spaces.includes(facts.space) || (h.favourites && facts.favourite) || facts.playlists.some((p) => h.playlists.includes(p)) || (facts.smart ?? []).some((s) => (h.smart ?? []).includes(s))
       if (selected) places.push({name: view.name, offline: view.status === 'disconnected'})
     }
   }

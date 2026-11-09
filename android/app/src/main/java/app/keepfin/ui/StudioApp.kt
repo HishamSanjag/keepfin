@@ -311,7 +311,7 @@ private fun StudioScaffold(vm: StudioViewModel) {
     app.keepfin.ui.library.MusicVideoSheetHost(vm)
     UpdateSheet(vm)
     WhatsNewSheet(vm)
-    // The once-per-version update announcement waits behind What's new and Meet your library.
+    // The once-per-version update announcement waits behind What's new.
     UpdateDialog(vm)
     CrashReportDialog()
 

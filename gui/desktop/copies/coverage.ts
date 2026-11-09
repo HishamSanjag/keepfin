@@ -3,6 +3,7 @@
 import type {DatabaseSync} from 'node:sqlite'
 import type {CopyCell, CopyRow} from '../../shared/copies.js'
 import {desiredEntries, placeMusicVideos, playlistItems, readContainers, setMembers, type PlaceConfig} from '../sqlstate/desired.js'
+import {heldSmart, readSmartSpaces, smartMembers} from '../sqlstate/smart.js'
 import {latestManifest} from './manifest.js'
 
 export interface Coverage {
@@ -23,6 +24,7 @@ export interface Rows {
 }
 
 export function readRows(db: DatabaseSync): Rows {
+  const smartRows: CopyRow[] = readSmartSpaces(db).map((s) => ({key: `smart:${s.id}`, kind: 'smart', id: s.id, name: s.name}))
   const rows: CopyRow[] = []
   const spaceFolders: Record<string, string> = {}
   for (const s of readContainers(db, 'space')) {
@@ -36,6 +38,7 @@ export function readRows(db: DatabaseSync): Rows {
     const name = typeof p.fields.name === 'string' ? p.fields.name : 'Playlist'
     rows.push({key: `playlist:${p.id}`, kind: 'playlist', id: p.id, name})
   }
+  rows.push(...smartRows)
   return {rows, spaceFolders}
 }
 
@@ -52,7 +55,8 @@ export async function coverage(db: DatabaseSync, place: PlaceConfig, mainRoot: s
   let total = 0
   let kept = 0
   const waitingItems = new Set<string>()
-  for (const e of desiredEntries(db, mainReplica, place.holds, place.options.companions, placeMusicVideos(place))) {
+  const smart = heldSmart(db, place.holds)
+  for (const e of desiredEntries(db, mainReplica, place.holds, place.options.companions, placeMusicVideos(place), smart)) {
     total++
     if (keptKeys.has(lineKey(e.itemId, e.contentId, e.path))) kept++
     else waitingItems.add(e.itemId)
@@ -61,7 +65,7 @@ export async function coverage(db: DatabaseSync, place: PlaceConfig, mainRoot: s
   const cells: Record<string, CopyCell> = {}
   const spaceStmt = db.prepare("SELECT id FROM item_view WHERE status = 'present' AND json_extract(fields, '$.space') = ?")
   for (const row of rows) {
-    const held = place.holds.all || (row.kind === 'space' && place.holds.spaces.includes(row.id)) || (row.kind === 'playlist' && place.holds.playlists.includes(row.id)) || (row.kind === 'favourites' && place.holds.favourites)
+    const held = place.holds.all || (row.kind === 'space' && place.holds.spaces.includes(row.id)) || (row.kind === 'playlist' && place.holds.playlists.includes(row.id)) || (row.kind === 'favourites' && place.holds.favourites) || (row.kind === 'smart' && place.holds.smart.includes(row.id))
     if (!held) {
       cells[row.key] = 'notHeld'
       continue
@@ -74,6 +78,7 @@ export async function coverage(db: DatabaseSync, place: PlaceConfig, mainRoot: s
     }
     if (row.kind === 'space') for (const r of spaceStmt.iterate(row.id) as Iterable<{id: string}>) visit(r.id)
     else if (row.kind === 'playlist') for (const id of playlistItems(db, row.id)) visit(id)
+    else if (row.kind === 'smart') for (const id of smartMembers(db, [row.id])) visit(id)
     else for (const id of setMembers(db, 'favourites')) visit(id)
     cells[row.key] = hasReview ? 'review' : hasWaiting ? 'waiting' : 'kept'
   }

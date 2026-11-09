@@ -38,6 +38,9 @@ import {PlayCache} from './library/prepare.js'
 import {handleLibraryRequest, libraryOperations, type LibraryDeps} from './library/ops.js'
 import {purgeKeepfinTrash} from './library/files.js'
 import {FollowEngine} from './library/follow.js'
+import {ArtistFollowing, artistHost} from './library/artists.js'
+import {findArtistChannel} from './engine/music.js'
+import {prefersAudio} from '../shared/providers.js'
 import {UndoShelf} from './library/undo.js'
 import {respondToMedia} from './library/protocol.js'
 import {supportLink} from '../shared/support.js'
@@ -373,6 +376,14 @@ else {
         },
       })
       followEngine = follow
+      const artists = new ArtistFollowing(
+        path.join(userData, 'following.json'),
+        artistHost(queue, (name, key) => findArtistChannel(name, key), (url) => prefersAudio(url)),
+        (state) => push({type: 'following', state}),
+      )
+      // followed artists are looked at a little after launch and then every 15 minutes; each artist is read at most twice a day
+      setTimeout(() => void artists.check(undefined, false).catch(() => {}), 45_000).unref()
+      setInterval(() => void artists.check(undefined, false).catch(() => {}), 15 * 60_000).unref()
       notifyCopies = ({title, body}) => {
         const preferences = notifications.snapshot()
         if (!Notification.isSupported() || !preferences.preferences.enabled) return
@@ -396,6 +407,7 @@ else {
       const libraryDeps: LibraryDeps = {
         index,
         follow,
+        artists,
         manager: queue,
         cache: playCache,
         ffmpeg: ffmpegPath,

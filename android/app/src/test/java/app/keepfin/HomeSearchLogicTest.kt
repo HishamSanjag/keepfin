@@ -2,7 +2,7 @@ package app.keepfin
 
 import app.keepfin.ui.home.HomeKind
 import app.keepfin.ui.home.HomeLogic
-import app.keepfin.ui.home.ListeningRow
+import app.keepfin.core.home.Mixes
 import app.keepfin.ui.home.QuickTile
 import app.keepfin.ui.search.SearchLogic
 import org.junit.Assert.assertEquals
@@ -35,8 +35,27 @@ class HomeSearchLogicTest {
         assertTrue(HomeLogic.matches(video(8), HomeKind.VIDEOS, music))
         assertFalse(HomeLogic.matches(video(8), HomeKind.MUSIC, music))
         // the listening rows hold it with the songs
-        val rows = HomeLogic.listening(listOf(clip) + (1..5).map { song(it) }, HomeKind.MUSIC, now, music).toMap()
-        assertTrue(rows.getValue(ListeningRow.RECENT).any { it.id == clip.id })
+        val rows = HomeLogic.listening(listOf(clip) + (1..5).map { song(it) }, HomeKind.MUSIC, now, music).associateBy { it.mix.id }
+        assertTrue(rows.getValue("recent").songs.any { it.id == clip.id })
+    }
+
+    @Test fun theMixesComeFromTheCoreWithItemsInTheMixOrderAndNoneForVideosOrPhotos() {
+        val library = (1..6).map { song(it, artist = "Pale Cassette", plays = 3, played = now - 2 * day) } + (7..12).map { song(it, artist = "Oren Vale") }
+        val mixes = HomeLogic.listening(library, HomeKind.ALL, now)
+        val byId = mixes.associateBy { it.mix.id }
+        assertEquals(listOf("on-repeat", "recent", "never", "because"), mixes.map { it.mix.id })
+        assertEquals("Because you play Pale Cassette", byId.getValue("because").mix.title)
+        assertEquals(library.filter { it.artist == "Pale Cassette" }.map { it.id }.toSet(), byId.getValue("because").songs.map { it.id }.toSet())
+        assertEquals((7..12).map { "a$it" }.toSet(), byId.getValue("never").songs.map { it.id }.toSet())
+        assertTrue(HomeLogic.listening(library, HomeKind.VIDEOS, now).isEmpty())
+        assertTrue(HomeLogic.listening(library, HomeKind.PHOTOS, now).isEmpty())
+    }
+
+    @Test fun lateNightReadsTheLocalClockOffset() {
+        val tenThirtyUtc = (now / day) * day + (22 * 60 + 30) * 60_000L
+        val library = (1..5).map { song(it, plays = 2, played = tenThirtyUtc - 2 * day) }
+        assertTrue(HomeLogic.listening(library, HomeKind.MUSIC, now, utcOffsetMinutes = 0).any { it.mix.id == "late-night" })
+        assertTrue(HomeLogic.listening(library, HomeKind.MUSIC, now, utcOffsetMinutes = -5 * 60).none { it.mix.id == "late-night" })
     }
 
     private fun photo(id: Int) = LibraryItem(id = "p$id", space = "downloads", uri = "content://p/$id", folder = "", kind = LibraryItemKind.IMAGE, title = "Photo $id", size = 1, modifiedAt = 0, addedAt = now - id * day)
@@ -96,17 +115,17 @@ class HomeSearchLogicTest {
     @Test fun listeningRowsNeedFiveSongsAndSayWhichData() {
         // Four songs played lately: not enough for "On repeat".
         val few = (1..4).map { song(it, plays = it, played = now - it * day) }
-        assertTrue(HomeLogic.listening(few, HomeKind.ALL, now).none { it.first == ListeningRow.ON_REPEAT })
+        assertTrue(HomeLogic.listening(few, HomeKind.ALL, now).none { it.mix.id == Mixes.ON_REPEAT })
         // Five: on repeat orders by plays, ignoring songs not played in 30 days.
         val five = (1..5).map { song(it, plays = it, played = now - it * day) } + song(9, plays = 99, played = now - 40 * day)
-        val onRepeat = HomeLogic.listening(five, HomeKind.ALL, now).first { it.first == ListeningRow.ON_REPEAT }.second
+        val onRepeat = HomeLogic.listening(five, HomeKind.ALL, now).first { it.mix.id == Mixes.ON_REPEAT }.songs
         assertEquals(listOf("a5", "a4", "a3", "a2", "a1"), onRepeat.map { it.id })
     }
 
     @Test fun forgottenFavouritesAreFavouritesOrFivePlayersNotHeardForSixtyDays() {
         val forgotten = (1..5).map { song(it, plays = 6, played = now - (70 + it) * day) } + song(7, favorite = true, plays = 1, played = now - 90 * day) +
             song(8, plays = 9, played = now - 10 * day) + song(10, favorite = true, plays = 0, played = null)
-        val row = HomeLogic.listening(forgotten, HomeKind.ALL, now).first { it.first == ListeningRow.FORGOTTEN }.second.map { it.id }
+        val row = HomeLogic.listening(forgotten, HomeKind.ALL, now).first { it.mix.id == Mixes.FORGOTTEN }.songs.map { it.id }
         assertTrue("a8 was heard lately", "a8" !in row)
         assertTrue("a7 is a favourite", "a7" in row)
         assertEquals("oldest first", "a7", row.first())
@@ -114,11 +133,11 @@ class HomeSearchLogicTest {
 
     @Test fun neverPlayedAndRecentlyAddedMusicShowFromFiveSongs() {
         val songs = (1..5).map { song(it) }
-        val rows = HomeLogic.listening(songs, HomeKind.ALL, now).map { it.first }
-        assertTrue(ListeningRow.RECENT in rows && ListeningRow.NEVER_PLAYED in rows)
-        assertTrue(ListeningRow.ON_REPEAT !in rows && ListeningRow.FORGOTTEN !in rows)
+        val rows = HomeLogic.listening(songs, HomeKind.ALL, now).map { it.mix.id }
+        assertTrue(Mixes.RECENT in rows && Mixes.NEVER in rows)
+        assertTrue(Mixes.ON_REPEAT !in rows && Mixes.FORGOTTEN !in rows)
         assertTrue("videos and photos chips hide the music rows", HomeLogic.listening(songs, HomeKind.VIDEOS, now).isEmpty() && HomeLogic.listening(songs, HomeKind.PHOTOS, now).isEmpty())
-        assertEquals("Music chip keeps them", rows, HomeLogic.listening(songs, HomeKind.MUSIC, now).map { it.first })
+        assertEquals("Music chip keeps them", rows, HomeLogic.listening(songs, HomeKind.MUSIC, now).map { it.mix.id })
     }
 
     // ---- Search ----

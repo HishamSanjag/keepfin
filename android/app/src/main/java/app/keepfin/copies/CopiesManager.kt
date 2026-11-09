@@ -6,6 +6,8 @@ import android.util.Base64
 import app.keepfin.core.copies.ActionKind
 import app.keepfin.core.copies.CopyMode
 import app.keepfin.core.copies.Holds
+import app.keepfin.core.copies.auditDue
+import app.keepfin.core.copies.onlineOnlyWords
 import app.keepfin.core.copies.PlaceConfig
 import app.keepfin.core.copies.PlaceOptions
 import app.keepfin.core.copies.ReviewKind
@@ -43,6 +45,9 @@ import java.util.concurrent.atomic.AtomicBoolean
 /** What the manager needs of the library (the repository on a phone; a small fake in tests). */
 internal interface CopiesLibrary {
     fun backend(): CopiesBackend
+
+    /** The ids of the items the smart spaces [wireIds] gather: what a copy that holds a smart space holds. */
+    fun smartItems(wireIds: Set<String>): Set<String> = emptySet()
     fun apply(drafts: List<OpDraft>)
     fun observed(itemId: String): Pair<List<String>, List<String>>
     fun versionSum(): Long
@@ -53,6 +58,7 @@ internal interface CopiesLibrary {
 
 internal class RepoCopiesLibrary(private val repo: LibraryRepository) : CopiesLibrary {
     override fun backend() = repo.copiesBackend()
+    override fun smartItems(wireIds: Set<String>): Set<String> = repo.smartItemIds(wireIds)
     override fun apply(drafts: List<OpDraft>) = repo.applyCopiesOps(drafts)
     override fun observed(itemId: String): Pair<List<String>, List<String>> =
         repo.observedItem(itemId)?.let { o -> o.tags.map { it.toString() } to o.heads.map { it.toString() } } ?: (emptyList<String>() to emptyList())
@@ -273,7 +279,8 @@ internal class CopiesManager(
             var kept = 0
             var bytes = 0L
             val hashes = ArrayList<Long>()
-            for (e in b.read { it.desiredEntries(b.replicaId, p.holds, p.options.companions, p.options.musicVideos).toList().asSequence() }) {
+            val smart = heldSmart(p.holds)
+            for (e in b.read { it.desiredEntries(b.replicaId, p.holds, p.options.companions, p.options.musicVideos, smart).toList().asSequence() }) {
                 total++
                 if (java.util.Arrays.binarySearch(keys, Manifest.keyHash(e.itemId, e.contentId, e.path)) >= 0) {
                     kept++
@@ -299,7 +306,10 @@ internal class CopiesManager(
         null
     }
 
-    private fun holdsUi(h: Holds) = CopyHoldsUi(h.all, h.spaces, h.playlists, h.favourites)
+    /** What the smart spaces a place holds gather (empty when it holds none): read once per run, not per file. */
+    private fun heldSmart(h: Holds): Set<String> = if (h.smart.isEmpty()) emptySet() else library.smartItems(h.smart)
+
+    private fun holdsUi(h: Holds) = CopyHoldsUi(h.all, h.spaces, h.playlists, h.favourites, h.smart)
 
     private fun publish(spaces: List<Pair<String, String>>? = null, playlists: List<Pair<String, String>>? = null) {
         val cards = places.map { card(it) }
@@ -406,6 +416,8 @@ internal class CopiesManager(
                 ReviewKind.KeptOnBackup.name -> make("keptOnBackup", path, "$name is kept on the backup", "It was deleted or is no longer held, so the backup keeps it until you clean up.", listOf(ReviewAction.DISMISS))
                 ReviewKind.NotHeld.name -> make("notHeld", path, "$name is no longer held", "This copy no longer holds this file. It is left where it is.", listOf(ReviewAction.DISMISS))
                 ReviewKind.Difference.name -> make("difference", path, "$name differs", "${detail.ifEmpty { "The two versions differ." }} Confirming keeps both versions: nothing is lost.", listOf(ReviewAction.KEEP_BOTH))
+                ReviewKind.OnlineOnly.name -> make("onlineOnly", path, "$name is only in the cloud", detail.ifEmpty { onlineOnlyWords(name) }, listOf(ReviewAction.DISMISS))
+                ReviewKind.TooLarge.name -> make("tooLarge", path, "$name is too large for this drive", detail, listOf(ReviewAction.DISMISS))
                 ReviewKind.Suspended.name -> make("suspended", path, "Removals are paused", detail.ifEmpty { "Keepfin could not be sure what is on the copy, so it only added files." }, listOf(ReviewAction.DISMISS))
             }
         }
@@ -432,7 +444,7 @@ internal class CopiesManager(
             ReviewAction.SAME_DRIVE -> {
                 val l = local[placeId] ?: return
                 val gen = Generations.read(accessFor(placeId, l.treeUri))
-                Relationship.write(stateDir(placeId), Relationship(gen, Relationship.read(stateDir(placeId)).previewConfirmed))
+                Relationship.write(stateDir(placeId), Relationship.read(stateDir(placeId)).let { Relationship(gen, it.previewConfirmed, it.rules, it.auditedAt) })
                 File(stateDir(placeId), "last-run.json").delete()
                 runtime(placeId).last = null
                 sync(placeId)
@@ -468,7 +480,11 @@ internal class CopiesManager(
         library.apply(fields.map { (field, value) -> OpDraft("place.set", mapOf("place" to JStr(placeId), "field" to JStr(field), "value" to value)) })
     }
 
-    private fun holdsJv(h: CopyHoldsUi): Jv = JObj(mapOf("all" to JBool(h.all), "spaces" to JArr(h.spaces.sorted().map { JStr(it) }), "playlists" to JArr(h.playlists.sorted().map { JStr(it) }), "favourites" to JBool(h.favourites)))
+    private fun holdsJv(h: CopyHoldsUi): Jv = JObj(
+        mapOf("all" to JBool(h.all), "spaces" to JArr(h.spaces.sorted().map { JStr(it) }), "playlists" to JArr(h.playlists.sorted().map { JStr(it) }), "favourites" to JBool(h.favourites)) +
+            // written only when a smart space is held, so the register of a copy that holds none stays as it was
+            (if (h.smart.isEmpty()) emptyMap() else mapOf("smart" to JArr(h.smart.sorted().map { JStr(it) }))),
+    )
     private fun scheduleJv(every: Int?, auto: Boolean): Jv = JObj(mapOf("everyHours" to (every?.let { JNum(it.toLong()) } ?: JNull), "auto" to JBool(auto)))
     /** [musicVideos] is written only once the person chose it; until then the place carries none and reads as "everything is held" (the core's rule). */
     private fun optionsJv(o: PlaceOptions, musicVideos: Boolean? = null): Jv = JObj(
@@ -562,7 +578,7 @@ internal class CopiesManager(
         }
     }
 
-    private fun placeFrom(id: String, d: CopyDraft, replica: String) = PlaceConfig(id, "folder", d.name, replica, d.mode, Holds(d.holds.all, d.holds.spaces, d.holds.playlists, d.holds.favourites), PlaceOptions(musicVideos = d.musicVideos ?: d.holds.all), d.everyHours)
+    private fun placeFrom(id: String, d: CopyDraft, replica: String) = PlaceConfig(id, "folder", d.name, replica, d.mode, Holds(d.holds.all, d.holds.spaces, d.holds.playlists, d.holds.favourites, d.holds.smart), PlaceOptions(companions = d.companions, musicVideos = d.musicVideos ?: d.holds.all), d.everyHours)
 
     /** The real plan of the first sync, additive only (nothing is executed, no generation bumped, no baseline written). */
     fun preview(draft: CopyDraft, previousId: String? = null): CopyPreview {
@@ -638,7 +654,7 @@ internal class CopiesManager(
             placeId,
             linkedMapOf(
                 "kind" to JStr(if (peers?.isPeer(d.treeUri) == true) "device" else "folder"), "name" to JStr(d.name), "replica" to JStr(entry.replica), "mode" to JStr(modeWire(d.mode)),
-                "holds" to holdsJv(d.holds), "options" to optionsJv(PlaceOptions(), d.musicVideos), "schedule" to scheduleJv(d.everyHours, d.auto),
+                "holds" to holdsJv(d.holds), "options" to optionsJv(PlaceOptions(companions = d.companions), d.musicVideos), "schedule" to scheduleJv(d.everyHours, d.auto),
             ),
         )
         refresh()
@@ -889,7 +905,8 @@ internal class CopiesManager(
             lockHeartbeatMs = if (onCloud) 30_000L else if (onPeer) 15_000L else CopyLock.HEARTBEAT_MS, lockStaleMs = if (onCloud) 300_000L else CopyLock.STALE_MS,
             relistDelayMs = if (onCloud) 1_500L else 300L,
             main = b.folder, copy = copy, stateDir = dir, placeId = place.id, mode = place.mode, device = if (onCloud) "$device (${b.replicaId.take(8)})" else device,
-            desired = b.read { it.desiredEntries(b.replicaId, place.holds, place.options.companions, place.options.musicVideos).toList().asSequence() },
+            desired = heldSmart(place.holds).let { smart -> b.read { it.desiredEntries(b.replicaId, place.holds, place.options.companions, place.options.musicVideos, smart).toList().asSequence() } },
+            volumeFormat = if (onCloud || onPeer) null else VolumeFormat.of(tree),
             deleted = deleted, confirmedDeletes = confirmed,
             holdsKey = holdsKey(place.holds), optionsKey = optionsKey(place.options), deleteGuardPercent = place.options.deleteGuardPercent, companions = place.options.companions, musicVideos = place.options.musicVideos,
             previewConfirmed = flags.previewConfirmed, confirmHeld = flags.confirmHeld, dryRun = dryRun, audit = flags.audit,
@@ -913,7 +930,8 @@ internal class CopiesManager(
             if (place.options.playlistFiles || place.options.flat || place.options.mp3 || access.stat(Exports.RECORD) != null) {
                 runCatching {
                     val names = NameMap.load(access)
-                    val entries = b.read { it.desiredEntries(b.replicaId, place.holds, false, false).toList() }
+                    val smart = heldSmart(place.holds)
+                    val entries = b.read { it.desiredEntries(b.replicaId, place.holds, false, false, smart).toList() }
                     val metas = HashMap<String, ExportItem>()
                     val playlists = b.read { s -> s.containers("playlist").map { ExportPlaylist(it.first, it.second, it.third) } }
                     val out = Exports.sync(
@@ -1008,6 +1026,14 @@ internal class CopiesManager(
         return Versions.liveEntries(access, Store.VERSIONS).map { CopyVersionUi(it.id, nameOf(it.path), it.path, it.archivedAt, it.why, it.why == "deleted" || it.why == "removed") }.sortedByDescending { it.archivedAt }.take(500)
     }
 
+    /** What Free up space… would delete: all kept entries (counted like Windows) and those kept for files deleted since. */
+    fun versionStats(placeId: String): CopyVersionStats {
+        if (peers?.isPeer(local[placeId]?.treeUri) == true) return CopyVersionStats(0, 0)
+        val access = openAccess(local[placeId]?.treeUri ?: throw IllegalStateException("Connect the copy first."))
+        val all = Versions.liveEntries(access, Store.VERSIONS)
+        return CopyVersionStats(all.size, all.count { it.why == "deleted" || it.why == "removed" })
+    }
+
     /** Brings an earlier version back into the library as a new file under "Restored from backup"; the version stays on the backup. */
     fun restore(placeId: String, entryId: String) {
         if (peers?.isPeer(local[placeId]?.treeUri) == true) throw IllegalStateException(peerVersionsNote)
@@ -1062,6 +1088,11 @@ internal class CopiesManager(
             val auto = (raw[p.id]?.get("schedule") as? JObj)?.members?.get("auto").let { (it as? JBool)?.value != false }
             if (!auto && p.everyHours == null) continue
             val appeared = r.connected && !was
+            // a full audit (every file hashed) by itself every 30 days, while the copy is here and nothing else runs; a failed one is not retried for hours
+            if (auditIsDue(p.id, now())) {
+                if (!(background && holdsBackground(p, l))) sync(p.id, audit = true)
+                continue
+            }
             val due = p.everyHours?.let { now() - l.lastRunAt >= it * 3_600_000L } ?: false
             val changed = auto && sum != null && l.seenSum >= 0 && sum != l.seenSum && now() - l.lastRunAt >= debounceMs
             val firstSeen = auto && l.seenSum < 0 && sum != null && also(l, sum)
@@ -1075,6 +1106,16 @@ internal class CopiesManager(
     }
 
     private fun also(l: Local, sum: Long): Boolean { l.seenSum = sum; return false }
+
+    /** When each copy's last background audit was asked for in this session. */
+    private val auditAsked = HashMap<String, Long>()
+
+    private fun auditIsDue(placeId: String, at: Long): Boolean {
+        if (at - (auditAsked[placeId] ?: 0L) < 6 * 3_600_000L) return false
+        if (!auditDue(Relationship.read(stateDir(placeId)).auditedAt, at)) return false
+        auditAsked[placeId] = at
+        return true
+    }
 
     /** True when this background run is large (a dry plan decides) and the phone is neither charging nor on an unmetered network. */
     private fun holdsBackground(p: PlaceConfig, l: Local): Boolean {

@@ -55,6 +55,8 @@ internal class ExecConfig(
     val onProgress: ((Progress) -> Unit)? = null,
     /** The copy volume's timestamp granularity: a file Keepfin just wrote is not hashed again for it. */
     val granularityMs: Long = 2000,
+    /** Name keys (the run's rule) of files that are only in the cloud: an action that touches one is skipped, never run. */
+    val onlineOnly: Set<String> = emptySet(),
 )
 
 internal class SkippedAction(val n: Int, val kind: String, val path: String, val reason: String)
@@ -281,7 +283,14 @@ internal object CopyExecutor {
 
         // ---- one action ----
 
-        private fun runAction(n: Int, a: Action): Outcome = when (a.kind) {
+        private fun runAction(n: Int, a: Action): Outcome {
+            if (cfg.onlineOnly.isNotEmpty() && (cfg.rules.key(a.path) in cfg.onlineOnly || (a.toPath != null && cfg.rules.key(a.toPath!!) in cfg.onlineOnly))) {
+                throw SkipError("online-only", "${a.path} is only in the cloud, not on this device.")
+            }
+            return dispatch(n, a)
+        }
+
+        private fun dispatch(n: Int, a: Action): Outcome = when (a.kind) {
             ActionKind.CopyTo -> copyTo(n, a)
             ActionKind.MoveOnCopy -> moveOnCopy(n, a)
             ActionKind.RemoveFromCopy -> removeFromCopy(n, a)

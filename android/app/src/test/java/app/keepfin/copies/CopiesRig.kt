@@ -77,12 +77,15 @@ internal class CopiesRig(val mode: CopyMode = CopyMode.Backup) {
         useHost: Boolean = true,
         confirmedDeletes: Set<String> = emptySet(),
         desiredNow: Collection<DesiredEntry> = desired.values,
+        audit: Boolean = false,
+        volumeFormat: String? = null,
+        maxFileBytes: Long? = null,
     ): RunReport {
         runNo++
         return CopyRunner.run(
             RunConfig(
                 main = main, copy = copy, stateDir = stateDir, placeId = "place1", mode = mode, device = "test", desired = desiredNow.toList().asSequence(), deleted = deleted.toSet(),
-                confirmedDeletes = confirmedDeletes, previewConfirmed = previewConfirmed, confirmHeld = confirmHeld, dryRun = dryRun, host = if (useHost) host else null, fault = fault,
+                confirmedDeletes = confirmedDeletes, audit = audit, volumeFormat = volumeFormat, maxFileBytes = maxFileBytes, previewConfirmed = previewConfirmed, confirmHeld = confirmHeld, dryRun = dryRun, host = if (useHost) host else null, fault = fault,
                 relistDelayMs = 0, parallelism = 1, runId = "run$runNo", mainReplica = "main-replica", copyReplica = "copy-replica", lockHeartbeatMs = 60_000,
             ),
         )

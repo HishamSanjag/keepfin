@@ -12,6 +12,7 @@ import {Mosaic} from './Art'
 import {Hero} from './Hero'
 import {CollectionDetail} from './CollectionDetail'
 import {albumSub, artistSub, OpenCard, OpenRow} from './cells'
+import {FollowButton} from './HomeFollow'
 import {useTileSelection} from './controller'
 import {sizes, type Density} from './density'
 import {openDialog} from './dialogState'
@@ -199,7 +200,7 @@ export function ArtistDetail({artist, onOpenAlbum, ...select}: {artist: Artist; 
       items={songs}
       label={`Songs by ${artist.name}`}
       menu={songsMenu(songs).slice(1)}
-      extra={[{label: 'Follow', icon: 'user', disabled: true, detail: 'Following for new releases arrives with online search.', onSelect: () => {}}]}
+      followButton={<FollowButton name={artist.name} />}
       hero={<Hero art={artist.artId ? [artist.artId] : []} round title={artist.name} kicker="Artist" meta={artistSub(artist)} />}
       below={
         <>

@@ -99,6 +99,31 @@ export async function foldCommits(options: {
   return {applied, entries}
 }
 
+/**
+ * Sorts the baseline file again under [rules] (the name rule changed since it was written). Entries are kept as they are; two that now
+ * share a name key stay side by side, and the planner reports them as a name collision rather than merging them.
+ */
+export async function resortBaseline(options: {stateDir: string; rules: NameRulesId; tmpDir: string; chunk?: number}): Promise<number> {
+  const file = baselineFile(options.stateDir)
+  const read = lineReader(file)
+  const sorter = new ExternalSorter(options.tmpDir, options.chunk ?? 50_000, 'resort')
+  let seq = 0
+  try {
+    for (let line = read(); line !== null; line = read()) {
+      const entry = JSON.parse(line) as BaselineEntry
+      await sorter.add({key: fastKey(options.rules, entry.path), path: entry.path, seq: seq++, text: line})
+    }
+  } finally {
+    read.close()
+  }
+  const tmp = `${file}.${process.pid}.resort.tmp`
+  const writer = await LineWriter.create(tmp)
+  for await (const rec of sorter.sorted()) await writer.write(rec.text)
+  await writer.close()
+  await fs.rename(tmp, file)
+  return seq
+}
+
 /** Streams the baseline entries. */
 export function* readBaseline(stateDir: string): Generator<BaselineEntry> {
   const read = lineReader(baselineFile(stateDir))

@@ -29,7 +29,7 @@ sealed class FolderError(message: String, cause: Throwable? = null) : Exception(
     class Io(message: String, cause: Throwable? = null) : FolderError(message, cause)
 }
 
-data class FolderEntry(val name: String, val isDirectory: Boolean, val size: Long, val modifiedMs: Long)
+data class FolderEntry(val name: String, val isDirectory: Boolean, val size: Long, val modifiedMs: Long, val onlineOnly: Boolean = false)
 
 /**
  * The children of a directory. [possiblyIncomplete] is true when the listing is empty or smaller than the previous

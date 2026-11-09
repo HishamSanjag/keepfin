@@ -13,7 +13,7 @@ export async function registerAwaySuite({test}) {
   for (const [away, hint] of [
     [undefined, 'On Laptop'],
     ['offline', 'On Laptop (not reachable)'],
-    ['none', 'Not on this PC'],
+    ['none', 'On Laptop (playing from it is off)'],
   ]) {
     await test(`away: a song that is not on this PC says "${hint}" instead of "File missing"`, async (page) => {
       await openMusic(page)
@@ -24,6 +24,13 @@ export async function registerAwaySuite({test}) {
       assert.ok((await page.getByRole('button', {name: /^Ghost Song/}).locator('xpath=ancestor::div[contains(@class,"song-row")]').textContent()).includes('File missing'))
     }, {fake: {awayItem: true, awayDevice: away}})
   }
+
+  await test('away: when no paired device is known to hold the item, the row says so honestly', async (page) => {
+    await openMusic(page)
+    await page.getByRole('button', {name: /^Far Song/}).waitFor()
+    await row(page).getByText('Not on this PC. No paired device is known to have it.', {exact: true}).waitFor()
+    assert.equal(await row(page).getByText(/^On Laptop/).count(), 0, 'a device that merely allows playing is not named as the holder')
+  }, {fake: {awayItem: true, awayHolder: 'nobody'}})
 
   await test('away: playing it asks the engine, plays, and the player says "From Laptop"', async (page) => {
     await openMusic(page)

@@ -4,7 +4,7 @@
 
 Everything you download lives in **one folder you choose**. The files inside are normal files: your music plays in any other player, and your videos open in any other app. Keepfin keeps its own library data in a hidden `.keepfin` folder alongside them.
 
-You pick the folder during first start. On Windows you can move it later in **Settings › Storage & copies › Change location…**. Keepfin shows you the plan first, and you can keep the old place as a backup copy.
+You pick the folder during first start. You can move it later in **Settings › Storage & copies › Change location…** (on your phone, under **Folder location**). Keepfin shows you the plan first and checks every file in the new place before it switches. On Windows you can keep the old place as a backup copy; on your phone the old folder stays until you choose to delete it, and Keepfin never deletes it by itself. Spaces that live outside your Keepfin folder show a notice with **Bring them in**.
 
 ## Copies
 

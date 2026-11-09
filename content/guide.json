@@ -73,6 +73,18 @@
       "title": "Library and spaces",
       "features": [
         {
+          "id": "mixes",
+          "title": "Made from your listening",
+          "summary": "Home builds mixes from your own plays and library: On repeat, Forgotten favourites, Recently added music, Never played, Because you play an artist you play a lot, and a Late-night mix. They are made on your device from what you play and never leave it. A mix appears once it has five songs.",
+          "steps": ["Open Home.", "Tap a mix to see its songs and play them.", "Tap See all for every mix."]
+        },
+        {
+          "id": "follow-artists",
+          "title": "Follow artists and keep their new releases",
+          "summary": "Follow an artist and Keepfin looks about every 12 hours for new releases on YouTube Music. They are listed on Home under This week and Earlier this month. Nothing downloads until you tap Keep it, which saves the release with your usual settings.",
+          "steps": ["Open an artist in Library and tap Follow, or open a song's menu and choose the Follow entry with the artist's name.", "On Home, tap Keep it beside a release to save it.", "Tap Manage beside Following to unfollow an artist or check now."]
+        },
+        {
           "id": "spaces",
           "title": "Spaces",
           "summary": "Spaces keep your media apart: Music, Videos and Downloads to start, plus any you create. Each has its own folder, color and icon.",
@@ -156,9 +168,9 @@
         {
           "id": "move-folder",
           "title": "Move your Keepfin folder",
-          "summary": "Put the whole library on another drive or in another folder. Keepfin closes your library, moves everything and checks every file in the new place, then restarts from there. Playlists, favorites and plays come along. The old place can stay as a backup copy.",
-          "steps": ["Open Settings › Storage & copies and click Change location….", "Pick an empty or new folder, then click Review.", "Check the plan. To keep the old place as a backup copy, turn on Keep the old place as a backup copy. Click Start: Keepfin moves the folder, then restarts once from the new place. Stop keeps it where it was.", "A space outside your Keepfin folder shows a notice. Click Bring them in, or Use the default folder in Edit space, and choose Move in, Copy in or Leave."],
-          "platforms": ["desktop"],
+          "summary": "Put the whole library on another drive, memory card or folder. Keepfin moves everything and checks every file in the new place before it switches. Playlists, favorites and plays come along. On Windows the old place can stay as a backup copy; on your phone Keepfin asks before it deletes the old folder.",
+          "steps": ["Open Settings › Storage & copies › Folder location and tap Change location….", "Choose an empty or new folder on this phone or a memory card. Folders in cloud apps such as Google Drive or Dropbox cannot be used.", "Check the plan and tap Start. Keepfin copies and checks every file, even with the screen off, then opens your library from the new place. Stop keeps it where it was.", "When it is done, delete the old folder or keep it. Keepfin never deletes it by itself.", "A space outside your Keepfin folder shows a notice. Tap Bring them in and choose Move in or Leave."],
+          "desktopSteps": ["Open Settings › Storage & copies and click Change location….", "Pick an empty or new folder, then click Review.", "Check the plan. To keep the old place as a backup copy, turn on Keep the old place as a backup copy. Click Start: Keepfin moves the folder, then restarts once from the new place. Stop keeps it where it was.", "A space outside your Keepfin folder shows a notice. Click Bring them in, or Use the default folder in Edit space, and choose Move in, Copy in or Leave."],
           "try": "settings"
         },
         {

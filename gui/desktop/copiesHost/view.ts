@@ -92,7 +92,7 @@ export class CopiesView {
       name: p.name || 'Copy',
       path: local?.path ?? '',
       mode: p.mode,
-      holds: {all: p.holds.all, spaces: p.holds.spaces, playlists: p.holds.playlists, favourites: p.holds.favourites},
+      holds: {all: p.holds.all, spaces: p.holds.spaces, playlists: p.holds.playlists, favourites: p.holds.favourites, smart: p.holds.smart},
       schedule: p.schedule,
       ...(cloudSpec || peerSpec ? {} : {exports: {playlistFiles: p.options.playlistFiles, flat: p.options.flat, mp3: p.options.mp3}}),
       companions: p.options.companions,
