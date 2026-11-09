@@ -276,10 +276,17 @@ export async function registerPlayerStylesSuite({test, calls}) {
     await page.waitForFunction(() => /\/video\/a-front$/.test(window.__keepfinTest.audio().active.getAttribute('src') || ''))
     await page.evaluate(() => (window.__keepfinTest.audio().active.currentTime = 2.8))
     await page.waitForFunction(() => window.__keepfinTest.audio().active.currentTime > 2.9)
-    const saved = await page.evaluate(() => {
+    // the player keeps the place from its clock tick (120-250 ms), so a busy machine can leave the saved place one tick behind the video:
+    // ask for the save until it has caught up with the second the video was set to, instead of reading it once
+    const readSaved = () => {
       window.dispatchEvent(new Event('beforeunload'))
       return JSON.parse(localStorage.getItem('keepfin-player-v1') || '{}').position
-    })
+    }
+    await page.waitForFunction(() => {
+      window.dispatchEvent(new Event('beforeunload'))
+      return JSON.parse(localStorage.getItem('keepfin-player-v1') || '{}').position >= 2.8
+    }, null, {polling: 50})
+    const saved = await page.evaluate(readSaved)
     const videoAt = (await media(page)).time
     assert.ok(saved >= 2.8 && Math.abs(saved - videoAt) < 0.6, `the saved place is the shared one (video at ${videoAt}, saved ${saved})`)
   })

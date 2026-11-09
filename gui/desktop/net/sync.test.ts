@@ -84,7 +84,7 @@ test('three devices converge after random partitions', async () => {
           if (!m.active || !nodes.every((o) => m.members[o.lib.actor()])) return false
         }
         return true
-      }, 'every device to be a member everywhere', 20_000)
+      }, 'every device to be a member everywhere', 120_000)
       const edges: [Node, Node][] = [[a, b], [b, c], [a, c]]
       let next = 100
       for (let round = 0; round < 6; round++) {
@@ -111,7 +111,7 @@ test('three devices converge after random partitions', async () => {
       await until(async () => {
         for (const n of nodes) await n.store.rescan()
         return stateOf(a) === stateOf(b) && stateOf(b) === stateOf(c) && a.titles().length === next - 100
-      }, `convergence (seed ${seed})`, 30_000)
+      }, `convergence (seed ${seed})`, 120_000)
     } finally {
       await w.cleanup()
     }

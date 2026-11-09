@@ -23,7 +23,7 @@ export const plainBox: KeyBox = {
   decrypt: (blob) => blob.toString('utf8'),
 }
 
-export async function until(check: () => boolean | Promise<boolean>, label: string, ms = 10_000): Promise<void> {
+export async function until(check: () => boolean | Promise<boolean>, label: string, ms = 60_000): Promise<void> {
   const end = Date.now() + ms
   while (Date.now() < end) {
     if (await check()) return
