@@ -9,6 +9,8 @@ const cases: [string, string, RegExp][] = [
   ['ERROR: [youtube] abc: Join this channel to get access to members-only content like this video', 'signIn', /members-only/],
   ['ERROR: [youtube] abc: Private video. Sign in if you\'ve been granted access to this video', 'signIn', /private/],
   ['ERROR: [vimeo] 76979871: The web client only works when logged-in. Use --cookies, --cookies-from-browser, --username and --password', 'signIn', /Sign-in required/],
+  // what Instagram answers a signed-out reel now and then (issue #45): a sign-in gets past it, so the sign-in retry must see it
+  ['ERROR: [Instagram] DdV1kbBIIF2: Requested content is not available, rate-limit reached or login required. Use --cookies, --cookies-from-browser, --username and --password, --netrc-cmd, or --netrc (instagram) to provide account credentials', 'signIn', /Sign-in required/],
   ['ERROR: [youtube] abc: The uploader has not made this video available in your country', 'tryAnother', /region/],
   ['ERROR: [youtube] abc: Premieres in 3 hours', 'retry', /not started/],
   ['ERROR: [youtube] abc: This live event will begin in 2 days.', 'retry', /not started/],
