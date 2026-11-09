@@ -82,9 +82,18 @@ class ConversionTest {
     }
 
     @Test
+    fun aConvertedSizeIsEstimatedLighterThanALowBitrateSource() {
+        // X serves 720p at a low bitrate: 3,000,000 bytes over 20 s carries 1072 kbit/s of video, so 480p is made at 80% of it
+        // (857), not at the 1200 of the table, and the estimate stays below the source instead of equalling it.
+        // (857 + 128) * 1000 * 20 / 8 = 2,462,500
+        assertEquals(2_462_500L, Conversion.estimate(480, served(720, size = 3_000_000), 20.0))
+    }
+
+    @Test
     fun estimateFallsBackToTheSourceBitrateForTheDuration() {
-        // 10,000,000 bytes at 1000 kbit/s is 80 s; (700 + 128) * 1000 * 80 / 8 = 8,280,000
-        assertEquals(8_280_000L, Conversion.estimate(360, served(540), null))
+        // 10,000,000 bytes at 1000 kbit/s is 80 s; the source carries 872 kbit/s of video, 80% is 697 (below 700):
+        // (697 + 128) * 1000 * 80 / 8 = 8,250,000
+        assertEquals(8_250_000L, Conversion.estimate(360, served(540), null))
         assertNull(Conversion.estimate(360, VideoOption("540p", 540, 540, 30, false, "h264", "mp4", "f", true, null, true, null), null))
     }
 

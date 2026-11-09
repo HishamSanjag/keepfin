@@ -94,14 +94,15 @@ object Conversion {
     }
 
     /**
-     * What a converted size is expected to weigh: its bitrate (video plus 128 kbit/s audio) times the duration, never more than
-     * the source it is made from. The duration is the item's, else the source's own size over its bitrate; null when neither says.
+     * What a converted size is expected to weigh: the bitrate it is made at ([kbpsFor], so the same 80% cap as the conversion)
+     * plus 128 kbit/s audio, times the duration, never more than the source it is made from. The duration is the item's, else the
+     * source's own size over its bitrate; null when neither says.
      */
     fun estimate(height: Int, source: VideoOption, duration: Double?): Long? {
         val seconds = duration?.takeIf { it > 0 }
             ?: if (source.size != null && source.tbr != null && source.tbr > 0) source.size * 8.0 / (source.tbr * 1000) else null
         if (seconds == null) return null
-        val bytes = round((videoKbps(height) + AUDIO_KBPS) * 1000.0 * seconds / 8)
+        val bytes = round((kbpsFor(height, source.size, seconds) + AUDIO_KBPS) * 1000.0 * seconds / 8)
         return if (source.size != null) min(source.size, bytes) else bytes
     }
 
