@@ -563,6 +563,32 @@ test('remote changes are reported as touched keys, and partial views give just t
   }
 })
 
+test('close writes a checkpoint once more than 1,000 operations arrived since the last one, and not below', async () => {
+  const e = await env()
+  try {
+    const ckptCount = async () => {
+      let n = 0
+      const root = path.join(dataDir(e.folder.root), 'checkpoints')
+      for (const shard of await fs.readdir(root).catch(() => [] as string[])) n += (await fs.readdir(path.join(root, shard))).length
+      return n
+    }
+    const few = await e.open('dev', A, {flushOps: 100_000})
+    await few.apply(Array.from({length: 999}, (_, i) => add(i + 1)))
+    await few.close()
+    assert.equal(await ckptCount(), 0)
+    const many = await e.open('dev', A, {flushOps: 100_000})
+    await many.apply(Array.from({length: 1000}, (_, i) => add(i + 2000)))
+    await many.close()
+    assert.ok((await ckptCount()) > 0, 'a checkpoint was written at close')
+    const again = await e.open('dev2', B)
+    assert.equal(again.stats.checkpoint, true)
+    assert.equal(again.views().items.length, 1999)
+    await again.close()
+  } finally {
+    await e.cleanup()
+  }
+})
+
 test('checkpoint parts: only changed shards are rewritten, an open uses them, old own parts are deleted', async () => {
   const e = await env()
   try {

@@ -97,6 +97,8 @@ export interface StoreOptions {
   onCompact?(info: CompactStats): void
   /** Operations between checkpoints (default 5,000). */
   checkpointEvery?: number
+  /** Operations since the last checkpoint that make close write one (default 1,000; never above checkpointEvery). */
+  checkpointAtCloseOps?: number
   /** Delay before a due checkpoint is written, off the save path (default 1,500 ms). */
   checkpointDelayMs?: number
   /** Largest segment this store writes (default 5,000 operations; the format allows 10,000). */
@@ -841,8 +843,9 @@ export class KeepfinStore {
     this.checkpointTimer.unref?.()
   }
 
-  private async writeParts() {
-    if (this.closed || this.opsSinceCheckpoint < (this.options.checkpointEvery ?? 5000)) return
+  private async writeParts(atClose = false) {
+    const every = this.options.checkpointEvery ?? 5000
+    if (this.closed || this.opsSinceCheckpoint < (atClose ? Math.min(every, this.options.checkpointAtCloseOps ?? 1000) : every)) return
     // A checkpoint never holds an operation that is not in a segment yet.
     if (this.pending.length) await this.flushNow()
     // Ops held above a gap are in the tables but must not be in a checkpoint: try again at the next trigger.
@@ -1105,7 +1108,7 @@ export class KeepfinStore {
     this.watcher = undefined
     await this.enqueue(async () => {
       await this.flushNow(true)
-      await this.writeParts() // a due checkpoint is written now, so a new device opens fast
+      await this.writeParts(true) // a due checkpoint is written now, so a new device opens fast
       // enough small files and no compaction for a while: do it now rather than carry them to the next start
       if (this.options.compact !== false && this.compactor.filesSinceCompact >= 8 && Date.now() - this.compactor.lastCompactAt >= (this.options.compactGapMs ?? 600_000)) await this.compactor.compactRound().catch((error) => console.error('Could not compact the library segments:', error))
     })

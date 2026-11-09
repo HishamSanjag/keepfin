@@ -62,6 +62,12 @@ export interface MirrorOptions {
    * mirrored (copies run directly over the transport, copies/remote.ts), and neither are the bytes of earlier versions and trash entries.
    */
   metaOnly?: boolean
+  /**
+   * Where the main folder holds a file of the library's data (`.keepfin/ops`, `.keepfin/checkpoints`), or null. A new or changed
+   * remote segment or checkpoint part that the main folder holds under the same name and size (they never change once written) is
+   * placed in the mirror from there instead of being downloaded: only what this device lacks crosses the network.
+   */
+  localSource?: (rel: string) => string | null
 }
 
 export interface PullReport {
@@ -69,6 +75,8 @@ export interface PullReport {
   missingRoot: boolean
   downloaded: number
   bytes: number
+  /** Segments and checkpoint parts placed from the main folder instead of being downloaded. */
+  fromMain: number
   removed: number
   conflicts: number
   /** Remote names this computer cannot store as files (reserved characters); left alone. */
@@ -170,6 +178,35 @@ export async function saveState(file: string, state: MirrorState): Promise<void>
 
 const abs = (root: string, rel: string) => path.join(root, ...rel.split('/'))
 
+/** The data that never changes once written (segments, checkpoint parts): the only kind a mirror may place from the main folder. */
+const LAZY_DATA = /^\.keepfin\/(ops|checkpoints)\//
+
+/** Copies [line] from the main folder into the mirror when the main folder holds the same file; true when the mirror now holds it. */
+async function placeFromMain(o: MirrorOptions, line: TransportInventoryLine, state: MirrorState, report: PullReport): Promise<boolean> {
+  const source = o.localSource?.(line.path)
+  if (!source) return false
+  const st = await fsp.stat(source).catch(() => null)
+  if (!st || !st.isFile() || st.size !== line.size) return false
+  const contentId = await sha256File(source).catch(() => null)
+  if (!contentId) return false
+  if (line.sha256 && contentId !== `sha256:${line.sha256.toLowerCase()}`) return false
+  const target = abs(o.mirror, line.path)
+  const temp = `${target}.${process.pid}.${Math.random().toString(36).slice(2)}.tmp`
+  try {
+    await fsp.mkdir(path.dirname(target), {recursive: true})
+    await fsp.copyFile(source, temp)
+    if (line.mtimeMs > 0) await fsp.utimes(temp, new Date(), new Date(line.mtimeMs)).catch(() => undefined)
+    await renameWithRetry(temp, target)
+  } catch {
+    await fsp.rm(temp, {force: true}).catch(() => undefined)
+    return false
+  }
+  const placed = await fsp.stat(target)
+  state.files[line.path] = {size: placed.size, mtimeMs: placed.mtimeMs, revision: line.revision, contentId}
+  report.fromMain++
+  return true
+}
+
 const OPS_FILE = /^\.keepfin\/ops\/([^/]+)\/(\d{16})-(\d{16})\.seg$/
 const MANIFEST_FILE = /^(\.keepfin\/places\/[^/]+)\/manifest-(\d+)\.jsonl$/
 /** How many manifests a place keeps (the same number as copies/manifest.ts, which writes them). */
@@ -230,7 +267,7 @@ export function friendlyCloudError(error: unknown): string {
 // ------------------------------------------------------------------------------------------------------------------ pull
 
 export async function pull(o: MirrorOptions): Promise<PullReport> {
-  const report: PullReport = {complete: true, missingRoot: false, downloaded: 0, bytes: 0, removed: 0, conflicts: 0, unmirrored: [], suspicious: false, unreadable: [], collisions: []}
+  const report: PullReport = {complete: true, missingRoot: false, downloaded: 0, bytes: 0, fromMain: 0, removed: 0, conflicts: 0, unmirrored: [], suspicious: false, unreadable: [], collisions: []}
   const progress = (p: Partial<MirrorProgress>) => o.onProgress?.({phase: 'listing', done: 0, total: 0, doneBytes: 0, totalBytes: 0, current: null, ...p})
   progress({})
   const remote = new Map<string, TransportInventoryLine>()
@@ -281,6 +318,16 @@ export async function pull(o: MirrorOptions): Promise<PullReport> {
       // here and on the replica, never reconciled (an earlier run stopped, or a folder that was already there): compare the bytes
       jobs.push({line, conflict: true})
     }
+  }
+
+  // Immutable data the main folder already holds is placed from there (same name and size, and the same SHA-256 when the account reports one).
+  if (o.localSource) {
+    const downloads: Job[] = []
+    for (const job of jobs) {
+      if (job.conflict || !LAZY_DATA.test(job.line.path) || !(await placeFromMain(o, job.line, state, report))) downloads.push(job)
+    }
+    jobs.length = 0
+    jobs.push(...downloads)
   }
 
   const totalBytes = jobs.reduce((n, j) => n + j.line.size, 0)

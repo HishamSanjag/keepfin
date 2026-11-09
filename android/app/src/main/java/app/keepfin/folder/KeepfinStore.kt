@@ -69,6 +69,8 @@ class StoreOptions(
     val onCompact: ((CompactStats) -> Unit)? = null,
     /** Operations between checkpoints. */
     val checkpointEvery: Int = 5_000,
+    /** Operations since the last checkpoint that make close write one (never above [checkpointEvery]). */
+    val checkpointAtCloseOps: Int = 1_000,
     val checkpointDelayMs: Long = 1_500,
     val segmentMaxOps: Int = 5_000,
     /** The first retry delay for a segment that cannot be read yet (doubling up to 30 s). */
@@ -646,8 +648,9 @@ class KeepfinStore private constructor(private val o: StoreOptions) {
         }
     }
 
-    private fun writeParts() {
-        if (closed || o.readOnly || opsSinceCheckpoint < o.checkpointEvery) return
+    private fun writeParts(atClose: Boolean = false) {
+        val needed = if (atClose) minOf(o.checkpointEvery, o.checkpointAtCloseOps) else o.checkpointEvery
+        if (closed || o.readOnly || opsSinceCheckpoint < needed) return
         // a checkpoint never holds an operation that is not in a segment yet
         if (pending.isNotEmpty()) flushInner(false)
         opsSinceCheckpoint = 0
@@ -880,7 +883,7 @@ class KeepfinStore private constructor(private val o: StoreOptions) {
                 compactTimer?.cancel(false)
                 if (!o.readOnly) {
                     flushNow(true)
-                    writeParts()
+                    writeParts(true)
                     // enough small files and no compaction for a while: do it now rather than carry them to the next start
                     if (o.compact && compaction.filesSinceCompact >= 8 && System.currentTimeMillis() - compaction.lastCompactAt >= o.compactGapMs) runCatching { compaction.compactRound() }.onFailure { lastError = it }
                 }

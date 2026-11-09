@@ -216,6 +216,23 @@ class KeepfinStoreTest {
         assertEquals(views, b.viewsJson().get(10, TimeUnit.SECONDS))
     }
 
+    @Test fun closeWritesACheckpointAboveAThousandOpsAndNotBelow() {
+        val few = open(options(actorA))
+        few.apply((1..999).map { set("name", "v$it") }).get(30, TimeUnit.SECONDS)
+        few.close().get(30, TimeUnit.SECONDS)
+        assertTrue(folder.files.keys.none { it.endsWith(".ckpt") })
+
+        val many = open(options(actorB))
+        many.apply((1..1_000).map { set("name", "w$it") }).get(30, TimeUnit.SECONDS)
+        val views = many.viewsJson().get(30, TimeUnit.SECONDS)
+        many.close().get(30, TimeUnit.SECONDS)
+        assertTrue(folder.files.keys.any { it.startsWith("${KeepfinStore.CKPT_DIR}/") && it.endsWith(".ckpt") })
+
+        val c = open(options("cccc"))
+        assertTrue(c.stats!!.checkpoint)
+        assertEquals(views, c.viewsJson().get(30, TimeUnit.SECONDS))
+    }
+
     @Test fun overlappingSegmentsThatDisagreeAreAnEquivocation() {
         writeSegmentOf(actorB, 1, 3, tag = "x")
         writeSegmentOf(actorB, 2, 3, tag = "y")

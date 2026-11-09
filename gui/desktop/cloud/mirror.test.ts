@@ -117,6 +117,50 @@ describe('mirror (pull and push) against a fake Graph', () => {
     assert.deepEqual([again.uploaded, again.replaced, again.moved, again.trashed], [0, 0, 0, 0])
   })
 
+  it('a new device mirror places segments the main folder holds instead of downloading them, and downloads only what it lacks', async () => {
+    const seg = (n: number) => `.keepfin/ops/actor1/${String(n).padStart(16, '0')}-${String(n + 9).padStart(16, '0')}.seg`
+    // the account holds three segments (another device sent them) and a checkpoint part
+    const other = path.join(dir, 'other')
+    await fs.mkdir(other)
+    const names = [seg(1), seg(11), seg(21), '.keepfin/checkpoints/0/x-actor1.ckpt']
+    for (const rel of names) {
+      await fs.writeFile(path.join(other, 'f'), 'bytes of ' + rel)
+      await o.meta.uploadNew(path.join(other, 'f'), rel.slice('.keepfin/'.length), contentIdOf(Buffer.from('bytes of ' + rel)))
+    }
+    // this device's main folder holds the first two segments and the part, not the third
+    const main = path.join(dir, 'main')
+    for (const rel of [names[0]!, names[1]!, names[3]!]) {
+      await fs.mkdir(path.dirname(path.join(main, ...rel.split('/'))), {recursive: true})
+      await fs.writeFile(path.join(main, ...rel.split('/')), 'bytes of ' + rel)
+    }
+    const downloadsOf = () => fake.server.log.filter((l) => l.method === 'GET' && l.host !== undefined && /content/i.test(l.path + l.host)).length
+    const metaOnly: MirrorOptions = {...o, metaOnly: true, localSource: (rel) => path.join(main, ...rel.split('/'))}
+
+    const before = downloadsOf()
+    const eager = await pull({...metaOnly, localSource: undefined, mirror: path.join(dir, 'eager'), stateFile: path.join(dir, 'eager.json')})
+    const eagerRequests = downloadsOf() - before
+    assert.equal(eager.downloaded, 4)
+
+    const mid = downloadsOf()
+    const lazy = await pull(metaOnly)
+    const lazyRequests = downloadsOf() - mid
+    assert.equal(lazy.fromMain, 3)
+    assert.equal(lazy.downloaded, 1)
+    assert.ok(lazyRequests < eagerRequests, `download requests ${eagerRequests} -> ${lazyRequests}`)
+    console.log('mirror download requests, eager vs lazy:', eagerRequests, lazyRequests)
+    for (const rel of names) assert.equal(await read(rel), 'bytes of ' + rel)
+    // the mirror is level: nothing to send, nothing trashed
+    const pushed = await push(metaOnly)
+    assert.deepEqual([pushed.uploaded, pushed.replaced, pushed.moved, pushed.trashed, pushed.pruned], [0, 0, 0, 0, 0])
+    // a main file of another size is not trusted: it is downloaded
+    const again = path.join(dir, 'again')
+    await fs.mkdir(path.join(again, '.keepfin', 'ops', 'actor1'), {recursive: true})
+    await fs.writeFile(path.join(again, ...names[0]!.split('/')), 'shorter')
+    const third = await pull({...metaOnly, mirror: path.join(dir, 'third'), stateFile: path.join(dir, 'third.json'), localSource: (rel) => path.join(again, ...rel.split('/'))})
+    assert.equal(third.fromMain, 0)
+    assert.equal(third.downloaded, 4)
+  })
+
   async function remoteRevision(rel: string): Promise<string | null> {
     let rev: string | null = null
     await o.media.scan('', (l) => {

@@ -126,6 +126,8 @@ export async function runCloudPlace(job: PlaceRunJob, spec: CloudPlaceSpec, deps
     meta: rig.meta,
     signal,
     now,
+    // segments and checkpoint parts the main folder already holds are placed from it, not downloaded again
+    localSource: (rel) => path.join(job.mainRoot, ...rel.split('/')),
   }
   const metaOptions: MirrorOptions = {...common, metaOnly: true, onProgress: onProgress ? (p) => onProgress(toProgress(p)) : undefined}
   let lock: Awaited<ReturnType<CloudTransport['acquireLock']>> | undefined

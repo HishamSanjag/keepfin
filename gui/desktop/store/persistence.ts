@@ -101,7 +101,7 @@ export type SessionOptions = {
 export type RemoteFetch = {kind: 'all'; data: ProjectedAll} | {kind: 'delta'; part: SyncPartialViews; more: SyncPartialViews | undefined; touched: SyncTouched}
 
 const yieldNow = () => new Promise<void>((resolve) => setImmediate(resolve))
-const TUNING_KEYS = ['flushIdleMs', 'flushMaxAgeMs', 'flushOps', 'compact', 'compactDelayMs', 'compactGapMs', 'compactSoonMs', 'leaseWaitMs', 'checkpointEvery', 'segmentMaxOps', 'watch', 'watchDebounceMs', 'retryMs', 'checkpointDelayMs'] as const
+const TUNING_KEYS = ['flushIdleMs', 'flushMaxAgeMs', 'flushOps', 'compact', 'compactDelayMs', 'compactGapMs', 'compactSoonMs', 'leaseWaitMs', 'checkpointEvery', 'checkpointAtCloseOps','segmentMaxOps', 'watch', 'watchDebounceMs', 'retryMs', 'checkpointDelayMs'] as const
 
 /** A library opened on one Keepfin folder. The store itself runs in a worker thread (storeClient.ts). */
 export class LibrarySession implements LibraryPersistence {
