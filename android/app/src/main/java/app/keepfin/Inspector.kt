@@ -136,7 +136,8 @@ internal class Inspector(private val engine: MediaEngine) {
         val text = engine.metadata.execute(request, session, timeoutMs, engine.toolsUpdater::ensureInit)
         val info = JSONObject(text)
         if (Formats.isCollection(info)) return@withCookies InspectResult.Collection(url, info.optString("title").takeIf { it.isNotBlank() })
-        val media = Formats.mediaInfo(url, info)
+        SizeFiller.fill(info)
+        val media = Formats.mediaInfo(url, info, single = true)
         try {
             infoDir.mkdirs()
             val target = File(infoDir, key(cacheKey) + ".json")

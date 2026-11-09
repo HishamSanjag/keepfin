@@ -16,6 +16,7 @@ class JsRequest(
     val container: String?,
     val target: String?,
     val quality: String?,
+    val scaleHeight: Int?,
 )
 
 @JsExport
@@ -46,7 +47,7 @@ class JsOptionsResult(val options: JsOptions?, val error: String?)
 class JsArgsResult(val args: Array<String>?, val error: String?)
 
 @JsExport
-class JsLabelVideo(val formatId: String, val height: Int, val fps: Int?, val hdr: Boolean, val size: Double?, val sizeApprox: Boolean, val hasAudio: Boolean)
+class JsLabelVideo(val formatId: String, val height: Int, val fps: Int?, val hdr: Boolean, val size: Double?, val sizeApprox: Boolean, val hasAudio: Boolean, val convertedFrom: Int?)
 
 @JsExport
 class JsLabelAudio(val formatId: String, val size: Double?, val sizeApprox: Boolean, val codec: String)
@@ -58,8 +59,8 @@ class JsQuote(val label: String, val expectedSize: Double?, val approx: Boolean)
 class JsQuoteResult(val quote: JsQuote?, val error: String?)
 
 private fun DownloadFormat.toJs(): JsRequest = when (this) {
-    is DownloadFormat.Video -> JsRequest("video", maxHeight, formatId, audioFormatId, fps, codec, container, null, null)
-    is DownloadFormat.Audio -> JsRequest("audio", null, formatId, null, null, null, null, target, quality)
+    is DownloadFormat.Video -> JsRequest("video", maxHeight, formatId, audioFormatId, fps, codec, container, null, null, scaleHeight)
+    is DownloadFormat.Audio -> JsRequest("audio", null, formatId, null, null, null, null, target, quality, null)
 }
 
 private fun PlanOptions.toJs() = JsOptions(
@@ -117,7 +118,7 @@ fun argsLabel(formatJson: String): JsQuoteResult = checked { Labels.label(ArgsJs
 fun argsQuote(formatJson: String, video: Array<JsLabelVideo>, audio: Array<JsLabelAudio>, duration: Double?, withSize: Boolean): JsQuoteResult = checked {
     Labels.quote(
         ArgsJson.format(formatJson),
-        video.map { LabelVideo(it.formatId, it.height, it.fps, it.hdr, it.size?.toLong(), it.sizeApprox, it.hasAudio) },
+        video.map { LabelVideo(it.formatId, it.height, it.fps, it.hdr, it.size?.toLong(), it.sizeApprox, it.hasAudio, it.convertedFrom) },
         audio.map { LabelAudio(it.formatId, it.size?.toLong(), it.sizeApprox, it.codec) },
         duration, withSize,
     )

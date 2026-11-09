@@ -172,6 +172,12 @@
   font-weight: 600;
   color: var(--text);
 }
+.size-row-note {
+  margin-left: 6px;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-3);
+}
 .size-row-detail {
   flex: 1;
   min-width: 0;

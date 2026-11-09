@@ -18,6 +18,7 @@ class JsChoiceVideo(
     val formatId: String,
     val size: Double?,
     val sizeApprox: Boolean,
+    val convertedFrom: Int?,
 )
 
 @JsExport
@@ -55,11 +56,12 @@ class JsChoiceRequest(
     val container: String?,
     val target: String?,
     val quality: String?,
+    val scaleHeight: Int?,
 )
 
 private fun JsChoiceMedia.toCore() = ChoiceMedia(
     duration,
-    video.map { ChoiceVideo(it.id, it.height, it.fps, it.hdr, it.codec, it.hasAudio, it.formatId, it.size?.toLong(), it.sizeApprox) },
+    video.map { ChoiceVideo(it.id, it.height, it.fps, it.hdr, it.codec, it.hasAudio, it.formatId, it.size?.toLong(), it.sizeApprox, it.convertedFrom) },
     audio.map { ChoiceAudio(it.formatId, it.codec, it.size?.toLong(), it.sizeApprox) },
 )
 
@@ -77,8 +79,8 @@ fun choiceSize(media: JsChoiceMedia, choice: JsChoice): JsChoiceSize =
 
 @JsExport
 fun choiceRequest(media: JsChoiceMedia, choice: JsChoice): JsChoiceRequest = when (val format = DownloadChoice.request(media.toCore(), choice.toCore())) {
-    is DownloadFormat.Video -> JsChoiceRequest("video", format.maxHeight, format.formatId, format.audioFormatId, format.fps, format.codec, format.container, null, null)
-    is DownloadFormat.Audio -> JsChoiceRequest("audio", null, format.formatId, null, null, null, null, format.target, format.quality)
+    is DownloadFormat.Video -> JsChoiceRequest("video", format.maxHeight, format.formatId, format.audioFormatId, format.fps, format.codec, format.container, null, null, format.scaleHeight)
+    is DownloadFormat.Audio -> JsChoiceRequest("audio", null, format.formatId, null, null, null, null, format.target, format.quality, null)
 }
 
 @JsExport

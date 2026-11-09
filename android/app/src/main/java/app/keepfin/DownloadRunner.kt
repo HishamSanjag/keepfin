@@ -254,6 +254,8 @@ internal class DownloadRunner(private val engine: MediaEngine) {
             val file = response.out.lineSequence().map { File(it.trim()) }
                 .lastOrNull { it.isAbsolute && it.isFile && it.canonicalPath.startsWith(folder.canonicalPath + File.separator) }
                 ?: return "Could not locate the downloaded file.\n" + response.err
+            // A converted size: the download becomes the smaller copy before anything is saved or published.
+            (record.format as? FormatRequest.Video)?.scaleHeight?.let { convertSmaller(id, file, it, record.job.duration) }
             // Tags travel with the job; they only reach the library item while "Import tags" is on.
             val tags = if (settings.library.importTags) TagLogic.fromJson(response.out.lineSequence().firstOrNull { it.startsWith(ArgsPolicy.TAGS_PREFIX) }?.removePrefix(ArgsPolicy.TAGS_PREFIX)) else emptyList()
             engine.mutate(id, persist = true) {
@@ -276,6 +278,24 @@ internal class DownloadRunner(private val engine: MediaEngine) {
     }
 
     private fun finish(id: String) = EngineAfterSteps(engine, id).finish()
+
+    /**
+     * Converts the finished download to the chosen smaller size ([ConvertStep]). A failure keeps the download, fails the job with a plain
+     * message (no retry: the same conversion would fail the same way) and stops this run; a cancel stops it quietly.
+     */
+    private fun convertSmaller(id: String, file: File, height: Int, duration: Double?) {
+        engine.mutate(id) { if (!it.status.active) null else it.copy(job = it.job.copy(status = JobStatus.PROCESSING, percent = 0f, phase = ConvertStep.PHASE, speed = null, eta = null)) }
+        try {
+            ConvertStep.run(engine.mediaTools, file, height, duration, { engine.stopped(id) }) { percent ->
+                engine.progress(id, ProgressParser.Snapshot(percent.toFloat(), null, null, null, null, ConvertStep.PHASE, true))
+            }
+        } catch (failed: ConvertFailed) {
+            engine.fail(id, ConvertStep.FAILED, failed.raw)
+            throw Stopped()
+        } catch (_: ConvertCancelled) {
+            throw Stopped()
+        }
+    }
 
     companion object {
         private const val TAG = "KeepfinRunner"

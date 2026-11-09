@@ -8,7 +8,7 @@ import {audioQualities, audioTargets, estimate, picksOf, qualityApplies, selecte
 import {audioCodecLabel, formatBytes, languageName, videoCodecLabel, videoLabel} from '../format'
 import {Badge, Segmented, Select} from '../ui/controls'
 
-type Row = {key: string; label: string; detail: string; aria: string; badge?: string; size?: number; approx?: boolean; checked: boolean; select: () => void}
+type Row = {key: string; label: string; detail: string; aria: string; badge?: string; note?: string; title?: string; size?: number; approx?: boolean; checked: boolean; select: () => void}
 
 const sizeText = (row: Pick<Row, 'size' | 'approx'>) => {
   const text = formatBytes(row.size)
@@ -49,12 +49,14 @@ function Rows({label, rows}: {label: string; rows: Row[]}) {
             tabIndex={index === stop ? 0 : -1}
             className={`size-row${row.checked ? ' checked' : ''}`}
             data-row={row.key}
+            title={row.title}
             onClick={row.select}
             onKeyDown={(event) => key(event, index)}
           >
             <span className="radio-dot" aria-hidden="true" />
             <strong className="size-row-label">
               {row.label}
+              {row.note && <span className="size-row-note">{row.note}</span>}
               {row.badge && <Badge tone="accent">{row.badge}</Badge>}
             </strong>
             <span className="size-row-detail">{row.detail}</span>
@@ -72,8 +74,10 @@ function videoRows(media: MediaInfo, choice: Choice, onChange: (choice: Choice) 
     key: option.id,
     label: `${option.height}p`,
     detail: [shownFps(option) ? `${shownFps(option)} fps` : '', option.hdr ? 'HDR' : '', videoCodecLabel(option.codec), option.ext.toUpperCase()].filter(Boolean).join(' · '),
-    aria: `${videoLabel(option)}${option.hdr ? ' HDR' : ''}, ${videoCodecLabel(option.codec)}${option.size ? `, ${sizeText({size: option.size, approx: option.sizeApprox})}` : ''}`,
+    aria: `${videoLabel(option)}${option.convertedFrom ? ' converted' : ''}${option.hdr ? ' HDR' : ''}, ${videoCodecLabel(option.codec)}${option.size ? `, ${sizeText({size: option.size, approx: option.sizeApprox})}` : ''}`,
     badge: index === 0 ? 'Best' : undefined,
+    note: option.convertedFrom ? 'converted' : undefined,
+    title: option.convertedFrom ? `Keepfin makes this size from the ${option.convertedFrom}p version after downloading` : undefined,
     size: option.size || undefined,
     approx: option.sizeApprox,
     checked: current === option.id,

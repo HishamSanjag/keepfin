@@ -9,6 +9,18 @@ class FormatsTest {
     private val media = Formats.mediaInfo("https://www.youtube.com/watch?v=aqz-KE-bpKQ", info)
     private val m4a get() = media.audio.first { it.ext == "m4a" && !it.note.orEmpty().contains("DRC") }
 
+    private val reel = JSONObject("""{"id":"R1","title":"Reel","extractor":"instagram","extractor_key":"Instagram","duration":20,"webpage_url":"https://www.instagram.com/reel/R1/",
+        "formats":[{"format_id":"dash-720","url":"https://x/a.mp4","ext":"mp4","vcodec":"avc1.64001f","acodec":"mp4a.40.2","height":720,"width":406,"tbr":900,"filesize":2250000,"protocol":"https"},
+                   {"format_id":"dash-540","url":"https://x/b.mp4","ext":"mp4","vcodec":"avc1.64001f","acodec":"mp4a.40.2","height":540,"width":304,"tbr":600,"filesize":1500000,"protocol":"https"}]}""")
+
+    @Test fun aSingleLinkOffersConvertedSizesBelowTheServedOnesButACollectionEntryDoesNot() {
+        val single = Formats.mediaInfo("https://www.instagram.com/reel/R1/", reel, single = true)
+        val converted = single.video.filter { it.convertedFrom != null }
+        assertTrue(converted.isNotEmpty())
+        assertTrue(converted.all { it.sizeApprox && it.height < 540 && it.formatId in setOf("dash-720", "dash-540") })
+        assertTrue(Formats.mediaInfo("https://www.instagram.com/reel/R1/", reel).video.none { it.convertedFrom != null })
+    }
+
     @Test fun dedupesPerHeightFpsHdr() {
         val ids = media.video.map { it.id }
         assertEquals(ids.distinct(), ids)

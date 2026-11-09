@@ -119,6 +119,7 @@ object UiTags {
     fun jobOpen(id: String) = "job-open-$id"
     fun jobThumb(id: String) = "job-thumb-$id"
     fun quality(id: String) = "quality-$id"
+    fun convertedNote(id: String) = "converted-note-$id"
     /** The one-link preview: the list of sizes (video), the Format row (container or audio format), the qualities (audio) and the original streams. */
     const val SIZES_LIST = "sizes-list"
     const val CONTAINER_REASON = "container-reason"

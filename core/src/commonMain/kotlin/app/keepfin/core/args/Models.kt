@@ -10,6 +10,8 @@ sealed class DownloadFormat {
         val fps: Int? = null,
         val codec: String = "auto",
         val container: String = "mp4",
+        /** Set when the size is made by converting the downloaded [formatId] (formats.Conversion): the short side to convert to, below [maxHeight]. */
+        val scaleHeight: Int? = null,
     ) : DownloadFormat()
 
     /** [target] is mp3|m4a|opus|flac|wav|original; [quality] is best|320|256|192|128. */
@@ -95,7 +97,7 @@ data class SourceTags(
 )
 
 /** The size facts the label and the estimate need about one video quality. */
-data class LabelVideo(val formatId: String, val height: Int, val fps: Int?, val hdr: Boolean, val size: Long?, val sizeApprox: Boolean = false, val hasAudio: Boolean = false)
+data class LabelVideo(val formatId: String, val height: Int, val fps: Int?, val hdr: Boolean, val size: Long?, val sizeApprox: Boolean = false, val hasAudio: Boolean = false, val convertedFrom: Int? = null)
 
 data class LabelAudio(val formatId: String, val size: Long?, val sizeApprox: Boolean = false, val codec: String = "other")
 

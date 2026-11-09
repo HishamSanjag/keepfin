@@ -50,12 +50,14 @@ object DownloadChoice {
         }
         val option = video(media, choice)
         return DownloadFormat.Video(
-            maxHeight = option?.height?.takeIf { it > 0 },
+            // A converted size downloads its source quality and converts it down (scaleHeight).
+            maxHeight = (option?.convertedFrom ?: option?.height)?.takeIf { it > 0 },
             formatId = option?.formatId,
             audioFormatId = choice.audioTrack.takeIf { option != null && !option.hasAudio },
             fps = option?.fps,
             codec = option?.codec?.takeIf { it in codecNames } ?: "auto",
             container = choice.container,
+            scaleHeight = option?.takeIf { it.convertedFrom != null }?.height,
         )
     }
 
@@ -73,8 +75,10 @@ object DownloadChoice {
 
     /** The best quality within a preset's height (the lowest when none fits); the first (best) for "best". */
     private fun qualityFor(media: ChoiceMedia, preset: String): ChoiceVideo? {
-        val limit = preset.toIntOrNull() ?: return media.video.firstOrNull()
-        return media.video.firstOrNull { it.height <= limit } ?: media.video.lastOrNull()
+        // A preset never picks a converted size: those are chosen by hand.
+        val served = media.video.filter { it.convertedFrom == null }
+        val limit = preset.toIntOrNull() ?: return served.firstOrNull()
+        return served.firstOrNull { it.height <= limit } ?: served.lastOrNull()
     }
 
     /** MP3 starts at 320; every other audio format at Best. */

@@ -24,7 +24,7 @@ data class SourceTags(val title: String, val artist: String?, val album: String?
  */
 object ArgsPolicy {
     private fun core(request: FormatRequest): DownloadFormat = when (request) {
-        is FormatRequest.Video -> DownloadFormat.Video(request.maxHeight, request.formatId, request.audioFormatId, request.fps, request.codec, request.container)
+        is FormatRequest.Video -> DownloadFormat.Video(request.maxHeight, request.formatId, request.audioFormatId, request.fps, request.codec, request.container, request.scaleHeight)
         is FormatRequest.Audio -> DownloadFormat.Audio(request.target, request.quality, request.formatId)
         is FormatRequest.Gallery -> throw IllegalArgumentException("A photo post has no download plan.")
     }

@@ -73,8 +73,11 @@ object Labels {
 
     /** The video quality a request will fetch: its exact format id, else the first (best) one within the height cap. */
     fun pickVideo(format: DownloadFormat.Video, video: List<LabelVideo>): LabelVideo? =
-        if (format.formatId != null) video.firstOrNull { it.formatId == format.formatId }
-        else video.firstOrNull { format.maxHeight == null || it.height <= format.maxHeight }
+        if (format.formatId != null) {
+            // A converted size shares its source's format id: the request's scaleHeight tells them apart.
+            val wanted = format.scaleHeight
+            video.firstOrNull { it.formatId == format.formatId && (if (wanted != null) it.convertedFrom != null && it.height == wanted else it.convertedFrom == null) }
+        } else video.firstOrNull { it.convertedFrom == null && (format.maxHeight == null || it.height <= format.maxHeight) }
 
     /**
      * Estimated bytes at enqueue time; null when the inspection gave nothing usable. It is the same figure the preview shows

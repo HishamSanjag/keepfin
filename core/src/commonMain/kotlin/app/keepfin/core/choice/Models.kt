@@ -12,6 +12,8 @@ data class ChoiceVideo(
     val formatId: String = id,
     val size: Long? = null,
     val sizeApprox: Boolean = false,
+    /** The height of the served quality a converted size is made from; null for a served one. */
+    val convertedFrom: Int? = null,
 )
 
 /** One audio stream of an inspected link. */

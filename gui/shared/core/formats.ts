@@ -6,9 +6,14 @@
 // names, subtitle tracks, music metadata, thumbnail and clean title. It makes no requests.
 import {
   formatsAudioCodec,
+  formatsConversionArgs,
+  formatsConversionKbps,
+  formatsConversionProbe,
+  formatsConversionPercent,
   formatsHeightLabel,
   formatsMediaInfo,
   formatsSize,
+  formatsSizeProbes,
   formatsSubtitles,
   formatsThumbnail,
   formatsUnavailable,
@@ -36,6 +41,17 @@ export const audioCodec = (acodec: unknown): AudioCodec =>
 export function estimateSize(format: object, duration?: number): {size?: number; approx: boolean} {
   const sized = formatsSize(JSON.stringify(format), duration ?? null)
   return sized.size == null ? {approx: sized.approx} : {size: sized.size, approx: sized.approx}
+}
+
+/** Formats with no size that a request to their link can measure (Instagram gives a bitrate but no length). */
+export type SizeProbe = {formatId: string; url: string; headers: Record<string, string>}
+
+export function sizeProbes(info: object, limit = 16): SizeProbe[] {
+  return Array.from(formatsSizeProbes(JSON.stringify(info), limit), (p) => ({
+    formatId: p.formatId,
+    url: p.url,
+    headers: Object.fromEntries(Array.from(p.headerNames, (name, i) => [name, p.headerValues[i]])),
+  }))
 }
 
 export function subtitleTracks(info: object): SubtitleTrack[] {
@@ -69,9 +85,9 @@ export type CoreMedia = {
 const opt = <T>(value: T | null | undefined): T | undefined => value ?? undefined
 
 /** Converts a single-item yt-dlp info dict into the options and facts the renderer shows. Throws when `info` is not an object. */
-export function mediaFromInfo(info: object, url: string): CoreMedia {
+export function mediaFromInfo(info: object, url: string, convertSmaller = false): CoreMedia {
   if (!info || typeof info !== 'object') throw new Error('The engine returned no media information.')
-  const m = formatsMediaInfo(url, JSON.stringify(info), 'auto', false)
+  const m = formatsMediaInfo(url, JSON.stringify(info), 'auto', false, convertSmaller)
   const music = m.music
   return {
     url: m.url,
@@ -99,6 +115,7 @@ export function mediaFromInfo(info: object, url: string): CoreMedia {
       size: opt(v.size),
       sizeApprox: v.sizeApprox,
       tbr: opt(v.tbr),
+      ...(v.convertedFrom != null ? {convertedFrom: v.convertedFrom} : {}),
     })),
     audio: Array.from(m.audio, (a) => ({
       id: a.id,
@@ -127,3 +144,18 @@ export const unavailableLabel: string = formatsUnavailableLabel()
 
 /** The name of a height: 720p, or Original for a direct file with none to read. */
 export const heightLabel = (height: number): string => formatsHeightLabel(height)
+
+/** The converter's arguments for a smaller size of a downloaded file: its short side becomes `height` (the core's Conversion.args). */
+export const conversionArgs = (input: string, output: string, height: number, kbps: number, copyAudio = false): string[] => Array.from(formatsConversionArgs(input, output, height, kbps, copyAudio))
+
+/** The length and the audio of a file, read from the converter report of `-i file`; `copyAudio` is true for light AAC audio that is kept as it is. */
+export const conversionProbe = (report: string): {duration?: number; copyAudio: boolean} => {
+  const probe = formatsConversionProbe(report)
+  return {duration: probe.duration ?? undefined, copyAudio: probe.copyAudio}
+}
+
+/** The video bitrate (kbit/s) to convert at: the size's own, never above 80% of what the downloaded file carries. */
+export const conversionKbps = (height: number, sourceBytes?: number, duration?: number): number => formatsConversionKbps(height, sourceBytes ?? null, duration ?? null)
+
+/** A converter progress line as a percent (0 to 99) of the duration in seconds, or undefined for any other line. */
+export const conversionPercent = (line: string, duration: number): number | undefined => formatsConversionPercent(line, duration) ?? undefined

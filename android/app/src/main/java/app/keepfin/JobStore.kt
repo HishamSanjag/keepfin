@@ -95,7 +95,7 @@ internal object JobCodec {
 
     fun encodeFormat(format: FormatRequest): JSONObject = when (format) {
         is FormatRequest.Video -> JSONObject().put("type", "video").put("maxHeight", format.maxHeight).put("formatId", format.formatId)
-            .put("audioFormatId", format.audioFormatId).put("fps", format.fps).put("codec", format.codec).put("container", format.container)
+            .put("audioFormatId", format.audioFormatId).put("fps", format.fps).put("codec", format.codec).put("container", format.container).put("scaleHeight", format.scaleHeight)
         is FormatRequest.Audio -> JSONObject().put("type", "audio").put("target", format.target).put("quality", format.quality).put("formatId", format.formatId)
         is FormatRequest.Gallery -> JSONObject().put("type", "gallery").put("count", format.count).put("items", format.items?.let { JSONArray(it) })
     }
@@ -104,7 +104,7 @@ internal object JobCodec {
         "audio" -> FormatRequest.Audio(json.optString("target", "mp3"), json.optString("quality", "best"), json.str("formatId"))
         "gallery" -> FormatRequest.Gallery(json.optInt("count", 1), json.optJSONArray("items")?.let { items -> (0 until items.length()).map { items.getInt(it) } })
         else -> FormatRequest.Video(json?.optInt("maxHeight")?.takeIf { it > 0 }, json?.str("formatId"), json?.str("audioFormatId"),
-            json?.optInt("fps")?.takeIf { it > 0 }, json?.optString("codec", "auto") ?: "auto", json?.optString("container", "mp4") ?: "mp4")
+            json?.optInt("fps")?.takeIf { it > 0 }, json?.optString("codec", "auto") ?: "auto", json?.optString("container", "mp4") ?: "mp4", json?.optInt("scaleHeight")?.takeIf { it > 0 })
     }
 
     fun encodeOptions(options: DownloadOptions): JSONObject = JSONObject()

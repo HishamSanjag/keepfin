@@ -9,6 +9,7 @@ import androidx.compose.ui.test.assertIsNotEnabled
 import androidx.compose.ui.test.assertIsSelected
 import androidx.compose.ui.test.assertTextContains
 import androidx.compose.ui.test.junit4.createComposeRule
+import androidx.compose.ui.test.onAllNodesWithTag
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
@@ -164,6 +165,30 @@ class DownloadScreensUiTest {
         assertFalse("a started download leaves no review behind", rule.exists(UiTags.REVIEW_SUMMARY))
     }
 
+    @Test fun aConvertedSizeSaysSoAndDownloadsItsSourceThenConverts() {
+        val h = Harness("empty")
+        val base = Fixtures.bigBuckBunny(video)
+        val served = base.video.first { it.id == "v720" }
+        val converted = served.copy(id = "360p-converted", height = 360, width = 640, codec = "h264", ext = "mp4", size = 20_000_000, sizeApprox = true, convertedFrom = 720)
+        h.engine.inspectResults[video] = InspectResult.Media(base.copy(video = listOf(served, converted)))
+        h.show(rule)
+        rule.onNodeWithTag(UiTags.LINK_FIELD).performTextInput(video)
+        rule.waitForTag(UiTags.REVIEW)
+        rule.waitUntil(5_000) { rule.exists(UiTags.DOWNLOAD) }
+        settle()
+        rule.onNodeWithTag(UiTags.quality("360p-converted")).performScrollTo()
+        rule.onNodeWithTag(UiTags.convertedNote("360p-converted"), useUnmergedTree = true).assertIsDisplayed()
+        assertFalse("a served size has no converted note", rule.onAllNodesWithTag(UiTags.convertedNote("v720"), useUnmergedTree = true).fetchSemanticsNodes().isNotEmpty())
+        rule.onNodeWithContentDescription("converted. Keepfin makes this size from the 720p version after downloading", useUnmergedTree = true).assertExists()
+        rule.onNodeWithTag(UiTags.quality("360p-converted")).performScrollTo().performClick()
+        rule.onNodeWithTag(UiTags.DOWNLOAD).performClick()
+        rule.waitUntil(5_000) { h.engine.enqueued.size == 1 }
+        val request = h.engine.enqueued.single().second as FormatRequest.Video
+        assertEquals(360, request.scaleHeight)
+        assertEquals(720, request.maxHeight)
+        assertEquals(served.formatId, request.formatId)
+    }
+
     @Test fun extrasAsMyDefaultSavesThem() {
         val h = openSheet()
         rule.openExtras()
@@ -256,13 +281,13 @@ class DownloadScreensUiTest {
 
     @Test fun aLinkThatCouldNotBeReadSaysWhyInTheSameSheetWithTryAgain() {
         val h = Harness("empty")
-        h.engine.inspectFailure = "This video is private. Sign in to see it."
+        // a failure that is not about signing in (one that is shows "Sign-in needed" instead: PhotoPostUiTest)
+        h.engine.inspectFailure = "Unable to download webpage: connection reset"
         h.show(rule)
         rule.onNodeWithTag(UiTags.LINK_FIELD).performTextInput(video)
         rule.waitForTag(UiTags.CAPTURE_ERROR)
         rule.onNodeWithText("Couldn't read this link").assertIsDisplayed()
         rule.onNodeWithText("Try again").assertIsDisplayed()
-        rule.onNodeWithText("Sign in").assertIsDisplayed()
         assertFalse(rule.exists(UiTags.DOWNLOAD))
         h.engine.inspectFailure = null
         rule.onNodeWithText("Try again").performClick()

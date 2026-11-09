@@ -21,6 +21,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import app.keepfin.MediaInfo
@@ -105,10 +107,18 @@ private fun VideoRow(option: VideoOption, best: Boolean, selected: Boolean, onSe
             Format.resolutionBadge(option.height)?.let { SpecBadge(it, emphasized = option.height >= 2160) }
             if (option.hdr) SpecBadge("HDR", emphasized = true)
             SpecBadge(Format.codec(option.codec))
+            option.convertedFrom?.let { source ->
+                val explanation = convertedNote(source)
+                Text("converted", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1, softWrap = false,
+                    modifier = Modifier.testTag(UiTags.convertedNote(option.id)).semantics { contentDescription = "converted. $explanation" })
+            }
         }
         SizeText(Format.size(option.size, option.sizeApprox))
     }
 }
+
+/** What a converted size is, in one honest line (the row's supporting text for screen readers). */
+internal fun convertedNote(source: Int) = "Keepfin makes this size from the ${source}p version after downloading"
 
 @Composable
 private fun SizeText(size: String?) {

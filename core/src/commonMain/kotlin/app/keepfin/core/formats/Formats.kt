@@ -114,6 +114,28 @@ object Formats {
         return Size(null, true)
     }
 
+    /**
+     * Direct http(s) media formats that carry no size at all (no filesize, filesize_approx or bitrate x duration), so an
+     * app can ask the server for the length. Some sites (Instagram) give a bitrate but no duration. Pure: no requests.
+     */
+    internal fun sizeProbes(info: JsonValue, limit: Int = 16, options: FormatOptions = FormatOptions()): List<SizeProbe> {
+        val duration = num(info.get("duration"))
+        val result = ArrayList<SizeProbe>()
+        for (f in mediaFormats(info, options)) {
+            if (result.size >= limit) break
+            if (!isDirect(f) || size(f, duration).bytes != null) continue
+            val url = httpUrl(f.members["url"]) ?: continue
+            val headers = LinkedHashMap<String, String>()
+            for ((name, value) in (f.members["http_headers"] as? JsonObject)?.members ?: emptyMap()) {
+                if (value is JsonString) headers[name] = value.value
+            }
+            result.add(SizeProbe((f.members["format_id"] as JsonString).value, url, headers))
+        }
+        return result
+    }
+
+    fun sizeProbesOf(infoJson: String, limit: Int): List<SizeProbe> = sizeProbes(parseJson(infoJson), limit)
+
     private fun isHdr(f: JsonObject): Boolean {
         val d = f.members["dynamic_range"]
         return d is JsonString && asciiLower(d.value) != "sdr" && d.value != ""
@@ -404,7 +426,9 @@ object Formats {
         val uploader = str(info.get("uploader"), 300) ?: str(info.get("channel"), 300) ?: str(info.get("creator"), 300)
         val provider = Providers.name(url, extractor)
         val primary = videoOptions(info, options)
-        val video = if (primary.isNotEmpty()) primary else originalOption(info, options)
+        val video = if (primary.isEmpty()) originalOption(info, options)
+        else if (options.convertSmaller) Conversion.withConverted(primary, num(info.get("duration")))
+        else primary
         val audio = audioOptions(info, options)
         val playlist = Providers.playlistUrl(url)
         return MediaInfo(

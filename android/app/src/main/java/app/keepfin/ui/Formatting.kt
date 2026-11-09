@@ -191,7 +191,7 @@ data class FormatChoice(
     /** What the choice sends to the engine, from the shared choice module. */
     fun request(media: MediaInfo): FormatRequest = media.gallery?.let { PhotoPosts.request(it.count, PhotoPosts.chosen(it.count, leftOut)) } ?: media.forChoice().let { core ->
         when (val format = DownloadChoice.request(core, toCore(core))) {
-            is DownloadFormat.Video -> FormatRequest.Video(format.maxHeight, format.formatId, format.audioFormatId, format.fps, format.codec, format.container)
+            is DownloadFormat.Video -> FormatRequest.Video(format.maxHeight, format.formatId, format.audioFormatId, format.fps, format.codec, format.container, format.scaleHeight)
             is DownloadFormat.Audio -> FormatRequest.Audio(format.target, format.quality, format.formatId)
         }
     }
@@ -232,6 +232,6 @@ fun DownloadPreset.isAudio() = wire.startsWith("audio-")
 /** The inspection as the shared choice module reads it. */
 fun MediaInfo.forChoice() = ChoiceMedia(
     duration,
-    video.map { ChoiceVideo(it.id, it.height, it.fps, it.hdr, it.codec, it.hasAudio, it.formatId, it.size, it.sizeApprox) },
+    video.map { ChoiceVideo(it.id, it.height, it.fps, it.hdr, it.codec, it.hasAudio, it.formatId, it.size, it.sizeApprox, it.convertedFrom) },
     audio.map { ChoiceAudio(it.formatId, it.codec, it.size, it.sizeApprox) },
 )

@@ -57,6 +57,7 @@ object ArgsJson {
                 fps = optionalInt(input.members["fps"], 1, 240, "Choose a supported frame rate."),
                 codec = if (input.members["codec"] == null) "auto" else text(input.members["codec"], listOf("auto", "h264", "vp9", "av1", "hevc"), "Choose a supported video codec."),
                 container = if (input.members["container"] == null) "mp4" else text(input.members["container"], listOf("mp4", "mkv", "webm"), "Choose MP4, MKV or WebM."),
+                scaleHeight = optionalInt(input.members["scaleHeight"], 100, 8640, "Choose a supported video quality."),
             )
             "audio" -> DownloadFormat.Audio(
                 target = text(input.members["target"], listOf("mp3", "m4a", "opus", "flac", "wav", "original"), "Choose a supported audio format."),

@@ -332,7 +332,7 @@ internal interface TagTools {
     fun run(args: List<String>, timeoutSeconds: Long = 120): MediaTools.Output?
 }
 
-internal class MediaTools(private val context: Context, private val ensureInit: () -> Unit) : TagTools {
+internal class MediaTools(private val context: Context, private val ensureInit: () -> Unit) : TagTools, ConvertTools {
     data class Output(val exit: Int, val text: String)
 
     private val executable: File? get() = File(context.applicationInfo.nativeLibraryDir, "libffmpeg.so").takeIf { it.isFile }
@@ -346,18 +346,39 @@ internal class MediaTools(private val context: Context, private val ensureInit: 
     }
 
     /** Runs ffmpeg with [args]; null when the binary cannot start. Output is stdout+stderr. */
-    override fun run(args: List<String>, timeoutSeconds: Long): Output? {
+    override fun run(args: List<String>, timeoutSeconds: Long): Output? = run(args, timeoutSeconds, { false }) { }
+
+    /**
+     * Like [run], reading the output line by line into [onLine] while it runs; the process is destroyed when [cancelled] turns true
+     * (polled while waiting). The conversion step uses it for progress and for cancelling.
+     */
+    override fun run(args: List<String>, timeoutSeconds: Long, cancelled: () -> Boolean, onLine: (String) -> Unit): Output? {
         val binary = executable ?: return null
         try { ensureInit() } catch (error: Throwable) { Log.w(TAG, "engine init failed", error); return null }
         return try {
             val builder = ProcessBuilder(listOf(binary.absolutePath, "-hide_banner", "-nostdin") + args).redirectErrorStream(true)
             environment(builder)
             val process = builder.start()
-            val buffer = ByteArrayOutputStream()
-            val reader = Thread { try { process.inputStream.copyTo(buffer) } catch (_: Exception) { } }.apply { isDaemon = true; start() }
-            if (!process.waitFor(timeoutSeconds, java.util.concurrent.TimeUnit.SECONDS)) { process.destroyForcibly(); reader.join(2000); return Output(-1, "timed out") }
+            val buffer = StringBuilder()
+            val reader = Thread {
+                try {
+                    process.inputStream.bufferedReader(Charsets.UTF_8).forEachLine { line ->
+                        synchronized(buffer) { if (buffer.length < 200_000) buffer.append(line).append('\n') }
+                        onLine(line)
+                    }
+                } catch (_: Exception) { }
+            }.apply { isDaemon = true; start() }
+            val deadline = System.nanoTime() + java.util.concurrent.TimeUnit.SECONDS.toNanos(timeoutSeconds)
+            var finished = false
+            while (!finished) {
+                finished = process.waitFor(200, java.util.concurrent.TimeUnit.MILLISECONDS)
+                if (!finished && (cancelled() || System.nanoTime() > deadline)) {
+                    process.destroyForcibly(); reader.join(2000)
+                    return Output(-1, if (cancelled()) "cancelled" else "timed out")
+                }
+            }
             reader.join(5000)
-            Output(process.exitValue(), buffer.toString(Charsets.UTF_8.name()))
+            Output(process.exitValue(), synchronized(buffer) { buffer.toString() })
         } catch (error: Exception) { Log.w(TAG, "ffmpeg failed to start", error); null }
     }
 

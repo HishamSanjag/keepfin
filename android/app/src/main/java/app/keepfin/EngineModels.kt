@@ -32,6 +32,8 @@ data class VideoOption(
     val size: Long?,
     val sizeApprox: Boolean,
     val tbr: Double?,
+    /** The height of the served size a converted option is made from after downloading; null for a served one. */
+    val convertedFrom: Int? = null,
 )
 
 data class AudioOption(
@@ -117,6 +119,8 @@ sealed interface FormatRequest {
         val codec: String = "auto",
         /** mp4 | mkv | webm */
         val container: String = "mp4",
+        /** A converted size: the short side the downloaded [formatId] is converted down to afterwards. */
+        val scaleHeight: Int? = null,
     ) : FormatRequest
     data class Audio(
         /** mp3 | m4a | opus | flac | wav | original */

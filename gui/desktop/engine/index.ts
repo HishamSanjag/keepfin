@@ -16,6 +16,8 @@ import type {
 } from '../../shared/contracts.js'
 import {isGenericUnavailable, restrictedMessage, restrictedMusicMessage, suggestsGallery} from '../../shared/errors.js'
 import {mediaInfoFromYtDlp, type RawInfo} from '../../shared/formats.js'
+import {fillSizes} from './sizes.js'
+import {CONVERT_PHASE, convertDownload} from './convert.js'
 import {buildDownloadArgs, ENCODING_ARGS, type CookieSource} from '../../shared/policy.js'
 import {settleOutputs} from './outputs.js'
 import {isCollectionUrl, isGalleryHost, isShortMusicLink, isYouTube, musicLink, musicLinkUrl} from '../../shared/providers.js'
@@ -258,7 +260,8 @@ export class StudioEngine implements Engine {
       const {info, raw} = await dumpInfo(yt, url, 'single')
       if (info._type === 'playlist') return collectionResult(url, info)
       await this.cache.put(url, raw).catch(() => {})
-      return {type: 'media', media: mediaInfoFromYtDlp(info, url)}
+      await fillSizes(info, this.fetcher, undefined, ctx.signal)
+      return {type: 'media', media: mediaInfoFromYtDlp(info, url, true)}
     } catch (error) {
       if (ctx.signal?.aborted) throw error
       if (isYouTube(url) && isGenericUnavailable(errorText(error))) {
@@ -726,7 +729,15 @@ export class StudioEngine implements Engine {
     })
     // The reported path is checked here, before tagging and before the job is saved (see outputs.ts).
     const settled = await settleOutputs({file: outcome.file!, files: outcome.files}, {template, log: (message) => console.warn(message)})
+    if (format.type === 'video' && format.scaleHeight) await this.convertSmaller(yt.ffmpeg, settled.file, format.scaleHeight, task.duration, ctx.signal, events)
     return {file: settled.file, files: settled.files, turbo}
+  }
+
+  /** A converted size: the downloaded file becomes the smaller one (convert.ts). */
+  private async convertSmaller(ffmpeg: string | undefined, file: string, height: number, duration: number | undefined, signal: AbortSignal | undefined, events: DownloadEvents) {
+    events.onStage('processing', CONVERT_PHASE)
+    events.onProgress({percent: 0})
+    await convertDownload({ffmpeg, file, height, duration, signal, onProgress: (percent) => events.onProgress({percent})})
   }
 
   /** Downloads eligible streams with parallel ranges. Returns whether it was used. */

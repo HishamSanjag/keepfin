@@ -19,6 +19,8 @@ data class VideoOption(
     val sizeApprox: Boolean,
     /** Total bitrate in kbit/s, rounded. */
     val tbr: Double?,
+    /** Set on a size Keepfin makes by converting a served one: the height of the served option it is made from (see [Conversion]). */
+    val convertedFrom: Int? = null,
 )
 
 data class AudioOption(
@@ -68,5 +70,9 @@ data class Size(val bytes: Long?, val approx: Boolean)
  * The only differences between the apps.
  * [codecPreference] "auto" ranks av1 and vp9 equally (the desktop); "vp9" ranks vp9 above av1 (phones decode vp9 in
  * hardware far more often; FMT-5 in fixtures/engine/DECISIONS.md). [skipDrm] drops formats flagged `has_drm`.
+ * [convertSmaller] adds the smaller sizes Keepfin can make by converting when a site serves only a few ([Conversion]).
  */
-data class FormatOptions(val codecPreference: String = "auto", val skipDrm: Boolean = false)
+data class FormatOptions(val codecPreference: String = "auto", val skipDrm: Boolean = false, val convertSmaller: Boolean = false)
+
+/** A format whose size the app can ask the server for: its link and the request headers the engine reported for it. */
+data class SizeProbe(val formatId: String, val url: String, val headers: Map<String, String>)

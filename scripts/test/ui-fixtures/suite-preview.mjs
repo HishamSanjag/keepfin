@@ -281,6 +281,26 @@ export async function registerPreviewSuite({test, calls, last, sent, field, capt
     assert.equal(await buttonSize(), await sizeOf(rows.nth(3)))
   }, {fake: {simulate: false}})
 
+  await test('preview, a reel with two sizes: converted sizes carry a "converted" note and send the source format with scaleHeight', async (page) => {
+    await field(page).fill('https://www.instagram.com/reel/C9reel01/')
+    const list = page.getByRole('radiogroup', {name: 'Video quality'})
+    await list.waitFor()
+    const rows = list.getByRole('radio')
+    assert.equal(await rows.count(), 4)
+    const served = rows.nth(1)
+    assert.doesNotMatch(await served.textContent(), /converted/)
+    const converted = list.locator('[data-row="480p-converted"]')
+    assert.match(await converted.textContent(), /^480p.*converted/)
+    assert.equal(await converted.getAttribute('title'), 'Keepfin makes this size from the 540p version after downloading')
+    assert.match(await converted.locator('.size-row-size').textContent(), /^≈/, 'an estimate carries the approximate marker')
+    await converted.click()
+    await page.locator('.download-btn').click()
+    const {format} = await last(page, 'enqueue')
+    assert.equal(format.formatId, 'reel-540')
+    assert.equal(format.scaleHeight, 480)
+    assert.equal(format.maxHeight, 540)
+  })
+
   await test('preview, one song: Format row (Original, MP3, M4A, Opus, FLAC, WAV), qualities for a lossy format', async (page) => {
     await field(page).fill(MUSIC)
     const dialog = win(page)

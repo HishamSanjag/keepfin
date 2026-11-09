@@ -19,6 +19,7 @@ class JsVideoOption(
     val size: Double?,
     val sizeApprox: Boolean,
     val tbr: Double?,
+    val convertedFrom: Int?,
 )
 
 @JsExport
@@ -63,15 +64,15 @@ class JsMediaInfo(
 @JsExport
 class JsSize(val size: Double?, val approx: Boolean)
 
-private fun VideoOption.toJs() = JsVideoOption(id, height, width, fps, hdr, codec, ext, formatId, hasAudio, size?.toDouble(), sizeApprox, tbr)
+private fun VideoOption.toJs() = JsVideoOption(id, height, width, fps, hdr, codec, ext, formatId, hasAudio, size?.toDouble(), sizeApprox, tbr, convertedFrom)
 
 private fun AudioOption.toJs() = JsAudioOption(id, formatId, codec, ext, abr, size?.toDouble(), sizeApprox, language, note)
 
 private fun SubtitleTrack.toJs() = JsSubtitleTrack(lang, name, auto)
 
 @JsExport
-fun formatsMediaInfo(url: String, infoJson: String, codecPreference: String, skipDrm: Boolean): JsMediaInfo {
-    val m = Formats.mediaInfo(url, infoJson, FormatOptions(codecPreference, skipDrm))
+fun formatsMediaInfo(url: String, infoJson: String, codecPreference: String, skipDrm: Boolean, convertSmaller: Boolean): JsMediaInfo {
+    val m = Formats.mediaInfo(url, infoJson, FormatOptions(codecPreference, skipDrm, convertSmaller))
     return JsMediaInfo(
         m.url, m.webpageUrl, m.title, m.uploader, m.duration, m.thumbnail, m.extractor, m.provider, m.isLive,
         m.music?.let { JsMusicMetadata(it.artist, it.album, it.track, it.releaseYear) },
@@ -107,3 +108,32 @@ fun formatsUnavailableLabel(): String = Unavailable.LABEL
 
 @JsExport
 fun formatsHeightLabel(height: Int): String = Formats.heightLabel(height)
+
+@JsExport
+class JsSizeProbe(val formatId: String, val url: String, val headerNames: Array<String>, val headerValues: Array<String>)
+
+/** Formats with no size that a request to their link can measure (see Formats.sizeProbes). */
+@JsExport
+fun formatsSizeProbes(infoJson: String, limit: Int): Array<JsSizeProbe> =
+    Formats.sizeProbesOf(infoJson, limit).map {
+        JsSizeProbe(it.formatId, it.url, it.headers.keys.toTypedArray(), it.headers.values.toTypedArray())
+    }.toTypedArray()
+
+/** The converter's arguments for a smaller size (see Conversion.args). */
+@JsExport
+fun formatsConversionArgs(input: String, output: String, height: Int, kbps: Int, copyAudio: Boolean): Array<String> = Conversion.args(input, output, height, kbps, copyAudio).toTypedArray()
+
+@JsExport
+class JsConversionProbe(val duration: Double?, val copyAudio: Boolean)
+
+/** The length and the audio of a file, read from the converter report of `-i file` (see Conversion.probe). */
+@JsExport
+fun formatsConversionProbe(report: String): JsConversionProbe = Conversion.probe(report).let { JsConversionProbe(it.duration, it.copyAudio) }
+
+/** The video bitrate (kbit/s) to convert a downloaded file at (see Conversion.kbpsFor). */
+@JsExport
+fun formatsConversionKbps(height: Int, sourceBytes: Double?, duration: Double?): Int = Conversion.kbpsFor(height, sourceBytes?.toLong(), duration)
+
+/** A converter progress line as a percent of the duration (seconds), or null. */
+@JsExport
+fun formatsConversionPercent(line: String, duration: Double): Double? = Conversion.percent(line, duration)

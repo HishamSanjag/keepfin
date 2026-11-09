@@ -321,6 +321,24 @@
     video: [v(1080, 30, false, 'h264', 'mp4', '137', 21e6), v(720, 30, false, 'h264', 'mp4', '136', 12e6)],
     audio: [a('251', 'opus', 'webm', 152, 3.9e6, 'en', 'original'), a('140', 'aac', 'm4a', 129, 3.6e6, 'en', 'original')],
   }
+  // a reel that serves two sizes: Keepfin adds the smaller ones it can make by converting (the core's rule; synthetic like the rest)
+  media['https://www.instagram.com/reel/C9reel01/'] = {
+    ...clone(media[yt('lofoten8k')]),
+    url: 'https://www.instagram.com/reel/C9reel01/',
+    title: 'Morning swim',
+    uploader: 'harbour.swim',
+    duration: 20,
+    provider: 'Instagram',
+    extractor: 'Instagram',
+    chapters: 0,
+    video: [
+      v(720, 30, false, 'h264', 'mp4', 'reel-720', 9e6, false, {hasAudio: true, width: 720}),
+      v(540, 30, false, 'h264', 'mp4', 'reel-540', 6e6, false, {hasAudio: true, width: 540}),
+      v(480, 30, false, 'h264', 'mp4', 'reel-540', 3.3e6, true, {id: '480p-converted', hasAudio: true, width: 480, convertedFrom: 540}),
+      v(360, 30, false, 'h264', 'mp4', 'reel-540', 2.1e6, true, {id: '360p-converted', hasAudio: true, width: 360, convertedFrom: 540}),
+    ],
+    audio: [],
+  }
   const errors = {
     'https://www.youtube.com/watch?v=private01':
       'Sign in required: this video is private. Add cookies in Settings → Downloads → Website sign-in, then try again.',

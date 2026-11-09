@@ -50,6 +50,8 @@ object DownloadPlan {
             request.maxHeight?.let { if (it < 100 || it > 8640) fail("Choose a supported video quality.") }
             val formatId = checkedId(request.formatId)
             val audioFormatId = checkedId(request.audioFormatId)
+            // A converted size starts from one exact download and only ever goes smaller (never upscaled).
+            request.scaleHeight?.let { if (it < 100 || it > 8640 || formatId == null || (request.maxHeight != null && it >= request.maxHeight)) fail("Choose a supported video quality.") }
             request.fps?.let { if (it < 1 || it > 240) fail("Choose a supported frame rate.") }
             if (request.codec !in codecs) fail("Choose a supported video codec.")
             if (request.container !in containers) fail("Choose MP4, MKV or WebM.")

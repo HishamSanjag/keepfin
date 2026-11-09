@@ -36,6 +36,8 @@ class JobStoreTest {
         assertEquals("YouTube", done.job.provider)
         assertEquals(MediaKind.VIDEO, done.job.kind)
         assertEquals(FormatRequest.Video(maxHeight = 720), done.format)
+        val scaled = FormatRequest.Video(maxHeight = 720, formatId = "dash-720", scaleHeight = 360)
+        assertEquals(scaled, JobCodec.decodeFormat(JobCodec.encodeFormat(scaled)))
         assertTrue(done.options.subtitles.enabled)
         assertEquals("en.*,ar.*", done.options.subtitles.languages)
         assertTrue(done.options.embedMetadata)

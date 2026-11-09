@@ -46,6 +46,7 @@ function requestOf(r: JsRequest): FormatRequest {
       fps: r.fps ?? undefined,
       codec: r.codec as CodecPreference,
       container: r.container as Container,
+      ...(r.scaleHeight != null ? {scaleHeight: r.scaleHeight} : {}),
     }
   return {type: 'audio', target: r.target as AudioTarget, quality: r.quality as AudioQuality, formatId: r.formatId ?? undefined}
 }
@@ -135,7 +136,7 @@ export function jobQuote(
   withSize = true,
 ): {label: string; expectedSize?: number; approx: boolean} {
   if (format.type === 'gallery') return {label: 'Images & media', approx: false}
-  const video = media.video.map((v) => new JsLabelVideo(v.formatId, v.height, v.fps ?? null, v.hdr, v.size ?? null, v.sizeApprox, !!v.hasAudio))
+  const video = media.video.map((v) => new JsLabelVideo(v.formatId, v.height, v.fps ?? null, v.hdr, v.size ?? null, v.sizeApprox, !!v.hasAudio, v.convertedFrom ?? null))
   const audio = media.audio.map((a) => new JsLabelAudio(a.formatId, a.size ?? null, a.sizeApprox, a.codec ?? 'other'))
   const quote = argsQuote(toJson(format), video, audio, media.duration ?? null, withSize)
   if (quote.error != null || !quote.quote) throw new Error(quote.error ?? 'Choose a download format.')

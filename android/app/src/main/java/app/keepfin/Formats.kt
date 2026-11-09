@@ -19,6 +19,7 @@ object Formats {
 
     /** Phones decode vp9 in hardware far more often than av1 (FMT-5), and never get DRM-protected formats offered. */
     private val options = FormatOptions(codecPreference = "vp9", skipDrm = true)
+    private val singleOptions = options.copy(convertSmaller = true)
 
     fun videoCodec(vcodec: String?): String = Core.videoCodec(vcodec)
 
@@ -66,14 +67,15 @@ object Formats {
         }
     }
 
-    fun mediaInfo(url: String, info: JSONObject): MediaInfo {
-        val m = Core.mediaInfo(url, completed(info).toString(), options)
+    /** [single] is the inspection of one link, which also offers the smaller sizes Keepfin converts to; collections and song matching do not. */
+    fun mediaInfo(url: String, info: JSONObject, single: Boolean = false): MediaInfo {
+        val m = Core.mediaInfo(url, completed(info).toString(), if (single) singleOptions else options)
         return MediaInfo(
             url = m.url, webpageUrl = m.webpageUrl, title = m.title, uploader = m.uploader, duration = m.duration,
             thumbnail = m.thumbnail ?: youtubeThumbnail(info), extractor = m.extractor, provider = m.provider, isLive = m.isLive,
             music = m.music?.let { MusicMetadata(it.artist, it.album, it.track, it.releaseYear) },
             video = m.video.map {
-                VideoOption(it.id, it.height, it.width, it.fps, it.hdr, it.codec, it.ext, it.formatId, it.hasAudio, it.size, it.sizeApprox, it.tbr)
+                VideoOption(it.id, it.height, it.width, it.fps, it.hdr, it.codec, it.ext, it.formatId, it.hasAudio, it.size, it.sizeApprox, it.tbr, it.convertedFrom)
             },
             audio = m.audio.map { AudioOption(it.id, it.formatId, it.codec, it.ext, it.abr, it.size, it.sizeApprox, it.language, it.note) },
             subtitles = m.subtitles.map { SubtitleTrack(it.lang, it.name, it.auto) },
@@ -90,11 +92,11 @@ object Formats {
 object Labels {
     private fun quote(format: FormatRequest, media: MediaInfo?): Quote {
         val request = when (format) {
-            is FormatRequest.Video -> DownloadFormat.Video(format.maxHeight, format.formatId, format.audioFormatId, format.fps, format.codec, format.container)
+            is FormatRequest.Video -> DownloadFormat.Video(format.maxHeight, format.formatId, format.audioFormatId, format.fps, format.codec, format.container, format.scaleHeight)
             is FormatRequest.Audio -> DownloadFormat.Audio(format.target, format.quality, format.formatId)
             is FormatRequest.Gallery -> throw IllegalArgumentException("A photo post has no quality label.")
         }
-        val video = media?.video.orEmpty().map { LabelVideo(it.formatId, it.height, it.fps, it.hdr, it.size, it.sizeApprox, it.hasAudio) }
+        val video = media?.video.orEmpty().map { LabelVideo(it.formatId, it.height, it.fps, it.hdr, it.size, it.sizeApprox, it.hasAudio, it.convertedFrom) }
         val audio = media?.audio.orEmpty().map { LabelAudio(it.formatId, it.size, it.sizeApprox, it.codec) }
         return CoreLabels.quote(request, video, audio, media?.duration, withSize = false)
     }

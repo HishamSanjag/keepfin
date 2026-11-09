@@ -88,9 +88,9 @@ export function sourceTags(info: RawInfo): string[] | undefined {
   return tags.length ? tags : undefined
 }
 
-/** Converts a single-item yt-dlp info dict into the renderer-facing MediaInfo. */
-export function mediaInfoFromYtDlp(info: RawInfo, url: string): MediaInfo {
-  const media = mediaFromInfo(info, url)
+/** Converts a single-item yt-dlp info dict into the renderer-facing MediaInfo; `convertSmaller` adds the sizes Keepfin can make by converting. */
+export function mediaInfoFromYtDlp(info: RawInfo, url: string, convertSmaller = false): MediaInfo {
+  const media = mediaFromInfo(info, url, convertSmaller)
   return {
     url: media.url,
     webpageUrl: media.webpageUrl,

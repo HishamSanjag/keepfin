@@ -41,6 +41,8 @@ export type VideoOption = {
   sizeApprox: boolean
   /** Total bitrate in kbit/s when known. */
   tbr?: number
+  /** Set on a size Keepfin makes by converting a served one after downloading: the height of that served size. */
+  convertedFrom?: number
 }
 
 /** One selectable source audio stream. */
@@ -159,6 +161,8 @@ export type FormatRequest =
       fps?: number
       codec: CodecPreference
       container: Container
+      /** A converted size: `formatId` is downloaded, then converted down to this height (never upscaled). */
+      scaleHeight?: number
     }
   | {
       type: 'audio'

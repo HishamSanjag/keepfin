@@ -44,7 +44,7 @@ function coreMedia(media: ChoiceSource): JsChoiceMedia {
   if (!result) {
     result = new JsChoiceMedia(
       media.duration ?? null,
-      media.video.map((v) => new JsChoiceVideo(v.id, v.height, v.fps ?? null, v.hdr, v.codec, v.hasAudio, v.formatId, v.size ?? null, v.sizeApprox)),
+      media.video.map((v) => new JsChoiceVideo(v.id, v.height, v.fps ?? null, v.hdr, v.codec, v.hasAudio, v.formatId, v.size ?? null, v.sizeApprox, v.convertedFrom ?? null)),
       media.audio.map((a) => new JsChoiceAudio(a.formatId, a.codec, a.size ?? null, a.sizeApprox)),
     )
     converted.set(media, result)
@@ -118,6 +118,7 @@ export function requestOf(media: ChoiceSource, picks: ChoicePicks): Extract<Form
     fps: request.fps ?? undefined,
     codec: request.codec as CodecPreference,
     container: request.container as Container,
+    ...(request.scaleHeight != null ? {scaleHeight: request.scaleHeight} : {}),
   }
 }
 
