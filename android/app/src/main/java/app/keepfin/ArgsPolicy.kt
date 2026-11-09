@@ -11,7 +11,7 @@ import app.keepfin.core.args.SourceTags as CoreTags
 data class Arg(val name: String, val value: String? = null)
 
 /** Source metadata written into resolver downloads (Spotify/Apple Music/Deezer → YouTube Music). */
-data class SourceTags(val title: String, val artist: String?, val album: String?, val track: Int? = null, val year: Int? = null, val trackCount: Int? = null)
+data class SourceTags(val title: String, val artist: String?, val album: String?, val track: Int? = null, val year: Int? = null, val trackCount: Int? = null, val isrc: String? = null)
 
 /**
  * Pure policy: structured intent (FormatRequest + DownloadOptions + EngineSettings) → validated yt-dlp arguments.
@@ -82,7 +82,7 @@ object ArgsPolicy {
      */
     fun metadata(title: String?): List<Arg> = pairs(DownloadPlan.metadataArgs(title))
 
-    fun tags(tags: SourceTags): List<Arg> = pairs(DownloadPlan.tagArgs(CoreTags(tags.title, tags.artist, tags.album, tags.track, tags.year)))
+    fun tags(tags: SourceTags): List<Arg> = pairs(DownloadPlan.tagArgs(CoreTags(tags.title, tags.artist, tags.album, tags.track, tags.year, tags.isrc)))
 
     fun reliability(fragments: Int): List<Arg> = listOf(
         Arg("--retries", "10"), Arg("--fragment-retries", "10"), Arg("--extractor-retries", "3"),

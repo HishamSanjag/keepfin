@@ -232,3 +232,25 @@ test('alternate ranking excludes the original, tried ids, low confidence and mis
   assert.deepEqual(ranked.map((r) => r.candidate.url.slice(-11)), ['j3SiMcrObkU'])
   assert.ok(ranked[0].confidence >= 0.6)
 })
+
+test('Deezer resolve: a track and an album carry their ISRCs; missing ones and failures leave them empty', async () => {
+  const requests: string[] = []
+  const json = (body: unknown, status = 200) => new Response(JSON.stringify(body), {status, headers: {'content-type': 'application/json'}})
+  const fakeFetch = (async (input: string | URL | Request) => {
+    const url = String(input)
+    requests.push(url)
+    if (url.endsWith('/track/1')) return json({id: 1, title: 'One', isrc: 'GBDUW0000059', duration: 200, artist: {name: 'A'}})
+    if (url.endsWith('/album/9')) return json({id: 9, title: 'Disc', nb_tracks: 2, tracks: {data: [{id: 11, title: 'a', artist: {name: 'A'}}, {id: 12, title: 'b', artist: {name: 'A'}}]}})
+    if (url.includes('/album/9/tracks')) return json({data: [{id: 11, isrc: 'gb-duw-00-00053'}, {id: 12}]})
+    if (url.endsWith('/album/8')) return json({id: 8, title: 'Down', nb_tracks: 1, tracks: {data: [{id: 21, title: 'c', artist: {name: 'A'}}]}})
+    return json({}, 500)
+  }) as typeof fetch
+  const track = await resolveMusic('https://www.deezer.com/track/1', fakeFetch)
+  assert.equal(track.kind === 'track' && track.track.isrc, 'GBDUW0000059')
+  const album = await resolveMusic('https://www.deezer.com/album/9', fakeFetch)
+  assert.equal(album.kind, 'collection')
+  if (album.kind === 'collection') assert.deepEqual(album.collection.tracks.map((t) => t.isrc), ['GBDUW0000053', undefined])
+  assert.equal(requests.filter((u) => u.includes('/album/9/tracks')).length, 1, 'one extra request, not one per track')
+  const down = await resolveMusic('https://www.deezer.com/album/8', fakeFetch)
+  assert.equal(down.kind === 'collection' && down.collection.tracks[0].isrc, undefined)
+})

@@ -6,6 +6,7 @@ import {
   albumPageRequest,
   albumSearchRequest,
   bestMusicVideo,
+  deezerIsrcs,
   musicVideoRequest,
   parseMusicVideos,
   type VideoHit,
@@ -35,6 +36,8 @@ export type SourceTrack = {
   releaseYear?: number
   /** Tracks on the source album (album collections). */
   trackCount?: number
+  /** The recording's ISRC when the service gives one (Deezer); lets the same recording be recognised across services. */
+  isrc?: string
 }
 
 export type SourceCollection = {
@@ -289,22 +292,48 @@ export function parseDeezer(data: Record<string, unknown>, link: MusicLink): Mus
   }
 }
 
+/** Gives each track of [tracks] the ISRC [text] (a Deezer response) holds for it. Tracks that have one keep it. */
+function applyIsrcs(tracks: SourceTrack[], text: string) {
+  const found = deezerIsrcs(text)
+  if (!found.size) return
+  for (const track of tracks) {
+    const id = /\/track\/(\d+)$/.exec(track.url)?.[1]
+    const isrc = id ? found.get(id) : undefined
+    if (isrc) track.isrc ??= isrc
+  }
+}
+
 async function resolveDeezer(link: MusicLink, fetcher: typeof fetch, signal?: AbortSignal): Promise<MusicSource> {
-  const get = async (path: string) => JSON.parse((await getText(fetcher, `https://api.deezer.com/${path}`, signal)).text) as Record<string, unknown>
-  const data = await get(`${link.type}/${link.id}`)
-  const source = parseDeezer(data, link)
+  const getRaw = async (path: string) => (await getText(fetcher, `https://api.deezer.com/${path}`, signal)).text
+  const first = await getRaw(`${link.type}/${link.id}`)
+  const source = parseDeezer(JSON.parse(first) as Record<string, unknown>, link)
+  applyIsrcs(source.kind === 'track' ? [source.track] : source.collection.tracks, first)
   // Large playlists/albums are paged by the API (25–400 per response).
   if (source.kind === 'collection' && source.collection.total && source.collection.tracks.length < source.collection.total) {
     const limit = Math.min(source.collection.total, 1000)
     while (source.collection.tracks.length < limit) {
-      const page = await get(`${link.type}/${link.id}/tracks?index=${source.collection.tracks.length}&limit=100`)
+      const raw = await getRaw(`${link.type}/${link.id}/tracks?index=${source.collection.tracks.length}&limit=100`)
+      const page = JSON.parse(raw) as Record<string, unknown>
       const items = Array.isArray(page.data) ? (page.data as DeezerTrack[]) : []
       const albumInfo = link.type === 'album' ? {title: source.collection.title, cover: source.collection.cover} : undefined
       const more = items
         .map((item, i) => deezerTrack(item, albumInfo, link.type === 'album' ? source.collection.tracks.length + i + 1 : undefined))
         .filter((t): t is SourceTrack => !!t)
       if (!more.length) break
+      applyIsrcs(more, raw)
       source.collection.tracks.push(...more)
+    }
+  }
+  // An album answer lists its tracks without ISRCs; its /tracks pages carry them. One request per 100 tracks, at most ten, and
+  // a failure only leaves the codes empty.
+  if (source.kind === 'collection' && link.type === 'album') {
+    const tracks = source.collection.tracks
+    try {
+      for (let index = 0; tracks.some((t) => !t.isrc) && index < Math.min(tracks.length, 1000); index += 100) {
+        applyIsrcs(tracks, await getRaw(`album/${link.id}/tracks?index=${index}&limit=100`))
+      }
+    } catch (error) {
+      if (signal?.aborted) throw error
     }
   }
   return source

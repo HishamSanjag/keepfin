@@ -183,11 +183,23 @@ internal data class ReadTags(
     val title: String? = null, val artist: String? = null, val album: String? = null, val albumArtist: String? = null,
     val track: Int? = null, val disc: Int? = null, val year: Int? = null, val genre: String? = null,
     val duration: Double? = null, val width: Int? = null, val height: Int? = null, val art: String? = null,
+    /** The recording code (ISRC) from the file's tags, see [IsrcTags]. */
+    val isrc: String? = null,
 )
 
 /** Reads tags with MediaMetadataRetriever and stores artwork in the app-private art folder. */
 internal class TagReader(private val context: Context, private val artDir: File) {
     private fun number(value: String?): Int? = value?.substringBefore('/')?.trim()?.toIntOrNull()?.takeIf { it > 0 }
+
+    /** The ISRC tag of an audio file: the start of the file (ID3, Vorbis) and its end (MP4's movie box), 1 MB each. */
+    private fun isrcOf(row: MediaRow): String? = try {
+        if (row.kind != LibraryItemKind.AUDIO) null
+        else context.contentResolver.openInputStream(row.uri)?.use { input ->
+            val head = input.readNBytes(IsrcTags.WINDOW)
+            val tail = if (row.size > 2L * IsrcTags.WINDOW) { input.skipNBytes(row.size - 2L * IsrcTags.WINDOW); input.readNBytes(IsrcTags.WINDOW) } else input.readAllBytes()
+            IsrcTags.read(head + tail)
+        }
+    } catch (_: Exception) { null }
 
     fun read(row: MediaRow, jobPoster: Bitmap?): ReadTags {
         if (row.kind == LibraryItemKind.OTHER || row.kind == LibraryItemKind.IMAGE) return readImage(row)
@@ -212,7 +224,7 @@ internal class TagReader(private val context: Context, private val artDir: File)
                 album = meta(MediaMetadataRetriever.METADATA_KEY_ALBUM), albumArtist = meta(MediaMetadataRetriever.METADATA_KEY_ALBUMARTIST),
                 track = number(meta(MediaMetadataRetriever.METADATA_KEY_CD_TRACK_NUMBER)), disc = number(meta(MediaMetadataRetriever.METADATA_KEY_DISC_NUMBER)),
                 year = year?.takeIf { it > 0 }, genre = meta(MediaMetadataRetriever.METADATA_KEY_GENRE), duration = durationMs?.let { it / 1000.0 },
-                width = width?.takeIf { it > 0 }, height = height?.takeIf { it > 0 }, art = art,
+                width = width?.takeIf { it > 0 }, height = height?.takeIf { it > 0 }, art = art, isrc = isrcOf(row),
             )
         } catch (error: Exception) {
             Log.w(TAG, "tags unreadable for ${row.name}", error)

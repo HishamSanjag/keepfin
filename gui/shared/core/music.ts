@@ -34,6 +34,7 @@ import {
   musicSongsApiUrl,
   musicQuery,
   musicConstants,
+  musicDeezerIsrcs,
   musicVideosBest,
   musicVideosParse,
   musicVideosQuery,
@@ -399,3 +400,5 @@ export function bestMusicVideo(artists: string[], title: string, hits: VideoHit[
   )
   return found ? fromVideo(found) : undefined
 }
+/** Track id to ISRC for every track a Deezer API response holds (a track, a playlist, or a page of /tracks). */
+export const deezerIsrcs = (json: string): Map<string, string> => new Map(Array.from(musicDeezerIsrcs(json), (pair) => [pair[0], pair[1]] as [string, string]))

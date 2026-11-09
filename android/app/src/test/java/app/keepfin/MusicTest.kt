@@ -56,6 +56,13 @@ class MusicTest {
         assertThrows(IllegalStateException::class.java) { MusicParsers.deezer("""{"error":{"message":"no data"}}""", "track") }
     }
 
+    @Test fun deezerCarriesIsrcWhenTheAnswerHasOne() {
+        val withCode = MusicParsers.deezer("""{"id":3135556,"title":"Harder","isrc":"GBDUW0000059","duration":226,"artist":{"name":"Daft Punk"}}""", "track")
+        assertEquals("GBDUW0000059", withCode.tracks.single().isrc)
+        val page = MusicParsers.deezer("""{"data":[{"id":1,"title":"a","isrc":"GBDUW0000053"},{"id":2,"title":"b"}],"total":2}""", "album")
+        assertEquals(listOf("GBDUW0000053", null), page.tracks.map { it.isrc })
+    }
+
     @Test fun apple() {
         val song = MusicParsers.apple(Fixtures.text("music/apple-song.html"), "https://music.apple.com/us/song/one-more-time/697195462")
         assertEquals("track", song.kind)

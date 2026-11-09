@@ -69,6 +69,8 @@ export type MusicMetadata = {
   releaseYear?: number
   /** Tracks on the source album (album collections), used to tell editions apart. */
   trackCount?: number
+  /** The recording's ISRC when the source service gives one (Deezer). */
+  isrc?: string
 }
 
 export type MusicMatch = {

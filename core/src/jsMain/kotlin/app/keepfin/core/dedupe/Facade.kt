@@ -23,6 +23,9 @@ class JsRecordingMatch(val index: Int, val tier: String)
 private fun JsRecording.toRecording() = Recording(title, artist, album, duration, sourceIds.toSet(), contentKey, isrc)
 
 @JsExport
+fun dedupeCleanIsrc(raw: String?): String? = Recordings.cleanIsrc(raw)
+
+@JsExport
 fun dedupeSourceId(url: String?): String? = Recordings.sourceId(url)
 
 @JsExport

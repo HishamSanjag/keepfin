@@ -292,7 +292,7 @@ object DownloadPlan {
         return out
     }
 
-    /** The source's own tags for a resolver download (title, artist, album, track number, year). Blank values are skipped. */
+    /** The source's own tags for a resolver download (title, artist, album, track number, year, ISRC). Blank values are skipped. */
     fun tagArgs(tags: SourceTags): List<String> {
         val out = ArrayList<String>()
         fun text(value: String?, field: String) {
@@ -304,6 +304,7 @@ object DownloadPlan {
         text(tags.title, "title"); text(tags.artist, "artist"); text(tags.album, "album")
         number(tags.track, "track"); number(tags.year, "date")
         text(tags.artist, "album_artist")
+        text(tags.isrc, "isrc")
         return out
     }
 }

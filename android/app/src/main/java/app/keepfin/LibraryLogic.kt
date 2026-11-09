@@ -343,8 +343,10 @@ data class Recording(
     val title: String,
     val album: String? = null,
     val duration: Double? = null,
+    /** The recording code (ISRC) from the file's tags or the music service. */
+    val isrc: String? = null,
 ) {
-    internal fun toCore() = CoreRecording(title = title, artist = artist, album = album, duration = duration, sourceIds = sourceIds, contentKey = contentKey)
+    internal fun toCore() = CoreRecording(title = title, artist = artist, album = album, duration = duration, sourceIds = sourceIds, contentKey = contentKey, isrc = isrc)
 }
 
 /**

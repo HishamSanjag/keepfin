@@ -94,6 +94,7 @@ export async function tagFile(ffmpeg: string, file: string, track: SourceTrack, 
       ['album', track.album],
       ['track', track.trackNumber ? String(track.trackNumber) : undefined],
       ['date', track.releaseYear ? String(track.releaseYear) : undefined],
+      ['isrc', track.isrc],
     ]
     const args = ['-hide_banner', '-nostdin', '-loglevel', 'error', '-y', '-i', file]
     if (cover) args.push('-i', cover, '-map', '0:a', '-map', '1')

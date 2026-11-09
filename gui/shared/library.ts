@@ -314,8 +314,8 @@ export type ExistingMatch = {
   itemId?: string
   path: string
   space: string
-  /** source = same source id; content = same file bytes; metadata = same artist/title/duration. */
-  by: 'source' | 'content' | 'metadata'
+  /** source = same source id; isrc = same recording code; content = same file bytes; metadata = same artist/title/duration. */
+  by: 'source' | 'isrc' | 'content' | 'metadata'
 }
 
 /** Built-in spaces and defaults. `folders` come from the platform (Electron app.getPath). */
@@ -421,7 +421,7 @@ export type {PathJob} from './core/providers.js'
 
 // Recording identity (source ids, title and artist normalisation, the same-recording test) is decided by the shared core
 // (gui/shared/core/dedupe.ts).
-export {normalizeArtists, normalizeTitle, sameRecording, sourceIdFromUrl, versionsOf} from './core/dedupe.js'
+export {cleanIsrc, normalizeArtists, normalizeTitle, sameRecording, sourceIdFromUrl, versionsOf} from './core/dedupe.js'
 export type {Recording} from './core/dedupe.js'
 
 function fold(value: string): string {

@@ -176,7 +176,7 @@ internal object JobCodec {
             .put("galleryRepairError", record.galleryRepairError).put("attachTo", record.attachTo).put("attachToJob", record.attachToJob).put("findVideo", record.findVideo).put("joinPlaylist", record.joinPlaylist).put("photoSaves", JSONObject(record.photoSaves))
             // the one phase a finished job keeps: a music video waiting for its song is settled again after a restart
             .put("phase", job.phase?.takeIf { it == MusicVideoLink.WAITING })
-            .put("source", record.source?.let { JSONObject().put("title", it.title).put("artist", it.artist).put("album", it.album).put("track", it.track).put("year", it.year).put("trackCount", it.trackCount) })
+            .put("source", record.source?.let { JSONObject().put("title", it.title).put("artist", it.artist).put("album", it.album).put("track", it.track).put("year", it.year).put("trackCount", it.trackCount).put("isrc", it.isrc) })
     }
 
     fun decode(json: JSONObject): JobRecord {
@@ -202,7 +202,7 @@ internal object JobCodec {
             existing = json.optJSONObject("existing")?.let { e -> json.optJSONObject("existing")?.str("uri")?.let { uri -> ExistingMatch(e.str("itemId"), uri, e.str("space") ?: "", e.str("by") ?: "metadata") } },
         )
         val source = json.optJSONObject("source")?.let {
-            SourceTags(it.optString("title"), it.str("artist"), it.str("album"), it.optInt("track").takeIf { n -> n > 0 }, it.optInt("year").takeIf { n -> n > 0 }, it.optInt("trackCount").takeIf { n -> n > 0 })
+            SourceTags(it.optString("title"), it.str("artist"), it.str("album"), it.optInt("track").takeIf { n -> n > 0 }, it.optInt("year").takeIf { n -> n > 0 }, it.optInt("trackCount").takeIf { n -> n > 0 }, it.str("isrc"))
         }
         return JobRecord(job, decodeFormat(json.optJSONObject("format")), decodeOptions(json.optJSONObject("options")), json.str("outputTemplate"),
             json.optJSONArray("publicFiles").strings(), source, json.str("galleryRepairError"), json.str("attachTo"), json.str("attachToJob"), json.optBoolean("findVideo"), json.str("joinPlaylist"),

@@ -7,7 +7,7 @@ import os from 'node:os'
 import path from 'node:path'
 import ffmpegPath from 'ffmpeg-static'
 import {fetchCover, lyricsKept, tagFile, writeLyrics} from './tagging.js'
-import {readEmbeddedLyrics} from '../library/tags.js'
+import {readEmbeddedLyrics, readTags} from '../library/tags.js'
 
 const ffmpeg = ffmpegPath as string
 
@@ -168,6 +168,26 @@ test('a rewritten song only replaces the original when it kept its length and it
     const cut = path.join(dir, 'cut.m4a')
     assert.equal(ff(['-y', '-i', withLyrics, '-t', '0.2', '-map', '0', '-c', 'copy', '-metadata', 'lyrics=[00:01.00] Hello', cut]).status, 0)
     assert.equal(await lyricsKept(original, cut), false, 'a much shorter copy is not kept')
+  } finally {
+    await fs.rm(dir, {recursive: true, force: true})
+  }
+})
+
+// m4a is left out on purpose: the converter cannot write the iTunes ISRC atom, and rewriting MP4 boxes by hand risks the file
+test('the recording code is written into mp3, opus and flac and read back by the library', async () => {
+  const dir = await fs.mkdtemp(path.join(os.tmpdir(), 'keepfin-isrc-'))
+  try {
+    for (const [ext, codec] of [['.mp3', 'libmp3lame'], ['.opus', 'libopus'], ['.flac', 'flac']] as const) {
+      const file = path.join(dir, 'song' + ext)
+      assert.equal(ff(['-y', '-f', 'lavfi', '-i', 'sine=frequency=440:duration=2', '-c:a', codec, file]).status, 0, ext)
+      await tagFile(ffmpeg, file, {...track, isrc: 'GBDUW0000053'})
+      assert.equal((await readTags(file, false)).isrc, 'GBDUW0000053', `${ext} keeps the ISRC`)
+      assert.equal(ff(['-v', 'error', '-i', file, '-f', 'null', '-']).status, 0, `${ext} still plays`)
+    }
+    const plain = path.join(dir, 'plain.mp3')
+    assert.equal(ff(['-y', '-f', 'lavfi', '-i', 'sine=frequency=440:duration=1', '-c:a', 'libmp3lame', plain]).status, 0)
+    await tagFile(ffmpeg, plain, track)
+    assert.equal((await readTags(plain, false)).isrc, undefined)
   } finally {
     await fs.rm(dir, {recursive: true, force: true})
   }

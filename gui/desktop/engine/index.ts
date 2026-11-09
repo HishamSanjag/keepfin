@@ -491,6 +491,7 @@ export class StudioEngine implements Engine {
         album: track.album ?? found.candidate.album,
         track: track.title,
         releaseYear: track.releaseYear,
+        isrc: track.isrc,
       },
     }
     return {type: 'media', media}
@@ -797,6 +798,12 @@ export class StudioEngine implements Engine {
         trackNumber: task.music?.trackNumber,
         trackCount: task.music?.trackCount,
         releaseYear: task.music?.releaseYear,
+        isrc: task.music?.isrc,
+      }
+      // a Deezer track from a collection list has no code yet: one cached lookup, and a failure leaves it empty
+      if (service === 'deezer' && !track.isrc) {
+        const source = await this.musicSource(task.url, ctx.signal).catch(() => undefined)
+        if (source?.kind === 'track') track.isrc = source.track.isrc
       }
     }
     if (!track?.artists.length) {

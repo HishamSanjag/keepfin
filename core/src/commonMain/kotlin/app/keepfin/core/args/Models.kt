@@ -94,6 +94,8 @@ data class SourceTags(
     val album: String?,
     val track: Int? = null,
     val year: Int? = null,
+    /** The recording's ISRC when the source service gives one. */
+    val isrc: String? = null,
 )
 
 /** The size facts the label and the estimate need about one video quality. */

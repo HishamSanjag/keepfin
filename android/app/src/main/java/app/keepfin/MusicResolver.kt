@@ -6,6 +6,7 @@ import app.keepfin.core.music.AlbumMatching
 import app.keepfin.core.music.AlbumPage
 import app.keepfin.core.music.AlbumStep
 import app.keepfin.core.music.Candidate
+import app.keepfin.core.music.DeezerTracks
 import app.keepfin.core.music.Match
 import app.keepfin.core.music.MusicMatching
 import app.keepfin.core.music.Origin
@@ -29,9 +30,11 @@ data class SourceTrack(
     val year: Int? = null,
     /** Tracks on the source album (album collections), used to tell editions apart. */
     val trackCount: Int? = null,
+    /** The recording's ISRC when the service gives one (Deezer), to recognise the same recording across services. */
+    val isrc: String? = null,
 ) {
     val artist get() = artists.joinToString(", ").ifBlank { null }
-    fun tags() = SourceTags(title, artist, album, position, year, trackCount)
+    fun tags() = SourceTags(title, artist, album, position, year, trackCount, isrc)
 }
 
 data class SourceCollection(
@@ -102,26 +105,27 @@ object MusicParsers {
         return SourceCollection("spotify", type, name, entity.text("subtitle") ?: entity.optJSONObject("authors")?.text("name"), cover, tracks)
     }
 
-    private fun deezerTrack(item: JSONObject, album: String?, cover: String?, position: Int?): SourceTrack? {
+    private fun deezerTrack(item: JSONObject, album: String?, cover: String?, position: Int?, isrcs: Map<String, String>): SourceTrack? {
         val id = item.optLong("id").takeIf { it > 0 } ?: return null
         val itemAlbum = item.optJSONObject("album")
         return SourceTrack(item.text("title") ?: "Untitled", listOfNotNull(item.optJSONObject("artist")?.text("name")),
             itemAlbum?.text("title") ?: album, item.optDouble("duration", 0.0).takeIf { it > 0 }, "https://www.deezer.com/track/$id",
             itemAlbum?.text("cover_xl") ?: cover, item.optInt("track_position").takeIf { it > 0 } ?: position,
-            item.text("release_date")?.take(4)?.toIntOrNull())
+            item.text("release_date")?.take(4)?.toIntOrNull(), isrc = isrcs[id.toString()])
     }
 
     fun deezer(json: String, type: String, offset: Int = 0): SourceCollection {
         val root = JSONObject(json)
+        val isrcs = DeezerTracks.isrcs(json)
         root.optJSONObject("error")?.let { error("Deezer: ${it.optString("message", "not found")}") }
         if (type == "track") {
-            val track = deezerTrack(root, null, null, null) ?: error("Deezer did not return this track.")
+            val track = deezerTrack(root, null, null, null, isrcs) ?: error("Deezer did not return this track.")
             return SourceCollection("deezer", "track", track.title, track.artist, track.cover, listOf(track), 1)
         }
         val cover = root.text("cover_xl") ?: root.text("picture_xl")
         val album = if (type == "album") root.text("title") else null
         val data = root.optJSONObject("tracks")?.optJSONArray("data") ?: root.optJSONArray("data") ?: JSONArray()
-        val tracks = (0 until data.length()).mapNotNull { index -> data.optJSONObject(index)?.let { deezerTrack(it, album, cover, if (type == "album") offset + index + 1 else null) } }
+        val tracks = (0 until data.length()).mapNotNull { index -> data.optJSONObject(index)?.let { deezerTrack(it, album, cover, if (type == "album") offset + index + 1 else null, isrcs) } }
         val owner = root.optJSONObject("artist")?.text("name") ?: root.optJSONObject("creator")?.text("name")
         return SourceCollection("deezer", type, root.text("title"), owner, cover, tracks, root.optInt("nb_tracks").takeIf { it > 0 } ?: root.optInt("total").takeIf { it > 0 })
     }

@@ -3,7 +3,7 @@ import fs from 'node:fs/promises'
 import path from 'node:path'
 import {parseFile, type IAudioMetadata} from 'music-metadata'
 import {isVideoCompanion, videoCompanionStem} from '../../shared/core/copies.js'
-import {extensionOf, mediaKindOf, parseLrc, subtitleExtensions, type Lyrics} from '../../shared/library.js'
+import {cleanIsrc, extensionOf, mediaKindOf, parseLrc, subtitleExtensions, type Lyrics} from '../../shared/library.js'
 
 export type Tags = {
   title?: string
@@ -14,6 +14,8 @@ export type Tags = {
   disc?: number
   year?: number
   genre?: string
+  /** The recording's ISRC when the file carries one (ID3 TSRC, MP4 ISRC atom, Vorbis ISRC). */
+  isrc?: string
   duration?: number
   picture?: {data: Uint8Array; format: string}
   hasLyrics: boolean
@@ -49,6 +51,7 @@ export async function readTags(file: string, wantPicture: boolean): Promise<Tags
     disc: whole(common.disk?.no),
     year: whole(common.year),
     genre: text(common.genre?.[0]),
+    isrc: cleanIsrc(common.isrc?.[0]),
     duration: format.duration && format.duration > 0 ? Math.round(format.duration * 100) / 100 : undefined,
     picture: wantPicture && picture ? {data: picture.data, format: picture.format.toLowerCase()} : undefined,
     hasLyrics: !!common.lyrics?.some((entry) => entry.text?.trim() || entry.syncText?.length),

@@ -89,6 +89,7 @@ export class Enrichment {
       entry.disc = tags.disc ?? entry.disc
       entry.year = tags.year ?? entry.year
       entry.genre = tags.genre ?? entry.genre
+      entry.isrc = tags.isrc ?? entry.isrc
       if (entry.tagsPending) {
         const fromGenre = normalizeTags(tags.genre)
         if (fromGenre.length) entry.tags = fromGenre

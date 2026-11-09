@@ -6,6 +6,7 @@
 // It reads links with its own providers parser, so desktop and Android agree on every link.
 import {
   JsRecording,
+  dedupeCleanIsrc,
   dedupeCompare,
   dedupeFind,
   dedupeNormalizeArtists,
@@ -57,3 +58,6 @@ export function findRecording(candidate: Recording, known: readonly Recording[])
   const found = dedupeFind(toCore(candidate), known.map(toCore))
   return found ? {index: found.index, tier: found.tier as Tier} : undefined
 }
+
+/** A clean ISRC (12 upper-case letters and digits, hyphens and spaces dropped), or undefined. */
+export const cleanIsrc = (raw: string | undefined | null): string | undefined => dedupeCleanIsrc(raw ?? null) ?? undefined

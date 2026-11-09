@@ -269,3 +269,8 @@ fun musicVideosParse(json: String): Array<JsVideoCandidate> = MusicVideos.parse(
 @JsExport
 fun musicVideosBest(artists: Array<String>, title: String, candidates: Array<JsVideoCandidate>, artistIds: Array<String> = emptyArray()): JsVideoCandidate? =
     MusicVideos.best(artists.toList(), title, candidates.map { it.toVideo() }, artistIds.toList())?.toJs()
+
+/** Track id and ISRC pairs of a Deezer response (see DeezerTracks). */
+@JsExport
+fun musicDeezerIsrcs(json: String): Array<Array<String>> =
+    DeezerTracks.isrcs(json).map { arrayOf(it.key, it.value) }.toTypedArray()

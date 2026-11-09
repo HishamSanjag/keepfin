@@ -194,7 +194,7 @@ internal class DownloadRunner(private val engine: MediaEngine) {
                 if (source.year == null && detail.year != null) source = source.copy(year = detail.year)
             }
         }
-        val track = SourceTrack(source.title, listOfNotNull(source.artist), source.album, record.job.duration, record.job.url, cover, source.track, source.year, source.trackCount)
+        val track = SourceTrack(source.title, listOfNotNull(source.artist), source.album, record.job.duration, record.job.url, cover, source.track, source.year, source.trackCount, source.isrc)
         val pick = engine.inspector.resolver.picks(track, 1).firstOrNull() ?: throw IllegalStateException("Couldn't find “${source.title}” on YouTube Music.")
         if (engine.stopped(id)) throw Stopped()
         val matchedUrl = Providers.validateUrl(pick.match.candidate.url)

@@ -27,6 +27,7 @@ import {
   type CollectionKind,
   type ExistingMatch,
   type ExistingProbe,
+  cleanIsrc,
   type LibraryItem,
   type LibrarySettings,
   type LibrarySnapshot,
@@ -36,6 +37,7 @@ import {
 import type {LibraryBatchPush, LibraryDeltaPush, LibraryMeta} from '../../shared/contracts.js'
 import {providerName} from '../../shared/providers.js'
 import {ArtStore, posterFrame} from './art.js'
+import {buildLookups, type Lookups} from './parts/lookups.js'
 import {findSidecars, isMusicVideoFile, musicVideoNames, readEmbeddedLyrics, readInfoChapters, readTags} from './tags.js'
 import {fingerprint} from './fingerprint.js'
 import {renameWithRetry} from '../fsutil.js'
@@ -57,6 +59,8 @@ export type LibraryEntry = LibraryItem & {
   managed: boolean
   /** `${size}:${modifiedAt}` the metadata was last read for. */
   sig?: string
+  /** The recording code read from the file's tags (the dedupe record's isrc). */
+  isrc?: string
   subPaths?: string[]
   lrc?: string
   infoJson?: string
@@ -169,6 +173,7 @@ const recordingOf = (entry: LibraryEntry) => ({
   title: entry.title,
   album: entry.album,
   duration: entry.duration,
+  isrc: entry.isrc,
 })
 
 export type LibraryOperation = NonNullable<LibrarySnapshot['operation']>
@@ -210,7 +215,7 @@ export class LibraryIndex {
   private readonly artRequests = new Map<string, {id: string; thumbnail?: string; file: string}>()
   private readonly idle = new Set<() => void>()
   // lookup tables for duplicate detection, rebuilt after any change to the entries
-  private tables?: {bySource: Map<string, LibraryEntry[]>; byTitle: Map<string, LibraryEntry[]>}
+  private tables?: Lookups
   // lyrics text cache (memory only)
   private readonly lyricsText = new Map<string, {sig: string; text: string}>()
   private held = 0
@@ -1358,25 +1363,20 @@ export class LibraryIndex {
 
   // ------------------------------------------------------------------ duplicate detection
 
-  private lookups() {
-    if (this.tables) return this.tables
-    const bySource = new Map<string, LibraryEntry[]>()
-    const byTitle = new Map<string, LibraryEntry[]>()
-    for (const entry of this.entries.values()) {
-      if (entry.sourceId) bySource.set(entry.sourceId, [...(bySource.get(entry.sourceId) ?? []), entry])
-      const key = normalizeTitle(entry.title, entry.artist ?? entry.albumArtist)
-      if (key) byTitle.set(key, [...(byTitle.get(key) ?? []), entry])
-    }
-    return (this.tables = {bySource, byTitle})
+  private lookups(): Lookups {
+    return (this.tables ??= buildLookups(this.entries.values()))
   }
 
   /** Tier 1 (source id) and tier 3 (artist, title, duration) against one space, or every space when [spaceId] is undefined. */
   findExisting(spaceId: string | undefined, probe: ExistingProbe, only?: LibraryEntry['kind']): ExistingMatch | undefined {
     if (!this.settings?.enabled || (spaceId && !this.space(spaceId))) return
-    const {bySource, byTitle} = this.lookups()
+    const {bySource, byIsrc, byTitle} = this.lookups()
     const usable = (entry: LibraryEntry) => (!spaceId || entry.space === spaceId) && (!only || entry.kind === only) && !entry.missing && this.visible(entry)
     const source = probe.sourceId ? bySource.get(probe.sourceId)?.find(usable) : undefined
     if (source) return {itemId: source.id, path: source.path, space: source.space, by: 'source'}
+    const code = cleanIsrc(probe.isrc ?? probe.recording?.isrc)
+    const coded = code ? byIsrc.get(code)?.find(usable) : undefined
+    if (coded) return {itemId: coded.id, path: coded.path, space: coded.space, by: 'isrc'}
     if (probe.recording) {
       const key = normalizeTitle(probe.recording.title, probe.recording.artist)
       const found = key ? byTitle.get(key)?.find((entry) => usable(entry) && sameRecording(probe.recording!, recordingOf(entry))) : undefined

@@ -203,6 +203,10 @@ test('duplicate detection: source id, metadata and content', async () => {
     song.title = 'Song'
     song.artist = 'Artist'
     song.duration = 200
+    song.isrc = 'GBDUW0000053'
+    assert.equal(f.index.findExisting('music', {isrc: 'gb-duw-00-00053'})?.by, 'isrc')
+    assert.equal(f.index.findExisting('music', {recording: {artist: 'Someone Else', title: 'Another Title', isrc: 'GBDUW0000053'}})?.by, 'isrc')
+    assert.equal(f.index.findExisting('music', {isrc: 'GBDUW0000099'}), undefined)
     assert.equal(f.index.findExisting('music', {sourceId: 'youtube:abc123DEF45'})?.by, 'source')
     assert.equal(f.index.findExisting('music', {recording: {artist: 'Artist - Topic', title: 'Song (Official Audio)', duration: 201}})?.by, 'metadata')
     assert.equal(f.index.findExisting('music', {recording: {artist: 'Artist', title: 'Song (Live)', duration: 200}}), undefined)
