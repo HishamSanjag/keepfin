@@ -7,7 +7,7 @@
 //   node scripts/test/android-cloud-peer.mjs [--control 47399]      prints one line:  READY {json}   (ports are chosen by the system)
 //   adb reverse tcp:<port> tcp:<port>                           for every port in the READY line, to reach it from an emulator
 //
-// Control (all JSON): GET /info; POST /fault {target,status,times,method?,path?,headers?,body?}; POST /reset; POST /option {target,name,value};
+// Control (all JSON): GET /info; POST /fault {target,status,times,method?,path? (text the request path contains),headers?,body?}; POST /reset; POST /option {target,name,value};
 // POST /expire {target}; POST /desktop/scan {target,root}; POST /desktop/put {target,root,path,text?|bytes?}; POST /desktop/edit {target,root,path,text?|bytes?};
 // POST /desktop/get {target,root,path};
 // GET /log?target=; POST /quit.   target is one of drive, graph, dropbox, davfake, davreal.
@@ -110,9 +110,9 @@ const control = http.createServer(async (req, res) => {
     if (url.pathname === '/fault') {
       const f = fakes[body.target]
       if (!f) return send(res, 400, {error: 'unknown target'})
-      const re = body.path ? new RegExp(body.path) : null
+      const part = typeof body.path === 'string' && body.path ? body.path : null
       f.server.fail(
-        (q) => (!body.method || q.method === body.method) && (!re || re.test(q.url.pathname + q.url.search)),
+        (q) => (!body.method || q.method === body.method) && (!part || (q.url.pathname + q.url.search).includes(part)),
         {status: body.status ?? 500, headers: body.headers ?? {}, body: body.body ?? {}},
         body.times ?? 1,
       )
@@ -227,7 +227,8 @@ const control = http.createServer(async (req, res) => {
     }
     send(res, 404, {error: 'not found'})
   } catch (error) {
-    send(res, 500, {error: String(error?.stack ?? error)})
+    console.error(error)
+    send(res, 500, {error: 'internal error (see the peer log)'})
   }
 })
 await new Promise((resolve) => control.listen(Number(args.control ?? 0), '127.0.0.1', resolve))

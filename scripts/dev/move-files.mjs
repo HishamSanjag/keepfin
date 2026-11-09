@@ -59,7 +59,7 @@ const CODE = /\.(ts|tsx|cts|mts|mjs|js)$/
 const MD_LINK = /(\]\(\s*<?)([^)\s>]+)(>?(?:\s+"[^"]*")?\s*\))/g
 const REL = /(['"`])(\.\.?\/[^'"`\s]*)\1/g
 const TOP = [...new Set(tracked.map((f) => f.split('/')[0]).filter((top) => folders.has(top)))]
-const REPO = new RegExp(`(?<![\\w./:-])(?:${TOP.map((t) => t.replace(/[.]/g, '\\.')).join('|')})/[\\w./-]*[\\w-]`, 'g')
+const REPO = new RegExp(`(?<![\\w./:-])(?:${TOP.map((t) => t.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('|')})/[\\w./-]*[\\w-]`, 'g')
 
 function safeDecode(s) {
   try {

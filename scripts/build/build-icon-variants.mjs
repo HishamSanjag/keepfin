@@ -85,8 +85,13 @@ function inlineImages(svg) {
     return `${head}data:image/png;base64,${png.toString('base64')}${tail}`
   })
 }
+/** Removes XML comments, repeating until none is left (one pass can join the pieces of a nested one). */
+function withoutComments(text) {
+  for (let before = ''; before !== text; ) [before, text] = [text, text.replace(/\s*<!--[\s\S]*?-->/g, '')]
+  return text
+}
 function themed(variant, file, accent, accentLight) {
-  const source = fs.readFileSync(path.join(dir, file), 'utf8').replace(/\s*<!--[\s\S]*?-->/g, '')
+  const source = withoutComments(fs.readFileSync(path.join(dir, file), 'utf8'))
   const to = palette(variant, accent, accentLight)
   const map = new Map(TOKEN_KEYS.map((key) => [variant.tokens[key], to[key]]))
   return inlineImages(source.replace(/#[0-9a-fA-F]{6}\b/g, (colour) => map.get(colour.toUpperCase()) ?? colour))

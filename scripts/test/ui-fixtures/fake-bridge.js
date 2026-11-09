@@ -2655,7 +2655,7 @@
           return snapshot()
         }
         // a ticked music video is its own job, linked to the song's job
-        const videoJob = req.videoId ? {id: `job-new-${++seq}`, url: /music.youtube.com/.test(m.url) ? `https://music.youtube.com/watch?v=${req.videoId}` : m.url, title: m.title + ' (Official Video)', uploader: m.uploader, provider: 'YouTube Music', label: '1080p · MP4', kind: 'video', format: {type: 'video', maxHeight: 1080, codec: 'h264', container: 'mp4'}, options: req.options, status: 'queued', percent: 0, createdAt: Date.now(), space: req.space, force: true, attachVideo: {jobId: created.id}} : undefined
+        const videoJob = req.videoId ? {id: `job-new-${++seq}`, url: /^https:\/\/music\.youtube\.com\//.test(m.url) ? `https://music.youtube.com/watch?v=${req.videoId}` : m.url, title: m.title + ' (Official Video)', uploader: m.uploader, provider: 'YouTube Music', label: '1080p · MP4', kind: 'video', format: {type: 'video', maxHeight: 1080, codec: 'h264', container: 'mp4'}, options: req.options, status: 'queued', percent: 0, createdAt: Date.now(), space: req.space, force: true, attachVideo: {jobId: created.id}} : undefined
         jobs = [...jobs, created, ...(videoJob ? [videoJob] : [])]
         setTimeout(() => {
           patch(created.id, {status: 'downloading', percent: 0, totalBytes: 220e6, downloadedBytes: 0, speed: 9 * MB, startedAt: Date.now()})

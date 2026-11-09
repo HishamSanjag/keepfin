@@ -143,7 +143,8 @@ const server = http.createServer(async (req, res) => {
     }
     send(res, 404, {error: 'not found'})
   } catch (error) {
-    send(res, 500, {error: error instanceof Error ? error.message : String(error)})
+    console.error(error)
+    send(res, 500, {error: 'internal error (see the peer log)'})
   }
 })
 server.listen(controlPort, '127.0.0.1', () => {

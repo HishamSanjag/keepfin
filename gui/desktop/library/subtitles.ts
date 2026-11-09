@@ -3,14 +3,19 @@ import {extensionOf} from '../../shared/library.js'
 
 const BOM = /^﻿/
 
+/** Removes tags WebVTT does not know, repeating until none is left (one pass can join the pieces of a nested one). */
+function withoutTags(text: string): string {
+  for (let before = ''; before !== text; ) [before, text] = [text, text.replace(/<\/?(?!(?:b|i|u|c|v|ruby|rt|lang)\b)[a-z][^>]*>/gi, '')]
+  return text
+}
+
 export function srtToVtt(source: string): string {
   const body = source
     .replace(BOM, '')
     .replace(/\r\n?/g, '\n')
     .replace(/(\d{1,2}:\d{2}:\d{2}),(\d{1,3})/g, (_m, clock: string, ms: string) => `${clock}.${ms.padEnd(3, '0')}`)
     .replace(/(^|\n)(\d{1,2}:\d{2}),(\d{3})(?= -->)/g, '$1$2.$3')
-    .replace(/<\/?(?!(?:b|i|u|c|v|ruby|rt|lang)\b)[a-z][^>]*>/gi, '')
-  return `WEBVTT\n\n${body.trim()}\n`
+  return `WEBVTT\n\n${withoutTags(body).trim()}\n`
 }
 
 const stamp = /^(\d+):(\d{2}):(\d{2})[.:](\d{1,3})$/

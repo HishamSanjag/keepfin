@@ -26,7 +26,7 @@ export async function registerCopiesSuite({test, sent}) {
     await row(page, 'Backup drive (E:)').waitFor()
   }
   /** A copy's row in Your library, and the dialog it opens. */
-  const row = (page, name) => page.getByRole('list', {name: 'Places that keep your library'}).getByRole('button', {name: new RegExp(`^${name.replace(/[()]/g, '\\$&')}:`)})
+  const row = (page, name) => page.getByRole('list', {name: 'Places that keep your library'}).getByRole('button', {name: new RegExp(`^${name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}:`)})
   const openCopy = async (page, name) => {
     await row(page, name).click()
     const dialog = page.getByRole('dialog', {name})
