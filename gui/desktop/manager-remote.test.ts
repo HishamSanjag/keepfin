@@ -12,6 +12,7 @@ import type {ToolManager} from './engine/tools.js'
 import type {InfoCache} from './engine/ytdlp.js'
 import {FakeEngine, fakeMedia} from './fake-engine.js'
 import {DownloadManager, type RemoteOptions} from './manager.js'
+import {LibraryIndex} from './library/index.js'
 
 const video: FormatRequest = {type: 'video', codec: 'auto', container: 'mp4', maxHeight: 1080}
 
@@ -166,4 +167,38 @@ test('the real engine asks the guard before any network work', async () => {
   await assert.rejects(() => engine.inspect('https://example.com/a', {settings: {} as never, guard}), /refused by the guard/)
   await assert.rejects(() => engine.download({url: 'https://example.com/a', title: 'a', format: video, options: {}, folder: os.tmpdir(), stem: 'x'}, {settings: {} as never, guard}, {onStage: () => undefined, onProgress: () => undefined}), /refused by the guard/)
   await assert.rejects(() => engine.discover('https://example.com/a', {start: 1, end: 10}, {settings: {} as never, guard}, () => undefined, () => undefined), /refused by the guard/)
+})
+
+test('a received audio request with musicVideo true and the library on looks for the song video; every other case does not', async () => {
+  const dir = await fs.mkdtemp(path.join(os.tmpdir(), 'keepfin-remote-video-'))
+  const library = new LibraryIndex({file: path.join(dir, 'library.json'), artDir: path.join(dir, 'art'), ffmpeg: () => undefined, saveDelay: 10, pushDelay: 5, watch: false, analyse: false})
+  await library.init()
+  const remote: RemoteOptions = {guard: async () => undefined, consentBytes: 1_000_000, metered: async () => false, originOf: () => ({device: 'Pixel'})}
+  const open = async (withLibrary: boolean, folder: string) => {
+    const manager = new DownloadManager({
+      store: path.join(dir, `${folder}.json`), defaultOutDir: path.join(dir, 'downloads'), libraryFolders: {music: path.join(dir, 'music'), videos: path.join(dir, 'videos')},
+      engine: new FakeEngine(), ...(withLibrary ? {library} : {}), snapshotDelay: 5, progressInterval: 20, remote,
+    })
+    await manager.init()
+    return manager
+  }
+  const audio: FormatRequest = {type: 'audio', target: 'mp3', quality: 'best'}
+  const ask = async (manager: DownloadManager, id: string, format: FormatRequest, musicVideo?: boolean) => {
+    await manager.enqueueRemote({id, url: `https://music.youtube.com/watch?v=${id}`, format, ...(musicVideo === undefined ? {} : {musicVideo})})
+    return manager.snapshot().jobs.find((job) => job.id === id)?.findVideo
+  }
+  const on = await open(true, 'on')
+  const off = await open(false, 'off')
+  try {
+    assert.equal(await ask(on, 'aaaaaaaaaaa', audio, true), true, 'audio, library on, video asked')
+    assert.equal(await ask(on, 'bbbbbbbbbbb', audio), undefined, 'the field absent')
+    assert.equal(await ask(on, 'ccccccccccc', audio, false), undefined, 'false')
+    assert.equal(await ask(on, 'ddddddddddd', video, true), undefined, 'a video format has no song video')
+    assert.equal(await ask(off, 'eeeeeeeeeee', audio, true), undefined, 'no library on this device')
+  } finally {
+    await on.close()
+    await off.close()
+    await library.close()
+    await fs.rm(dir, {recursive: true, force: true})
+  }
 })

@@ -23,9 +23,9 @@ export class QueueJobPort implements JobPort {
     return library?.enabled ? folderSpaces(library.spaces).map((space) => ({id: space.id, name: space.name})) : []
   }
 
-  async create(input: {jobId: string; url: string; format: unknown; options?: unknown; space?: string}): Promise<void> {
+  async create(input: {jobId: string; url: string; format: unknown; options?: unknown; space?: string; musicVideo?: boolean}): Promise<void> {
     if (!this.manager) throw new Error('This device is not ready to download yet.')
-    await this.manager.enqueueRemote({id: input.jobId, url: input.url, format: input.format, options: input.options, space: input.space})
+    await this.manager.enqueueRemote({id: input.jobId, url: input.url, format: input.format, options: input.options, space: input.space, musicVideo: input.musicVideo})
   }
 
   view(jobId: string): RemoteJobView | undefined {

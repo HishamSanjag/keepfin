@@ -100,7 +100,7 @@ export function ListReview({source, open, onClose, onDone, initialSpace}: {sourc
           <AddToPlaylist value={c.playlist} onChange={c.setPlaylist} />
           <span className="foot-gap" />
           <DownloadOn
-            jobs={() => c.entries.filter((entry) => c.selected.has(entry.url) && !c.queued.has(entry.url)).map((entry) => ({url: entry.url, format: presetToFormat(c.preset), options: c.options}))}
+            jobs={() => c.entries.filter((entry) => c.selected.has(entry.url) && !c.queued.has(entry.url)).map((entry) => ({url: entry.url, format: presetToFormat(c.preset), options: c.options, musicVideo: c.offerVideos && c.keepVideos}))}
             onSent={onDone}
             disabled={!c.selectedCount || !!optionError}
           />

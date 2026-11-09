@@ -12,14 +12,14 @@ import {JobsHost, payloadHash, type JobPort} from './jobs.js'
 import {World, until, type Node} from './testkit.js'
 
 class FakePort implements JobPort {
-  created: {jobId: string; url: string; format: unknown; options?: unknown; space?: string}[] = []
+  created: {jobId: string; url: string; format: unknown; options?: unknown; space?: string; musicVideo?: boolean}[] = []
   views = new Map<string, RemoteJobView>()
   listeners = new Set<() => void>()
   free = 50e9
   spaces() {
     return [{id: 'music', name: 'Music'}]
   }
-  async create(input: {jobId: string; url: string; format: unknown; options?: unknown; space?: string}) {
+  async create(input: {jobId: string; url: string; format: unknown; options?: unknown; space?: string; musicVideo?: boolean}) {
     if (input.url.includes('bad-format')) throw new Error('Choose a download format.')
     if (this.views.has(input.jobId)) return
     this.created.push(input)
@@ -237,12 +237,13 @@ test('Download on...: the request is on disk before it is sent, the sender follo
     await until(() => guest.service.state().paired[0].jobs.allowed, 'the sender to learn it may send jobs')
     assert.deepEqual(guest.service.state().paired[0].jobs.spaces, [{id: 'music', name: 'Music'}])
 
-    await guest.service.sendJob(host.identity.deviceId, {url: 'http://video.example/watch?v=7', format: video, space: 'music'})
+    await guest.service.sendJob(host.identity.deviceId, {url: 'http://video.example/watch?v=7', format: video, space: 'music', musicVideo: true})
     const row = guest.service.state().remoteJobs[0]
     assert.equal(row.deviceName, host.identity.name)
     const saved = JSON.parse(await fs.readFile(path.join(guest.deviceDir, 'net', 'outgoing-jobs.json'), 'utf8'))
     assert.equal(saved.jobs[0].requestId, row.requestId, 'persisted')
     await until(() => port.created.length === 1, 'the job to reach the receiver')
+    assert.equal(port.created[0].musicVideo, true, 'the music video choice reaches the other device')
     const jobId = port.created[0].jobId
     await until(() => guest.service.state().remoteJobs[0].state === 'queued', 'the sender to see it queued')
 
@@ -336,3 +337,25 @@ test('the guard follows redirects hop by hop, connects only to checked addresses
 
 void PeerHttpError
 type _Unused = Node
+
+test('the music video choice travels with the request: absent or not true means no video, and it is part of the request identity', async () => {
+  const r = await rig()
+  try {
+    const old = await r.post({requestId: randomUUID(), url: 'http://video.example/watch?v=10', format: video})
+    const no = await r.post({requestId: randomUUID(), url: 'http://video.example/watch?v=11', format: video, musicVideo: 'yes'})
+    const requestId = randomUUID()
+    const body = {requestId, url: 'http://video.example/watch?v=12', format: video, musicVideo: true}
+    const yes = await r.post(body)
+    assert.deepEqual([old.status, no.status, yes.status], [201, 201, 201])
+    assert.deepEqual(r.port.created.map((job) => job.musicVideo), [false, false, true])
+    // a retry returns the same job; the same id without the video is another payload
+    assert.equal((await r.post(body)).status, 200)
+    assert.equal((await r.post({...body, musicVideo: undefined})).status, 409)
+    assert.equal(r.port.created.length, 3)
+    // a request without the field hashes exactly as before this field existed
+    assert.equal(payloadHash({url: 'a', format: {}, musicVideo: false}), payloadHash({url: 'a', format: {}}))
+    assert.notEqual(payloadHash({url: 'a', format: {}, musicVideo: true}), payloadHash({url: 'a', format: {}}))
+  } finally {
+    await r.cleanup()
+  }
+})

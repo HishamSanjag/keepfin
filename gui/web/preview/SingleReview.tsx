@@ -167,7 +167,7 @@ export function SingleReview({capture: c, entry, open, onClose}: {capture: Captu
             </span>
           )}
           <span className="foot-gap" />
-          <DownloadOn jobs={() => [{url: media.url, format: formatRequest(media, choice), options: c.options}]} onSent={c.dismiss} disabled={!!optionError || noPhotos} />
+          <DownloadOn jobs={() => [{url: media.url, format: formatRequest(media, choice), options: c.options, musicVideo: bothOn}]} onSent={c.dismiss} disabled={!!optionError || noPhotos} />
           <Button variant="primary" size="lg" icon="download" loading={adding} disabled={!!optionError || noPhotos} onClick={() => void c.enqueue([entry])} className="download-btn">
             {downloadAnyway ? 'Download anyway' : 'Download'}
             {choice.tab === 'gallery' && media.gallery ? (

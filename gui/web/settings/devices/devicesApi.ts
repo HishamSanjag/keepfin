@@ -34,7 +34,7 @@ export const cancelJoin = () => call('devicesJoinCancel')
 /** The app restarts into the chosen library. */
 export const openLibrary = (profileId: string) => call('devicesOpenLibrary', {profileId})
 /** Download on…: asks a paired device to download a link. */
-export const sendJob = (deviceId: string, args: {url: string; format: unknown; options?: unknown; space?: string}) => call('devicesJob', {deviceId, ...args})
+export const sendJob = (deviceId: string, args: {url: string; format: unknown; options?: unknown; space?: string; musicVideo?: boolean}) => call('devicesJob', {deviceId, ...args})
 export const dismissRemoteJob = (requestId: string) => call('devicesJobDismiss', {requestId})
 /** The folder picker of the setup window (a path, or null when cancelled). */
 export const pickLibraryFolder = () => request<string | null>({op: 'storagePickFolder'})

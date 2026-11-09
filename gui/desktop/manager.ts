@@ -660,7 +660,7 @@ export class DownloadManager {
     return this.remoteJobs.isRemote(id)
   }
 
-  async enqueueRemote(input: {id: string; url: unknown; format: unknown; options?: unknown; space?: unknown}): Promise<void> {
+  async enqueueRemote(input: {id: string; url: unknown; format: unknown; options?: unknown; space?: unknown; musicVideo?: boolean}): Promise<void> {
     return this.remoteJobs.enqueueRemote(input)
   }
 

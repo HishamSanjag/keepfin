@@ -36,7 +36,7 @@ class RecordingJobPort : JobPort {
     val views = java.util.concurrent.ConcurrentHashMap<String, RemoteJobView>()
     private val listeners = CopyOnWriteArrayList<() -> Unit>()
     override fun spaces() = listOf("music" to "Music")
-    override fun create(jobId: String, url: String, format: JSONObject, options: JSONObject?, space: String?) {
+    override fun create(jobId: String, url: String, format: JSONObject, options: JSONObject?, space: String?, musicVideo: Boolean) {
         created += Triple(jobId, url, format)
         views[jobId] = RemoteJobView("queued", 0.0, "Title", "720p")
     }

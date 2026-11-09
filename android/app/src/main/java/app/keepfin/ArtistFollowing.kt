@@ -253,7 +253,8 @@ internal class EngineFollowingHost(private val engine: MediaEngine) : FollowingH
             val preset = if (music && !settings.defaultPreset.wire.startsWith("audio-")) DownloadPreset.MP3 else settings.defaultPreset
             val group = JobGroup(id = UUID.randomUUID().toString(), title = listing.title ?: "Release", url = url, uploader = entries.firstNotNullOfOrNull { it.uploader ?: it.artist },
                 thumbnail = entries.firstNotNullOfOrNull { it.thumbnail }, kind = "album")
-            return engine.enqueueEntries(session, entries, preset, settings.options, group, null)
+            // the same "music videos" setting the collection box starts from: a song kept as audio also gets its video where there is one
+            return engine.enqueueEntries(session, entries, preset, settings.options, group, null, null, music && settings.keepMusicVideos, null)
         } finally { engine.inspector.dropSession(session) }
     }
 }

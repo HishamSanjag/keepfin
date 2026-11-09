@@ -1121,11 +1121,11 @@ export class NetService {
   // ---- Download on... (phase 6): the sending side -------------------------------------------------------------------------
 
   /** Asks a paired device to download a link. The request is written to disk first and resent until the device answers. */
-  async sendJob(deviceId: string, input: {url: string; format: unknown; options?: unknown; space?: string}): Promise<void> {
+  async sendJob(deviceId: string, input: {url: string; format: unknown; options?: unknown; space?: string; musicVideo?: boolean}): Promise<void> {
     const peer = this.peers.get(deviceId)
     if (!peer) throw new Error('That device is not paired.')
     if (typeof input.url !== 'string' || !/^https?:\/\//i.test(input.url.trim())) throw new Error('Paste a complete https:// link.')
-    const job = await this.outgoing.create({deviceId, deviceName: peer.name, url: input.url.trim(), format: input.format, options: input.options, space: input.space})
+    const job = await this.outgoing.create({deviceId, deviceName: peer.name, url: input.url.trim(), format: input.format, options: input.options, space: input.space, ...(input.musicVideo ? {musicVideo: true} : {})})
     this.changed()
     const link = this.links.get(deviceId)
     void link?.withClient((client) => this.deliverOne(client, job.requestId)).catch(() => undefined)
@@ -1145,7 +1145,7 @@ export class NetService {
     const job = this.outgoing.get(requestId)
     if (!job || isTerminalJob(job.state)) return
     try {
-      const answer = await client.json<{view?: never}>('POST', '/v1/jobs', {json: {requestId, url: job.url, format: job.format, ...(job.options !== undefined ? {options: job.options} : {}), ...(job.space ? {space: job.space} : {})}, timeoutMs: 60_000})
+      const answer = await client.json<{view?: never}>('POST', '/v1/jobs', {json: {requestId, url: job.url, format: job.format, ...(job.options !== undefined ? {options: job.options} : {}), ...(job.space ? {space: job.space} : {}), ...(job.musicVideo ? {musicVideo: true} : {})}, timeoutMs: 60_000})
       if (answer.view) await this.outgoing.applyView(requestId, answer.view)
       else await this.outgoing.update(requestId, {state: 'queued'})
     } catch (error) {

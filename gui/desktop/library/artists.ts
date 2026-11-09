@@ -177,8 +177,8 @@ export type ReleaseQueue = {
   startDiscovery(url: unknown, id: unknown): unknown
   discoveryState(id: unknown): {state: string; entries: PlaylistEntry[]; error?: string}
   cancelDiscovery(id: unknown): unknown
-  enqueueDiscovered(id: unknown, urls: unknown, preset: unknown, options?: unknown, grouped?: unknown): Promise<unknown>
-  getSettings(): {defaultPreset: string}
+  enqueueDiscovered(id: unknown, urls: unknown, preset: unknown, options?: unknown, grouped?: unknown, space?: unknown, keepInSync?: unknown, findVideo?: unknown): Promise<unknown>
+  getSettings(): {defaultPreset: string; musicVideos?: boolean; library?: {enabled: boolean}}
 }
 
 /** The artist follow on the real engine: channel search, the follow check's listing, and a kept release through the normal download path. */
@@ -200,7 +200,10 @@ export function artistHost(queue: ReleaseQueue, resolveChannel: ArtistHost['reso
         if (!urls.length) throw new Error(listing.error ?? 'Keepfin could not read this release right now.')
         const preferred = queue.getSettings().defaultPreset
         const preset = isMusic(url) && !preferred.startsWith('audio-') ? 'audio-mp3' : preferred
-        await queue.enqueueDiscovered(session, urls, preset)
+        // the "music videos" setting is the same default the Capture and collection boxes start from: songs kept as audio in the library also get their video
+        const settings = queue.getSettings()
+        const findVideo = settings.musicVideos === true && settings.library?.enabled === true && isMusic(url) && preset.startsWith('audio-')
+        await queue.enqueueDiscovered(session, urls, preset, undefined, true, undefined, undefined, findVideo || undefined)
         return urls.length
       } finally {
         queue.cancelDiscovery(session)

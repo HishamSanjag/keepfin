@@ -986,10 +986,10 @@ class NetService(private val deps: NetServiceDeps) {
     // ---- Download on... (phase 6): the sending side --------------------------------------------------------------------------
 
     /** Asks a paired device to download a link. The request is written to disk first and resent until the device answers. */
-    fun sendJob(deviceId: String, url: String, format: JSONObject, options: JSONObject? = null, space: String? = null) {
+    fun sendJob(deviceId: String, url: String, format: JSONObject, options: JSONObject? = null, space: String? = null, musicVideo: Boolean = false) {
         val peer = peers.get(deviceId) ?: throw IllegalStateException("That device is not paired.")
         if (!Regex("^https?://", RegexOption.IGNORE_CASE).containsMatchIn(url.trim())) throw IllegalArgumentException("Paste a complete https:// link.")
-        val job = outgoing.create(deviceId, peer.name, url.trim(), format, options, space)
+        val job = outgoing.create(deviceId, peer.name, url.trim(), format, options, space, musicVideo)
         changed()
         val link = links[deviceId]
         work.execute { runCatching { link?.withClient { client -> deliverOne(client, job.requestId) } } }
@@ -1012,6 +1012,7 @@ class NetService(private val deps: NetServiceDeps) {
             val body = JSONObject().put("requestId", requestId).put("url", job.url).put("format", job.format)
             job.options?.let { body.put("options", it) }
             job.space?.let { body.put("space", it) }
+            if (job.musicVideo) body.put("musicVideo", true)
             val answer = client.json("POST", "/v1/jobs", body, timeoutMs = 60_000)
             val view = answer.optJSONObject("view")
             if (view != null) outgoing.applyView(requestId, RemoteJobView.of(view)) else outgoing.update(requestId) { it.state = "queued" }

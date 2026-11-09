@@ -62,10 +62,10 @@ fun optionsJson(o: DownloadOptions): JSONObject = JSONObject()
     .put("embedThumbnail", o.embedThumbnail).put("embedMetadata", o.embedMetadata).put("embedChapters", o.embedChapters).put("sponsorBlock", o.sponsorBlock)
 
 /** One link to send to another device, with the format this phone chose for it. */
-class SendJob(val url: String, val request: FormatRequest)
+class SendJob(val url: String, val request: FormatRequest, val musicVideo: Boolean = false)
 
 /** Sends [jobs] to [target] (kept on disk and resent until the device answers). Blocking: call off the main thread. */
 fun sendDownloads(target: DownloadTarget, jobs: List<SendJob>, options: DownloadOptions) {
     val service = NetRuntime.peek() ?: throw IllegalStateException("Devices are off.")
-    for (job in jobs) service.sendJob(target.deviceId, job.url, formatJson(job.request), optionsJson(options))
+    for (job in jobs) service.sendJob(target.deviceId, job.url, formatJson(job.request), optionsJson(options), musicVideo = job.musicVideo)
 }

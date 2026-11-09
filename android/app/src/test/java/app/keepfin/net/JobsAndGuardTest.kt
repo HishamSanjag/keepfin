@@ -19,15 +19,17 @@ private const val PEER = "peer-one"
 
 private class FakePort : JobPort {
     val created = ArrayList<Triple<String, String, JSONObject>>()
+    val musicVideos = ArrayList<Boolean>()
     val views = HashMap<String, RemoteJobView>()
     var spaces = listOf("music" to "Music")
     var free: Long? = 10L * 1024 * 1024 * 1024
     var failCreate: String? = null
     private val listeners = ArrayList<() -> Unit>()
     override fun spaces() = spaces
-    override fun create(jobId: String, url: String, format: JSONObject, options: JSONObject?, space: String?) {
+    override fun create(jobId: String, url: String, format: JSONObject, options: JSONObject?, space: String?, musicVideo: Boolean) {
         failCreate?.let { throw IllegalStateException(it) }
         created += Triple(jobId, url, format)
+        musicVideos += musicVideo
         views[jobId] = RemoteJobView("queued", 0.0, "Title", "720p")
     }
     override fun view(jobId: String) = views[jobId]
@@ -85,6 +87,21 @@ class JobsHostTest {
         assertEquals(409, changed.status)
         assertEquals("payload-changed", changed.body.getString("error"))
         assertEquals(1, port.created.size)
+    }
+
+    @Test fun theMusicVideoChoiceIsOptionalAndOnlyTrueAsksForIt() {
+        host.handle(PEER, "Laptop", body(request = REQ_1))
+        host.handle(PEER, "Laptop", body(request = "00000000-0000-4000-8000-000000000002", url = "https://example.com/two", extra = ""","musicVideo":"yes""""))
+        val asked = body(request = "00000000-0000-4000-8000-000000000003", url = "https://example.com/three", extra = ""","musicVideo":true""")
+        assertEquals(201, host.handle(PEER, "Laptop", asked).status)
+        assertEquals(listOf(false, false, true), port.musicVideos)
+        // the same request again is the same job; the same id without the video is another payload
+        assertEquals(200, host.handle(PEER, "Laptop", asked).status)
+        assertEquals(409, host.handle(PEER, "Laptop", body(request = "00000000-0000-4000-8000-000000000003", url = "https://example.com/three")).status)
+        assertEquals(3, port.created.size)
+        val format = JSONObject("{}")
+        assertEquals(payloadHash("u", format, null, null), payloadHash("u", format, null, null, false))
+        assertNotEquals(payloadHash("u", format, null, null), payloadHash("u", format, null, null, true))
     }
 
     @Test fun exactFormatIdsBelongToTheDeviceThatInspectedTheLink() {

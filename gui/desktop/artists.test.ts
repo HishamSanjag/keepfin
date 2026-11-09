@@ -4,7 +4,7 @@ import fs from 'node:fs/promises'
 import os from 'node:os'
 import path from 'node:path'
 import type {PlaylistEntry} from '../shared/contracts.js'
-import {ArtistFollowing, ARTIST_CHECK_EVERY_MS, releaseLink, type ArtistHost} from './library/artists.js'
+import {ArtistFollowing, ARTIST_CHECK_EVERY_MS, artistHost, releaseLink, type ArtistHost, type ReleaseQueue} from './library/artists.js'
 
 const HOUR = 3_600_000
 const entry = (n: number, title = `Album - Release ${n}`): PlaylistEntry => ({url: `https://www.youtube.com/playlist?list=OLAK5uy_${n}`, title, position: n})
@@ -155,4 +155,29 @@ test('keeping a release downloads it and marks it kept; a failed download leaves
 test('album links stay music links and other links are left alone', () => {
   assert.equal(releaseLink('https://www.youtube.com/playlist?list=OLAK5uy_x'), 'https://music.youtube.com/playlist?list=OLAK5uy_x')
   assert.equal(releaseLink('https://www.youtube.com/watch?v=abc'), 'https://www.youtube.com/watch?v=abc')
+})
+
+test('a kept release asks for the music videos only when the setting, the library and an audio download all allow it', async () => {
+  const run = async (settings: {defaultPreset: string; musicVideos?: boolean; library?: {enabled: boolean}}, music = true) => {
+    const calls: unknown[][] = []
+    const queue: ReleaseQueue = {
+      followDiscover: async () => ({entries: []}),
+      startDiscovery: () => undefined,
+      discoveryState: () => ({state: 'done', entries: [entry(1), entry(2)]}),
+      cancelDiscovery: () => undefined,
+      enqueueDiscovered: async (...args: unknown[]) => void calls.push(args),
+      getSettings: () => settings,
+    }
+    await artistHost(queue, async () => undefined, () => music).keep('https://music.youtube.com/playlist?list=OLAK5uy_1')
+    return calls[0]
+  }
+  const on = {defaultPreset: 'audio-mp3', musicVideos: true, library: {enabled: true}}
+  assert.equal((await run(on))[7], true)
+  assert.equal((await run({...on, musicVideos: false}))[7], undefined)
+  assert.equal((await run({...on, library: {enabled: false}}))[7], undefined)
+  assert.equal((await run(on, false))[7], undefined)
+  // a video preset becomes mp3 for a music link, so it can carry the video; a non-music link never does
+  assert.equal((await run({...on, defaultPreset: 'best'}))[2], 'audio-mp3')
+  assert.equal((await run({...on, defaultPreset: 'best'}))[7], true)
+  assert.equal((await run({...on, defaultPreset: 'best'}, false))[7], undefined)
 })

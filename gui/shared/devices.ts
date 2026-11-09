@@ -187,6 +187,8 @@ export interface DevicesArgs {
   format?: unknown
   options?: unknown
   space?: string
+  /** devicesJob: also keep the song's music video on the other device. */
+  musicVideo?: boolean
   /** devicesJobDismiss. */
   requestId?: string
   /** devicesPlayFrom: the content of the item (`sha256:…`) and the library it is in. */

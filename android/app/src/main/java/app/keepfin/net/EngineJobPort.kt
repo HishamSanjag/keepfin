@@ -6,6 +6,8 @@ import app.keepfin.EngineApi
 import app.keepfin.FormatRequest
 import app.keepfin.InspectResult
 import app.keepfin.MediaInfo
+import app.keepfin.MusicVideoLookup
+import app.keepfin.MusicVideoMatch
 import app.keepfin.PhotoPosts
 import app.keepfin.SubtitleOptions
 import app.keepfin.VideoOption
@@ -35,7 +37,7 @@ class EngineJobPort(
 ) : JobPort {
     class Consent(val reason: String, val bytes: Long?)
 
-    private class Rec(val jobId: String, val url: String, val format: JSONObject, val options: JSONObject?, val space: String?, val startedAt: Long) {
+    private class Rec(val jobId: String, val url: String, val format: JSONObject, val options: JSONObject?, val space: String?, val startedAt: Long, val musicVideo: Boolean) {
         @Volatile var state: String = "preparing"
         @Volatile var engineJobId: String? = null
         @Volatile var title: String? = null
@@ -73,11 +75,11 @@ class EngineJobPort(
         pool.shutdownNow()
     }
 
-    override fun create(jobId: String, url: String, format: JSONObject, options: JSONObject?, space: String?) {
+    override fun create(jobId: String, url: String, format: JSONObject, options: JSONObject?, space: String?, musicVideo: Boolean) {
         if (recs.containsKey(jobId)) return
         // a malformed photo choice is refused here; the positions are checked against the post once it is read
         if (format.optString("type") == "gallery") itemsOf(format)
-        val rec = Rec(jobId, url, format, options, space, now())
+        val rec = Rec(jobId, url, format, options, space, now(), musicVideo)
         recs[jobId] = rec
         pool.execute { prepare(rec) }
         fire()
@@ -117,7 +119,8 @@ class EngineJobPort(
     private fun start(rec: Rec) {
         val media = rec.media ?: return
         val before = engine.jobs.value.map { it.id }.toSet()
-        engine.enqueue(media, formatOf(rec.format, media), optionsOf(rec.options), rec.space)
+        val format = formatOf(rec.format, media)
+        engine.enqueue(media, format, optionsOf(rec.options), rec.space, musicVideoOf(rec, media, format))
         // the engine makes its own id: the job is the new one for this link
         val deadline = System.currentTimeMillis() + 8000
         while (System.currentTimeMillis() < deadline) {
@@ -134,6 +137,14 @@ class EngineJobPort(
         rec.state = "failed"
         rec.error = "The download did not start."
         fire()
+    }
+
+    /** The song's music video when the asking device wants it: only for a song kept as audio in the library; a failed look-up means no video, never a failed song. */
+    private fun musicVideoOf(rec: Rec, media: MediaInfo, format: FormatRequest): MusicVideoMatch? {
+        if (!rec.musicVideo || format !is FormatRequest.Audio || !engine.settings.value.library.enabled) return null
+        val artist = media.music?.artist?.takeIf { it.isNotBlank() } ?: return null
+        val title = (media.music?.track ?: media.title).ifBlank { return null }
+        return (runCatching { engine.findMusicVideo(listOf(artist), title) }.getOrNull() as? MusicVideoLookup.Found)?.video
     }
 
     /** The person here allows a job that was waiting. */

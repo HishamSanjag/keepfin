@@ -12,7 +12,7 @@ export function presetToFormat(preset: DownloadPreset): FormatRequest {
   return {type: 'video', codec: 'auto', container: 'mp4', ...(preset === 'best' ? {} : {maxHeight: Number(preset)})}
 }
 
-type Job = {url: string; format: FormatRequest; options?: DownloadOptions}
+type Job = {url: string; format: FormatRequest; options?: DownloadOptions; /** The music video box is ticked: the other device keeps the song's video too. */ musicVideo?: boolean}
 
 /**
  * "Download on…": the devices that let this one send them downloads. The other device checks the link, picks its own streams and saves
@@ -35,7 +35,7 @@ export function DownloadOn({jobs, label = 'Download on…', onSent, disabled}: {
     if (!list.length || busy) return
     setBusy(true)
     try {
-      for (const job of list) await sendJob(deviceId, {url: job.url, format: job.format, options: job.options, space})
+      for (const job of list) await sendJob(deviceId, {url: job.url, format: job.format, options: job.options, space, ...(job.musicVideo ? {musicVideo: true} : {})})
       toast({tone: 'success', message: list.length === 1 ? `Sent to ${name}. Its progress shows in Downloads.` : `Sent ${list.length.toLocaleString()} downloads to ${name}. Their progress shows in Downloads.`})
       onSent?.(list.length, name)
     } catch (caught) {

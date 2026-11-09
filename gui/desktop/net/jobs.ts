@@ -24,7 +24,7 @@ export const isTerminalJob = (state: string) => TERMINAL.has(state)
 export interface JobPort {
   spaces(): {id: string; name: string}[]
   /** Makes the job under [jobId] (the same id again changes nothing). Throws with words when the capture rules refuse it. */
-  create(input: {jobId: string; url: string; format: unknown; options?: unknown; space?: string}): Promise<void>
+  create(input: {jobId: string; url: string; format: unknown; options?: unknown; space?: string; musicVideo?: boolean}): Promise<void>
   view(jobId: string): RemoteJobView | undefined
   /** Called when anything about the queue changed (throttled by the queue). */
   subscribe(listener: () => void): () => void
@@ -66,13 +66,13 @@ export interface JobAnswer {
 const answer = (status: number, body: Record<string, unknown>): JobAnswer => ({status, body})
 
 /** The identity of a request's payload: the same fields in the same order give the same hash. */
-export function payloadHash(p: {url: string; format: unknown; options?: unknown; space?: string}): string {
+export function payloadHash(p: {url: string; format: unknown; options?: unknown; space?: string; musicVideo?: boolean}): string {
   const canon = (value: unknown): unknown => {
     if (Array.isArray(value)) return value.map(canon)
     if (value && typeof value === 'object') return Object.fromEntries(Object.entries(value as Record<string, unknown>).filter(([, v]) => v !== undefined).sort(([a], [b]) => (a < b ? -1 : 1)).map(([k, v]) => [k, canon(v)]))
     return value
   }
-  return createHash('sha256').update(JSON.stringify(canon({url: p.url, format: p.format, options: p.options ?? null, space: p.space ?? null}))).digest('hex')
+  return createHash('sha256').update(JSON.stringify(canon({url: p.url, format: p.format, options: p.options ?? null, space: p.space ?? null, ...(p.musicVideo ? {musicVideo: true} : {})}))).digest('hex')
 }
 
 /** Exact format ids belong to the device that inspected the link; the receiver chooses by height, codec and container. */
@@ -155,9 +155,11 @@ export class JobsHost {
     if (!body.format || typeof body.format !== 'object' || Array.isArray(body.format)) return answer(400, {error: 'format', message: 'The request needs a format.'})
     if (body.options !== undefined && (typeof body.options !== 'object' || body.options === null || Array.isArray(body.options))) return answer(400, {error: 'options', message: 'The options are not valid.'})
     if (body.space !== undefined && (typeof body.space !== 'string' || body.space.length > 100)) return answer(400, {error: 'space', message: 'The space is not valid.'})
+    // optional: an older device never sends it, and only `true` asks for the song's music video (anything else means no video)
+    const musicVideo = body.musicVideo === true
     const format = portable(body.format)
     const space = body.space as string | undefined
-    const hash = payloadHash({url, format, options: body.options, space})
+    const hash = payloadHash({url, format, options: body.options, space, musicVideo})
     const key = `${caller.deviceId}:${requestId}`
 
     const known = this.entries.get(key)
@@ -167,7 +169,7 @@ export class JobsHost {
       // an earlier answer may have been lost, or the record was written and the job was not made: make it, the same id changes nothing
       if (!this.options.port.view(known.jobId)) {
         try {
-          await this.options.port.create({jobId: known.jobId, url, format, options: body.options, space})
+          await this.options.port.create({jobId: known.jobId, url, format, options: body.options, space, musicVideo})
         } catch (error) {
           return this.refuse(known, error instanceof Error ? error.message : 'The download was not accepted.', 'refused')
         }
@@ -193,7 +195,7 @@ export class JobsHost {
     this.add(entry)
     await this.save() // the record exists before the job does
     try {
-      await this.options.port.create({jobId: entry.jobId, url, format, options: body.options, space})
+      await this.options.port.create({jobId: entry.jobId, url, format, options: body.options, space, musicVideo})
     } catch (error) {
       return this.refuse(entry, error instanceof Error ? error.message : 'The download was not accepted.', 'refused')
     }
@@ -249,6 +251,8 @@ export interface OutgoingJob {
   format: unknown
   options?: unknown
   space?: string
+  /** Also keep the song's music video on the other device (sent only when true). */
+  musicVideo?: boolean
   createdAt: number
   updatedAt: number
   state: OutgoingState
@@ -293,7 +297,7 @@ export class OutgoingJobs {
   }
 
   /** Written to disk before it is sent. */
-  async create(input: {deviceId: string; deviceName: string; url: string; format: unknown; options?: unknown; space?: string}): Promise<OutgoingJob> {
+  async create(input: {deviceId: string; deviceName: string; url: string; format: unknown; options?: unknown; space?: string; musicVideo?: boolean}): Promise<OutgoingJob> {
     const job: OutgoingJob = {...input, requestId: randomUUID(), createdAt: this.now(), updatedAt: this.now(), state: 'sending', percent: 0}
     this.jobs.set(job.requestId, job)
     await this.save()

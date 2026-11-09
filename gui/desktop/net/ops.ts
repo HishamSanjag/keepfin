@@ -39,7 +39,7 @@ export async function handleDevices(service: NetService | undefined, op: string,
       break
     case 'devicesJob':
       if (typeof args.deviceId !== 'string' || typeof args.url !== 'string') throw new Error('Invalid request.')
-      await service.sendJob(args.deviceId, {url: args.url, format: args.format, options: args.options, space: typeof args.space === 'string' ? args.space : undefined})
+      await service.sendJob(args.deviceId, {url: args.url, format: args.format, options: args.options, space: typeof args.space === 'string' ? args.space : undefined, musicVideo: args.musicVideo === true})
       break
     case 'devicesJobDismiss':
       if (typeof args.requestId !== 'string') throw new Error('Invalid request.')

@@ -32,7 +32,7 @@ export class RemoteJobs {
    * rules apply as for the person's own: a plain http(s) link, a valid format and options, one of the spaces. Nothing is inspected yet:
    * the link is checked and inspected when the job starts, and the person is asked first if it is large.
    */
-  async enqueueRemote(input: {id: string; url: unknown; format: unknown; options?: unknown; space?: unknown}): Promise<void> {
+  async enqueueRemote(input: {id: string; url: unknown; format: unknown; options?: unknown; space?: unknown; musicVideo?: boolean}): Promise<void> {
     if (!this.core.options.remote) throw new Error('This device does not take downloads from other devices.')
     if (this.core.jobs().some((job) => job.id === input.id)) return
     const url = validateUrl(input.url)
@@ -57,6 +57,8 @@ export class RemoteJobs {
       status: 'queued',
       percent: 0,
       space,
+      // the song's music video is looked up once the song is saved (only a song kept as audio in the library has one)
+      findVideo: input.musicVideo === true && format.type === 'audio' && !!this.core.options.library && this.core.settings().library.enabled ? true : undefined,
       createdAt: this.core.now(),
     })
     await this.core.commit()

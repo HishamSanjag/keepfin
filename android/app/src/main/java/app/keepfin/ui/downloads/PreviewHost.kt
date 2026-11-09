@@ -114,7 +114,7 @@ private fun ColumnScope.SinglePreview(vm: StudioViewModel, media: MediaInfo, tar
         footer = {
             PreviewFooter(
                 saveTo = vm.saveToFor(link, media.uploader), playlist = rememberPlaylistUi(vm, vm.playlistTo) { vm.playlistTo = it }, targets = targets,
-                onDownloadOn = { scope.sendTo(vm, it, listOf(SendJob(link, choice.request(media))), vm.options, media.title) { vm.clearDraft() } },
+                onDownloadOn = { scope.sendTo(vm, it, listOf(SendJob(link, choice.request(media), bothOn)), vm.options, media.title) { vm.clearDraft() } },
                 label = (if (anyway) "Download anyway" else "Download") + " · " + (choiceSize(media, choice) ?: "size unknown"),
                 onDownload = { vm.download(anyway = anyway) }, adding = vm.adding,
             )
@@ -142,7 +142,8 @@ private fun ColumnScope.ListPreview(vm: StudioViewModel, review: CollectionRevie
                 saveTo = if (vm.libraryEnabled) vm.saveToForCollection(review) else null, playlist = rememberPlaylistUi(vm, review.playlist) { review.playlist = it }, targets = targets,
                 onDownloadOn = { target ->
                     val request = FormatChoice.forPreset(review.preset)
-                    scope.sendTo(vm, target, review.entries.filter { review.selected[it.url] == true }.map { SendJob(it.url, request) }, review.options, "$count ${if (count == 1) "item" else "items"}") { vm.collections.closeCollection() }
+                    val withVideos = vm.collections.offersCollectionVideos(review) && review.preset.isAudio() && review.findVideo
+                    scope.sendTo(vm, target, review.entries.filter { review.selected[it.url] == true }.map { SendJob(it.url, request, withVideos) }, review.options, "$count ${if (count == 1) "item" else "items"}") { vm.collections.closeCollection() }
                 },
                 label = if (count > 0) "Download $count" else "Select items to download", onDownload = vm.collections::downloadCollection,
                 enabled = count > 0, adding = review.adding, tag = UiTags.COLLECTION_DOWNLOAD,

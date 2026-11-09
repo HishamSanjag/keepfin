@@ -57,8 +57,8 @@ class RemoteJobView(
 interface JobPort {
     fun spaces(): List<Pair<String, String>>
 
-    /** Makes the job under [jobId] (the same id again changes nothing). Throws with words when the capture rules refuse it. */
-    fun create(jobId: String, url: String, format: JSONObject, options: JSONObject?, space: String?)
+    /** Makes the job under [jobId] (the same id again changes nothing). [musicVideo]: also keep the song's music video. Throws with words when the capture rules refuse it. */
+    fun create(jobId: String, url: String, format: JSONObject, options: JSONObject?, space: String?, musicVideo: Boolean = false)
     fun view(jobId: String): RemoteJobView?
 
     /** Called when anything about the queue changed (throttled by the queue). */
@@ -86,7 +86,7 @@ class JobAnswer(val status: Int, val body: JSONObject)
 private fun answer(status: Int, body: JSONObject) = JobAnswer(status, body)
 
 /** The identity of a request's payload: the same fields in the same order give the same hash. */
-fun payloadHash(url: String, format: JSONObject, options: JSONObject?, space: String?): String {
+fun payloadHash(url: String, format: JSONObject, options: JSONObject?, space: String?, musicVideo: Boolean = false): String {
     fun canon(v: Any?): String = when (v) {
         null, JSONObject.NULL -> "null"
         is JSONObject -> v.keys().asSequence().toList().sorted().joinToString(",", "{", "}") { JSONObject.quote(it) + ":" + canon(v.get(it)) }
@@ -94,7 +94,9 @@ fun payloadHash(url: String, format: JSONObject, options: JSONObject?, space: St
         is String -> JSONObject.quote(v)
         else -> v.toString()
     }
-    val text = "{" + listOf("format" to canon(format), "options" to canon(options), "space" to canon(space), "url" to JSONObject.quote(url)).joinToString(",") { JSONObject.quote(it.first) + ":" + it.second } + "}"
+    // the music video choice joins the identity only when asked for, so a request without it hashes as it always did
+    val parts = listOf("format" to canon(format), "options" to canon(options), "space" to canon(space), "url" to JSONObject.quote(url)) + (if (musicVideo) listOf("musicVideo" to "true") else emptyList())
+    val text = "{" + parts.sortedBy { it.first }.joinToString(",") { JSONObject.quote(it.first) + ":" + it.second } + "}"
     return MessageDigest.getInstance("SHA-256").digest(text.toByteArray(Charsets.UTF_8)).joinToString("") { "%02x".format(it) }
 }
 
@@ -195,8 +197,10 @@ class JobsHost private constructor(private val options: JobsHostOptions) {
         val options = if (body.has("options") && !body.isNull("options")) (body.optJSONObject("options") ?: return answer(400, err("options", "The options are not valid."))) else null
         val space = if (body.has("space") && !body.isNull("space")) (body.opt("space") as? String ?: return answer(400, err("space", "The space is not valid."))) else null
         if (space != null && space.length > 100) return answer(400, err("space", "The space is not valid."))
+        // optional: an older device never sends it; only `true` asks for the song's music video
+        val musicVideo = body.optBoolean("musicVideo", false)
         val format = portable(rawFormat)
-        val hash = payloadHash(url, format, options, space)
+        val hash = payloadHash(url, format, options, space, musicVideo)
         val key = "$callerId:$requestId"
 
         synchronized(this) {
@@ -208,7 +212,7 @@ class JobsHost private constructor(private val options: JobsHostOptions) {
                 // an earlier answer may have been lost, or the record was written and the job was not made: make it, the same id changes nothing
                 if (this.options.port.view(known.jobId) == null) {
                     try {
-                        this.options.port.create(known.jobId, url, format, options, space)
+                        this.options.port.create(known.jobId, url, format, options, space, musicVideo)
                     } catch (e: Exception) {
                         return refuse(known, e.message ?: "The download was not accepted.", "refused")
                     }
@@ -232,7 +236,7 @@ class JobsHost private constructor(private val options: JobsHostOptions) {
             add(entry)
             save() // the record exists before the job does
             try {
-                this.options.port.create(entry.jobId, url, format, options, space)
+                this.options.port.create(entry.jobId, url, format, options, space, musicVideo)
             } catch (e: Exception) {
                 return refuse(entry, e.message ?: "The download was not accepted.", "refused")
             }
@@ -297,11 +301,14 @@ class OutgoingJob(
     var eta: Long? = null,
     var totalBytes: Long? = null,
     var error: String? = null,
+    /** Also keep the song's music video on the other device (sent only when true). */
+    val musicVideo: Boolean = false,
 ) {
     fun json(): JSONObject = JSONObject().put("requestId", requestId).put("deviceId", deviceId).put("deviceName", deviceName).put("url", url).put("format", format)
         .put("createdAt", createdAt).put("updatedAt", updatedAt).put("state", state).put("percent", percent).apply {
             options?.let { put("options", it) }
             space?.let { put("space", it) }
+            if (musicVideo) put("musicVideo", true)
             title?.let { put("title", it) }
             label?.let { put("label", it) }
             speed?.let { put("speed", it) }
@@ -315,7 +322,7 @@ class OutgoingJob(
             o.getString("requestId"), o.optString("deviceId"), o.optString("deviceName"), o.optString("url"), o.optJSONObject("format") ?: JSONObject(), o.optJSONObject("options"),
             o.optString("space").ifEmpty { null }, o.optLong("createdAt"), o.optLong("updatedAt"), o.optString("state", "sending"), o.optDouble("percent", 0.0),
             o.optString("title").ifEmpty { null }, o.optString("label").ifEmpty { null }, if (o.has("speed")) o.optLong("speed") else null, if (o.has("eta")) o.optLong("eta") else null,
-            if (o.has("totalBytes")) o.optLong("totalBytes") else null, o.optString("error").ifEmpty { null },
+            if (o.has("totalBytes")) o.optLong("totalBytes") else null, o.optString("error").ifEmpty { null }, o.optBoolean("musicVideo", false),
         )
     }
 }
@@ -347,8 +354,8 @@ class OutgoingJobs private constructor(private val file: File, private val now: 
     @Synchronized fun openFor(deviceId: String): List<OutgoingJob> = list().filter { it.deviceId == deviceId && !isTerminalJob(it.state) }
 
     /** Written to disk before it is sent. */
-    @Synchronized fun create(deviceId: String, deviceName: String, url: String, format: JSONObject, options: JSONObject?, space: String?): OutgoingJob {
-        val job = OutgoingJob(UUID.randomUUID().toString(), deviceId, deviceName, url, format, options, space, now(), now(), "sending")
+    @Synchronized fun create(deviceId: String, deviceName: String, url: String, format: JSONObject, options: JSONObject?, space: String?, musicVideo: Boolean = false): OutgoingJob {
+        val job = OutgoingJob(UUID.randomUUID().toString(), deviceId, deviceName, url, format, options, space, now(), now(), "sending", musicVideo = musicVideo)
         jobs[job.requestId] = job
         save()
         return job
