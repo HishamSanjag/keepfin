@@ -427,6 +427,9 @@ class KeepfinStore private constructor(private val o: StoreOptions) {
     /** The whole state as canonical JSON text (tests and diagnostics). */
     fun viewsJson(): CompletableFuture<String> = submit { state.viewsJson() }
 
+    /** Remembers the recording code read from the tags of an item's file (this device only, see [MergeState.setIsrc]). */
+    fun setIsrc(id: String, isrc: String?): CompletableFuture<Unit> = submit { state.setIsrc(id, isrc) }
+
     fun versionVector(): CompletableFuture<Map<String, Long>> = submit { state.versionVector() }
 
     /** What deletes and removes of these keys must observe (see [MergeState.observed]). */

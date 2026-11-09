@@ -517,5 +517,5 @@ internal val ALL_SIDECARS = SUBTITLE_EXTENSIONS + setOf("lrc")
 /** What a job looks like to the same-recording check. */
 internal fun JobRecord.recording(): Recording = Recording(
     sourceIds = SourceIds.of(job), artist = source?.artist ?: job.uploader, title = source?.title ?: job.title,
-    album = source?.album, duration = job.duration,
+    album = source?.album, duration = job.duration, isrc = source?.isrc,
 )

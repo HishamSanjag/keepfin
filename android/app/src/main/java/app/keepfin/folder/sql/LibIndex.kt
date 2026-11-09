@@ -45,6 +45,9 @@ class LibIndex(private val db: SqlStateDb, private val replicaId: String) {
                 "added INTEGER NOT NULL, played INTEGER NOT NULL, plays INTEGER NOT NULL, position REAL, watched INTEGER NOT NULL, fav INTEGER NOT NULL, " +
                 "hasLyrics INTEGER NOT NULL, srcUrl TEXT, srcId TEXT, tags TEXT NOT NULL, utags TEXT NOT NULL, place TEXT, dir TEXT, size INTEGER NOT NULL, content TEXT, prov TEXT, musicVideo INTEGER NOT NULL DEFAULT 0)",
             "CREATE TABLE IF NOT EXISTS lib_sources (sid TEXT NOT NULL, id TEXT NOT NULL, PRIMARY KEY (sid, id)) WITHOUT ROWID",
+            // this device's own reading of a song's recording code (ISRC) from its file tags: not shared data, and kept across index rebuilds
+            "CREATE TABLE IF NOT EXISTS lib_isrc (id TEXT PRIMARY KEY, isrc TEXT NOT NULL) WITHOUT ROWID",
+            "CREATE INDEX IF NOT EXISTS lib_isrc_code ON lib_isrc (isrc)",
             "CREATE TABLE IF NOT EXISTS lib_tags (tag TEXT NOT NULL, id TEXT NOT NULL, own INTEGER NOT NULL, PRIMARY KEY (tag, id)) WITHOUT ROWID",
             "CREATE INDEX IF NOT EXISTS lib_tags_by_id ON lib_tags (id)",
             "CREATE INDEX IF NOT EXISTS lib_title ON lib_index (tkey, id)",
@@ -114,6 +117,12 @@ class LibIndex(private val db: SqlStateDb, private val replicaId: String) {
 
     fun createSchema() {
         for (ddl in DDL) exec(ddl)
+    }
+
+    /** Remembers the recording code read from an item's file tags (this device only; an empty code forgets it). */
+    fun setIsrc(id: String, isrc: String?) {
+        if (isrc.isNullOrEmpty()) db.prep("DELETE FROM lib_isrc WHERE id = ?").run(listOf(id))
+        else db.prep("INSERT OR REPLACE INTO lib_isrc (id, isrc) VALUES (?, ?)").run(listOf(id, isrc))
     }
 
     /** A signature of the merge state's version vector: the index is current when it was written under the same one. */
@@ -210,6 +219,8 @@ class LibIndex(private val db: SqlStateDb, private val replicaId: String) {
         }
         val tIdx = System.nanoTime()
         for (ddl in indexes) exec(ddl)
+        // the recording codes read on this device outlive a rebuild, except those of items that are gone
+        exec("DELETE FROM lib_isrc WHERE id NOT IN (SELECT id FROM lib_index)")
         timings["read item_view"] = tRead / 1_000_000; timings["build row values"] = tRow / 1_000_000; timings["insert lib_index"] = tUpsert / 1_000_000
         timings["tags and sources"] = tSide / 1_000_000; timings["search rows"] = tFts / 1_000_000; timings["secondary indexes"] = (System.nanoTime() - tIdx) / 1_000_000
     }
@@ -259,6 +270,7 @@ class LibIndex(private val db: SqlStateDb, private val replicaId: String) {
         val drop = db.prep("DELETE FROM lib_index WHERE id = ?")
         val sourceDrop = db.prep("DELETE FROM lib_sources WHERE id = ?")
         val tagDrop = db.prep("DELETE FROM lib_tags WHERE id = ?")
+        val isrcDrop = db.prep("DELETE FROM lib_isrc WHERE id = ?")
         val tagPut = db.prep("INSERT OR IGNORE INTO lib_tags (tag, id, own) VALUES (?, ?, ?)")
         val sourcePut = db.prep("INSERT OR IGNORE INTO lib_sources (sid, id) VALUES (?, ?)")
         for (id in ids) {
@@ -271,6 +283,7 @@ class LibIndex(private val db: SqlStateDb, private val replicaId: String) {
                     drop.run(listOf(id))
                     sourceDrop.run(listOf(id))
                     tagDrop.run(listOf(id))
+                    isrcDrop.run(listOf(id))
                 }
                 continue
             }

@@ -170,6 +170,50 @@ class FolderDownloadsTest {
         assertTrue(runCatching { repo.collectionFollow(mix.id, FollowUpdate(mode = FollowMode.AUTO)) }.exceptionOrNull() is IllegalArgumentException)
     }
 
+    private fun mp3WithCode(code: String?): ByteArray {
+        fun syncsafe(n: Int) = byteArrayOf((n shr 21 and 0x7f).toByte(), (n shr 14 and 0x7f).toByte(), (n shr 7 and 0x7f).toByte(), (n and 0x7f).toByte())
+        val content = byteArrayOf(3) + (code ?: "").toByteArray()
+        val frame = if (code == null) ByteArray(0) else "TSRC".toByteArray() + syncsafe(content.size) + byteArrayOf(0, 0) + content
+        return "ID3".toByteArray() + byteArrayOf(4, 0, 0) + syncsafe(frame.size) + frame + ByteArray(200) { 7 }
+    }
+
+    private fun imported(name: String, bytes: ByteArray, title: String, artist: String): String {
+        val template = app.keepfin.core.library.LibItem(id = "", space = "music", kind = "audio", title = title, artist = artist, duration = 120.0, addedAt = 1.0)
+        return repo.addFile("music", "", name, bytes.inputStream(), template).itemId
+    }
+
+    private fun isrcOf(id: String) = repo.mergeBackend().state.query("SELECT isrc FROM lib_isrc WHERE id = ?", listOf(id)).firstOrNull()?.get(0)
+
+    @Test fun aSongsRecordingCodeIsReadOnImportKeptOnThisDeviceAndFindsTheSameSongUnderAnotherName() {
+        val id = imported("Imported.mp3", mp3WithCode("GBDUW0000053"), "Imported", "Someone")
+        assertEquals("GBDUW0000053", isrcOf(id))
+        // nothing about the code is in the shared data
+        assertTrue(!repo.mergeBackend().state.viewsJson().contains("GBDUW0000053"))
+        // another title, artist and link, no source id in common: the code decides
+        val match = repo.findExisting(job("n"), Recording(emptySet(), null, "Other Artist", "A Different Title", null, 5.0, isrc = "GB-DUW-00-00053"))
+        assertNotNull(match)
+        assertEquals(id, match!!.itemId)
+        assertEquals("isrc", match.by)
+        // a different code does not match
+        assertNull(repo.findExisting(job("n2"), Recording(emptySet(), null, "Other Artist", "A Different Title", null, 5.0, isrc = "GBDUW0000099")))
+    }
+
+    @Test fun aSongWithoutACodeIsFoundTheWayItWasBefore() {
+        val id = imported("Plain.mp3", mp3WithCode(null), "Plain Song", "Band")
+        assertNull(isrcOf(id))
+        assertNull(repo.findExisting(job("p"), Recording(emptySet(), null, "Other", "Unrelated", null, 5.0, isrc = "GBDUW0000053")))
+        val match = repo.findExisting(job("p"), Recording(emptySet(), null, "Band", "Plain Song", null, 120.0))
+        assertEquals(id, match?.itemId)
+        assertEquals("metadata", match?.by)
+    }
+
+    @Test fun aDownloadsServiceCodeIsKeptWhenTheFileHoldsNoReadableOne() {
+        val media = private("Song q.m4a", ByteArray(300) { 1 })
+        repo.saveDownload(job("q"), SourceTags("Song q", "Band", null, isrc = "GBDUW0000053"), "music", "", "Song q", media, emptyList())
+        val match = repo.findExisting(job("q2"), Recording(emptySet(), null, "Zed", "Elsewhere", null, 9.0, isrc = "GBDUW0000053"))
+        assertEquals("isrc", match?.by)
+    }
+
     @Test fun anExistingRecordingIsFoundWhenTheSpaceSkipsExisting() {
         repo.saveDownload(job("e"), SourceTags("Song e", "Band", null), "music", "", "Song e", private("Song e.mp3", ByteArray(30) { 3 }), emptyList())
         val match = repo.findExisting(job("e2"), Recording(app.keepfin.SourceIds.of(job("e")), null, "Band", "Song e", null, 120.0))

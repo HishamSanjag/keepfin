@@ -184,6 +184,8 @@ class SqlMergeState(
     /** Runs a query on the writer connection (store thread only). */
     fun query(sql: String, params: List<Any?> = emptyList()): List<List<Any?>> = db.prep(sql).rows(params)
 
+    override fun setIsrc(id: String, isrc: String?) = index.setIsrc(id, isrc)
+
     val views: StateViews get() = StateViews(::query)
 
     val statePath: String get() = path

@@ -1,6 +1,7 @@
 package app.keepfin.library.repo
 
 import app.keepfin.ImportResult
+import app.keepfin.IsrcCapture
 import app.keepfin.LibrarySettings
 import app.keepfin.Providers
 import app.keepfin.Space
@@ -34,7 +35,9 @@ internal class RepoImports(private val core: RepoCore) {
         b.folder.mkdirs(dir)
         val name = core.uniqueIn(b, dir, fileName)
         val path = join(dir, name)
-        val result = source.use { b.folder.publishFrom(path, it) }
+        // a song's recording code is read from its tags on the way in (this device only; it is never written to the shared data)
+        val capture = if (template.kind == "audio") IsrcCapture(source) else null
+        val result = (capture ?: source).use { b.folder.publishFrom(path, it) }
         val contentId = "sha256:${result.sha256}"
         val existing = core.rd().rows("SELECT id FROM lib_index WHERE content = ? LIMIT 1", listOf(contentId)).firstOrNull()?.get(0) as String?
         if (existing != null) {
@@ -43,6 +46,7 @@ internal class RepoImports(private val core: RepoCore) {
         }
         val item = template.copy(id = core.newId(), space = spaceId, place = path, addedAt = template.addedAt ?: core.now().toDouble(), kind = template.kind)
         core.addItems(listOf(item), listOf(LibraryMapping.reviseDraft(item.id, contentId, result.size, emptyList())))
+        capture?.isrc()?.let { runCatching { core.setIsrc(item.id, it) }.onFailure { e -> core.log("The recording code of a file could not be kept.", e) } }
         return AddedFile(item.id, null)
     }
 

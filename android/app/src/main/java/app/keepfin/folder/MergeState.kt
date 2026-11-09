@@ -20,6 +20,9 @@ interface MergeState {
     /** Admits lines that came in a segment signed by the device [signer] (null: an unsigned segment); the membership judges them. */
     fun admit(lines: List<String>, signer: String?): List<AdmitKind> = admit(lines)
 
+    /** Remembers the recording code (ISRC) read from the tags of an item's file, on this device only (not an op); an empty code forgets it. */
+    fun setIsrc(id: String, isrc: String?) {}
+
     /** Who may write in this library (inactive until a genesis is held). */
     fun membership(): MembershipView = MembershipView.INACTIVE
 

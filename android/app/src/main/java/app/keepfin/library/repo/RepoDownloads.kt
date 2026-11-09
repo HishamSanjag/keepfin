@@ -32,9 +32,9 @@ import org.json.JSONObject
 
 /** Finished downloads saved into the folder, their collections, and the checks for a recording the library already holds. Inner state is reached through [RepoCore]. */
 internal class RepoDownloads(private val core: RepoCore) {
-    private fun known(item: LibItem, content: String?): Recording = Recording(
+    private fun known(item: LibItem, content: String?, isrc: String?): Recording = Recording(
         sourceIds = SourceIds.of(item.sourceUrl) + listOfNotNull(item.sourceId), contentKey = content,
-        artist = item.artist ?: item.albumArtist, title = item.title, album = item.album, duration = item.duration,
+        artist = item.artist ?: item.albumArtist, title = item.title, album = item.album, duration = item.duration, isrc = isrc,
     )
 
     private val titleSplit = Regex("\\s+[-\u2013\u2014]\\s+")
@@ -45,6 +45,10 @@ internal class RepoDownloads(private val core: RepoCore) {
         val out = LinkedHashSet<String>()
         if (candidate.sourceIds.isNotEmpty()) {
             for (r in core.rd().rows("SELECT i.id FROM lib_sources s JOIN lib_index i ON i.id = s.id WHERE s.sid IN (SELECT value FROM json_each(?1)) AND i.space = ?2 AND i.media = ?3", listOf(jsonList(candidate.sourceIds), wire, kind.wire))) out += r[0] as String
+        }
+        // the recording code read from the file tags (this device's own index of it, see lib_isrc)
+        app.keepfin.core.dedupe.Recordings.cleanIsrc(candidate.isrc)?.let { isrc ->
+            for (r in core.rd().rows("SELECT i.id FROM lib_isrc c JOIN lib_index i ON i.id = c.id WHERE c.isrc = ?1 AND i.space = ?2 AND i.media = ?3", listOf(isrc, wire, kind.wire))) out += r[0] as String
         }
         candidate.contentKey?.let { content ->
             for (r in core.rd().rows("SELECT id FROM lib_index WHERE content = ?1 AND space = ?2 AND media = ?3", listOf(content, wire, kind.wire))) out += r[0] as String
@@ -70,7 +74,9 @@ internal class RepoDownloads(private val core: RepoCore) {
         if (ids.isEmpty()) return null
         val contents = HashMap<String, String?>()
         for (r in core.rd().rows("SELECT id, content FROM lib_index WHERE id IN (SELECT value FROM json_each(?))", listOf(jsonList(ids)))) contents[r[0] as String] = r[1] as String?
-        val library = core.readItems(ids).first.map { it to known(it, contents[it.id]) }
+        val isrcs = HashMap<String, String>()
+        for (r in core.rd().rows("SELECT id, isrc FROM lib_isrc WHERE id IN (SELECT value FROM json_each(?))", listOf(jsonList(ids)))) isrcs[r[0] as String] = r[1] as String
+        val library = core.readItems(ids).first.map { it to known(it, contents[it.id], isrcs[it.id]) }
         val (item, by) = Recordings.find(candidate, library) ?: return null
         return ExistingMatch(item.id, item.place?.let { if (isLinkedPlace(it)) core.locators.get(item.id)?.uri ?: "" else b.uriFor(it) } ?: "", spaceId, by)
     }
@@ -168,6 +174,8 @@ internal class RepoDownloads(private val core: RepoCore) {
             chapters = if (kind == "video") chapters else null, hasLyrics = if (hasLyrics) true else null,
         )
         val added = core.addFile(spaceId, subfolder, fileName, media.inputStream(), template)
+        // the service's own code for the song, when the file's tags carry none we can read back (a converted M4A, say)
+        if (audio && added.duplicateOf == null) tags?.isrc?.let { code -> app.keepfin.core.dedupe.Recordings.cleanIsrc(code)?.let { runCatching { core.setIsrc(added.itemId, it) } } }
         val place = core.placeOf(added.itemId) ?: throw FolderError.Io("The saved file could not be found in the Keepfin folder.")
         val problems = ArrayList<String>()
         val uris = ArrayList<String>()

@@ -60,6 +60,8 @@ internal interface RepoCore {
     fun updateCollection(id: String, transform: (LibCollection) -> LibCollection): Boolean
     fun removeItems(gone: Set<String>)
     fun addFile(spaceId: String, subfolder: String, fileName: String, source: InputStream, template: LibItem): AddedFile
+    /** Remembers the recording code read from the tags of an item's file (this device only, never synced). */
+    fun setIsrc(id: String, isrc: String)
     fun collectionAdd(id: String, itemIds: List<String>)
     fun collectionReorder(id: String, itemIds: List<String>)
 

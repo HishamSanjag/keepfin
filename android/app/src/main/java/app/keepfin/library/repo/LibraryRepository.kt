@@ -218,6 +218,7 @@ internal class LibraryRepository(
         override fun backend(): RepositoryBackend = this@LibraryRepository.backend()
         override fun rd(): IndexReader = this@LibraryRepository.rd()
         override fun publish() = this@LibraryRepository.publish()
+        override fun setIsrc(id: String, isrc: String) { backend().store.setIsrc(id, isrc).get(30, TimeUnit.SECONDS) }
 
         override fun readItems(ids: Collection<String>): Pair<List<LibItem>, Map<String, Long>> = this@LibraryRepository.readItems(ids)
         override fun libItem(id: String): LibItem? = this@LibraryRepository.libItem(id)

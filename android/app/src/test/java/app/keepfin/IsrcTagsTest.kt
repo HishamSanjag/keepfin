@@ -25,6 +25,25 @@ class IsrcTagsTest {
         assertNull(IsrcTags.read(id3(3, "TSRC" to "not a code")))
     }
 
+    @Test fun readingAStreamOnTheWayFindsTheCodeAtTheStartAndInTheTailOfALargeFile() {
+        // ID3 at the start of a file larger than both windows
+        val start = id3(3, "TSRC" to "GBDUW0000053") + ByteArray(3 shl 20) { 1 }
+        val a = IsrcCapture(start.inputStream())
+        a.readBytes()
+        assertEquals("GBDUW0000053", a.isrc())
+        // a movie box at the end, read in small odd-sized chunks
+        fun box(type: String, vararg parts: ByteArray): ByteArray { val body = parts.fold(ByteArray(0)) { x, p -> x + p }; return be32(8 + body.size) + ascii(type) + body }
+        val atom = box("----", box("mean", be32(0), ascii("com.apple.iTunes")), box("name", be32(0), ascii("ISRC")), box("data", be32(1), be32(0), ascii("GBDUW0000057")))
+        val end = ByteArray(3 shl 20) { 2 } + box("moov", box("udta", box("meta", be32(0), box("ilst", atom))))
+        val b = IsrcCapture(end.inputStream())
+        val chunk = ByteArray(70_001)
+        while (b.read(chunk, 0, chunk.size) >= 0) { }
+        assertEquals("GBDUW0000057", b.isrc())
+        val c = IsrcCapture(ByteArray(5_000_000) { 3 }.inputStream())
+        c.readBytes()
+        assertNull(c.isrc())
+    }
+
     @Test fun mp4FreeformAtomCarriesTheCode() {
         fun box(type: String, vararg parts: ByteArray): ByteArray { val body = parts.fold(ByteArray(0)) { a, p -> a + p }; return be32(8 + body.size) + ascii(type) + body }
         val atom = box("----", box("mean", be32(0), ascii("com.apple.iTunes")), box("name", be32(0), ascii("ISRC")), box("data", be32(1), be32(0), ascii("GBDUW0000057")))

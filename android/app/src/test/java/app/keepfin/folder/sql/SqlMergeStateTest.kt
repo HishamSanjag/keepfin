@@ -187,6 +187,30 @@ class SqlMergeStateTest {
         assertEquals(many.query("SELECT id, title, fav FROM lib_index ORDER BY id"), one.query("SELECT id, title, fav FROM lib_index ORDER BY id"))
     }
 
+    @Test fun anIndexFromBeforeTheRecordingCodeTableOpensWithItsRowsAndKeepsTheCodesItIsGiven() {
+        val m = model(40)
+        val folder = FakeFolderAccess()
+        val state = sql("isrc")
+        val store = open("isrc", folder, state)
+        store.apply(drafts(m)).get(10, TimeUnit.SECONDS)
+        val id = state.query("SELECT id FROM lib_index ORDER BY id LIMIT 1")[0][0] as String
+        store.close().get(10, TimeUnit.SECONDS)
+        // the previous schema had no lib_isrc
+        java.sql.DriverManager.getConnection("jdbc:sqlite:" + File(root, "isrc/state.db").path).use { c -> c.createStatement().use { it.execute("DROP TABLE lib_isrc") } }
+        val again = SqlMergeState(File(root, "isrc/state.db").path, library, replica, null, JdbcHost())
+        val reopened = open("isrc", folder, again)
+        val reader = IndexReader(again.statePath, { again.epoch }) { JdbcHost().open(it) }
+        assertEquals(40L, reader.rows("SELECT COUNT(*) FROM lib_index")[0][0])
+        assertEquals(0L, reader.rows("SELECT COUNT(*) FROM lib_isrc")[0][0])
+        reopened.setIsrc(id, "GBDUW0000053").get(10, TimeUnit.SECONDS)
+        assertEquals("GBDUW0000053", reader.rows("SELECT isrc FROM lib_isrc WHERE id = ?", listOf(id))[0][0])
+        // a rebuild of the index keeps the code of an item that is still there, and drops the code of one that is not
+        reopened.setIsrc("00000000-0000-4000-8000-0000000fffff", "GBDUW0000054").get(10, TimeUnit.SECONDS)
+        again.rebuildIndex()
+        assertEquals(listOf(listOf<Any?>("GBDUW0000053")), reader.rows("SELECT isrc FROM lib_isrc"))
+        assertEquals(40L, reader.rows("SELECT COUNT(*) FROM lib_index")[0][0])
+    }
+
     @Test fun aKeptDatabaseIsOpenedWithoutReplayAndStaysCurrent() {
         val m = model(40)
         val folder = FakeFolderAccess()
