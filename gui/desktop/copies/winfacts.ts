@@ -71,11 +71,16 @@ export async function onlineOnlyFiles(root: string, signal?: AbortSignal): Promi
 
 /** [onlineOnlyFiles] without asking whether the folder is a cloud folder: lists every file under [root] whose attributes say it is not on the disk. */
 export async function scanOnlineOnly(root: string, signal?: AbortSignal): Promise<string[] | null> {
-  // PowerShell only narrows (any of the three attribute bits); the core decides from the bits it prints (isOnlineOnly)
+  // PowerShell only narrows (any of the three attribute bits); the core decides from the bits it prints (isOnlineOnly).
+  // Relative paths are built from the names walked, never cut from FullName: PowerShell can spell the same folder differently
+  // from [root] (a short 8.3 name such as RUNNER~1 comes back long), which shifted the cut. Links are not followed.
   const script =
-    "$root = $env:KF_ROOT; $mask = 0x400000 -bor 0x40000 -bor 0x1000; " +
-    "Get-ChildItem -LiteralPath $root -Recurse -File -Force -ErrorAction SilentlyContinue | Where-Object { ([int]$_.Attributes -band $mask) -ne 0 } | " +
-    "ForEach-Object { '{0}|{1}' -f [int]$_.Attributes, $_.FullName.Substring($root.TrimEnd('\\').Length + 1) }"
+    "$mask = 0x400000 -bor 0x40000 -bor 0x1000; " +
+    "function Walk($dir, $rel) { foreach ($i in @(Get-ChildItem -LiteralPath $dir -Force -ErrorAction SilentlyContinue)) { " +
+    "$r = if ($rel) { $rel + '\\' + $i.Name } else { $i.Name }; " +
+    "if ($i.PSIsContainer) { if (-not $i.LinkType) { Walk $i.FullName $r } } " +
+    "elseif (([int]$i.Attributes -band $mask) -ne 0) { '{0}|{1}' -f [int]$i.Attributes, $r } } }; " +
+    "Walk $env:KF_ROOT ''"
   try {
     const out = await powershell(script, {KF_ROOT: path.resolve(root)}, 15 * 60_000, signal)
     const files: string[] = []

@@ -34,8 +34,9 @@ function deps(deviceDir: string) {
   }
   return {value, events, relaunches: () => relaunched}
 }
+// up to 20 s: a copy run asks Windows for the drive format once per process, which takes seconds on slow CI machines
 const until = async (check: () => boolean) => {
-  for (let i = 0; i < 500 && !check(); i++) await new Promise((resolve) => setTimeout(resolve, 10))
+  for (let i = 0; i < 2000 && !check(); i++) await new Promise((resolve) => setTimeout(resolve, 10))
   assert.ok(check(), 'timed out')
 }
 
