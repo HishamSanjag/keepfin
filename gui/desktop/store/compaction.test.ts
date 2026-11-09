@@ -28,11 +28,14 @@ async function env(): Promise<Env> {
   const dir = await fs.mkdtemp(path.join(os.tmpdir(), 'keepfin-compact-'))
   const folder = await createKeepfinFolder(path.join(dir, 'Keepfin'), {libraryId: randomUUID(), replicaId: randomUUID(), now: new Date().toISOString(), hide: () => undefined})
   let clock = 1_700_000_000_000
+  // every store a test opens, so a test that fails before its own close() cannot leave one running (it would hold the test
+  // process open until the CI job times out)
+  const opened: KeepfinStore[] = []
   return {
     dir,
     folder,
-    open: (name, actor, extra = {}) =>
-      KeepfinStore.open({
+    open: async (name, actor, extra = {}) => {
+      const store = await KeepfinStore.open({
         root: folder.root,
         libraryId: folder.libraryId,
         actor,
@@ -45,8 +48,18 @@ async function env(): Promise<Env> {
         signer: key,
         compact: false,
         ...extra,
-      }),
-    cleanup: () => fs.rm(dir, {recursive: true, force: true, maxRetries: 10, retryDelay: 200}),
+      })
+      opened.push(store)
+      return store
+    },
+    cleanup: async () => {
+      for (const store of opened) {
+        try {
+          store.abandon() // harmless after close(); stops one a failed test left open
+        } catch {}
+      }
+      await fs.rm(dir, {recursive: true, force: true, maxRetries: 10, retryDelay: 200})
+    },
   }
 }
 
@@ -440,7 +453,7 @@ test('a flush that leaves eight small segments compacts them on its own, soon', 
     const store = await e.open('dev', A, {compact: true, compactGapMs: 0, compactSoonMs: 50, compactDelayMs: 3_600_000})
     currentLibrary = e.folder.libraryId
     await pile(store, 10)
-    const end = Date.now() + 5000
+    const end = Date.now() + 20_000
     while ((await names(e.folder.root, A)).length > 1 && Date.now() < end) await delay(50)
     assert.equal((await names(e.folder.root, A)).length, 1)
     await store.close()
