@@ -39,7 +39,7 @@ import {handleLibraryRequest, libraryOperations, type LibraryDeps} from './libra
 import {purgeKeepfinTrash} from './library/files.js'
 import {FollowEngine} from './library/follow.js'
 import {ArtistFollowing, artistHost} from './library/artists.js'
-import {findArtistChannel} from './engine/music.js'
+import {fetchArtistReleases, findArtistChannel} from './engine/music.js'
 import {prefersAudio} from '../shared/providers.js'
 import {UndoShelf} from './library/undo.js'
 import {respondToMedia} from './library/protocol.js'
@@ -378,7 +378,7 @@ else {
       followEngine = follow
       const artists = new ArtistFollowing(
         path.join(userData, 'following.json'),
-        artistHost(queue, (name, key) => findArtistChannel(name, key), (url) => prefersAudio(url)),
+        artistHost(queue, (name, key) => findArtistChannel(name, key), (channelId) => fetchArtistReleases(channelId), (url) => prefersAudio(url)),
         (state) => push({type: 'following', state}),
       )
       // followed artists are looked at a little after launch and then every 15 minutes; each artist is read at most twice a day
@@ -469,6 +469,17 @@ else {
         hasDownloads: () =>
           queue.snapshot().jobs.some((job) => isActive(job.status)),
         openReleases: (url) => shell.openExternal(url),
+        bundledNotes: () => {
+          // Packaged next to the program by scripts/build/stage-release-notes.mjs; a development run reads the docs.
+          const file = app.isPackaged
+            ? path.join(process.resourcesPath, 'release-notes.md')
+            : path.join(app.getAppPath(), 'docs', 'release-notes', `${app.getVersion()}.md`)
+          try {
+            return readFileSync(file, 'utf8')
+          } catch {
+            return undefined
+          }
+        },
         onReady: (version) => recorder.updateReady(version),
       })
       const ids = () => queue.snapshot().jobs.map((job) => job.id)

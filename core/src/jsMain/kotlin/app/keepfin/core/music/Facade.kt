@@ -274,3 +274,29 @@ fun musicVideosBest(artists: Array<String>, title: String, candidates: Array<JsV
 @JsExport
 fun musicDeezerIsrcs(json: String): Array<Array<String>> =
     DeezerTracks.isrcs(json).map { arrayOf(it.key, it.value) }.toTypedArray()
+
+// -- followed artist releases (see ArtistReleases) ----------------------------------------------------------------------
+
+@JsExport
+class JsArtistRelease(val link: String, val title: String, val kind: String, val thumbnail: String?)
+
+@JsExport
+fun musicArtistBrowseUrl(): String = ArtistReleases.browseUrl
+
+/** The artist page request body for a channel id, or null when it is not one. */
+@JsExport
+fun musicArtistBrowseBody(channelId: String): String? = ArtistReleases.browseBody(channelId)
+
+/** The albums and singles (or latest uploads) in an artist page response. Throws when the text is not JSON. */
+@JsExport
+fun musicArtistReleases(json: String): Array<JsArtistRelease> =
+    ArtistReleases.parse(json).map { JsArtistRelease(it.link, it.title, it.kind, it.thumbnail) }.toTypedArray()
+
+@JsExport
+fun musicArtistChannelUrl(channelId: String): String = ArtistReleases.channelUrl(channelId)
+
+@JsExport
+fun musicArtistChannelId(url: String): String? = ArtistReleases.channelId(url)
+
+@JsExport
+fun musicArtistLegacyAddress(url: String): Boolean = ArtistReleases.isLegacyAddress(url)

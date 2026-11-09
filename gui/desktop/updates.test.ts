@@ -159,6 +159,23 @@ test('installed-version notes use the fixed public feed, preserve updater phase,
   assert.equal(calls, 1)
 })
 
+test('the notes packaged with the installed version need no network', async () => {
+  const owner = new DesktopUpdates({
+    updater: Object.assign(new EventEmitter(), {}) as unknown as AppUpdater,
+    mode: 'installed',
+    current: '1.1.0',
+    hasDownloads: () => false,
+    openReleases: async () => {},
+    bundledNotes: () => '## Windows\n- Photo posts',
+    fetch: (async () => {
+      throw new Error('the release is not public yet')
+    }) as typeof fetch,
+  })
+  const state = await owner.action('updateNotes')
+  assert.equal(state.notesVersion, '1.1.0')
+  assert.equal(state.notes, '## Windows\n- Photo posts')
+})
+
 test('release notes network failure does not disable downloading or fabricate an update', async () => {
   const owner = new DesktopUpdates({
     updater: Object.assign(new EventEmitter(), {}) as unknown as AppUpdater,

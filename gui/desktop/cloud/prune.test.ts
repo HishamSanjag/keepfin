@@ -6,7 +6,7 @@ import path from 'node:path'
 import {afterEach, beforeEach, describe, it} from 'node:test'
 import {FakeGraph} from './fakes/graph.js'
 import {pull, push} from './mirror.js'
-import type {MirrorOptions} from './mirror.js'
+import type {MirrorOptions, MirrorProgress} from './mirror.js'
 import {rig, tmpDir} from './testkit.js'
 import type {Rig} from './testkit.js'
 import {CloudTransport} from './transport.js'
@@ -82,6 +82,21 @@ describe('pruning redundant segments on a fake Graph account', () => {
     assert.equal(followed.removed, small)
     const names = await fs.readdir(path.join(b.mirror, '.keepfin', 'ops', ACTOR))
     assert.deepEqual(names, [seg(1, small).split('/').pop()])
+  })
+
+  it('says how far the clean-up is: tidying ticks count the removals, and four run at once', async () => {
+    const small = 40
+    for (let i = 1; i <= small; i++) await put(a, seg(i, i), `small ${i}`)
+    await put(a, seg(1, small), 'merged')
+    await push(a)
+    for (let i = 1; i <= small; i++) await fs.rm(path.join(a.mirror, ...seg(i, i).split('/')))
+    const ticks: MirrorProgress[] = []
+    const out = await push({...a, onProgress: (p) => ticks.push(p)})
+    assert.equal(out.pruned, small)
+    const tidy = ticks.filter((p) => p.phase === 'tidying')
+    assert.equal(tidy.length, small)
+    assert.ok(tidy.every((p) => p.total === small && p.done >= 0 && p.done < small))
+    assert.equal(Math.max(...tidy.map((p) => p.done)) >= small - 4, true, 'the last ticks are near the end')
   })
 
   it('a removal that nothing covers still goes to the trash', async () => {

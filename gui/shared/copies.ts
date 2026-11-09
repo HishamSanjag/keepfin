@@ -53,7 +53,7 @@ export type CopyRow = {key: string; kind: 'space' | 'playlist' | 'favourites' | 
 export type CopyExports = {playlistFiles: boolean; flat: boolean; mp3: boolean}
 
 /** [data]: Keepfin's own bookkeeping is moving, not the person's files; the counts stay zero and the UI says so quietly. */
-export type CopyProgress = {doneActions: number; totalActions: number; doneBytes: number; totalBytes: number; current: string | null; data?: boolean}
+export type CopyProgress = {doneActions: number; totalActions: number; doneBytes: number; totalBytes: number; current: string | null; data?: boolean; dataStep?: 'saving' | 'tidying'; dataDone?: number; dataTotal?: number}
 
 /** Why some files of a copy were not copied (words from the shared core: no codes, no temporary names). */
 export type CopyProblem = {
@@ -93,6 +93,9 @@ export type CopyPlaceView = {
   kept: number
   waiting: number
   review: number
+  /** The person's files (songs, videos, photos, other; no sidecars, none of Keepfin's own data) the copy should hold / of those it has. Absent: only kept and waiting are known. */
+  items?: number
+  itemsKept?: number
   /** Files that could not be copied at the last sync, said in plain words. Absent when none failed. */
   problem?: CopyProblem
   freeBytes?: number

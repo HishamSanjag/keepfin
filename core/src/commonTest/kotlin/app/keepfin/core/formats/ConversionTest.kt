@@ -97,6 +97,34 @@ class ConversionTest {
         assertNull(Conversion.estimate(360, VideoOption("540p", 540, 540, 30, false, "h264", "mp4", "f", true, null, true, null), null))
     }
 
+    private fun lightAudio(size: Long = 188_207, abr: Double = 44.6) = AudioOption("a", "a", "aac", "m4a", abr, size, false, null, null)
+
+    @Test
+    fun withoutALengthTheAudioStreamSaysHowLongTheClipIs() {
+        // An Instagram reel: the 720p video-only stream plus its audio weigh 1,885,997 bytes (a size covers the best audio) and the
+        // manifest says 405 kbit/s (the clip really runs 33.6 s; the video alone would give 37.2 s, the audio gives 33.8 s: 188,207
+        // bytes at 44.6 kbit/s). 480p is made at 80% of (1,885,997 * 8 / 33.76 s - 128) = 255 kbit/s and the light audio is kept:
+        // 255 * 33.76 / 8 * 1000 + 188,207 = 1,264,000 bytes (the real conversion came to 1,363,243, 8% more).
+        val source = VideoOption("720p", 720, 728, 30, false, "vp9", "mp4", "v", false, 1_885_997, false, 405.0)
+        val size = Conversion.estimate(480, source, null, lightAudio())!!
+        assertEquals(1_264_000L, size / 1000 * 1000)
+    }
+
+    @Test
+    fun aManifestPeakBitrateDoesNotShortenTheEstimate() {
+        // The video claims 3000 kbit/s but its 1,000,000 bytes (audio included) are spread over 24 s: worked out from the video the
+        // clip is 2.7 s long and the estimate 443,000 bytes. The audio (134,400 bytes at 44.8 kbit/s = 24 s) gives the real length:
+        // 80% of (1,000,000 * 8 / 24 - 128) = 164 kbit/s -> 164 * 24 / 8 * 1000 + 134,400 = 626,400 bytes.
+        val source = VideoOption("540p", 540, 540, 30, false, "vp9", "mp4", "v", false, 1_000_000, false, 3000.0)
+        val audio = lightAudio(size = 134_400, abr = 44.8)
+        assertEquals(626_400L, Conversion.estimate(480, source, null, audio))
+        assertTrue(Conversion.estimate(480, source, null)!! < 450_000)
+    }
+    @Test
+    fun aSourceWithItsOwnAudioIsNotGivenTheSeparateStream() {
+        assertEquals(Conversion.estimate(480, served(540, size = 50_000_000), 20.0), Conversion.estimate(480, served(540, size = 50_000_000), 20.0, lightAudio()))
+    }
+
     @Test
     fun mediaInfoAddsConvertedSizesOnlyWhenAsked() {
         val info = "{\"title\":\"x\",\"duration\":20,\"formats\":[" +

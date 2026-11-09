@@ -1,5 +1,6 @@
 package app.keepfin
 
+import app.keepfin.core.music.ArtistReleaseItem
 import app.keepfin.core.music.VideoArtist
 import app.keepfin.core.music.VideoCandidate
 import org.junit.Assert.assertEquals
@@ -11,20 +12,19 @@ import org.junit.Test
 /** Followed artists through [FollowingHost]: a scripted channel search and release listing stand in for the network. */
 class ArtistFollowingTest {
     private class Host : FollowingHost {
-        var channel: () -> String? = { "UCpale" }
-        var releases: () -> List<PlaylistEntry> = { emptyList() }
+        var channel: () -> String? = { "UCpale0001" }
+        var releases: () -> List<ArtistReleaseItem> = { emptyList() }
         var listingError: String? = null
         var metered = false
         val kept = ArrayList<String>()
         var keepFails = false
         val discovered = ArrayList<String>()
         override fun resolveChannel(name: String, key: String) = channel()
-        override fun discover(url: String, session: String, start: Int, end: Int): PlaylistDiscovery {
-            discovered += url
+        override fun listReleases(channelId: String): List<ArtistReleaseItem> {
+            discovered += channelId
             if (listingError != null) error(listingError!!)
-            return PlaylistDiscovery("d", url, "Releases", releases(), "completed", null, 200, false)
+            return releases()
         }
-        override fun dropSession(session: String) {}
         override fun keep(url: String): Int { check(!keepFails) { "queue full" }; kept += url; return 3 }
         override fun metered() = metered
     }
@@ -40,7 +40,7 @@ class ArtistFollowingTest {
     private val store = Memory()
     private val following = ArtistFollowing(host, store, clock = { now })
 
-    private fun release(id: String, title: String = "Album - $id") = PlaylistEntry("https://www.youtube.com/playlist?list=OLAK5uy_$id", title, thumbnail = "t-$id", uploader = null, duration = null, position = 1)
+    private fun release(id: String, title: String = "Release $id", kind: String = "Album") = ArtistReleaseItem("https://music.youtube.com/playlist?list=OLAK5uy_$id", title, kind, "t-$id")
 
     @Test fun followingTheSameArtistTwiceIsOneFollowWhateverTheSpelling() {
         val first = following.follow("Pale Cassette")!!
@@ -56,7 +56,8 @@ class ArtistFollowingTest {
         val state = following.state.value
         assertTrue(state.releases.isEmpty())
         assertEquals(2, state.artists.single().seen.size)
-        assertEquals("https://www.youtube.com/channel/UCpale/releases", host.discovered.single())
+        assertEquals("UCpale0001", host.discovered.single())
+        assertEquals("https://music.youtube.com/channel/UCpale0001", state.artists.single().url)
         assertNull(state.artists.single().error)
     }
 
@@ -65,7 +66,7 @@ class ArtistFollowingTest {
         host.releases = { listOf(release("a")) }
         following.check(artist.id, manual = true)
         now += 3 * ReleaseDay
-        host.releases = { listOf(release("a"), release("b", "Single - Night Ferry")) }
+        host.releases = { listOf(release("a"), release("b", "Night Ferry", "Single")) }
         assertEquals(1, following.check(artist.id, manual = true))
         val found = following.state.value.releases.single()
         assertEquals("Night Ferry", found.title)
@@ -131,10 +132,10 @@ class ArtistFollowingTest {
         host.channel = { null }
         assertEquals(0, following.check(artist.id, manual = true))
         assertTrue(following.state.value.artists.single().error!!.contains("couldn't find Nobody Known"))
-        host.channel = { "UCx" }
-        host.listingError = "HTTP Error 500"
+        host.channel = { "UCx0000001" }
+        host.listingError = "UCx0000001: This channel does not have a releases tab (yt-dlp)"
         following.check(artist.id, manual = true)
-        assertTrue(following.state.value.artists.single().error != null)
+        assertEquals("Keepfin couldn't check this artist right now. It will try again later.", following.state.value.artists.single().error)
         assertFalse(following.state.value.artists.single().checkedOnce)
         host.listingError = null
         host.releases = { listOf(release("a")) }
@@ -168,6 +169,32 @@ class ArtistFollowingTest {
         val again = ArtistFollowing(host, store, clock = { now })
         assertEquals(following.state.value.copy(checking = false), again.state.value)
         assertTrue(again.state.value.isFollowing("Pale Cassette"))
+    }
+
+    @Test fun oneArtistThatFailsDoesNotStopTheOthers() {
+        val first = following.follow("Pale Cassette")!!
+        val second = following.follow("Glum Aleks")!!
+        host.channel = { "UCany000001" }
+        var calls = 0
+        host.releases = { if (calls++ == 0) error("boom") else listOf(release("a")) }
+        following.check(null, manual = true)
+        val state = following.state.value
+        assertEquals(ArtistFollowing.CHECK_FAILED, state.artists.first { it.id == first.id }.error)
+        assertNull(state.artists.first { it.id == second.id }.error)
+        assertTrue(state.artists.first { it.id == second.id }.checkedOnce)
+    }
+
+    @Test fun anArtistStoredByTheFirstReleaseCheckIsCheckedAfreshAndItsOldErrorIsDropped() {
+        val old = """{"v":1,"artists":[{"id":"a1","name":"Ariana Grande","key":"ariana grande","url":"https://www.youtube.com/channel/UC0076UMUgEng8HORUw_MYHA/releases","checkedOnce":false,"seen":[],"checkedAt":1799999999000,"error":"The download engine stopped: UC0076UMUgEng8HORUw_MYHA: This channel does not have a releases tab"}],"releases":[]}"""
+        store.text = old
+        val again = ArtistFollowing(host, store, clock = { now })
+        val artist = again.state.value.artists.single()
+        assertNull(artist.error)
+        assertNull(artist.checkedAt)
+        host.releases = { listOf(release("a")) }
+        again.check(null, manual = false)
+        assertEquals(listOf("UC0076UMUgEng8HORUw_MYHA"), host.discovered)
+        assertEquals("https://music.youtube.com/channel/UC0076UMUgEng8HORUw_MYHA", again.state.value.artists.single().url)
     }
 
     @Test fun theChannelIsOnlyTakenWhenTheNameAndTheChannelIdFit() {

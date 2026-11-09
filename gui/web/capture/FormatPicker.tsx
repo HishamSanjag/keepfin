@@ -9,6 +9,7 @@ export function GalleryPreview({media, choice, onChange}: {media: MediaInfo; cho
   if (!gallery) return null
   const out = new Set(choice.leftOut)
   const chosen = galleryChosen(media, choice).length
+  const one = gallery.items.some((item) => !item.photo) ? 'an item' : 'a photo'
   const toggle = (position: number) => {
     const next = new Set(out)
     if (!next.delete(position)) next.add(position)
@@ -17,7 +18,7 @@ export function GalleryPreview({media, choice, onChange}: {media: MediaInfo; cho
   return (
     <div className="picker">
       <p className="picker-note" role="status">
-        {chosen.toLocaleString()} of {gallery.count.toLocaleString()} chosen. {chosen ? 'Click a photo to leave it out.' : 'Click a photo to choose it.'}
+        {chosen.toLocaleString()} of {gallery.count.toLocaleString()} chosen. {chosen ? `Click ${one} to leave it out.` : `Click ${one} to choose it.`}
         {gallery.truncated ? ' The listing was capped, so the post may contain more.' : ''}
       </p>
       <div className="gallery-grid">
@@ -30,7 +31,7 @@ export function GalleryPreview({media, choice, onChange}: {media: MediaInfo; cho
             aria-label={`${item.photo ? 'Photo' : 'Video'} ${item.position}`}
             onClick={() => toggle(item.position)}
           >
-            <Thumbnail url={item.photo ? item.url : undefined} kind="gallery" lazy />
+            <Thumbnail url={item.photo ? item.url : item.cover} kind="gallery" lazy />
             {!item.photo && (
               <span className="gallery-play">
                 <Icon name="play" size={14} />

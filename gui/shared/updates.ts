@@ -2,7 +2,7 @@ import {isPrerelease, type UpdateChannel} from './core/versions.js'
 
 // Version order, channel selection and release-notes highlights are decided by the shared core
 // (core/, see ./core/versions.ts); they are re-exported here so call sites keep importing from this module.
-export {compareReleases, isPrerelease, isValidVersion, pickRelease, releaseHighlights} from './core/versions.js'
+export {compareReleases, isPrerelease, isValidVersion, pickRelease, releaseHighlights, whatsNewDue} from './core/versions.js'
 export type {UpdateChannel}
 export const updateChannels: UpdateChannel[] = ['stable', 'beta']
 

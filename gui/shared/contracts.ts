@@ -129,7 +129,7 @@ export type MediaInfo = {
   subtitles: SubtitleTrack[]
   chapters: number
   /** Present when the engine is gallery-dl (images / mixed posts). */
-  gallery?: {count: number; previews: string[]; items: {position: number; url: string; photo: boolean}[]; truncated: boolean}
+  gallery?: {count: number; previews: string[]; items: {position: number; url: string; photo: boolean; /** A video's picture, when the site gives one. */ cover?: string}[]; truncated: boolean}
   /** Present when the link is a single item inside a playlist (watch?v=…&list=…). */
   playlist?: {url: string; title?: string}
   /** Genre, tags and categories from the source, normalised (see normalizeTags). Kept on the file when the library imports tags. */
@@ -517,6 +517,8 @@ export type Operation =
   | 'libraryEditInfo'
   | 'libraryDeleteFile'
   | 'libraryOpen'
+  // one item's technical details (resolution, codecs, bitrate), read from its file: `id` is the item (FileDetails in gui/shared/library.ts)
+  | 'libraryDetails'
   | 'libraryReveal'
   | 'libraryDrag'
   | 'libraryPlayback'

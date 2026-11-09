@@ -49,3 +49,6 @@ fun UpdateSnapshot.hasUpdate(current: String): Boolean =
     phase in setOf("available", "downloading", "ready") && version.isNotEmpty() && isNewer(version, current)
 
 fun isNewer(candidate: String, current: String): Boolean = runCatching { UpdateRelease.newer(candidate, current) }.getOrDefault(false)
+
+/** The shared rule (core): the running version is newer than the last one whose notes were seen; no stored version is a fresh install. */
+fun whatsNewDue(seen: String?, current: String): Boolean = app.keepfin.core.versions.Releases.whatsNewDue(seen, current)

@@ -7,6 +7,7 @@ import {buildM3u8, notOnThisPc, type MusicVideoFound, type UndoResult} from '../
 import {lookupMusicVideo} from '../engine/music.js'
 import type {DownloadManager} from '../manager.js'
 import {editInfo, validateInfo, type EditInfo} from './edit.js'
+import {fileDetails} from './details.js'
 import {
   copyItems,
   deleteItems,
@@ -59,7 +60,7 @@ export type PlayFromOutcome = {url: string; deviceName: string} | {unreachable: 
 
 export const libraryOperations = new Set<string>([
   'libraryState', 'libraryResync', 'libraryScan', 'libraryImport', 'libraryMove', 'libraryCancel', 'libraryRename', 'libraryEditInfo',
-  'libraryDeleteFile', 'libraryOpen', 'libraryReveal', 'libraryDrag', 'libraryPlayback', 'libraryFavorite',
+  'libraryDeleteFile', 'libraryOpen', 'libraryDetails', 'libraryReveal','libraryDrag', 'libraryPlayback', 'libraryFavorite',
   'libraryLyrics', 'libraryFindLyrics', 'songOfLink', 'libraryFindMusicVideo', 'libraryGetMusicVideo', 'libraryRemoveMusicVideo', 'librarySearchLyrics', 'libraryPrepare', 'libraryMatch', 'downloadAnyway', 'spaceSave',
   'spaceDelete', 'spaceReorder', 'libraryTag', 'libraryAddFrom', 'collectionSave', 'collectionDelete', 'collectionExport',
   'collectionAdd', 'collectionRemove', 'collectionReorder', 'collectionFollow', 'collectionCheck', 'collectionReview',
@@ -280,6 +281,10 @@ export async function handleLibraryRequest(request: Request, deps: LibraryDeps):
       const failure = await deps.openPath(request.video && entry.videoPath ? entry.videoPath : entry.path)
       if (failure) throw new Error('This file could not be opened in another app.')
       return null
+    }
+    case 'libraryDetails': {
+      const entry = await playable(deps, request.id)
+      return fileDetails(deps.ffmpeg(), entry.path)
     }
     case 'libraryReveal': {
       const entry = await playable(deps, request.id)

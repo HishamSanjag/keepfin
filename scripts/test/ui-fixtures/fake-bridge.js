@@ -259,6 +259,7 @@
           position: i + 1,
           url: i === 3 ? 'https://instagram.fcdn/market-3.mp4' : `https://instagram.fcdn/market-${i}.jpg`,
           photo: i !== 3,
+          ...(i === 3 ? {cover: 'https://instagram.fcdn/market-3-cover.jpg'} : {}),
         })),
         truncated: false,
       },
@@ -1349,6 +1350,14 @@
         const gone = fakeTrash
         fakeTrash = []
         return {done: gone.length, failed: 0, message: `Deleted ${gone.length} files for good`, ids: gone.map((entry) => entry.id)}
+      }
+      case 'libraryDetails': {
+        // SYNTHETIC: what a real file would say about itself (the engine reads it from the file)
+        const item = libItems.find((entry) => entry.id === req.id)
+        if (!item) throw new Error('The file is no longer at its saved location.')
+        return item.kind === 'video'
+          ? {container: 'MP4', width: 1080, height: 1920, fps: 29.97, duration: item.duration, videoCodec: 'h264', audioCodec: 'aac', bitrate: 4120}
+          : {container: 'MP3', duration: item.duration, audioCodec: 'mp3', bitrate: 320}
       }
       case 'libraryOpen':
       case 'libraryReveal':

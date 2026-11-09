@@ -276,15 +276,21 @@ internal fun InfoDialog(where: app.keepfin.where.WhereFilesSource?, item: Librar
     val line by androidx.compose.runtime.produceState<String?>(null, item.id, where) {
         value = if (where == null) null else kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) { runCatching { app.keepfin.where.WhereWords.itemLine(where.placesOf(item.id)) }.getOrNull() }
     }
+    // the file's own facts (resolution, codecs, container): one quick read of this one file, off the main thread
+    val context = androidx.compose.ui.platform.LocalContext.current
+    val facts by androidx.compose.runtime.produceState<FileFacts?>(null, item.id) {
+        value = if (!item.remote && (item.kind == app.keepfin.LibraryItemKind.VIDEO || item.kind == app.keepfin.LibraryItemKind.AUDIO))
+            kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) { runCatching { FileFactsReader.read(context, item.uri) }.getOrNull() } else null
+    }
     AlertDialog(
         onDismissRequest = onDismiss, title = { Text(item.title) },
         text = {
             Column(Modifier.verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                listOfNotNull(
+                (listOfNotNull(
                     item.artist?.let { "Artist" to it }, item.album?.let { "Album" to it }, item.year?.let { "Year" to "$it" }, item.genre?.let { "Genre" to it },
-                    item.duration?.let { "Duration" to LibraryViews.mmss(it) }, "Size" to Format.bytes(item.size), "Folder" to item.folder.ifBlank { "Top level" },
-                ).forEach { (k, v) ->
-                    Row { Text(k, Modifier.width(88.dp), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant); Text(v, style = MaterialTheme.typography.bodyMedium) }
+                    item.duration?.let { "Duration" to LibraryViews.mmss(it) }, "Size" to Format.bytes(item.size),
+                ) + FileFactsWords.rows(item, facts) + ("Folder" to item.folder.ifBlank { "Top level" })).forEach { (k, v) ->
+                    Row { Text(k, Modifier.width(104.dp), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant); Text(v, style = MaterialTheme.typography.bodyMedium) }
                 }
                 line?.let { Text(it, style = MaterialTheme.typography.bodyMedium, modifier = Modifier.padding(top = 8.dp).testTag("where-item-line")) }
             }

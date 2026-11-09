@@ -18,6 +18,12 @@ export type GalleryContext = {
   signal?: AbortSignal
 }
 
+/**
+ * The engine prints the paths it saved in the console's code page, whatever PYTHONUTF8 says: a non-Latin title becomes `????` and no
+ * path matches a file (issue #49). This makes it print UTF-8, which the pipe reader decodes.
+ */
+export const UTF8_STDOUT = ['-o', 'output.stdout=utf-8']
+
 export function galleryArgs(ctx: GalleryContext) {
   const args = ['--config-ignore', '--retries', '4', '--http-timeout', '30']
   const proxy = validateProxy(ctx.network.proxy)
@@ -61,6 +67,12 @@ function galleryError(stderr: string) {
   return new EngineError(friendly.message, friendly.action, stderr, friendly.retryable, friendly.engine)
 }
 
+/** The arguments that save a post (or the chosen items of it) into `folder`. */
+export function galleryDownloadArgs(ctx: GalleryContext, url: string, folder: string, items?: number[]) {
+  const range = items && chosenRange(items)
+  return [...galleryArgs(ctx), ...UTF8_STDOUT, '-D', folder, ...(range ? ['--range', range] : []), '--', validateUrl(url)]
+}
+
 export async function downloadGallery(
   ctx: GalleryContext,
   url: string,
@@ -70,8 +82,7 @@ export async function downloadGallery(
   onProgress: (done: number, total?: number) => void,
 ): Promise<{files: string[]}> {
   const files: string[] = []
-  const range = items && chosenRange(items)
-  const result = await run(ctx.binary, [...galleryArgs(ctx), '-D', folder, ...(range ? ['--range', range] : []), '--', validateUrl(url)], {
+  const result = await run(ctx.binary, galleryDownloadArgs(ctx, url, folder, items), {
     env: ctx.env,
     signal: ctx.signal,
     onStdoutLine: (line) => {

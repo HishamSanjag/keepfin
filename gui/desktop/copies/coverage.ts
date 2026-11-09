@@ -15,7 +15,14 @@ export interface Coverage {
   verified: boolean
   verifiedAt: number | null
   cells: Record<string, CopyCell>
+  /** The same in the person's files: items (not sidecars) the copy should hold / of those the manifest has. */
+  items: number
+  itemsKept: number
+  /** The items whose file the manifest lacks (up to MISSING_LIMIT), or null when there are more: the copy then covers nothing for sure. */
+  missingItems: string[] | null
 }
+
+const MISSING_LIMIT = 2000
 
 export interface Rows {
   rows: CopyRow[]
@@ -54,14 +61,27 @@ export async function coverage(db: DatabaseSync, place: PlaceConfig, mainRoot: s
   if (manifest) for (const line of manifest.lines()) keptKeys.add(lineKey(line.itemId, line.contentId, line.path))
   let total = 0
   let kept = 0
+  let items = 0
+  let itemsKept = 0
+  const seen = new Set<string>()
   const waitingItems = new Set<string>()
+  const missingItems = new Set<string>()
   const smart = heldSmart(db, place.holds)
   for (const e of desiredEntries(db, mainReplica, place.holds, place.options.companions, placeMusicVideos(place), smart)) {
     total++
-    if (keptKeys.has(lineKey(e.itemId, e.contentId, e.path))) kept++
+    const isKept = keptKeys.has(lineKey(e.itemId, e.contentId, e.path))
+    if (isKept) kept++
     else waitingItems.add(e.itemId)
+    // the first entry of an item is the file itself (its companions follow): only it is one of the person's files
+    if (!seen.has(e.itemId)) {
+      seen.add(e.itemId)
+      items++
+      if (isKept) itemsKept++
+      else if (missingItems.size <= MISSING_LIMIT) missingItems.add(e.itemId)
+    }
   }
   keptKeys.clear()
+  seen.clear()
   const cells: Record<string, CopyCell> = {}
   const spaceStmt = db.prepare("SELECT id FROM item_view WHERE status = 'present' AND json_extract(fields, '$.space') = ?")
   for (const row of rows) {
@@ -82,5 +102,5 @@ export async function coverage(db: DatabaseSync, place: PlaceConfig, mainRoot: s
     else for (const id of setMembers(db, 'favourites')) visit(id)
     cells[row.key] = hasReview ? 'review' : hasWaiting ? 'waiting' : 'kept'
   }
-  return {total, kept, waiting: total - kept, verified: !!manifest, verifiedAt: manifest?.header.at ?? null, cells}
+  return {total, kept, waiting: total - kept, verified: !!manifest, verifiedAt: manifest?.header.at ?? null, cells, items, itemsKept, missingItems: missingItems.size > MISSING_LIMIT ? null : [...missingItems]}
 }

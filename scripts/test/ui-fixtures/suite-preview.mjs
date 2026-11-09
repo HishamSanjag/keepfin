@@ -164,15 +164,19 @@ export async function registerPreviewSuite({test, calls, last, sent, field, capt
     assert.deepEqual((await last(page, 'enqueue')).format, {type: 'gallery', items: [1, 2, 4, 5, 6, 7, 8]})
   })
 
-  await test('preview, photo post with a video: leaving a photo out says items; no photo chosen disables Download', async (page) => {
+  await test('preview, photo post with a video: the button names photos and videos; the video tile shows its cover and a video mark; no item chosen disables Download', async (page) => {
     await field(page).fill(CAROUSEL)
     const dialog = win(page)
     const button = page.locator('.download-btn')
     await button.waitFor()
-    assert.match(await button.textContent(), /^Download 7 items$/)
+    assert.match(await button.textContent(), /^Download 6 photos, 1 video$/)
+    await dialog.getByText('7 of 7 chosen. Click an item to leave it out.').waitFor()
+    const video = dialog.getByRole('button', {name: 'Video 4'})
+    await video.locator('.gallery-play').waitFor()
+    await video.locator('.thumb img').waitFor()
     await dialog.getByRole('button', {name: 'Photo 2'}).click()
     await dialog.getByText('6 of 7 chosen.').waitFor()
-    assert.match(await button.textContent(), /^Download 6 items$/)
+    assert.match(await button.textContent(), /^Download 5 photos, 1 video$/)
     for (const name of ['Photo 1', 'Video 4', 'Photo 3', 'Photo 5', 'Photo 6', 'Photo 7']) await dialog.getByRole('button', {name}).click()
     await dialog.getByText('0 of 7 chosen.').waitFor()
     assert.equal(await button.isDisabled(), true)

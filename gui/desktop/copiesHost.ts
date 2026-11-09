@@ -232,7 +232,7 @@ export class CopiesHost {
 
   /** For "Where your files are": every copy with the replica it keeps, and the spaces and playlists a copy can hold (for their names). */
   whereInputs(): {copies: {view: CopyPlaceView; replica: string | null}[]; rows: CopiesState['rows']} {
-    return {copies: this.snap.places.filter((p) => !p.removed).map((p) => ({view: this.viewPart.view(p), replica: p.replica})), rows: this.snap.rows}
+    return {copies: this.snap.places.filter((p) => !p.removed).map((p) => ({view: this.viewPart.view(p), replica: p.replica, missing: this.snap.coverage[p.id]?.missingItems ?? null})), rows: this.snap.rows}
   }
 
   /** A paired device came or went, or changed what this device may do: the screen is told (a copy on it is connected or not). */

@@ -14,6 +14,10 @@ fun releasesIsPrerelease(version: String): Boolean = Releases.isPrerelease(versi
 @JsExport
 fun releasesCompare(a: String, b: String): Int = Releases.compare(a, b)
 
+/** True when `current` is newer than the last version whose notes were seen (`seen` null: a fresh install). */
+@JsExport
+fun releasesWhatsNewDue(seen: String?, current: String): Boolean = Releases.whatsNewDue(seen, current)
+
 /** `channel` is "stable" or "beta"; the result is the offered entry of `versions`, or null. */
 @JsExport
 fun releasesPick(versions: Array<String>, channel: String, current: String): String? =

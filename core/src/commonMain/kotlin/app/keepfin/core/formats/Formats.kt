@@ -426,10 +426,10 @@ object Formats {
         val uploader = str(info.get("uploader"), 300) ?: str(info.get("channel"), 300) ?: str(info.get("creator"), 300)
         val provider = Providers.name(url, extractor)
         val primary = videoOptions(info, options)
-        val video = if (primary.isEmpty()) originalOption(info, options)
-        else if (options.convertSmaller) Conversion.withConverted(primary, num(info.get("duration")))
-        else primary
         val audio = audioOptions(info, options)
+        val video = if (primary.isEmpty()) originalOption(info, options)
+        else if (options.convertSmaller) Conversion.withConverted(primary, num(info.get("duration")), audio.firstOrNull())
+        else primary
         val playlist = Providers.playlistUrl(url)
         return MediaInfo(
             url = url,

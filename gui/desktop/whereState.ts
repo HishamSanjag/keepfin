@@ -6,8 +6,8 @@ import type {PairedDevice} from '../shared/devices.js'
 import type {WhereHolds, WhereItemView, WhereKind, WherePlace, WhereSingles, WhereState, WhereStatus} from '../shared/where.js'
 import type {CopyCover, WhereCounts, WhereItemFacts} from './store/where.js'
 
-/** A copy as the host knows it: its view, what it holds as the library stores it (ids), and the replica it keeps (null when unknown). */
-export type WhereCopy = {view: CopyPlaceView; replica: string | null}
+/** A copy as the host knows it: its view, the replica it keeps (null when unknown) and the items its last finished run lacks (null: too many to list; absent: not known). */
+export type WhereCopy = {view: CopyPlaceView; replica: string | null; missing?: readonly string[] | null}
 
 export type WhereInput = {
   thisName: string
@@ -21,14 +21,23 @@ export type WhereInput = {
   membership: SyncMembership | null
 }
 
-/** A copy whose files are all there: it counts for the files it holds (a copy that has not finished counts for nothing yet). */
-export function isComplete(view: CopyPlaceView): boolean {
-  return view.lastVerifiedAt !== undefined && view.waiting === 0 && view.review === 0 && !view.problem && view.status !== 'syncing' && view.status !== 'new' && !view.previewPending && view.status !== 'refused'
+/**
+ * What a copy covers for the "only one copy" count: the files its last finished run holds (its manifest), also while it runs again or
+ * waits for the next sync. The items that run lacks are named in [except]. A copy that was never verified, has no plan confirmed yet or
+ * cannot be used covers nothing; so does one whose missing items are too many to list (and unknown).
+ */
+export function coverOf(copy: WhereCopy): CopyCover | null {
+  const {view} = copy
+  if (view.lastVerifiedAt === undefined || view.status === 'new' || view.status === 'refused' || view.previewPending) return null
+  const except = copy.missing !== undefined ? copy.missing : view.waiting === 0 && view.review === 0 && !view.problem ? [] : null
+  if (except === null) return null
+  const h = view.holds
+  return {id: view.id, holds: {all: h.all, spaces: h.spaces, playlists: h.playlists, favourites: h.favourites, ...(h.smart?.length ? {smart: h.smart} : {})}, ...(except.length ? {except: [...except]} : {})}
 }
 
-/** The complete copies and what each holds, the way the counting wants them. */
+/** The copies that cover files of the library, the way the counting wants them. */
 export function completeCovers(copies: readonly WhereCopy[]): CopyCover[] {
-  return copies.filter((c) => isComplete(c.view)).map((c) => ({id: c.view.id, holds: {all: c.view.holds.all, spaces: c.view.holds.spaces, playlists: c.view.holds.playlists, favourites: c.view.holds.favourites, ...(c.view.holds.smart?.length ? {smart: c.view.holds.smart} : {})}}))
+  return copies.map(coverOf).filter((c): c is CopyCover => c !== null)
 }
 
 const names = (ids: readonly string[], kind: CopyRow['kind'], rows: readonly CopyRow[]) => ids.map((id) => rows.find((r) => r.kind === kind && r.id === id)?.name).filter((n): n is string => !!n)
@@ -42,6 +51,8 @@ export function holdsOf(holds: CopyPlaceView['holds'], rows: readonly CopyRow[])
 function copyStatus(view: CopyPlaceView): WhereStatus {
   switch (view.status) {
     case 'syncing':
+      // only Keepfin's own records are being removed from the account: the person's files are all there
+      if (view.progress?.dataStep === 'tidying') return {state: 'tidying'}
       return {state: 'copying', done: view.progress?.doneActions ?? 0, total: view.progress?.totalActions || view.waiting}
     case 'upToDate':
       return {state: 'upToDate', ...(view.lastVerifiedAt ? {at: view.lastVerifiedAt} : {})}
@@ -67,9 +78,11 @@ function copyStatus(view: CopyPlaceView): WhereStatus {
 
 /** Where a copy is and how much of it is there: the second line of its card. A cloud copy names its service; a device is named already. */
 function copyFacts(view: CopyPlaceView): Pick<WherePlace, 'location' | 'files'> {
-  const of = view.kept + view.waiting
+  // the person's files, counted the way the main storage counts them (sidecars are not files)
+  const of = view.items ?? view.kept + view.waiting
+  const kept = view.itemsKept ?? view.kept
   const location = view.cloud ? view.cloud.providerName : view.device ? undefined : view.path || undefined
-  return {...(location ? {location} : {}), ...(of > 0 ? {files: {kept: view.kept, of}} : {})}
+  return {...(location ? {location} : {}), ...(of > 0 ? {files: {kept, of}} : {})}
 }
 
 const kindOfPlatform = (platform: string): WhereKind => (platform === 'android' ? 'phone' : 'pc')
@@ -152,7 +165,7 @@ export function buildWhere(input: WhereInput): WhereState {
       name: view.name,
       holds: holdsOf(view.holds, rows),
       bytes: held?.bytes ?? 0,
-      items: held?.items ?? view.kept,
+      items: held?.items ?? view.itemsKept ?? view.kept,
       status: copyStatus(view),
       ...copyFacts(view),
       link: {to: 'copy', id: view.id},
@@ -202,8 +215,10 @@ export function itemPlaces(input: Pick<WhereInput, 'mainReplica' | 'thisName' | 
   }
   // a copy holds the file when this computer has it and the copy is complete and selects it
   if (actors.has(input.mainReplica)) {
-    for (const {view} of input.copies) {
-      if (!isComplete(view)) continue
+    for (const copy of input.copies) {
+      const cover = coverOf(copy)
+      if (!cover || (facts.id !== undefined && cover.except?.includes(facts.id))) continue
+      const {view} = copy
       const h = view.holds
       const selected = h.all || h.spaces.includes(facts.space) || (h.favourites && facts.favourite) || facts.playlists.some((p) => h.playlists.includes(p)) || (facts.smart ?? []).some((s) => (h.smart ?? []).includes(s))
       if (selected) places.push({name: view.name, offline: view.status === 'disconnected'})

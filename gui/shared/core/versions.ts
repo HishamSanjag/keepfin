@@ -2,7 +2,7 @@
 // and the release helpers the apps already use. This is the only file that imports the core's versions
 // package, so the core's generated API stays behind one boundary. The core makes the decisions (version
 // validity and order, channel selection, release-notes highlights); it performs no requests.
-import {releasesCompare, releasesHighlights, releasesIsPrerelease, releasesIsValid, releasesPick} from '../../../build/core-js/keepfin-core.mjs'
+import {releasesCompare, releasesHighlights, releasesIsPrerelease, releasesIsValid, releasesPick, releasesWhatsNewDue} from '../../../build/core-js/keepfin-core.mjs'
 
 export type UpdateChannel = 'stable' | 'beta'
 
@@ -14,6 +14,9 @@ export const isPrerelease = (value: string): boolean => releasesIsPrerelease(val
 
 /** Semver ordering (0.4.2 < 0.5.0-beta.1 < 0.5.0-beta.2 < 0.5.0). Unparsable versions sort lowest. Returns -1, 0 or 1. */
 export const compareReleases = (a: string, b: string): number => releasesCompare(a, b)
+
+/** True when the running version is newer than the last one whose notes were seen; null (nothing stored) is a fresh install. */
+export const whatsNewDue = (seen: string | null | undefined, current: string): boolean => releasesWhatsNewDue(seen ?? null, current)
 
 /**
  * The newest release a channel offers from a list of release versions: Stable ignores pre-releases,

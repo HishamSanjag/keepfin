@@ -28,6 +28,7 @@ export function copyLine(place: Pick<WherePlace, 'holds' | 'location' | 'files'>
 export function statusTone(status: WhereStatus): 'good' | 'busy' | 'quiet' | 'warn' {
   switch (status.state) {
     case 'upToDate':
+    case 'tidying':
       return 'good'
     case 'copying':
       return 'busy'

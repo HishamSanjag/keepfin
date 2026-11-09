@@ -36,6 +36,10 @@ export interface Progress {
   current: string | null
   /** The copy's own Keepfin data is moving (not the person's files): the counts stay zero so they are never shown as files. */
   data?: boolean
+  /** With [data]: what the data step is doing and how far ('tidying' removes old records from the account). */
+  dataStep?: 'saving' | 'tidying'
+  dataDone?: number
+  dataTotal?: number
 }
 
 export interface ExecConfig {

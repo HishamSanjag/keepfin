@@ -5,7 +5,7 @@ package app.keepfin.core.gallery
 // The JavaScript surface of the gallery core (see gui/shared/core/gallery.ts). `kind` is "post", "failed" or "empty".
 
 @JsExport
-class JsGalleryItem(val position: Int, val url: String, val photo: Boolean)
+class JsGalleryItem(val position: Int, val url: String, val photo: Boolean, val cover: String?)
 
 @JsExport
 class JsGalleryRead(
@@ -23,7 +23,7 @@ class JsGalleryRead(
 
 @JsExport
 fun galleryRead(json: String, url: String, limit: Int): JsGalleryRead = when (val r = Gallery.read(json, url, limit)) {
-    is GalleryRead.Post -> JsGalleryRead("post", null, r.title, r.uploader, r.category, r.provider, r.previews.toTypedArray(), r.items.map { JsGalleryItem(it.position, it.url, it.photo) }.toTypedArray(), r.count, r.truncated)
+    is GalleryRead.Post -> JsGalleryRead("post", null, r.title, r.uploader, r.category, r.provider, r.previews.toTypedArray(), r.items.map { JsGalleryItem(it.position, it.url, it.photo, it.cover) }.toTypedArray(), r.count, r.truncated)
     is GalleryRead.Failed -> JsGalleryRead("failed", r.message, null, null, null, null, emptyArray(), emptyArray(), 0, false)
     GalleryRead.Empty -> JsGalleryRead("empty", null, null, null, null, null, emptyArray(), emptyArray(), 0, false)
 }
@@ -42,7 +42,7 @@ fun galleryAlreadySaved(url: String, count: Int, items: Array<Int>, allItems: Bo
     Gallery.alreadySaved(url, count, if (allItems) null else items.toList(), earlier.map { EarlierSave(it.url, it.count, if (it.allItems) null else it.items.toList(), it.complete) })
 
 @JsExport
-fun galleryLabel(count: Int, videos: Boolean): String = Gallery.label(count, videos)
+fun galleryLabel(photos: Int, videos: Int): String = Gallery.label(photos, videos)
 
 @JsExport
 fun gallerySavedLabel(saved: Int, expected: Int, label: String): String = Gallery.savedLabel(saved, expected, label)

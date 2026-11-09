@@ -21,6 +21,8 @@ export type WhereHolds = {
 export type WhereStatus =
   | {state: 'upToDate'; at?: number}
   | {state: 'copying'; done: number; total: number}
+  /** Every file is there; only Keepfin's own old records are being removed from the account. */
+  | {state: 'tidying'}
   /** Something waits for the next sync; [reason] is a plain sentence when the place has one ("Waiting for Wi-Fi"). */
   | {state: 'waiting'; reason?: string}
   /** Not reachable now. [unplugged]: a drive or folder that is not there; [at]: when it was last copied or seen. */

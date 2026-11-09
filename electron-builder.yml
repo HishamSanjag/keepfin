@@ -28,6 +28,9 @@ extraResources:
     to: licenses/Manrope-OFL.txt
   - from: licenses/Inter-OFL.txt
     to: licenses/Inter-OFL.txt
+  # This version's release notes, shown as "What's new" after an update without any network.
+  - from: build/release-notes.md
+    to: release-notes.md
   - from: resources/app-icons
     to: app-icons
   - from: build/tools

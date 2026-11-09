@@ -30,7 +30,7 @@ export function readGallery(data: unknown, url: string, limit: number): GalleryR
       gallery: {
         count: read.count,
         previews,
-        items: Array.from(read.items, (i) => ({position: i.position, url: i.url, photo: i.photo})),
+        items: Array.from(read.items, (i) => ({position: i.position, url: i.url, photo: i.photo, ...(i.cover ? {cover: i.cover} : {})})),
         truncated: read.truncated,
       },
     },
@@ -73,9 +73,23 @@ export function alreadySavedIndex(url: string, count: number, items: number[] | 
   )
 }
 
-/** "6 photos" (or "6 items" when a video of the post is among them). */
-export function photoCountLabel(count: number, videos: boolean): string {
-  return galleryLabel(count, videos)
+/** "6 photos", "1 video" or "2 photos, 8 videos" for `photos` and `videos` files. */
+export function photoCountLabel(photos: number, videos: number): string {
+  return galleryLabel(photos, videos)
+}
+
+/** What the `chosen` positions of a post hold (every position when undefined): a position the listing does not name counts as a photo. */
+export function galleryContents(gallery: NonNullable<MediaInfo['gallery']>, chosen?: readonly number[]): {photos: number; videos: number} {
+  const positions = chosen ?? Array.from({length: gallery.count}, (_, i) => i + 1)
+  const video = new Set(gallery.items.filter((item) => !item.photo).map((item) => item.position))
+  const videos = positions.filter((position) => video.has(position)).length
+  return {photos: positions.length - videos, videos}
+}
+
+/** The label of the chosen files of a post: "4 photos", "2 videos", "2 photos, 8 videos". */
+export function galleryContentsLabel(gallery: NonNullable<MediaInfo['gallery']>, chosen?: readonly number[]): string {
+  const {photos, videos} = galleryContents(gallery, chosen)
+  return photoCountLabel(photos, videos)
 }
 
 /** The job label once `saved` of the `expected` files are in storage: "4 of 6 photos" while some are missing, "6 photos" when all are. */

@@ -13,8 +13,11 @@ import app.keepfin.core.providers.Providers
 import app.keepfin.core.providers.Url
 import kotlin.math.max
 
-/** One file of a post: [position] is 1-based in the engine's order (what its range selects), [photo] when it is an image. */
-data class GalleryItem(val position: Int, val url: String, val photo: Boolean)
+/**
+ * One file of a post: [position] is 1-based in the engine's order (what its range selects), [photo] when it is an image. A video has no image
+ * link of its own ([url] is a page the engine hands to the download engine), so [cover] is the post's picture of it, when the site gives one.
+ */
+data class GalleryItem(val position: Int, val url: String, val photo: Boolean, val cover: String? = null)
 
 /**
  * A finished photo job an app remembers: the post link, the photos it asked for ([items] null = all [count]) and whether every one of them
@@ -108,7 +111,7 @@ object Gallery {
             .filter { it.url.startsWith("https://") && isImage(it) }
             .take(12)
             .map { it.url }
-        val items = files.take(limit).mapIndexed { i, f -> GalleryItem(i + 1, f.url, isImage(f)) }
+        val items = files.take(limit).mapIndexed { i, f -> GalleryItem(i + 1, f.url, isImage(f), if (isImage(f)) null else cover(f)) }
         val count = max(files.size.toDouble(), declared).toInt()
         return GalleryRead.Post(title, uploader, category, Providers.name(url, category), previews, items, count, count > limit || files.size >= limit)
     }
@@ -168,18 +171,25 @@ object Gallery {
         return earlier.indexOfFirst { it.complete && samePost(it.url, url) && positions(it.items, it.count).containsAll(wanted) }
     }
 
-    /** The label of a photo job asking for [count] files: "6 photos", "1 photo", or "6 items" when a video of the post is among them. */
-    fun label(count: Int, videos: Boolean): String = "$count ${if (videos) "item" else "photo"}${if (count == 1) "" else "s"}"
+    /** The label of a job asking for [photos] photos and [videos] videos: "6 photos", "1 video", or "2 photos, 8 videos" for a mixed post. */
+    fun label(photos: Int, videos: Int): String = listOf(photos to "photo", videos to "video")
+        .filter { it.first > 0 }
+        .joinToString(", ") { "${it.first} ${it.second}${if (it.first == 1) "" else "s"}" }
+        .ifEmpty { "0 photos" }
 
     /**
      * The label once [saved] of the [expected] files reached storage: "4 of 6 photos" while some are missing, the plain "6 photos" when all
-     * are there. [label] is the job's current label, partial or not.
+     * are there. [label] is the job's current label, partial or not. A mixed label ("2 photos, 8 videos") reads "7 of 10 items" meanwhile.
      */
     fun savedLabel(saved: Int, expected: Int, label: String): String {
         val of = label.indexOf(" of ")
         val full = if (of > 0 && label.substring(0, of).all { it in '0'..'9' }) label.substring(of + 4) else label
-        return if (saved >= expected) full else "$saved of $full"
+        if (saved >= expected) return full
+        return if (full.contains(", ")) "$saved of $expected items" else "$saved of $full"
     }
+
+    /** The picture the site gives for a video of the post (`display_url`), when it is a secure link. */
+    private fun cover(file: File): String? = str(file.meta.get("display_url"), 2000)?.takeIf { it.startsWith("https://") }
 
     /** The meta's extension (or ext), else the last dot-part of the link before any `?` or `#`. */
     private fun isImage(file: File): Boolean {

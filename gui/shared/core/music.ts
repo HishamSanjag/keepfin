@@ -35,6 +35,12 @@ import {
   musicQuery,
   musicConstants,
   musicDeezerIsrcs,
+  musicArtistBrowseBody,
+  musicArtistBrowseUrl,
+  musicArtistChannelId,
+  musicArtistChannelUrl,
+  musicArtistLegacyAddress,
+  musicArtistReleases,
   musicVideosBest,
   musicVideosParse,
   musicVideosQuery,
@@ -402,3 +408,23 @@ export function bestMusicVideo(artists: string[], title: string, hits: VideoHit[
 }
 /** Track id to ISRC for every track a Deezer API response holds (a track, a playlist, or a page of /tracks). */
 export const deezerIsrcs = (json: string): Map<string, string> => new Map(Array.from(musicDeezerIsrcs(json), (pair) => [pair[0], pair[1]] as [string, string]))
+
+// -- followed artist releases (one artist page answers for every artist; see core ArtistReleases) --------------------
+
+/** A release found on an artist page: `link` downloads it; `kind` is Album, Single, EP or Video. */
+export type ArtistReleaseHit = {link: string; title: string; kind: string; thumbnail?: string}
+
+/** The artist page request (one browse call by channel id), or undefined when the id is not a channel id. */
+export function artistPageRequest(channelId: string): AlbumRequest | undefined {
+  const body = musicArtistBrowseBody(channelId)
+  return body == null ? undefined : {url: musicArtistBrowseUrl(), headers: requestHeaders(), body}
+}
+
+/** The albums and singles (or, for a channel without any, the latest uploads) in an artist page answer. Throws when it is not JSON. */
+export const parseArtistReleases = (json: string): ArtistReleaseHit[] =>
+  Array.from(musicArtistReleases(json), (r) => ({link: r.link, title: r.title, kind: r.kind, thumbnail: r.thumbnail ?? undefined}))
+
+/** The address an artist is kept under for a channel id, the id inside a stored address, and whether an address is the old releases-tab one. */
+export const artistChannelUrl = (channelId: string): string => musicArtistChannelUrl(channelId)
+export const artistChannelId = (url: string): string | undefined => musicArtistChannelId(url) ?? undefined
+export const isLegacyArtistAddress = (url: string): boolean => musicArtistLegacyAddress(url)

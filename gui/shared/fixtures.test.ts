@@ -20,7 +20,7 @@ import {
 } from './providers.js'
 import {isoDate, musicService, parseUrl} from './core/providers.js'
 import {safeName} from './output.js'
-import {compareReleases, isValidVersion, pickRelease, releaseHighlights} from './core/versions.js'
+import {compareReleases, isValidVersion, pickRelease, releaseHighlights, whatsNewDue} from './core/versions.js'
 import * as playbackCore from './core/playback.js'
 import {containerAfterPick, containerOffer, modesOf, openingPicks, picksForPreset, picksForTarget, requestOf, sizeOf, videoLabel, type ChoicePicks, type ChoiceSource} from './core/choice.js'
 import {cleanSongTitle, findLyricsWords, lyricsAreTimed, preferTimedLyrics, lyricsExactUrl, lyricsFindUrl, lyricsInExactAnswer, lyricsInSearchAnswer, lyricsOutcome, lyricsOutcomeText, lyricsRetryAfterMs, lyricsServiceBusy, normalizeLyricsKey} from './core/lyrics.js'
@@ -490,6 +490,7 @@ function versions(input: Obj): Json {
     }
     case 'valid': return isValidVersion(input.value)
     case 'highlights': return releaseHighlights(input.notes, input.platform, input.limit)
+    case 'whatsNewDue': return whatsNewDue(input.seen, input.current)
   }
   throw new Error(`unknown versions op ${input.op}`)
 }

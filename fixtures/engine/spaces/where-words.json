@@ -35,6 +35,7 @@
     {"name":"state: up to date","input":{"op":"whereState","state":"upToDate"},"expected":"up to date"},
     {"name":"state: up to date, a while ago","input":{"op":"whereState","state":"upToDate","ageMs":120000},"expected":"up to date 2 min ago"},
     {"name":"state: copying","input":{"op":"whereState","state":"copying","done":40,"total":210},"expected":"copying · 40 of 210"},
+    {"name":"state: only old Keepfin records are being tidied: the files are all there","input":{"op":"whereState","state":"tidying","done":100,"total":1021},"expected":"up to date · tidying"},
     {"name":"state: copying, thousands","input":{"op":"whereState","state":"copying","done":1200,"total":25000},"expected":"copying · 1,200 of 25,000"},
     {"name":"state: copying, nothing counted yet","input":{"op":"whereState","state":"copying","done":0,"total":0},"expected":"copying"},
     {"name":"state: waiting for a reason","input":{"op":"whereState","state":"waiting","reason":"Waiting for Wi-Fi."},"expected":"waiting for Wi-Fi"},

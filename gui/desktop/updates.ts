@@ -40,6 +40,8 @@ export class DesktopUpdates {
       hasDownloads: () => boolean
       openReleases: (url: string) => Promise<void>
       fetch?: typeof fetch
+      /** The release notes packaged with this version (docs/release-notes/<version>.md), when the copy has them. */
+      bundledNotes?: () => string | undefined
       /** An update finished downloading and waits for a restart. */
       onReady?: (version: string) => void
     },
@@ -130,6 +132,12 @@ export class DesktopUpdates {
       const version = this.state.version || this.state.current
       if (this.state.notes && this.state.notesVersion === version)
         return this.snapshot()
+      // The notes of the installed version travel inside the package: they need no network and exist before the release is public.
+      const bundled = version === this.state.current ? this.options.bundledNotes?.() : undefined
+      if (bundled?.trim()) {
+        this.state = {...this.state, notes: bundled.slice(0, 20000), notesVersion: version}
+        return this.snapshot()
+      }
       const response = await (this.options.fetch || fetch)(
         `https://api.github.com/repos/HishamSanjag/keepfin/releases/tags/v${encodeURIComponent(version)}`,
         {

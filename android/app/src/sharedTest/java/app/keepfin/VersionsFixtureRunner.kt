@@ -48,6 +48,7 @@ object VersionsFixtureRunner {
             Releases.pick((0 until list.length()).map { list.getString(it) }, Channel.of(input.getString("channel")), input.getString("current"))
         }
         "valid" -> Releases.isValid(input.getString("value"))
+        "whatsNewDue" -> Releases.whatsNewDue(input.str("seen"), input.getString("current"))
         "highlights" -> {
             val limit = if (input.has("limit")) input.getInt("limit") else 3
             JSONArray(Releases.highlights(input.str("notes"), Platform.of(input.str("platform")), limit))

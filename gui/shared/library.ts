@@ -616,3 +616,19 @@ export function removedSummary(removed: number, total: number): string {
 
 /** Where a library entry shows when it has no file on this computer (a joined library's items): a path that never exists. */
 export const notOnThisPc = (item: Pick<LibraryItem, 'missing' | 'path'>): boolean => item.missing === true && /[\\/]\.keepfin[\\/]unplaced[\\/][^\\/]+$/.test(item.path)
+
+/** What the Details dialog shows about a file's contents, read from the file itself (the codecs as the converter names them, the bitrate in kbit/s). */
+export type FileDetails = {
+  /** The file's extension in capitals: MP4, MKV, M4A. */
+  container?: string
+  /** Pixels as people see the picture (a sideways phone video is turned). */
+  width?: number
+  height?: number
+  fps?: number
+  /** Seconds. */
+  duration?: number
+  videoCodec?: string
+  audioCodec?: string
+  /** The whole file's bitrate in kbit/s. */
+  bitrate?: number
+}

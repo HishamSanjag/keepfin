@@ -32,7 +32,8 @@ export interface MirrorState {
 }
 
 export interface MirrorProgress {
-  phase: 'listing' | 'downloading' | 'uploading' | 'finishing'
+  phase: 'listing' | 'downloading' | 'uploading' | 'tidying' | 'finishing'
+  /** Of the files of this phase. 'tidying': old records removed from the account, of all that are to be. */
   done: number
   total: number
   doneBytes: number
@@ -564,26 +565,34 @@ export async function push(o: MirrorOptions): Promise<PushReport> {
     // A segment a larger one covers, or an old manifest, is pruned for good, but only while the file that makes it redundant is already
     // on the replica; anything else the runner removed goes to the trash as before.
     const redundant = redundantIn(trashes, Object.keys(state.files).filter((p) => onDisk.has(p)))
-    for (const rel of trashes) {
-      if (o.signal?.aborted) break
-      tick(rel)
-      const r = remoteOf(rel)
-      try {
-        if (redundant.has(rel) && r.t.prune) {
-          await r.t.prune(r.p, state.files[rel]!.revision)
-          report.pruned = (report.pruned ?? 0) + 1
-        } else {
-          await r.t.moveToTrash(r.p, state.files[rel]!.revision)
-          report.trashed++
+    // one request each, a pool of four like the uploads: a first clean-up of a thousand old records is minutes, not an hour
+    let tidied = 0
+    await pool(
+      trashes,
+      o.parallelism ?? 4,
+      async (rel) => {
+        if (o.signal?.aborted) return
+        progress({phase: 'tidying', done: tidied, total: trashes.length, current: rel})
+        const r = remoteOf(rel)
+        try {
+          if (redundant.has(rel) && r.t.prune) {
+            await r.t.prune(r.p, state.files[rel]!.revision)
+            report.pruned = (report.pruned ?? 0) + 1
+          } else {
+            await r.t.moveToTrash(r.p, state.files[rel]!.revision)
+            report.trashed++
+          }
+          delete state.files[rel]
+        } catch (error) {
+          if (error instanceof CloudError && error.kind === 'NotFound') delete state.files[rel]
+          else fail('trash', rel, error)
         }
-        delete state.files[rel]
-      } catch (error) {
-        if (error instanceof CloudError && error.kind === 'NotFound') delete state.files[rel]
-        else fail('trash', rel, error)
-      }
-      done++
-      await saved()
-    }
+        tidied++
+        done++
+        await saved()
+      },
+      o.signal,
+    )
   } catch (error) {
     if (error instanceof CloudError && error.kind === 'NeedsSignIn') report.stopped = 'signin'
     else throw error

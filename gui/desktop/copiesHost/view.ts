@@ -105,6 +105,7 @@ export class CopiesView {
       ...(cov?.verifiedAt ? {lastVerifiedAt: cov.verifiedAt} : {}),
       kept: cov?.kept ?? 0,
       waiting: cov?.waiting ?? 0,
+      ...(cov ? {items: cov.items, itemsKept: cov.itemsKept} : {}),
       review: reviewCount,
       ...(problem ? {problem} : {}),
       ...(rt.freeBytes !== undefined ? {freeBytes: rt.freeBytes, totalBytes: rt.totalBytes} : {}),

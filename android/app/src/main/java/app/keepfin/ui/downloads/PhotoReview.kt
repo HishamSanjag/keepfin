@@ -41,10 +41,11 @@ import app.keepfin.ui.devices.DownloadTarget
 import app.keepfin.core.gallery.GalleryItem
 import app.keepfin.ui.FormatChoice
 import app.keepfin.ui.UiTags
+import androidx.compose.ui.graphics.Color
 import app.keepfin.ui.components.MediaThumb
 import app.keepfin.ui.theme.Studio
 
-/** The Download button of a photo post: "Download 6 photos" ("6 items" when a video of the post is among them). */
+/** The Download button of a photo post: "Download 6 photos", or "Download 2 photos, 8 videos" for a mixed post. */
 internal fun photoDownloadLabel(media: MediaInfo, choice: FormatChoice): String {
     val count = media.gallery?.count ?: 0
     return "Download " + PhotoPosts.countLabel(media, PhotoPosts.chosen(count, choice.leftOut))
@@ -110,10 +111,14 @@ private fun PhotoTile(item: GalleryItem, chosen: Boolean, onToggle: () -> Unit) 
             .semantics { contentDescription = PhotoPosts.tileDescription(item.position, item.photo, chosen) }
             .testTag(UiTags.photoTile(item.position)),
     ) {
-        if (item.photo) MediaThumb(item.url, Modifier.fillMaxSize().alpha(if (chosen) 1f else .4f), shape = MaterialTheme.shapes.medium)
-        else Box(Modifier.fillMaxSize().alpha(if (chosen) 1f else .4f).background(MaterialTheme.colorScheme.surfaceContainerHighest), contentAlignment = Alignment.Center) {
-            Icon(Icons.Outlined.PlayArrow, contentDescription = null, modifier = Modifier.size(32.dp), tint = MaterialTheme.colorScheme.onSurfaceVariant)
-        }
+        // A photo is its own picture; a video shows the post's cover for it (when there is one), always with a play mark.
+        val picture = if (item.photo) item.url else item.cover
+        if (picture != null) MediaThumb(picture, Modifier.fillMaxSize().alpha(if (chosen) 1f else .4f), shape = MaterialTheme.shapes.medium)
+        else Box(Modifier.fillMaxSize().alpha(if (chosen) 1f else .4f).background(MaterialTheme.colorScheme.surfaceContainerHighest))
+        if (!item.photo) Box(
+            Modifier.align(Alignment.BottomStart).padding(6.dp).size(24.dp).clip(CircleShape).background(Color.Black.copy(alpha = .6f)),
+            contentAlignment = Alignment.Center,
+        ) { Icon(Icons.Outlined.PlayArrow, contentDescription = null, modifier = Modifier.size(16.dp), tint = Color.White) }
         Box(
             Modifier.align(Alignment.TopEnd).padding(6.dp).size(24.dp).clip(CircleShape)
                 .background(if (chosen) Studio.colors.action else MaterialTheme.colorScheme.surface.copy(alpha = .7f)),

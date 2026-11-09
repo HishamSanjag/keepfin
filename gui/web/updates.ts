@@ -4,6 +4,7 @@ import type {Operation} from '../shared/contracts'
 import {compareReleases, type UpdateChannel, type UpdateState} from '../shared/updates'
 import {messageOf, native, request} from './bridge'
 import {readPreference, savePreference} from './prefs'
+import {whatsNewToShow} from './whatsNew'
 
 export type UpdateSnapshot = {
   state?: UpdateState
@@ -104,18 +105,28 @@ export async function openWhatsNew() {
 }
 
 async function checkWhatsNew(state: UpdateState) {
-  let seen: string | null = null
-  try {
-    seen = localStorage.getItem(lastSeenKey)
-    localStorage.setItem(lastSeenKey, state.current)
-  } catch {}
-  // Fresh installs (nothing stored) and downgrades never show a dialog.
-  if (!seen || compareVersions(state.current, seen) <= 0) return
-  const next = await request<UpdateState>({op: 'updateNotes'}).catch(() => undefined)
-  if (!next?.notes?.trim()) return
-  // Only show notes that belong to the version now running.
-  if (next.notesVersion && compareVersions(next.notesVersion, state.current) !== 0) return
-  set({state: next, whatsNew: {version: state.current, notes: next.notes}})
+  let loaded: UpdateState | undefined
+  const notes = await whatsNewToShow({
+    current: state.current,
+    // Storage blocked: nothing to compare with, so nothing is shown.
+    read: () => {
+      try {
+        return localStorage.getItem(lastSeenKey)
+      } catch {
+        return state.current
+      }
+    },
+    write: (version) => {
+      try {
+        localStorage.setItem(lastSeenKey, version)
+      } catch {}
+    },
+    load: async () => {
+      loaded = await request<UpdateState>({op: 'updateNotes'}).catch(() => undefined)
+      return loaded && {notes: loaded.notes, notesVersion: loaded.notesVersion}
+    },
+  })
+  if (notes && loaded) set({state: loaded, whatsNew: {version: state.current, notes}})
 }
 
 let started = false

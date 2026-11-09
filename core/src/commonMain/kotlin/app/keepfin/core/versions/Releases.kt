@@ -90,6 +90,14 @@ object Releases {
     }
 
     /**
+     * Whether "What's new" is due: the version running ([current]) is newer than the last one whose notes were seen ([seen]).
+     * Nothing stored (a fresh install), the same version, an older one (a downgrade) or an unreadable stored value show nothing.
+     * It depends only on the stored version, never on how the new version was installed.
+     */
+    fun whatsNewDue(seen: String?, current: String): Boolean =
+        seen != null && isValid(seen) && isValid(current) && compare(current, seen) > 0
+
+    /**
      * The newest release [channel] offers from a list of release versions (any order): Stable ignores
      * pre-releases, Beta takes the newest of both. Returns null unless it is newer than [current], so a
      * build is never offered a downgrade. The returned string is the list entry as given.

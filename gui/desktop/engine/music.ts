@@ -5,7 +5,10 @@
 import {
   albumPageRequest,
   albumSearchRequest,
+  artistPageRequest,
   bestMusicVideo,
+  parseArtistReleases,
+  type ArtistReleaseHit,
   deezerIsrcs,
   musicVideoRequest,
   parseMusicVideos,
@@ -511,6 +514,16 @@ export async function fetchAlbumPage(browseId: string, fetcher: typeof fetch = f
   const request = albumPageRequest(browseId)
   if (!request) return
   return parseAlbumPageText(await postMusic(request, fetcher, signal, 'album page'))
+}
+
+/**
+ * The latest releases of an artist: one request to the artist's YouTube Music page. Most channels have no releases tab on YouTube and
+ * "Topic" channels have no tabs at all, so this page is the source that answers for every artist (the core reads it).
+ */
+export async function fetchArtistReleases(channelId: string, fetcher: typeof fetch = fetch, signal?: AbortSignal): Promise<ArtistReleaseHit[]> {
+  const request = artistPageRequest(channelId)
+  if (!request) throw new Error('Not a channel id.')
+  return parseArtistReleases(await postMusic(request, fetcher, signal, 'artist page'))
 }
 
 export function serviceOf(url: string): MusicService | undefined {

@@ -2,12 +2,14 @@ import {useEffect, useState} from 'react'
 import '../styles/where.css'
 import type {WhereItemView} from '../../shared/where'
 import {formatBytes, formatDuration} from '../../shared/contracts'
-import {messageOf, native} from '../bridge'
+import type {FileDetails} from '../../shared/library'
+import {messageOf, native, request} from '../bridge'
 import {Button} from '../ui/controls'
 import {Dialog} from '../ui/Dialog'
 import {getWhereItem} from '../settings/where/whereApi'
 import {itemWords} from '../settings/whereText'
 import {closeDialog} from './dialogState'
+import {technicalFacts} from './itemFacts'
 import {getLibItem} from './libStore'
 
 const kindName = {audio: 'Song', video: 'Video', image: 'Image', other: 'File'} as const
@@ -30,6 +32,19 @@ export function ItemDetailsDialog({id}: {id: string}) {
       live = false
     }
   }, [id])
+  // The file's own facts (resolution, codecs, bitrate): one quick read of this one file, only for what has a picture or a sound.
+  const [file, setFile] = useState<FileDetails | undefined>()
+  const readable = item?.kind === 'video' || item?.kind === 'audio'
+  useEffect(() => {
+    if (!native || !readable) return
+    let live = true
+    request<FileDetails>({op: 'libraryDetails', id})
+      .then((read) => live && setFile(read))
+      .catch(() => {})
+    return () => {
+      live = false
+    }
+  }, [id, readable])
   if (!item) return null
   const facts: [string, string][] = [
     ['Kind', kindName[item.kind]],
@@ -37,6 +52,7 @@ export function ItemDetailsDialog({id}: {id: string}) {
     ...(item.album ? ([['Album', item.album]] as [string, string][]) : []),
     ...(item.duration ? ([['Length', formatDuration(item.duration)]] as [string, string][]) : []),
     ['Size', formatBytes(item.size) || 'Unknown'],
+    ...technicalFacts(item, file),
   ]
   return (
     <Dialog

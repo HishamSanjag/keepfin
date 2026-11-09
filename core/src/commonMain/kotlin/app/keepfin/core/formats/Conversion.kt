@@ -52,7 +52,7 @@ object Conversion {
     private fun even(x: Double): Int = maxOf(2, (round(x / 2.0) * 2).toInt())
 
     /** The converted sizes to add to [served] (best first), best first; empty when the rule offers none. */
-    fun options(served: List<VideoOption>, duration: Double?): List<VideoOption> {
+    fun options(served: List<VideoOption>, duration: Double?, audio: AudioOption? = null): List<VideoOption> {
         if (served.isEmpty() || served.any { it.hdr || it.convertedFrom != null }) return emptyList()
         if (served.map { it.height }.toSet().size > MAX_SERVED_SIZES) return emptyList()
         val best = served.maxOf { it.height }
@@ -64,7 +64,8 @@ object Conversion {
             // The nearest served size above the target is the one downloaded (the smallest download that never upscales).
             val sourceHeight = served.filter { it.height > target }.minOf { it.height }
             val source = served.first { it.height == sourceHeight }
-            val kbps = videoKbps(target) + AUDIO_KBPS
+            val size = estimate(target, source, duration, audio)
+            val kbps = bitrateOf(size, source, duration, audio) ?: (videoKbps(target) + AUDIO_KBPS).toDouble()
             result.add(
                 VideoOption(
                     id = "${target}p-converted",
@@ -76,9 +77,9 @@ object Conversion {
                     ext = "mp4",
                     formatId = source.formatId,
                     hasAudio = source.hasAudio,
-                    size = estimate(target, source, duration),
+                    size = size,
                     sizeApprox = true,
-                    tbr = kbps.toDouble(),
+                    tbr = kbps,
                     convertedFrom = source.height,
                 ),
             )
@@ -87,23 +88,48 @@ object Conversion {
     }
 
     /** [served] plus its converted sizes, best first (a converted size follows a served one of the same height). */
-    fun withConverted(served: List<VideoOption>, duration: Double?): List<VideoOption> {
-        val extra = options(served, duration)
+    fun withConverted(served: List<VideoOption>, duration: Double?, audio: AudioOption? = null): List<VideoOption> {
+        val extra = options(served, duration, audio)
         if (extra.isEmpty()) return served
         return (served + extra).sortedWith(compareByDescending<VideoOption> { it.height }.thenByDescending { it.fps ?: 0 }.thenByDescending { it.hdr })
     }
 
     /**
-     * What a converted size is expected to weigh: the bitrate it is made at ([kbpsFor], so the same 80% cap as the conversion)
-     * plus 128 kbit/s audio, times the duration, never more than the source it is made from. The duration is the item's, else the
-     * source's own size over its bitrate; null when neither says.
+     * The length to estimate with: the item's own, else the audio stream's size over its bitrate (an audio stream is close to
+     * constant, so this is within a few percent), else the video source's size over its bitrate (a manifest's declared bitrate can
+     * be a peak far above the average, which makes the length too short). Null when none of them says.
      */
-    fun estimate(height: Int, source: VideoOption, duration: Double?): Long? {
-        val seconds = duration?.takeIf { it > 0 }
-            ?: if (source.size != null && source.tbr != null && source.tbr > 0) source.size * 8.0 / (source.tbr * 1000) else null
-        if (seconds == null) return null
-        val bytes = round((kbpsFor(height, source.size, seconds) + AUDIO_KBPS) * 1000.0 * seconds / 8)
-        return if (source.size != null) min(source.size, bytes) else bytes
+    private fun seconds(source: VideoOption, duration: Double?, audio: AudioOption?): Double? {
+        if (duration != null && duration > 0) return duration
+        if (audio?.size != null && audio.abr != null && audio.abr > 0) return audio.size * 8.0 / (audio.abr * 1000)
+        if (source.size != null && source.tbr != null && source.tbr > 0) return source.size * 8.0 / (source.tbr * 1000)
+        return null
+    }
+
+    /** The audio stream is copied as it is when it is light AAC (see [probe]); only then does its own size count. */
+    private fun copiedAudio(audio: AudioOption?): AudioOption? =
+        audio?.takeIf { it.codec == "aac" && it.abr != null && it.abr <= 160 && it.size != null }
+
+    /**
+     * What a converted size is expected to weigh: the video at the bitrate it is made at ([kbpsFor], the same 80% cap as the
+     * conversion, which measures the downloaded file with its audio), plus the audio (kept as it is when it is light AAC, else made
+     * at 128 kbit/s), times the duration, never more than what is downloaded. The duration is the item's, else worked out from the
+     * audio or the source ([seconds]); null when none says.
+     */
+    fun estimate(height: Int, source: VideoOption, duration: Double?, audio: AudioOption? = null): Long? {
+        val seconds = seconds(source, duration, audio) ?: return null
+        val total = source.size
+        val video = kbpsFor(height, total, seconds)
+        val kept = if (source.hasAudio) null else copiedAudio(audio)
+        val audioBytes = kept?.size ?: round(AUDIO_KBPS * 1000.0 * seconds / 8)
+        val bytes = round(video * 1000.0 * seconds / 8) + audioBytes
+        return if (total != null) min(total, bytes) else bytes
+    }
+
+    /** [size] as a bitrate in kbit/s over the same duration the estimate used. */
+    private fun bitrateOf(size: Long?, source: VideoOption, duration: Double?, audio: AudioOption?): Double? {
+        val seconds = seconds(source, duration, audio) ?: return null
+        return size?.let { round(it * 8.0 / seconds / 1000).toDouble() }
     }
 
     /**

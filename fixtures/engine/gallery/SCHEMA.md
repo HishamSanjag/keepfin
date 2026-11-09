@@ -16,6 +16,8 @@ Rules:
 
 ## Items and range
 
-`post` also has `items`: every file read, in the engine's output order, capped at `limit`: `position` (1-based, what the engine's range selects), `url`, `photo` (the same image-extension rule as previews, without the `https://` requirement).
+`post` also has `items`: every file read, in the engine's output order, capped at `limit`: `position` (1-based, what the engine's range selects), `url`, `photo` (the same image-extension rule as previews, without the `https://` requirement), and for a video (not a photo) `cover` when the file's meta has a `display_url` starting with `https://` (a video of a post has no image link of its own). A post can mix videos and photos (an Instagram carousel): videos arrive as `ytdl:` links, the engine hands them to the download engine when saving, and all of them are saved into the same folder.
+
+`saved.json` rule `label`: input `photos` and `videos` (counts); expected `label`: "6 photos", "1 video", "2 photos, 8 videos". Rule `savedLabel` for a mixed label reads "7 of 10 items" while some files are missing.
 
 `range.json`: input `chosen` (positions) and `count`; expected `range` (null when every position 1..count is chosen, else sorted and compact, for example `1,3-5`) or `invalid: true` for an empty list, a position outside 1..count, a repeat, or more than 500 values.

@@ -10,6 +10,8 @@ import {
   formatsConversionKbps,
   formatsConversionProbe,
   formatsConversionPercent,
+  formatsBitrateWords,
+  formatsCodecName,
   formatsHeightLabel,
   formatsMediaInfo,
   formatsSize,
@@ -159,3 +161,9 @@ export const conversionKbps = (height: number, sourceBytes?: number, duration?: 
 
 /** A converter progress line as a percent (0 to 99) of the duration in seconds, or undefined for any other line. */
 export const conversionPercent = (line: string, duration: number): number | undefined => formatsConversionPercent(line, duration) ?? undefined
+
+/** A codec as people write it ("H.264", "AAC"): from the converter's name (h264) or an Android media type; undefined for nothing. */
+export const codecName = (raw: string | undefined): string | undefined => formatsCodecName(raw ?? null) ?? undefined
+
+/** A bitrate in kbit/s as words: "320 kbit/s", "2.4 Mbit/s". */
+export const bitrateWords = (kbps: number): string => formatsBitrateWords(kbps)

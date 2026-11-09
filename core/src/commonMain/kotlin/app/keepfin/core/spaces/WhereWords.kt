@@ -4,7 +4,7 @@ import app.keepfin.core.copies.copyProblemShort
 import app.keepfin.core.groupDigits
 import app.keepfin.core.music.isJsWhitespace
 
-/** One place's state, as the screens know it: [state] is upToDate, copying, waiting, offline, problem or needsDecision. */
+/** One place's state, as the screens know it: [state] is upToDate, tidying, copying, waiting, offline, problem or needsDecision. */
 class PlaceStatus(
     val state: String,
     val at: Long? = null,
@@ -69,6 +69,8 @@ object WhereWords {
      */
     fun state(status: PlaceStatus, toCopy: Boolean, now: Long): String = when (status.state) {
         "upToDate" -> status.at?.let { "up to date " + ago(it, now) } ?: "up to date"
+        // every file is there and only Keepfin's own old records are being removed from the account
+        "tidying" -> "up to date · tidying"
         "copying" -> if (status.total > 0) "copying · " + groupDigits(status.done.toLong()) + " of " + groupDigits(status.total.toLong()) else "copying"
         "waiting" -> status.reason?.let(::reason)?.takeIf { it.isNotEmpty() && it.length <= 40 } ?: "waiting"
         "offline" -> {

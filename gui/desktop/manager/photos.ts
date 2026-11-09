@@ -2,18 +2,14 @@
 import fs from 'node:fs/promises'
 import type {FormatRequest, MediaInfo} from '../../shared/contracts.js'
 import type {ExistingMatch} from '../../shared/library.js'
-import {alreadySavedIndex, photoCountLabel, savedPhotosLabel, type EarlierSave} from '../../shared/core/gallery.js'
+import {alreadySavedIndex, galleryContentsLabel, savedPhotosLabel, type EarlierSave} from '../../shared/core/gallery.js'
 import type {StoredJob} from '../migrate.js'
 
 type GalleryFormat = Extract<FormatRequest, {type: 'gallery'}>
 
-/** The label of a photo job: "6 photos" for the photos chosen from the inspected post ("items" when a video of the post is among them). */
+/** The label of a photo job: what was chosen from the inspected post, "6 photos" or "2 photos, 8 videos". */
 export function photoLabel(media: MediaInfo, format: GalleryFormat): string {
-  const gallery = media.gallery
-  if (!gallery) return 'Photos'
-  const chosen = format.items
-  const videos = gallery.items.some((item) => !item.photo && (!chosen || chosen.includes(item.position)))
-  return photoCountLabel(chosen ? chosen.length : gallery.count, videos)
+  return media.gallery ? galleryContentsLabel(media.gallery, format.items) : 'Photos'
 }
 
 /** How many files the job asked for: the chosen photos, else every photo of the post. */

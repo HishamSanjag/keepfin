@@ -68,7 +68,6 @@ import app.keepfin.ui.settings.SettingsGroups
 import app.keepfin.ui.settings.SettingsRedirect
 import app.keepfin.ui.settings.SettingsTarget
 import app.keepfin.ui.updates.UpdateSource
-import app.keepfin.ui.updates.isNewer
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -823,7 +822,7 @@ class StudioViewModel(
         val current = updates.currentVersion
         val seen = prefs.lastSeenVersion
         // A stored older version means the app was updated since the last launch; a fresh install has none.
-        if (seen != null && seen != current && isNewer(current, seen)) whatsNew = current
+        if (app.keepfin.ui.updates.whatsNewDue(seen, current)) whatsNew = current
         if (seen != current) prefs.lastSeenVersion = current
         if (System.currentTimeMillis() - prefs.lastUpdateCheck > UPDATE_CHECK_INTERVAL_MS) {
             prefs.lastUpdateCheck = System.currentTimeMillis()

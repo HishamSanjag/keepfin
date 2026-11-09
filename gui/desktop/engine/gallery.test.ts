@@ -1,7 +1,7 @@
 import {test} from 'node:test'
 import assert from 'node:assert/strict'
-import {galleryArgs, galleryInfo} from './gallery.js'
-import {chosenRange, validateGalleryRequest} from '../../shared/core/gallery.js'
+import {galleryArgs, galleryDownloadArgs, galleryInfo} from './gallery.js'
+import {chosenRange, galleryContentsLabel, validateGalleryRequest} from '../../shared/core/gallery.js'
 import {EngineError} from './ytdlp.js'
 
 const POST = 'https://www.instagram.com/p/DfW56Yoim48/'
@@ -41,6 +41,34 @@ test('a gallery request names the chosen photos: checked against the post, an al
 test('the engine range is compact and sorted', () => {
   assert.equal(chosenRange([5, 1, 3, 4, 2, 7]), '1-5,7')
   assert.equal(chosenRange([2]), '2')
+})
+
+test('a download asks the engine to print the saved paths in UTF-8 (a non-Latin title otherwise prints as ???? and the file is "not found")', () => {
+  const base = {binary: 'gallery-dl', env: {}, network: {fragments: 1, rateLimit: 0, proxy: ''}}
+  const args = galleryDownloadArgs(base, POST, 'C:\\Keepfin\\Downloads\\مجلس', [1, 3])
+  const option = args.indexOf('output.stdout=utf-8')
+  assert.equal(args[option - 1], '-o')
+  assert.deepEqual(args.slice(-6), ['-D', 'C:\\Keepfin\\Downloads\\مجلس', '--range', '1,3', '--', POST])
+})
+
+test('a carousel of videos and photos (captured from the engine, issue #49): videos keep their cover, the label names both', () => {
+  const file = (num: number, video: boolean) => [
+    3,
+    video ? `ytdl:${POST}${num}.mp4` : `https://scontent.cdninstagram.com/p${num}.jpg`,
+    {category: 'instagram', count: 4, num, extension: video ? 'mp4' : 'jpg', display_url: `https://scontent.cdninstagram.com/cover${num}.jpg`},
+  ]
+  const media = galleryInfo([[2, {category: 'instagram'}], file(1, true), file(2, true), file(3, false), file(4, true)], POST)
+  const gallery = media.gallery!
+  assert.deepEqual(gallery.items.map((i) => [i.photo, i.cover]), [
+    [false, 'https://scontent.cdninstagram.com/cover1.jpg'],
+    [false, 'https://scontent.cdninstagram.com/cover2.jpg'],
+    [true, undefined],
+    [false, 'https://scontent.cdninstagram.com/cover4.jpg'],
+  ])
+  assert.deepEqual(gallery.previews, ['https://scontent.cdninstagram.com/p3.jpg'])
+  assert.equal(galleryContentsLabel(gallery), '1 photo, 3 videos')
+  assert.equal(galleryContentsLabel(gallery, [3]), '1 photo')
+  assert.equal(galleryContentsLabel(gallery, [1, 2]), '2 videos')
 })
 
 test('a Firefox profile reaches the gallery engine as firefox:<folder>; a browser alone stays a bare name', () => {

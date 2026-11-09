@@ -21,6 +21,7 @@ internal fun versionsHandler(input: JsonObject): JsonValue {
             val versions = (input.members.getValue("versions") as JsonArray).items.map { (it as JsonString).value }
             jstr(Releases.pick(versions, Channel.of(input.string("channel")), input.string("current")!!))
         }
+        "whatsNewDue" -> JsonBool(Releases.whatsNewDue(input.string("seen"), input.string("current")!!))
         "valid" -> JsonBool(Releases.isValid(input.string("value")!!))
         "highlights" -> {
             val limit = (input.members["limit"] as? JsonNumber)?.value?.toInt() ?: 3

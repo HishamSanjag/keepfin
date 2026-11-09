@@ -2,6 +2,8 @@ package app.keepfin
 
 import android.util.Log
 import app.keepfin.core.home.ReleaseFeed
+import app.keepfin.core.music.ArtistReleaseItem
+import app.keepfin.core.music.ArtistReleases
 import app.keepfin.core.music.MusicMatching
 import app.keepfin.core.music.MusicVideos
 import app.keepfin.core.music.VideoCandidate
@@ -19,7 +21,7 @@ data class FollowedArtist(
     val name: String,
     /** The folded first credited artist ([ReleaseFeed.artistKey]); one follow per key. */
     val key: String,
-    /** The artist's channel releases page once resolved; null until the first check finds it. */
+    /** The artist's YouTube Music channel page once resolved (the check reads its channel id); null until the first check finds it. */
     val url: String? = null,
     val checkedOnce: Boolean = false,
     val seen: List<String> = emptyList(),
@@ -49,8 +51,8 @@ data class FollowingState(val artists: List<FollowedArtist> = emptyList(), val r
 internal interface FollowingHost {
     /** The artist's YouTube Music channel id (UC...), or null when no result is surely this artist. Throws when the search fails. */
     fun resolveChannel(name: String, key: String): String?
-    fun discover(url: String, session: String, start: Int, end: Int): PlaylistDiscovery
-    fun dropSession(session: String)
+    /** The artist's latest releases, newest first: one request to the artist's YouTube Music page by channel id. Throws when it cannot be read. */
+    fun listReleases(channelId: String): List<ArtistReleaseItem>
     /** Queues every track of the release link through the normal download path with the person's defaults; returns how many were queued. */
     fun keep(url: String): Int
     fun metered(): Boolean
@@ -72,7 +74,7 @@ internal class FileFollowingStore(private val file: File) : FollowingStore {
 
 /**
  * Followed artists and their new releases (Home's "New from artists you follow"). Reuses the follow check's network path: the artist's channel is found
- * with the YouTube Music search (never guessed) and its releases page is listed with the engine's discovery. The first check of an artist records what
+ * with the YouTube Music search (never guessed) and its releases are read from the artist's YouTube Music page (the shared core's [ArtistReleases]). The first check of an artist records what
  * already exists; later checks add what is new, dated by when it was found. Nothing downloads except through [keep], one release per tap.
  */
 internal class ArtistFollowing(
@@ -117,39 +119,34 @@ internal class ArtistFollowing(
     private fun checkOne(id: String): Int {
         val artist = flow.value.artists.firstOrNull { it.id == id } ?: return 0
         val now = clock()
-        var url = artist.url
-        if (url == null) {
-            val channel = try { host.resolveChannel(artist.name, artist.key) } catch (error: Exception) {
+        var channel = artist.url?.let(ArtistReleases::channelId)
+        if (channel == null) {
+            channel = try { host.resolveChannel(artist.name, artist.key) } catch (error: Exception) {
                 warn("artist search failed", error)
                 return fail(id, "Keepfin couldn't reach YouTube Music right now. It will try again later.")
             } ?: return fail(id, "Keepfin couldn't find ${artist.name} on YouTube Music.")
-            url = "https://www.youtube.com/channel/$channel/releases"
         }
-        val session = "artist-${UUID.randomUUID()}"
-        try {
-            val discovery = try { host.discover(url, session, 1, PAGE) } catch (error: Exception) {
-                warn("release listing failed", error)
-                return fail(id, ErrorMessages.friendly(error.message.orEmpty()), url)
-            }
-            if (discovery.state != "completed" && discovery.entries.isEmpty()) return fail(id, discovery.error ?: "Keepfin couldn't read this artist's releases right now. It will try again later.", url)
-            val entries = discovery.entries.filter { it.unavailable == null && it.url.isNotBlank() }.associateBy { releaseLink(it.url) }
-            val freshIds = ReleaseFeed.fresh(artist.seen.toSet(), entries.keys.toList(), firstCheck = !artist.checkedOnce)
-            val added = freshIds.map { link ->
-                val entry = entries.getValue(link)
-                val (kind, title) = splitKind(entry.title ?: "Release")
-                ArtistRelease(link, id, title, kind, link, entry.thumbnail, now)
-            }
-            synchronized(lock) {
-                val cur = flow.value
-                if (cur.artists.none { it.id == id }) return 0
-                val keep = cur.releases.filter { it.foundAt >= now - PRUNE_MS }
-                commit(cur.copy(
-                    artists = cur.artists.map { if (it.id == id) it.copy(url = url, checkedOnce = true, seen = (it.seen + entries.keys).distinct(), checkedAt = now, error = null) else it },
-                    releases = (added + keep).distinctBy { it.id },
-                ))
-            }
-            return added.size
-        } finally { host.dropSession(session) }
+        val url = ArtistReleases.channelUrl(channel)
+        val found = try { host.listReleases(channel).take(CAP) } catch (error: Exception) {
+            warn("release listing failed", error)
+            return fail(id, CHECK_FAILED, url)
+        }
+        val releases = found.associateBy { it.link }
+        val freshIds = ReleaseFeed.fresh(artist.seen.toSet(), releases.keys.toList(), firstCheck = !artist.checkedOnce)
+        val added = freshIds.map { link ->
+            val release = releases.getValue(link)
+            ArtistRelease(link, id, release.title, release.kind, link, release.thumbnail, now)
+        }
+        synchronized(lock) {
+            val cur = flow.value
+            if (cur.artists.none { it.id == id }) return 0
+            val keep = cur.releases.filter { it.foundAt >= now - PRUNE_MS }
+            commit(cur.copy(
+                artists = cur.artists.map { if (it.id == id) it.copy(url = url, checkedOnce = true, seen = (it.seen + releases.keys).distinct(), checkedAt = now, error = null) else it },
+                releases = (added + keep).distinctBy { it.id },
+            ))
+        }
+        return added.size
     }
 
     private fun fail(id: String, message: String, url: String? = null): Int {
@@ -184,16 +181,10 @@ internal class ArtistFollowing(
         private fun warn(message: String, error: Throwable) { try { Log.w(TAG, message, error) } catch (_: Throwable) {} }
         const val CHECK_EVERY_MS = 12 * 60 * 60 * 1000L
         const val PRUNE_MS = 60 * 24 * 60 * 60 * 1000L
-        private const val PAGE = 200
+        private const val CAP = 200
 
-        /** An album playlist link is kept as a YouTube Music link so it downloads as music; any other link stays as it is. */
-        fun releaseLink(url: String): String {
-            val list = Providers.queryParameter(url, "list")
-            return if (list != null && list.startsWith("OLAK")) "https://music.youtube.com/playlist?list=$list" else url
-        }
-
-        /** "Album - Salt Season" gives (Album, Salt Season). */
-        fun splitKind(title: String): Pair<String?, String> = ReleaseFeed.splitKind(title)
+        /** What a failed check of one artist says: a plain sentence, never the raw reason (the log holds that) or a channel id. */
+        const val CHECK_FAILED = "Keepfin couldn't check this artist right now. It will try again later."
 
         /** The channel id of the search-result artist that is surely [key] (the shared core decides); null rather than a guess. */
         fun pickChannel(candidates: List<VideoCandidate>, key: String): String? =
@@ -215,9 +206,11 @@ internal class ArtistFollowing(
             fun JSONObject.str(name: String): String? = if (isNull(name)) null else optString(name).takeIf { it.isNotEmpty() }
             val artists = root.optJSONArray("artists")?.let { arr ->
                 (0 until arr.length()).map { arr.getJSONObject(it) }.map { o ->
+                    // the first follow check read a channel's releases tab, which most channels lack: such an artist was never read, so it is checked afresh
+                    val legacy = o.str("url")?.let(ArtistReleases::isLegacyAddress) == true
                     FollowedArtist(o.getString("id"), o.getString("name"), o.getString("key"), o.str("url"), o.optBoolean("checkedOnce"),
                         o.optJSONArray("seen")?.let { s -> (0 until s.length()).map { s.getString(it) } } ?: emptyList(),
-                        if (o.isNull("checkedAt")) null else o.optLong("checkedAt"), o.str("error"))
+                        if (o.isNull("checkedAt") || legacy) null else o.optLong("checkedAt"), if (legacy) null else o.str("error"))
                 }
             } ?: emptyList()
             val releases = root.optJSONArray("releases")?.let { arr ->
@@ -238,8 +231,11 @@ internal class EngineFollowingHost(private val engine: MediaEngine) : FollowingH
         return ArtistFollowing.pickChannel(MusicVideos.parse(answer), key)
     }
 
-    override fun discover(url: String, session: String, start: Int, end: Int) = engine.discover(url, session, start, end) { }
-    override fun dropSession(session: String) = engine.inspector.dropSession(session)
+    override fun listReleases(channelId: String): List<ArtistReleaseItem> {
+        val body = checkNotNull(ArtistReleases.browseBody(channelId)) { "not a channel id" }
+        return ArtistReleases.parse(MusicResolver.post(ArtistReleases.browseUrl, MusicMatching.songsApiHeaders, body))
+    }
+
     override fun metered() = engine.follow.metered()
 
     override fun keep(url: String): Int {

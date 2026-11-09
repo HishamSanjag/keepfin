@@ -101,7 +101,8 @@ export function describeFailure(error: unknown): {state: CloudRunInfo['state']; 
 
 /** The mirror only carries Keepfin's own data (the media go straight over the account), so its file counts are never the person's files. */
 function toProgress(p: MirrorProgress): Progress {
-  return {doneActions: 0, totalActions: 0, doneBytes: p.doneBytes, totalBytes: p.totalBytes, current: null, data: true}
+  const tidying = p.phase === 'tidying'
+  return {doneActions: 0, totalActions: 0, doneBytes: p.doneBytes, totalBytes: p.totalBytes, current: null, data: true, dataStep: tidying ? 'tidying' : 'saving', dataDone: p.done, dataTotal: p.total}
 }
 
 /** The staging folder of a place's runs: the one file in flight per worker, emptied after every action. */

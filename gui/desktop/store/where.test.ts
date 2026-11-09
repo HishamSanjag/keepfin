@@ -134,6 +134,29 @@ test('a file the main replica has and a complete copy also holds is not a single
   }
 })
 
+test('a copy that is syncing again still covers what its last run held: only the items it lacks stay singles (issue 52)', async () => {
+  const w = await world()
+  try {
+    const a = await w.add('audio', MUSIC, 1000, {[w.main]: 'Music/a.mp3'})
+    await w.add('audio', MUSIC, 2000, {[w.main]: 'Music/b.mp3'})
+    await w.add('video', VIDEOS, 9000, {[w.main]: 'Videos/c.mp4'})
+    await w.store.flush()
+    const lacking = await w.store.whereCounts(w.main, [{id: 'drive', holds: {all: true, spaces: [], playlists: [], favourites: false}, except: [a]}])
+    assert.deepEqual(lacking.copies.drive, {items: 2, bytes: 11_000})
+    assert.equal(group(lacking, w.main, 'audio'), 1) // the song the copy lacks is still only here
+    assert.equal(group(lacking, w.main, 'video'), 0)
+    // two copies: a file counts as kept when either holds it
+    const two = await w.store.whereCounts(w.main, [
+      {id: 'drive', holds: {all: true, spaces: [], playlists: [], favourites: false}, except: [a]},
+      {id: 'stick', holds: {all: false, spaces: [MUSIC], playlists: [], favourites: false}},
+    ])
+    assert.equal(group(two, w.main, 'audio') + group(two, w.main, 'video'), 0)
+    assert.deepEqual(two.copies.stick, {items: 2, bytes: 3000})
+  } finally {
+    await w.cleanup()
+  }
+})
+
 test('a copy that holds favourites or a playlist is looked at item by item and counts exactly its items', async () => {
   const w = await world()
   try {
@@ -222,7 +245,7 @@ test('a big library (200,000 items with KEEPFIN_SCALE): the counting is one pass
 test('whereItem is empty for an item nobody has a file for', () => {
   const sql = new SqlState(':memory:')
   try {
-    assert.deepEqual(whereItem(sql, 'nope'), {replicas: [], space: '', favourite: false, playlists: [], smart: []})
+    assert.deepEqual(whereItem(sql, 'nope'), {id: 'nope', replicas: [], space: '', favourite: false, playlists: [], smart: []})
   } finally {
     sql.close()
   }

@@ -7,6 +7,7 @@ Release ordering, update channels and release-notes highlights. Since phase 8 of
 | `compare` | `a`, `b` | the sign of a - b: `-1`, `0` or `1` (text that is not a version sorts lowest) |
 | `pick` | `channel` (`stable` or `beta`), `current`, `versions` (list, any order) | the version the channel offers, or `null` (nothing newer than `current`) |
 | `valid` | `value` | `true` when `value` is a version |
+| `whatsNewDue` | `seen` (the last version whose notes were seen, or `null`), `current` | `true` when `current` is newer than `seen`; `false` for a fresh install (`null`), the same version, a downgrade or unreadable text |
 | `highlights` | `notes`, `platform` (`windows` or `android`), optional `limit` (default 3) | the list of short plain-text bullets for the update dialog |
 
-Files: `compare.json`, `channels.json` (includes the 0.5.5-beta.N upgrade paths), `valid.json`, `highlights.json`.
+Files: `compare.json`, `channels.json` (includes the 0.5.5-beta.N upgrade paths), `valid.json`, `highlights.json`, `whatsNew.json`.

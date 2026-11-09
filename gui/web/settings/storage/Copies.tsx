@@ -15,7 +15,7 @@ import {agoWords, copyLine, holdsWords, sizeWords, statusTone, statusWords} from
 import {useNow, useWhere} from '../where/useWhere'
 import {AddCopy} from './AddCopy'
 import {syncCopies} from './copiesApi'
-import {holdsText, modeWords, statusWords as copyStatus} from './copyText'
+import {copyFiles, holdsText, modeWords, statusWords as copyStatus} from './copyText'
 import {CloudAccountCards, type CloudNote} from './CloudAccounts'
 import {CopyDialog} from './CopyDialog'
 import {CopyMatrix} from './CopyMatrix'
@@ -116,8 +116,9 @@ export function Places({copies}: {copies: Copies}) {
           {!here &&
             state.places.map((place) => {
               const status = copyStatus[place.status]
-              const total = place.kept + place.waiting
-              const holds = [modeWords[place.mode].name, holdsText(place.holds, state.rows), place.path || place.cloud?.providerName, total > 0 ? (place.waiting === 0 ? plural(total, 'file') : `${place.kept.toLocaleString()} of ${plural(total, 'file')}`) : ''].filter(Boolean).join(' · ')
+              const counted = copyFiles(place)
+              const total = counted.kept + counted.waiting
+              const holds = [modeWords[place.mode].name, holdsText(place.holds, state.rows), place.path || place.cloud?.providerName, total > 0 ? (counted.waiting === 0 ? plural(total, 'file') : `${counted.kept.toLocaleString()} of ${plural(total, 'file')}`) : ''].filter(Boolean).join(' · ')
               return (
                 <li key={place.id}>
                   <button type="button" className="where-row" aria-label={`${place.name}: ${holds}, ${status.label}. Open the copy`} onClick={() => setOpen({copy: place.id})}>
@@ -214,6 +215,8 @@ const removalWords = (removal: NonNullable<CopyPlaceView['removal']>) => (remova
 
 function PlaceRow({place, now, mode, removal, onOpen}: {place: WherePlace; now: number; mode?: CopyMode; removal?: CopyPlaceView['removal']; onOpen: () => void}) {
   const size = sizeWords(place)
+  // every row counts the same thing: the person's files held there (the main storage says how many the library has)
+  const count = place.thisDevice && place.holds.files ? place.holds.files.of : place.items
   const status = removal ? removalWords(removal) : statusWords(place, now)
   const type = mode ? modeWords[mode].name : undefined
   const body = (
@@ -234,7 +237,7 @@ function PlaceRow({place, now, mode, removal, onOpen}: {place: WherePlace; now: 
         <span className="small muted where-line" title={place.thisDevice ? undefined : copyLine(place)}>{place.thisDevice ? `Your Keepfin folder on ${THIS} · every copy is made from it` : copyLine(place)}</span>
       </span>
       <span className="where-state small">
-        {size && <span className="tabular where-size">{place.thisDevice && place.holds.files ? plural(place.holds.files.of, 'file') : size}</span>}
+        {count > 0 && <span className="tabular where-size" >{plural(count, 'file')}{size && size !== plural(count, 'file') ? ` · ${size}` : ''}</span>}
         <span className="where-status" data-tone={removal ? (removal.state === 'failed' ? 'warn' : 'quiet') : statusTone(place.status)} {...(removal ? {role: 'status', title: removal.text} : {})}>
           {status}
         </span>

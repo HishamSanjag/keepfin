@@ -14,6 +14,8 @@ export type CopyCover = {
   id: string
   /** Space ids (as the library stores them), playlist ids, favourites, smart space ids (a rule decides, so they are counted item by item). */
   holds: {all: boolean; spaces: string[]; playlists: string[]; favourites: boolean; smart?: string[]}
+  /** Items the copy's last finished run lacks: it holds the rest of what it selects. */
+  except?: string[]
 }
 
 /** What one replica holds: its placements joined to live items. */
@@ -76,7 +78,7 @@ export function whereCounts(sql: SqlState, mainReplica: string, completeCopies: 
   }
 
   const copies: WhereCounts['copies'] = {}
-  const itemLevel = completeCopies.some((copy) => !copy.holds.all && (copy.holds.favourites || copy.holds.playlists.length > 0 || (copy.holds.smart ?? []).length > 0))
+  const itemLevel = completeCopies.some((copy) => (copy.except ?? []).length > 0 || (!copy.holds.all && (copy.holds.favourites || copy.holds.playlists.length > 0 || (copy.holds.smart ?? []).length > 0)))
   if (!itemLevel) {
     // everything or whole spaces: the per-space totals of this computer's files say it all
     for (const copy of completeCopies) {
@@ -110,6 +112,7 @@ export function whereCounts(sql: SqlState, mainReplica: string, completeCopies: 
       for (const playlist of copy.holds.playlists) for (const song of sql.songs(playlist)) set.add(song.item)
       return set
     })
+    const lacking = completeCopies.map((copy) => new Set(copy.except ?? []))
     const inSmart = completeCopies.map((copy) => ((copy.holds.smart ?? []).length ? smartMembers(sql.db, copy.holds.smart ?? []) : new Set<string>()))
     for (const copy of completeCopies) copies[copy.id] = {items: 0, bytes: 0}
     const covered = new Map<string, number>()
@@ -117,7 +120,7 @@ export function whereCounts(sql: SqlState, mainReplica: string, completeCopies: 
       let any = false
       completeCopies.forEach((copy, index) => {
         const h = copy.holds
-        if (h.all || h.spaces.includes(row.space) || (h.favourites && favourites.has(row.id)) || inList[index].has(row.id) || inSmart[index].has(row.id)) {
+        if (!lacking[index].has(row.id) && (h.all || h.spaces.includes(row.space) || (h.favourites && favourites.has(row.id)) || inList[index].has(row.id) || inSmart[index].has(row.id))) {
           const held = copies[copy.id]
           held.items++
           held.bytes += row.bytes
@@ -146,7 +149,7 @@ export function whereCounts(sql: SqlState, mainReplica: string, completeCopies: 
 }
 
 /** What the per-file line needs to know about one item: who has a file for it, and what a copy would select it by. */
-export type WhereItemFacts = {replicas: {replica: string; actor: string}[]; space: string; favourite: boolean; playlists: string[]; smart?: string[]}
+export type WhereItemFacts = {id?: string; replicas: {replica: string; actor: string}[]; space: string; favourite: boolean; playlists: string[]; smart?: string[]}
 
 export function whereItem(sql: SqlState, itemId: string): WhereItemFacts {
   const replicas = (sql.prep("SELECT k2 AS replica, oactor AS actor FROM regs WHERE scope = 'placement' AND k1 = ? AND value <> 'null' ORDER BY k2").all(itemId) as {replica: string; actor: string}[]).map((r) => ({replica: r.replica, actor: r.actor}))
@@ -160,5 +163,5 @@ export function whereItem(sql: SqlState, itemId: string): WhereItemFacts {
       )
       .get(itemId) !== undefined
   const playlists = (sql.prep('SELECT DISTINCT playlist FROM entries WHERE item = ? AND entry NOT IN (SELECT entry FROM removed_entries)').all(itemId) as {playlist: string}[]).map((r) => r.playlist)
-  return {replicas, space, favourite, playlists, smart: smartSpacesOf(sql.db, itemId)}
+  return {id: itemId, replicas, space, favourite, playlists, smart: smartSpacesOf(sql.db, itemId)}
 }

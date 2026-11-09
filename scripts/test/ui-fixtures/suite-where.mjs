@@ -207,6 +207,26 @@ export async function registerWhereSuite({test, sent}) {
     }, {theme: mode, fake: {where: 'several'}})
   }
 
+  // Details… also says what is in the file: resolution, codecs, bitrate, container (read from the file by the engine)
+  await test('details: a video says its resolution, codecs, bitrate and container; a song its codec and bitrate', async (page) => {
+    await page.getByRole('navigation', {name: 'Main navigation'}).getByRole('button', {name: 'Library'}).click()
+    await page.getByRole('navigation', {name: 'Your library'}).getByRole('button', {name: /^Videos/}).click()
+    await page.getByRole('button', {name: /^How a Master/}).click({button: 'right'})
+    await page.getByRole('menuitem', {name: 'Details…'}).click()
+    const dialog = page.getByRole('dialog', {name: 'Details'})
+    await sent(page, 'libraryDetails')
+    await dialog.getByText('1080x1920 · 29.97 fps', {exact: true}).waitFor()
+    const text = await dialog.textContent()
+    for (const word of ['Container', 'MP4', 'Resolution', 'Video codec', 'H.264', 'Audio codec', 'AAC', 'Bitrate', '4.1 Mbit/s']) assert.ok(text.includes(word), `"${word}" in ${text}`)
+    await page.keyboard.press('Escape')
+    await page.getByRole('navigation', {name: 'Your library'}).getByRole('button', {name: /^Music/}).click()
+    await page.getByRole('button', {name: /^Cold Front/}).click({button: 'right'})
+    await page.getByRole('menuitem', {name: 'Details…'}).click()
+    const song = page.getByRole('dialog', {name: 'Details'})
+    await song.getByText('320 kbit/s', {exact: true}).waitFor()
+    assert.ok(!(await song.textContent()).includes('Video codec'), 'a song has no video codec')
+  }, {fake: {where: 'one'}})
+
   await test('where: a file only this computer has says "Only on this PC"', async (page) => {
     await page.getByRole('navigation', {name: 'Main navigation'}).getByRole('button', {name: 'Library'}).click()
     await page.getByRole('navigation', {name: 'Your library'}).getByRole('button', {name: /^Music/}).click()

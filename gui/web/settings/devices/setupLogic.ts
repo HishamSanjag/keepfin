@@ -1,6 +1,7 @@
 import {formatBytes} from '../../../shared/contracts'
 import type {CopiesState, CopyDeviceChoice, CopyDraft, CopyPlaceView, CopyPreview, CopyRow} from '../../../shared/copies'
 import {plural} from '../../format'
+import {dataProgressWords} from '../storage/copyText'
 
 /** The pure rules of "what stays up to date" on a paired device: the draft from the choices, the review sentences, the card's status sentence. */
 
@@ -117,7 +118,7 @@ export function copyStatusLine(place: CopyPlaceView, name: string): string {
   if (place.status === 'disconnected' || offline) return `Waiting for ${name}`
   if (place.status === 'syncing') {
     const progress = place.progress
-    if (progress?.data) return 'Saving Keepfin’s own data…'
+    if (progress?.data) return dataProgressWords(progress)
     if (!progress || progress.totalActions <= 0) return 'Copying…'
     return `Copying ${progress.doneActions.toLocaleString()} of ${plural(progress.totalActions, 'file')} · ${formatBytes(Math.max(0, progress.totalBytes - progress.doneBytes))} left`
   }

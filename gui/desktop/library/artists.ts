@@ -5,15 +5,16 @@
 import {randomUUID} from 'node:crypto'
 import fs from 'node:fs/promises'
 import path from 'node:path'
-import {scrubToolNames} from '../../shared/errors.js'
-import {artistKey, freshReleases, splitKind} from '../../shared/core/home.js'
+import {artistKey, freshReleases} from '../../shared/core/home.js'
+import {artistChannelId, artistChannelUrl, isLegacyArtistAddress, type ArtistReleaseHit} from '../../shared/core/music.js'
 import type {PlaylistEntry} from '../../shared/contracts.js'
 import type {ArtistRelease, FollowedArtist, FollowingState} from '../../shared/following.js'
 
 export type ArtistHost = {
   /** The artist's channel id (UC...), or undefined when no result is surely this artist. Throws when the search fails. */
   resolveChannel(name: string, key: string): Promise<string | undefined>
-  discover(url: string): Promise<{entries: PlaylistEntry[]}>
+  /** The artist's latest releases, newest first: one request to the artist's YouTube Music page by channel id. */
+  listReleases(channelId: string): Promise<ArtistReleaseHit[]>
   /** Queues every track of the release through the normal download path with the person's defaults; returns how many were queued. */
   keep(url: string): Promise<number>
 }
@@ -22,17 +23,8 @@ export const ARTIST_CHECK_EVERY_MS = 12 * 3_600_000
 export const ARTIST_PRUNE_MS = 60 * 86_400_000
 const CAP = 200
 
-const friendly = (error: unknown) => (error instanceof Error ? scrubToolNames(error.message).trim().slice(0, 300) : '') || 'Keepfin could not check this artist right now. It will try again later.'
-
-/** An album playlist link is kept as a YouTube Music link so it downloads as music. */
-export function releaseLink(url: string): string {
-  try {
-    const list = new URL(url).searchParams.get('list')
-    return list?.startsWith('OLAK') ? `https://music.youtube.com/playlist?list=${list}` : url
-  } catch {
-    return url
-  }
-}
+/** What a failed check of one artist says: a plain sentence, never the raw reason (the logs hold that) or a channel id. */
+const CHECK_FAILED = "Keepfin couldn't check this artist right now. It will try again later."
 
 export class ArtistFollowing {
   private state: FollowingState = {artists: [], releases: [], checking: false}
@@ -51,7 +43,11 @@ export class ArtistFollowing {
     this.loaded = true
     try {
       const raw = JSON.parse(await fs.readFile(this.file, 'utf8'))
-      if (Array.isArray(raw.artists) && Array.isArray(raw.releases)) this.state = {artists: raw.artists, releases: raw.releases, checking: false}
+      if (Array.isArray(raw.artists) && Array.isArray(raw.releases)) {
+        // the first follow check read a channel's releases tab, which most channels lack: those artists were never read, so they are checked afresh
+        const artists = (raw.artists as FollowedArtist[]).map((artist) => (artist.url && isLegacyArtistAddress(artist.url) ? {...artist, checkedAt: undefined, error: undefined} : artist))
+        this.state = {artists, releases: raw.releases, checking: false}
+      }
     } catch {}
   }
 
@@ -129,30 +125,29 @@ export class ArtistFollowing {
     const artist = this.state.artists.find((item) => item.id === id)
     if (!artist) return
     const at = this.now()
-    let url = artist.url
-    if (!url) {
-      let channel: string | undefined
+    let channel = artist.url ? artistChannelId(artist.url) : undefined
+    if (!channel) {
       try {
         channel = await this.host.resolveChannel(artist.name, artist.key)
       } catch {
         return this.commit(this.patch(id, {checkedAt: at, error: 'Keepfin could not reach YouTube Music right now. It will try again later.'}))
       }
       if (!channel) return this.commit(this.patch(id, {checkedAt: at, error: `Keepfin could not find ${artist.name} on YouTube Music.`}))
-      url = `https://www.youtube.com/channel/${channel}/releases`
     }
-    let entries: PlaylistEntry[]
+    const url = artistChannelUrl(channel)
+    let hits: ArtistReleaseHit[]
     try {
-      entries = (await this.host.discover(url)).entries.slice(0, CAP)
+      hits = (await this.host.listReleases(channel)).slice(0, CAP)
     } catch (error) {
-      return this.commit(this.patch(id, {checkedAt: at, error: friendly(error), url}))
+      console.warn('artist release check failed', error)
+      return this.commit(this.patch(id, {checkedAt: at, error: CHECK_FAILED, url}))
     }
-    const usable = new Map<string, PlaylistEntry>()
-    for (const entry of entries) if (!entry.unavailable && entry.url) usable.set(releaseLink(entry.url), entry)
+    const usable = new Map<string, ArtistReleaseHit>()
+    for (const hit of hits) usable.set(hit.link, hit)
     const fresh = freshReleases(artist.seen, [...usable.keys()], !artist.checkedOnce)
     const added: ArtistRelease[] = fresh.map((link) => {
-      const entry = usable.get(link)!
-      const {kind, title} = splitKind(entry.title ?? 'Release')
-      return {id: link, artistId: id, title, kind, url: link, thumbnail: entry.thumbnail, foundAt: at, kept: false}
+      const hit = usable.get(link)!
+      return {id: link, artistId: id, title: hit.title, kind: hit.kind, url: link, thumbnail: hit.thumbnail, foundAt: at, kept: false}
     })
     const keepOld = this.state.releases.filter((release) => release.foundAt >= at - ARTIST_PRUNE_MS)
     const seen = [...new Set([...artist.seen, ...usable.keys()])]
@@ -173,7 +168,6 @@ export class ArtistFollowing {
 
 /** The slice of the download manager a kept release needs. */
 export type ReleaseQueue = {
-  followDiscover(url: string, cap: number): Promise<{entries: PlaylistEntry[]}>
   startDiscovery(url: unknown, id: unknown): unknown
   discoveryState(id: unknown): {state: string; entries: PlaylistEntry[]; error?: string}
   cancelDiscovery(id: unknown): unknown
@@ -182,10 +176,10 @@ export type ReleaseQueue = {
 }
 
 /** The artist follow on the real engine: channel search, the follow check's listing, and a kept release through the normal download path. */
-export function artistHost(queue: ReleaseQueue, resolveChannel: ArtistHost['resolveChannel'], isMusic: (url: string) => boolean): ArtistHost {
+export function artistHost(queue: ReleaseQueue, resolveChannel: ArtistHost['resolveChannel'], listReleases: ArtistHost['listReleases'], isMusic: (url: string) => boolean): ArtistHost {
   return {
     resolveChannel,
-    discover: (url) => queue.followDiscover(url, CAP),
+    listReleases,
     async keep(url) {
       const session = `keep-${randomUUID()}`
       queue.startDiscovery(url, session)

@@ -56,8 +56,8 @@ export function parseProbe(banner: string): Probe {
   return probe
 }
 
-/** Probes a local file. Resolves undefined when ffmpeg is missing or the file cannot be read. */
-export async function probeFile(ffmpeg: string | undefined, file: string, signal?: AbortSignal): Promise<Probe | undefined> {
+/** The converter's report of a local file (`-i file`, no output). Resolves undefined when ffmpeg is missing or the file cannot be read. */
+export async function readBanner(ffmpeg: string | undefined, file: string, signal?: AbortSignal): Promise<{banner: string; probe: Probe} | undefined> {
   if (!ffmpeg) return
   try {
     const result = await run(ffmpeg, ['-hide_banner', '-nostdin', '-protocol_whitelist', 'file', '-i', file], {
@@ -65,8 +65,13 @@ export async function probeFile(ffmpeg: string | undefined, file: string, signal
       timeoutMs: 30_000,
     })
     const probe = parseProbe(result.stderr)
-    return probe.containers.length ? probe : undefined
+    return probe.containers.length ? {banner: result.stderr, probe} : undefined
   } catch {
     return
   }
+}
+
+/** Probes a local file. Resolves undefined when ffmpeg is missing or the file cannot be read. */
+export async function probeFile(ffmpeg: string | undefined, file: string, signal?: AbortSignal): Promise<Probe | undefined> {
+  return (await readBanner(ffmpeg, file, signal))?.probe
 }

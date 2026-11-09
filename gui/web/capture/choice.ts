@@ -8,6 +8,7 @@ import type {
   MediaInfo,
   VideoOption,
 } from '../../shared/contracts'
+import {galleryContentsLabel} from '../../shared/core/gallery'
 import {containerAfterPick, modesOf, openingPicks, picksForPreset, requestOf, sizeOf, type ChoicePicks} from '../../shared/core/choice'
 import {audioCodecLabel, formatBytes, plural, videoLabel} from '../format'
 
@@ -97,11 +98,9 @@ export function galleryChosen(media: MediaInfo, choice: Choice): number[] {
   return Array.from({length: media.gallery?.count ?? 0}, (_, i) => i + 1).filter((position) => !out.has(position))
 }
 
-/** "6 photos", or "6 items" when a video of the post is among them. */
+/** "6 photos", "2 videos" or "2 photos, 8 videos": what the choice saves. */
 export function galleryChosenLabel(media: MediaInfo, choice: Choice): string {
-  const chosen = new Set(galleryChosen(media, choice))
-  const videos = media.gallery?.items.some((item) => !item.photo && chosen.has(item.position))
-  return plural(chosen.size, videos ? 'item' : 'photo')
+  return media.gallery ? galleryContentsLabel(media.gallery, galleryChosen(media, choice)) : ''
 }
 
 export function formatRequest(media: MediaInfo, choice: Choice): FormatRequest {

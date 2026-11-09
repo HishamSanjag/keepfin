@@ -1,4 +1,4 @@
-import type {CopyHolds, CopyMode, CopyPlaceView, CopyRow, CopyStatus} from '../../../shared/copies'
+import type {CopyHolds, CopyMode, CopyPlaceView, CopyProgress, CopyRow, CopyStatus} from '../../../shared/copies'
 import {plural} from '../../format'
 
 export const modeWords: Record<CopyMode, {name: string; short: string; long: string}> = {
@@ -74,4 +74,25 @@ export function scheduleText(place: Pick<CopyPlaceView, 'schedule'>): string {
   if (auto) parts.push('when the drive is connected and your library changes')
   if (everyHours) parts.push(everyHours === 24 ? 'once a day' : `every ${everyHours} hours`)
   return parts.length ? `Syncs ${parts.join(', and ')}.` : 'Syncs only when you press Sync now.'
+}
+
+/**
+ * What the step that moves Keepfin's own data is doing, and how far: "Cleaning up old Keepfin records on Google Drive · 100 of 1,021"
+ * while old records are removed from the account, "Saving Keepfin's own data · 3 of 12" otherwise (no count while the size is unknown).
+ */
+export function dataProgressWords(progress: Pick<CopyProgress, 'dataStep' | 'dataDone' | 'dataTotal'>, service?: string): string {
+  const total = progress.dataTotal ?? 0
+  const count = total > 0 ? ` · ${(progress.dataDone ?? 0).toLocaleString('en')} of ${total.toLocaleString('en')}` : ''
+  if (progress.dataStep === 'tidying') return `Cleaning up old Keepfin records${service ? ` on ${service}` : ''}${count}`
+  return `Saving Keepfin’s own data${count || '…'}`
+}
+
+/** How far the data step is, 0 to 100, or undefined while it cannot be told (the bar then keeps moving without a value). */
+export const dataProgressPercent = (progress: Pick<CopyProgress, 'dataDone' | 'dataTotal'>): number | undefined =>
+  progress.dataTotal && progress.dataTotal > 0 ? Math.min(100, ((progress.dataDone ?? 0) / progress.dataTotal) * 100) : undefined
+
+/** The person's files a copy has and still waits for, counted the way the main storage counts them (sidecars and Keepfin's own data are not files). */
+export function copyFiles(place: Pick<CopyPlaceView, 'kept' | 'waiting' | 'items' | 'itemsKept'>): {kept: number; waiting: number} {
+  if (place.items === undefined || place.itemsKept === undefined) return {kept: place.kept, waiting: place.waiting}
+  return {kept: place.itemsKept, waiting: Math.max(0, place.items - place.itemsKept)}
 }

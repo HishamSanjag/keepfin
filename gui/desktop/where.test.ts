@@ -13,7 +13,7 @@ import type {CopyPlaceView, CopyRow} from '../shared/copies.js'
 import type {DevicesState, PairedDevice} from '../shared/devices.js'
 import type {WhereState} from '../shared/where.js'
 import type {WhereCounts, WhereItemFacts} from './store/where.js'
-import {buildWhere, completeCovers, isComplete, itemPlaces, type WhereCopy} from './whereState.js'
+import {buildWhere, completeCovers, coverOf, itemPlaces, type WhereCopy} from './whereState.js'
 import {WhereHost} from './whereHost.js'
 
 const MAIN = 'replica-main'
@@ -145,17 +145,43 @@ test('copies: holds are named, the states are plain, a drive that is away says s
   assert.deepEqual(state.places.map((p) => p.id), ['this', 'dev-phone', 'p-backup', 'p-stick', 'p-cloud', 'p-laptop'])
 })
 
-test('which copies are complete: verified, nothing waiting, nothing to review, not syncing, not a first plan waiting', () => {
+test('a copy covers the files its last finished run holds, also while it syncs again or waits; the items it lacks are named', () => {
+  const of = (view: CopyPlaceView, missing?: readonly string[] | null) => coverOf({view, replica: null, ...(missing !== undefined ? {missing} : {})})
   const ok = copy({id: 'a', name: 'A'})
-  assert.equal(isComplete(ok), true)
-  assert.equal(isComplete(copy({id: 'b', name: 'B', waiting: 1, status: 'waiting'})), false)
-  assert.equal(isComplete(copy({id: 'c', name: 'C', status: 'syncing'})), false)
-  assert.equal(isComplete(copy({id: 'd', name: 'D', lastVerifiedAt: undefined, status: 'new'})), false)
-  assert.equal(isComplete(copy({id: 'e', name: 'E', review: 1, status: 'review'})), false)
-  assert.equal(isComplete(copy({id: 'f', name: 'F', previewPending: true, status: 'preview'})), false)
-  assert.equal(isComplete(copy({id: 'g', name: 'G', connected: false, status: 'disconnected'})), true) // away, but everything was verified
+  assert.deepEqual(of(ok), {id: 'a', holds: {all: true, spaces: [], playlists: [], favourites: false}})
+  // running again or waiting: the manifest of the last finished run still says what is there
+  assert.deepEqual(of(copy({id: 'b', name: 'B', waiting: 2, status: 'syncing'}), ['x', 'y']), {id: 'b', holds: {all: true, spaces: [], playlists: [], favourites: false}, except: ['x', 'y']})
+  assert.deepEqual(of(copy({id: 'c', name: 'C', waiting: 11, status: 'waiting'}), [])?.except, undefined)
+  // nothing is known about what waits: a copy with files waiting covers nothing for sure
+  assert.equal(of(copy({id: 'd', name: 'D', waiting: 1, status: 'waiting'})), null)
+  assert.equal(of(copy({id: 'e', name: 'E', waiting: 5, status: 'syncing'}), null), null)
+  assert.equal(of(copy({id: 'f', name: 'F', lastVerifiedAt: undefined, status: 'new'})), null)
+  assert.equal(of(copy({id: 'g', name: 'G', previewPending: true, status: 'preview'})), null)
+  assert.equal(of(copy({id: 'h', name: 'H', status: 'refused'})), null)
+  assert.notEqual(of(copy({id: 'i', name: 'I', connected: false, status: 'disconnected'})), null) // away, but verified
   const covers = completeCovers([ok, copy({id: 'b', name: 'B', waiting: 1, status: 'waiting'})].map((view) => ({view, replica: null})))
   assert.deepEqual(covers, [{id: 'a', holds: {all: true, spaces: [], playlists: [], favourites: false}}])
+})
+
+test('a mirror of everything that is syncing and a subset that waits both count for the files they hold (issue 52)', () => {
+  const mirror = copy({id: 'drive', name: 'Google Drive', status: 'syncing', waiting: 29, kept: 84, items: 84, itemsKept: 84, progress: {doneActions: 0, totalActions: 0, doneBytes: 0, totalBytes: 0, current: null, data: true, dataStep: 'saving', dataDone: 3, dataTotal: 12}})
+  const subset = copy({id: 'dropbox', name: 'Dropbox', holds: {all: false, spaces: ['music'], playlists: [], favourites: false}, status: 'waiting', kept: 101, waiting: 11, items: 80, itemsKept: 71})
+  const copies: WhereCopy[] = [{view: mirror, replica: null, missing: []}, {view: subset, replica: null, missing: ['i1']}]
+  assert.deepEqual(completeCovers(copies).map((c) => c.id), ['drive', 'dropbox'])
+  const state = buildWhere(base({copies, counts: counts({items: 84, replicas: [{replica: MAIN, actors: ['actor-main'], items: 84, bytes: 10}], copies: {drive: {items: 84, bytes: 10}}})}))
+  const by = Object.fromEntries(state.places.map((p) => [p.id, p]))
+  // files, not entries: the sidecars are not counted, so main and the mirror of everything say the same number
+  assert.equal(by.this.items, 84)
+  assert.equal(by.drive.items, 84)
+  assert.deepEqual(by.drive.files, {kept: 84, of: 84})
+  assert.equal(by.dropbox.items, 71)
+  assert.deepEqual(by.dropbox.files, {kept: 71, of: 80})
+  // only the old records are being removed: not "copying"
+  const tidying = copy({id: 't', name: 'T', status: 'syncing', progress: {doneActions: 0, totalActions: 0, doneBytes: 0, totalBytes: 0, current: null, data: true, dataStep: 'tidying', dataDone: 100, dataTotal: 1021}})
+  const saving = copy({id: 's', name: 'S', status: 'syncing', progress: {doneActions: 0, totalActions: 0, doneBytes: 0, totalBytes: 0, current: null, data: true, dataStep: 'saving', dataDone: 1, dataTotal: 2}})
+  const words = buildWhere(base({copies: [tidying, saving].map((view) => ({view, replica: null}))}))
+  assert.deepEqual(words.places.find((p) => p.id === 't')!.status, {state: 'tidying'})
+  assert.equal(words.places.find((p) => p.id === 's')!.status.state, 'copying')
 })
 
 test('singles: counted per place and kind, the space most of them are in is offered for Keep a copy', () => {

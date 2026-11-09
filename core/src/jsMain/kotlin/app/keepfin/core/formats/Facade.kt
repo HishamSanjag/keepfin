@@ -137,3 +137,11 @@ fun formatsConversionKbps(height: Int, sourceBytes: Double?, duration: Double?):
 /** A converter progress line as a percent of the duration (seconds), or null. */
 @JsExport
 fun formatsConversionPercent(line: String, duration: Double): Double? = Conversion.percent(line, duration)
+
+/** A codec as people write it (see MediaDetails.codecName), or null. */
+@JsExport
+fun formatsCodecName(raw: String?): String? = MediaDetails.codecName(raw)
+
+/** A bitrate in kbit/s as words (see MediaDetails.bitrate). */
+@JsExport
+fun formatsBitrateWords(kbps: Double): String = MediaDetails.bitrate(kbps)

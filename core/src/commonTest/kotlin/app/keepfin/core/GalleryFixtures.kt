@@ -22,7 +22,7 @@ internal fun galleryHandler(input: JsonObject): JsonValue {
         is GalleryRead.Post -> obj(
             "kind" to jstr("post"), "title" to jstr(r.title), "uploader" to jstr(r.uploader), "category" to jstr(r.category),
             "provider" to jstr(r.provider), "previews" to arr(r.previews.map { jstr(it) }),
-            "items" to arr(r.items.map { obj("position" to jnum(it.position), "url" to jstr(it.url), "photo" to JsonBool(it.photo)) }), "count" to jnum(r.count),
+            "items" to arr(r.items.map { obj("position" to jnum(it.position), "url" to jstr(it.url), "photo" to JsonBool(it.photo)).let { item -> if (it.cover == null) item else JsonObject(LinkedHashMap(item.members + ("cover" to jstr(it.cover)))) } }), "count" to jnum(r.count),
             "truncated" to JsonBool(r.truncated),
         )
         is GalleryRead.Failed -> obj("kind" to jstr("failed"), "message" to jstr(r.message))
@@ -45,7 +45,7 @@ private fun gallerySavedHandler(input: JsonObject): JsonValue = when ((input.mem
             (input.members.getValue("url") as JsonString).value, (input.members.getValue("count") as JsonNumber).value.toInt(), ints(input.members["items"]), earlier,
         )))
     }
-    else -> obj("label" to jstr(Gallery.label((input.members.getValue("count") as JsonNumber).value.toInt(), (input.members.getValue("videos") as JsonBool).value)))
+    else -> obj("label" to jstr(Gallery.label((input.members.getValue("photos") as JsonNumber).value.toInt(), (input.members.getValue("videos") as JsonNumber).value.toInt())))
 }
 
 private fun galleryRangeHandler(input: JsonObject): JsonValue {

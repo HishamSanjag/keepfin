@@ -7,7 +7,7 @@ import {Button, InlineAlert, ProgressBar, SwitchRow, Tabs} from '../../ui/contro
 import {Dialog} from '../../ui/Dialog'
 import {cleanUpCopy, editCopy, listVersions, pauseCopies, removeCopy, restoreVersion, signInToCloud, syncCopies} from './copiesApi'
 import {freeUpKeeps, freeUpNothing, freeUpSummary, freeUpTitle, nothingToFree as nothingToFreeOf, problemRetry, problemTitle, removeFilesStay, removeLead, removeTitle} from '../../../shared/core/copies'
-import {holdsText, modeWords, scheduleText, statusWords} from './copyText'
+import {copyFiles, dataProgressPercent, dataProgressWords, holdsText, modeWords, scheduleText, statusWords} from './copyText'
 import {HoldsEditor} from './HoldsEditor'
 
 /** Why files were not copied: each plain reason (with how many, when all are listed), the promise to try again, and the files behind a toggle. */
@@ -101,7 +101,9 @@ export function CopyDialog({place, state, onState, onReview, onClose}: {place: C
     ...(backup ? [{value: 'versions' as const, label: 'Earlier versions'}] : []),
   ]
   const progress = place.progress
-  const percent = progress && progress.totalBytes > 0 ? (progress.doneBytes / progress.totalBytes) * 100 : progress && progress.totalActions > 0 ? (progress.doneActions / progress.totalActions) * 100 : 0
+  const files = copyFiles(place)
+  const dataPercent = progress?.data ? dataProgressPercent(progress) : undefined
+  const percent = dataPercent !== undefined ? dataPercent : progress && progress.totalBytes > 0 ? (progress.doneBytes / progress.totalBytes) * 100 : progress && progress.totalActions > 0 ? (progress.doneActions / progress.totalActions) * 100 : 0
   const free = place.freeBytes
   const usedPercent = place.totalBytes && free !== undefined ? ((place.totalBytes - free) / place.totalBytes) * 100 : undefined
   const holdsOk = holds.all || holds.spaces.length > 0 || holds.playlists.length > 0 || holds.favourites
@@ -115,7 +117,7 @@ export function CopyDialog({place, state, onState, onReview, onClose}: {place: C
         onClose={onClose}
         eyebrow={
           <>
-            {words.name} · <span data-tone={status.tone}>{place.status === 'waiting' && place.waiting > 0 ? `${plural(place.waiting, 'file')} waiting` : status.label}</span>
+            {words.name} · <span data-tone={status.tone}>{place.status === 'waiting' && files.waiting > 0 ? `${plural(files.waiting, 'file')} waiting` : status.label}</span>
           </>
         }
         title={place.name}
@@ -180,7 +182,7 @@ export function CopyDialog({place, state, onState, onReview, onClose}: {place: C
               )}
               {finished && (
                 <InlineAlert tone="info">
-                  {place.waiting === 0 ? 'Synced just now: everything this copy holds is on it.' : `Synced just now. ${plural(place.waiting, 'file')} still ${place.waiting === 1 ? 'waits' : 'wait'} for the next sync.`}
+                  {files.waiting === 0 ? 'Synced just now: everything this copy holds is on it.' : `Synced just now. ${plural(files.waiting, 'file')} still ${files.waiting === 1 ? 'waits' : 'wait'} for the next sync.`}
                 </InlineAlert>
               )}
               {place.review > 0 && (
@@ -216,7 +218,7 @@ export function CopyDialog({place, state, onState, onReview, onClose}: {place: C
                 <div>
                   <dt>Kept</dt>
                   <dd className="tabular">
-                    {plural(place.kept, 'file')} · {place.waiting.toLocaleString()} waiting
+                    {plural(files.kept, 'file')} · {files.waiting.toLocaleString()} waiting
                   </dd>
                 </div>
                 <div>
@@ -230,10 +232,10 @@ export function CopyDialog({place, state, onState, onReview, onClose}: {place: C
               </dl>
               {syncing && (
                 <div className="copy-progress" role="status">
-                  <ProgressBar value={percent} label={`Syncing ${place.name}`} mode={progress && (progress.totalActions > 0 || progress.totalBytes > 0) ? 'determinate' : 'indeterminate'} />
+                  <ProgressBar value={percent} label={`Syncing ${place.name}`} mode={dataPercent !== undefined || (progress && !progress.data && (progress.totalActions > 0 || progress.totalBytes > 0)) ? 'determinate' : 'indeterminate'} />
                   <span className="small muted tabular">
-                    {progress?.data ? 'Saving Keepfin’s own data…' : progress && progress.totalActions > 0 ? `${progress.doneActions.toLocaleString()} of ${plural(progress.totalActions, 'file')}` : 'Looking at both sides…'}
-                    {progress?.current ? ` · ${progress.current.split('/').pop()}` : ''}
+                    {progress?.data ? dataProgressWords(progress, place.cloud?.providerName) : progress && progress.totalActions > 0 ? `${progress.doneActions.toLocaleString()} of ${plural(progress.totalActions, 'file')}` : 'Looking at both sides…'}
+                    {progress?.current && !progress.data ? ` · ${progress.current.split('/').pop()}` : ''}
                   </span>
                 </div>
               )}

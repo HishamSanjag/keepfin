@@ -76,10 +76,10 @@ object PhotoPosts {
         return request(count, items.sorted())
     }
 
-    /** "6 photos", or "6 items" when a video of the post is among the chosen. */
+    /** What the chosen positions hold: "6 photos", "2 videos" or "2 photos, 8 videos". A position the listing does not name counts as a photo. */
     fun countLabel(media: MediaInfo, chosen: Collection<Int>): String {
-        val videos = media.gallery?.items.orEmpty().any { !it.photo && it.position in chosen }
-        return Gallery.label(chosen.size, videos)
+        val videos = media.gallery?.items.orEmpty().count { !it.photo && it.position in chosen }
+        return Gallery.label(chosen.size - videos, videos)
     }
 
     /** The finished photo jobs that [alreadySaved] compares a new request with; [present] says whether a saved copy is still there. */
@@ -106,7 +106,7 @@ object PhotoPosts {
     /** The job row's label: "6 photos" (the media is known) or the count alone. */
     fun label(request: FormatRequest.Gallery, media: MediaInfo?): String {
         val chosen = request.items ?: chosen(request.count, emptyList())
-        return media?.gallery?.let { countLabel(media, chosen) } ?: Gallery.label(chosen.size, false)
+        return media?.gallery?.let { countLabel(media, chosen) } ?: Gallery.label(chosen.size, 0)
     }
 
     /** The row label once [saved] of the [expected] files are in storage: "4 of 6 photos" while some are missing, "6 photos" when all are. */
