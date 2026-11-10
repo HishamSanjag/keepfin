@@ -49,7 +49,8 @@ import {cloudStopped, emptyPreview, inside, prepareCopyFolder, previewFrom, remo
 import {LibrarySide} from './copiesHost/librarySide.js'
 import {CopiesReview} from './copiesHost/review.js'
 import {CopiesView} from './copiesHost/view.js'
-import {retryDelayMs, runUnfinished} from './copiesHost/retry.js'
+import {planRetry, runUnfinished} from './copiesHost/retry.js'
+import {RunQueue} from './copiesHost/queue.js'
 
 // prepareCopyFolder stays importable from here
 export {prepareCopyFolder} from './copiesHost/helpers.js'
@@ -111,8 +112,7 @@ export class CopiesHost {
   private lastRecognitionAt = 0
   private libraryChangedAt = 0
   private seenSum = -1
-  private readonly queue: string[] = []
-  private active = 0
+  private readonly runs = new RunQueue()
   private chain: Promise<unknown> = Promise.resolve()
   private offStore?: () => void
   private readonly cloud?: CloudHost
@@ -671,7 +671,7 @@ export class CopiesHost {
     for (const id of ids) {
       const rt = this.runtime(id)
       // a copy that is already syncing reports through its own run
-      const running = !!rt.worker || this.queue.includes(id)
+      const running = !!rt.worker || this.runs.has(id)
       rt.paused = false
       rt.error = undefined
       const run = this.syncPlace(id, {})
@@ -718,8 +718,7 @@ export class CopiesHost {
       } else {
         rt.paused = true
         rt.waitingFor = undefined
-        const at = this.queue.indexOf(id)
-        if (at >= 0) this.queue.splice(at, 1)
+        this.runs.drop(id)
       }
     }
     this.schedulePush()
@@ -728,51 +727,27 @@ export class CopiesHost {
   /** Starts a sync of one place (queued: at most two copies run at once); resolves when it has finished. */
   syncPlace(placeId: string, flags: {previewConfirmed?: boolean; confirmHeld?: boolean; audit?: boolean}): Promise<RunSummary | undefined> {
     const rt = this.runtime(placeId)
-    if (rt.worker || this.queue.includes(placeId) || rt.removal?.state === 'removing') return Promise.resolve(undefined)
+    if (rt.worker || this.runs.has(placeId) || rt.removal?.state === 'removing') return Promise.resolve(undefined)
     rt.paused = false
+    // both slots are taken: the row says whom it waits for
+    if (this.runs.full) rt.waitingFor = this.snap.places.filter((p) => this.rt.get(p.id)?.worker).map((p) => p.name || 'another copy').join(' and ') || 'another copy'
     return new Promise((resolve) => {
-      const go = async () => {
-        this.active++
+      this.runs.add(placeId, async () => {
         rt.waitingFor = undefined
         try {
           resolve(await this.runNow(placeId, flags))
         } catch (error) {
           rt.error = error instanceof Error ? error.message : String(error)
           // a run that threw never reached its result: nothing is marked as seen, and it tries again on its own
-          if (!this.closed) this.planRetry(rt, rt.error)
+          if (!this.closed) planRetry(rt, rt.error, this.deps.now())
           resolve(undefined)
-        } finally {
-          this.active--
-          this.pump()
         }
-      }
-      this.jobs.set(placeId, go)
-      this.queue.push(placeId)
-      // both slots are taken: the row says whom it waits for
-      if (this.active >= 2) {
-        const names = this.snap.places.filter((p) => this.rt.get(p.id)?.worker).map((p) => p.name || 'another copy')
-        rt.waitingFor = names.join(' and ') || 'another copy'
-      }
-      this.pump()
+      })
     })
   }
 
-  private planRetry(rt: Runtime, reason: string): void {
-    const attempts = (rt.retry?.attempts ?? 0) + 1
-    rt.retry = {attempts, at: this.deps.now() + retryDelayMs(attempts), reason}
-  }
-
-  private readonly jobs = new Map<string, () => Promise<void>>()
   /** The last sync the person started, once it finished. */
   private report: CopiesState['report']
-  private pump(): void {
-    while (this.active < 2 && this.queue.length) {
-      const id = this.queue.shift()!
-      const job = this.jobs.get(id)
-      this.jobs.delete(id)
-      if (job) void job()
-    }
-  }
 
   private async runNow(placeId: string, flags: {previewConfirmed?: boolean; confirmHeld?: boolean; audit?: boolean}): Promise<RunSummary | undefined> {
     const place = this.snap.places.find((p) => p.id === placeId && !p.removed)
@@ -808,7 +783,7 @@ export class CopiesHost {
     const sum = await this.librarySum().catch(() => undefined)
     this.seenSum = sum ?? this.seenSum
     // only a run that finished marks the changes as seen; one that could not reach the copy or found it held tries again with back-off
-    if (runUnfinished(summary)) this.planRetry(rt, summary.cloud?.message ?? summary.reason ?? 'The copy could not be reached.')
+    if (runUnfinished(summary)) planRetry(rt, summary.cloud?.message ?? summary.reason ?? 'The copy could not be reached.', this.deps.now())
     else {
       local.seenLast = sum
       rt.retry = undefined
@@ -996,7 +971,7 @@ export class CopiesHost {
       const was = rt.connected
       await this.checkConnected(place)
       if (rt.connected !== was) this.schedulePush()
-      if (!rt.connected || rt.worker || rt.paused || this.queue.includes(place.id) || rt.previewPending) continue
+      if (!rt.connected || rt.worker || rt.paused || this.runs.has(place.id) || rt.previewPending) continue
       if (rt.last?.status === 'held' || (rt.last?.status === 'refused' && !rt.last.cloud)) continue
       if (rt.last?.cloud?.state === 'needsSignIn' || rt.last?.cloud?.state === 'quota') continue
       if (!place.schedule.auto && !place.schedule.everyHours) continue
