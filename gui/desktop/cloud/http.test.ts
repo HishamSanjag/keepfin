@@ -1,5 +1,3 @@
-// The executor sends requests the core marks serial one at a time per account (a Dropbox change locks the whole Dropbox: changes
-// sent together fail with too_many_write_operations), while the account's other requests still run alongside.
 import assert from 'node:assert/strict'
 import {describe, it} from 'node:test'
 import {CloudHttp} from './http.js'

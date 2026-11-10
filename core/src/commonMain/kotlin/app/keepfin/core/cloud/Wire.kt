@@ -87,7 +87,7 @@ internal fun mapOfNotNull(vararg pairs: Pair<String, Any?>): LinkedHashMap<Strin
  * A request description. The platform executes it. [auth] says the account's `Authorization` header goes on it (never put the
  * secret in the description: descriptions are journaled and logged). [bodyRef] is a slice of the pinned source file
  * (`offset`, `length`) that the platform reads and sends. [redirect] is "manual" when the platform must hand back a 3xx.
- * [serial] marks a request the platform sends one at a time per account (the account's other requests still run alongside).
+ * [serial] requests are sent one at a time per account.
  */
 internal fun request(
     method: String,

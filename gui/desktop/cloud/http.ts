@@ -93,7 +93,6 @@ export class CloudHttp {
   private readonly random: () => number
   readonly limiter: RateLimiter
   readonly transfers: Semaphore
-  /** Requests the core marks serial go through here one at a time. */
   private readonly serial = new Semaphore(1)
   /** Number of requests actually sent, retries included (tests read it). */
   sent = 0

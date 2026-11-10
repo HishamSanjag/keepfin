@@ -52,7 +52,7 @@ nsis:
   oneClick: false
   shortcutName: Keepfin
   uninstallDisplayName: Keepfin
-  # The folder page comes from assets/installer/installer.nsh (customPageAfterChangeDir), which skips it on an update.
+  # installer.nsh has its own folder page, skipped on updates
   allowToChangeInstallationDirectory: false
   installerIcon: assets/icons/icon.ico
   uninstallerIcon: assets/icons/icon.ico

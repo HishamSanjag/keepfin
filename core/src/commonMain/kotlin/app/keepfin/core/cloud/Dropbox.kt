@@ -6,9 +6,7 @@ import app.keepfin.core.json.jsonQuote
 // path does, so Keepfin addresses objects by id once it has one. Create-only is mode=add with autorename=false and
 // strict_conflict=true; replace is mode=update with the rev (strict_conflict) and delete is delete_v2 with parent_rev, which
 // is the compare-and-swap. Upload sessions take 8 MiB appends and finish with the commit info (the condition lives there).
-// Every change to the folder (a commit, delete, move or new folder) takes a lock on the whole Dropbox, so parallel changes fail
-// with too_many_write_operations until the retries run out; they are marked serial and go one at a time. Session appends and
-// reads still run in parallel.
+// Changes are serial: Dropbox locks the whole account per write, so parallel writes fail with too_many_write_operations.
 
 internal object Dropbox {
     private const val API = "https://api.dropboxapi.com/2"

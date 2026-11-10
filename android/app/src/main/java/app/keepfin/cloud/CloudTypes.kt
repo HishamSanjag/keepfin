@@ -88,7 +88,6 @@ internal class CloudResponse(val status: Int, val headers: Map<String, String>, 
     fun json(): JSONObject = JSONObject().put("status", status).put("headers", JSONObject(headers)).put("body", body)
 }
 
-/** [serial]: sent one at a time per account (a Dropbox change locks the whole Dropbox). */
 internal class CloudRequest(val method: String, val url: String, val headers: Map<String, String>, val auth: Boolean, val body: String?, val bodyOffset: Long?, val bodyLength: Long?, val manualRedirect: Boolean, val serial: Boolean = false) {
     companion object {
         fun of(o: JSONObject): CloudRequest {
