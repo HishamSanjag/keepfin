@@ -41,6 +41,7 @@ export function ensureMedia() {
   fs.writeFileSync(out('tiny.lrc'), lrc)
   fs.writeFileSync(out('tiny.vtt'), 'WEBVTT\n\n00:00.500 --> 00:02.500\nHello from the fixture subtitles\n\n00:03.000 --> 00:05.000\nA second subtitle cue\n')
   if (!fs.existsSync(out('tiny.jpg'))) ffmpeg(['-f', 'lavfi', '-i', 'testsrc=size=640x360:rate=1', '-frames:v', '1', out('tiny.jpg')])
+  if (!fs.existsSync(out('tall.jpg'))) ffmpeg(['-f', 'lavfi', '-i', 'testsrc=size=1080x1920:rate=1', '-frames:v', '1', out('tall.jpg')])
 }
 
 const types = {'.mp4': 'video/mp4', '.mp3': 'audio/mpeg', '.jpg': 'image/jpeg', '.vtt': 'text/vtt', '.lrc': 'text/plain'}
@@ -52,9 +53,9 @@ export function mediaPlugin() {
     if (!match) return next()
     const [, kind, rawId] = match
     const id = decodeURIComponent(rawId)
-    // Fixture ids: a-* audio, v-* video, i-* image.
+    // Fixture ids: a-* audio, v-* video, i-* image; the market photos are tall portraits.
     let file = 'tiny.jpg'
-    if (kind === 'item' || kind === 'job') file = id.startsWith('a-') ? 'tiny.mp3' : id.startsWith('v-') ? 'tiny.mp4' : 'tiny.jpg'
+    if (kind === 'item' || kind === 'job') file = id.startsWith('a-') ? 'tiny.mp3' : id.startsWith('v-') ? 'tiny.mp4' : id.startsWith('i-market-') ? 'tall.jpg' : 'tiny.jpg'
     else if (kind === 'art') file = id.startsWith('v-') ? 'tiny.jpg' : 'cover.jpg'
     else if (kind === 'sub') file = 'tiny.vtt'
     else if (kind === 'video') file = 'tiny.mp4'

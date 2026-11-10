@@ -1140,6 +1140,10 @@ export async function registerLibrarySuite({test, calls, last, sent, field}) {
     await page.getByRole('button', {name: 'Night market 1', exact: true}).click()
     const viewer = page.getByRole('dialog', {name: /Viewing Night market 1/})
     await viewer.waitFor()
+    const photo = viewer.locator('.image-stage img')
+    await page.waitForFunction(() => document.querySelector('.image-stage img')?.complete)
+    const [img, stage] = [await photo.boundingBox(), await viewer.locator('.image-stage').boundingBox()]
+    assert.ok(img && stage && img.height <= stage.height + 1 && img.y >= stage.y - 1, `a tall photo fits the window at 100%: ${JSON.stringify({img, stage})}`)
     await page.keyboard.press('ArrowRight')
     await page.getByRole('dialog', {name: /Viewing Night market 2/}).waitFor()
     await page.keyboard.press('+')
