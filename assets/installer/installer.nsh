@@ -110,11 +110,86 @@ FunctionEnd
 
 !insertmacro keepfinArtFunction ""
 
+; Updating over an installed Keepfin (#54). initMultiUser (.onInit) reads where Keepfin was installed from the registry and
+; points $INSTDIR there, so Keepfin.exe in $INSTDIR means this run is an update: the welcome page says so and the folder
+; page is skipped (the update goes where Keepfin already is). The folder page is ours rather than electron-builder's
+; (allowToChangeInstallationDirectory is off), because its own page skips only for the app's silent updates.
+!include StrContains.nsh
+
+; "all" or "CurrentUser" when Keepfin is installed for exactly one of them and switching to it needs no new Windows
+; permission (for all users only when already elevated); "" otherwise, and the "who is it for" page is shown.
+Var keepfinScope
+
+; The functions below use multiUser.nsh's variables and UAC.nsh, which electron-builder includes after this file, so they
+; are defined when customWelcomePage is expanded (in assistedInstaller.nsh, before the pages).
+!macro keepfinUpdateFunctions
+Function keepfinFindScope
+  StrCpy $keepfinScope ""
+  ${If} $perUserInstallationFolder != ""
+  ${AndIf} $perMachineInstallationFolder == ""
+    StrCpy $keepfinScope "CurrentUser"
+  ${ElseIf} $perMachineInstallationFolder != ""
+  ${AndIf} $perUserInstallationFolder == ""
+  ${AndIf} ${UAC_IsAdmin}
+    StrCpy $keepfinScope "all"
+  ${EndIf}
+FunctionEnd
+
+Function keepfinWelcomeShow
+  Call keepfinSidebarShow
+  ${If} ${FileExists} "$INSTDIR\${APP_EXECUTABLE_FILENAME}"
+    Call keepfinFindScope
+    StrCpy $0 "Next"
+    ${If} $keepfinScope != ""
+      ; nothing is asked after this page: Next starts the update
+      StrCpy $0 "Update"
+      GetDlgItem $1 $HWNDPARENT 1
+      SendMessage $1 ${WM_SETTEXT} 0 "STR:Update"
+    ${EndIf}
+    SendMessage $mui.WelcomePage.Title ${WM_SETTEXT} 0 "STR:Update Keepfin"
+    SendMessage $mui.WelcomePage.Text ${WM_SETTEXT} 0 "STR:Setup will update Keepfin to version ${VERSION} in $INSTDIR.$\r$\n$\r$\nIf Keepfin is open, close it first. Your library and settings are kept.$\r$\n$\r$\nClick $0 to continue."
+  ${EndIf}
+FunctionEnd
+
+Function keepfinDirectoryPre
+  ${If} ${FileExists} "$INSTDIR\${APP_EXECUTABLE_FILENAME}"
+    Abort
+  ${EndIf}
+FunctionEnd
+
+; As electron-builder's own folder page does: a chosen folder without "Keepfin" in its path gets a Keepfin subfolder.
+; (Done before the files page: $INSTDIR is not final yet in the folder page's leave function.)
+Function keepfinInstFilesPre
+  ${StrContains} $0 "${APP_FILENAME}" $INSTDIR
+  ${If} $0 == ""
+    StrCpy $INSTDIR "$INSTDIR\${APP_FILENAME}"
+  ${EndIf}
+FunctionEnd
+!macroend
+
+; Runs in the "who is it for" page's pre function (multiUserUi.nsh): keep the scope Keepfin is installed for.
+!macro customInstallMode
+  Call keepfinFindScope
+  ${If} $keepfinScope == "CurrentUser"
+    StrCpy $isForceCurrentInstall "1"
+  ${ElseIf} $keepfinScope == "all"
+    StrCpy $isForceMachineInstall "1"
+  ${EndIf}
+!macroend
+
+; The folder page (after the "who is it for" page); the pre function set last applies to the files page that follows.
+!macro customPageAfterChangeDir
+  !define MUI_PAGE_CUSTOMFUNCTION_PRE keepfinDirectoryPre
+  !insertmacro MUI_PAGE_DIRECTORY
+  !define MUI_PAGE_CUSTOMFUNCTION_PRE keepfinInstFilesPre
+!macroend
+
 ; A welcome page (with the branded sidebar) before the usual pages, skipped when an update runs the installer.
 !macro customWelcomePage
+  !insertmacro keepfinUpdateFunctions
   !define MUI_CUSTOMFUNCTION_GUIINIT keepfinGuiInit
   !insertmacro skipPageIfUpdated
-  !define MUI_PAGE_CUSTOMFUNCTION_SHOW keepfinSidebarShow
+  !define MUI_PAGE_CUSTOMFUNCTION_SHOW keepfinWelcomeShow
   !define MUI_WELCOMEPAGE_TEXT "Setup will install Keepfin on this computer.$\r$\n$\r$\nIf Keepfin is open, close it first. Your library and settings are kept.$\r$\n$\r$\nClick Next to continue."
   !insertmacro MUI_PAGE_WELCOME
 !macroend
