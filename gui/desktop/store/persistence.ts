@@ -259,7 +259,8 @@ export class LibrarySession implements LibraryPersistence {
     pool?.entry(entry)
     const local = this.device.items.get(entry.id)
     if (local) for (const key of DEVICE_ITEM_KEYS) if (local[key] !== undefined) (entry as Record<string, unknown>)[key] = local[key]
-    entry.hasArt = this.art.has(entry.id)
+    // a photo is its own art
+    entry.hasArt = entry.kind === 'image' || this.art.has(entry.id)
   }
 
   private overlayCollection(collection: Collection) {

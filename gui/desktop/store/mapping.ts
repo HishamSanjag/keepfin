@@ -749,7 +749,7 @@ export function projectItem(view: SyncItem, placements: Record<string, string | 
     size: local.size ?? view.heads[0]?.size ?? 0,
     modifiedAt: local.modifiedAt ?? 0,
     addedAt: 0,
-    hasArt: device.art.has(view.id),
+    hasArt: kind === 'image' || device.art.has(view.id),
     managed: true,
   }
   for (const field of ITEM_FIELDS) {

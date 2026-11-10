@@ -331,6 +331,21 @@ test('store mode: a cover this device saved in its own art folder shows after a 
   }
 })
 
+test('store mode: a photo shows as its own art after a restart', async () => {
+  const e = await env()
+  try {
+    let d = await e.device()
+    const photos = e.spaceDir(d, 'music')
+    const photo = (await d.index!.addFile(await write(path.join(photos, 'post 1.jpg'), 'jpeg'), {space: 'music', managed: true}))!
+    await d.index!.flush()
+    d = await e.restart(d)
+    assert.equal(d.index!.item(photo.id).hasArt, true)
+    assert.equal(await d.index!.artPath(photo.id), photo.path)
+  } finally {
+    await e.cleanup()
+  }
+})
+
 test('store mode: a playlist reorder after a restart keeps the new order', async () => {
   const e = await env()
   try {

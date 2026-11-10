@@ -119,6 +119,7 @@ function genEntry(rng: Rng, spaces: Space[]): LibraryEntry {
     hasArt: false,
     managed: true,
   }
+  entry.hasArt = entry.kind === 'image'
   for (const key of ['artist', 'album', 'albumArtist', 'genre', 'sourceUrl', 'sourceId'] as const) if (chance(rng, 0.4)) entry[key] = pick(rng, WORDS)
   for (const key of ['track', 'disc', 'year', 'width', 'height', 'lastPlayedAt'] as const) if (chance(rng, 0.4)) entry[key] = between(rng, 0, 4000)
   for (const key of ['duration', 'position'] as const) if (chance(rng, 0.5)) entry[key] = between(rng, 0, 600_000) / 1000
