@@ -133,7 +133,7 @@ export function Places({copies}: {copies: Copies}) {
                     </span>
                     <span className="where-state small">
                       <span className="where-status" data-tone={place.removal ? (place.removal.state === 'failed' ? 'warn' : 'quiet') : status.tone === 'success' ? 'good' : status.tone === 'warning' || status.tone === 'danger' ? 'warn' : 'quiet'}>
-                        {place.removal ? removalWords(place.removal) : place.status === 'problem' && place.statusText ? place.statusText : status.label}
+                        {place.removal ? removalWords(place.removal) : (place.status === 'problem' || place.status === 'waiting') && place.statusText ? place.statusText : status.label}
                       </span>
                     </span>
                     <span className="where-chevron" aria-hidden="true">

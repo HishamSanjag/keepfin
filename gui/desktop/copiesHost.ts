@@ -49,6 +49,7 @@ import {cloudStopped, emptyPreview, inside, prepareCopyFolder, previewFrom, remo
 import {LibrarySide} from './copiesHost/librarySide.js'
 import {CopiesReview} from './copiesHost/review.js'
 import {CopiesView} from './copiesHost/view.js'
+import {retryDelayMs, runUnfinished} from './copiesHost/retry.js'
 
 // prepareCopyFolder stays importable from here
 export {prepareCopyFolder} from './copiesHost/helpers.js'
@@ -716,6 +717,7 @@ export class CopiesHost {
         rt.abort?.()
       } else {
         rt.paused = true
+        rt.waitingFor = undefined
         const at = this.queue.indexOf(id)
         if (at >= 0) this.queue.splice(at, 1)
       }
@@ -731,10 +733,13 @@ export class CopiesHost {
     return new Promise((resolve) => {
       const go = async () => {
         this.active++
+        rt.waitingFor = undefined
         try {
           resolve(await this.runNow(placeId, flags))
         } catch (error) {
           rt.error = error instanceof Error ? error.message : String(error)
+          // a run that threw never reached its result: nothing is marked as seen, and it tries again on its own
+          if (!this.closed) this.planRetry(rt, rt.error)
           resolve(undefined)
         } finally {
           this.active--
@@ -743,8 +748,18 @@ export class CopiesHost {
       }
       this.jobs.set(placeId, go)
       this.queue.push(placeId)
+      // both slots are taken: the row says whom it waits for
+      if (this.active >= 2) {
+        const names = this.snap.places.filter((p) => this.rt.get(p.id)?.worker).map((p) => p.name || 'another copy')
+        rt.waitingFor = names.join(' and ') || 'another copy'
+      }
       this.pump()
     })
+  }
+
+  private planRetry(rt: Runtime, reason: string): void {
+    const attempts = (rt.retry?.attempts ?? 0) + 1
+    rt.retry = {attempts, at: this.deps.now() + retryDelayMs(attempts), reason}
   }
 
   private readonly jobs = new Map<string, () => Promise<void>>()
@@ -790,8 +805,14 @@ export class CopiesHost {
       await this.setRegisters(placeId, {verified: {at: summary.finishedAt, manifest: summary.manifest.n, sha256: summary.manifest.sha256, generation: summary.generation.committedAt ?? 0}}).catch(() => undefined)
     }
     // what the run itself wrote to the library, its verified record included, is not "the library changed"
-    local.seenLast = await this.librarySum().catch(() => undefined)
-    this.seenSum = local.seenLast ?? this.seenSum
+    const sum = await this.librarySum().catch(() => undefined)
+    this.seenSum = sum ?? this.seenSum
+    // only a run that finished marks the changes as seen; one that could not reach the copy or found it held tries again with back-off
+    if (runUnfinished(summary)) this.planRetry(rt, summary.cloud?.message ?? summary.reason ?? 'The copy could not be reached.')
+    else {
+      local.seenLast = sum
+      rt.retry = undefined
+    }
     rt.paused = summary.status === 'paused'
     await this.saveLocal().catch(() => undefined)
     this.reviewPart.rebuildReview(place, rt)
@@ -979,6 +1000,10 @@ export class CopiesHost {
       if (rt.last?.status === 'held' || (rt.last?.status === 'refused' && !rt.last.cloud)) continue
       if (rt.last?.cloud?.state === 'needsSignIn' || rt.last?.cloud?.state === 'quota') continue
       if (!place.schedule.auto && !place.schedule.everyHours) continue
+      if (rt.retry) {
+        if (now >= rt.retry.at) void this.syncPlace(place.id, {})
+        continue
+      }
       const appeared = rt.connected && !was
       // a full audit (every file hashed) by itself every 30 days, while the copy is here and nothing else is running (spec 3)
       if (!local.cloud && !local.peer && (await this.auditIsDue(place.id, now))) {

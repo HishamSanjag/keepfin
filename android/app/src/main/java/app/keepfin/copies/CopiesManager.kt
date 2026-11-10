@@ -66,6 +66,9 @@ internal class RepoCopiesLibrary(private val repo: LibraryRepository) : CopiesLi
     override fun publish() = repo.publishPending()
 }
 
+/** Run results that ended without a verdict on the library: the copy could not be reached, was held by another run, or crashed. */
+private val UNFINISHED = setOf("disconnected", "busy", "crashed")
+
 private class Local(var treeUri: String, var lastRunAt: Long = 0, var seenSum: Long = -1)
 
 private class Pending(val draft: CopyDraft, val placeId: String, val replica: String, val created: Boolean)
@@ -83,6 +86,10 @@ private class Rt {
     var error: String? = null
     var paused = false
     var scannedAt = 0L
+
+    /** A run that did not finish: how many times in a row, and when the next automatic try is due (back-off 2, 4, 8, 16, 30 minutes). */
+    var retryAttempts = 0
+    var retryAt = 0L
 
     /** Stop keeping this copy: what it is doing, or why it stopped. */
     var removal: CopyRemovalUi? = null
@@ -350,6 +357,11 @@ internal class CopiesManager(
             reviewCount > 0 -> CopyStatus.REVIEW
             problem != null -> CopyStatus.PROBLEM
             verified == null && last == null -> CopyStatus.NEW
+            r.retryAt > now() -> {
+                val at = java.time.LocalTime.ofInstant(Instant.ofEpochMilli(r.retryAt), java.time.ZoneId.systemDefault())
+                text = "The last try did not finish. Keepfin will try again at %02d:%02d.".format(at.hour, at.minute)
+                CopyStatus.WAITING
+            }
             r.waiting > 0 -> CopyStatus.WAITING
             else -> CopyStatus.UP_TO_DATE
         }
@@ -876,8 +888,16 @@ internal class CopiesManager(
         r.last = summary
         writeFileAtomic(File(dir, "last-run.json"), summary.toString().toByteArray(Charsets.UTF_8))
         l.lastRunAt = now()
-        // what the run itself wrote to the library is not "the library changed"
-        l.seenSum = library.versionSum().also { if (it < before) Unit }
+        // Only a run that finished marks the changes as seen (what it wrote itself is not "the library changed"); one that could not
+        // reach the copy, found it held or crashed keeps them unseen and tries again with back-off.
+        if (report.status in UNFINISHED) {
+            r.retryAttempts++
+            r.retryAt = now() + minOf(30L, 1L shl r.retryAttempts.coerceAtMost(5)) * 60_000L
+        } else {
+            l.seenSum = library.versionSum().also { if (it < before) Unit }
+            r.retryAttempts = 0
+            r.retryAt = 0L
+        }
         saveLocal()
         r.paused = report.status == "paused"
         r.connected = report.status != "disconnected"
@@ -1087,6 +1107,7 @@ internal class CopiesManager(
             if (lastStatus == "held" || lastStatus == "refused") continue
             val auto = (raw[p.id]?.get("schedule") as? JObj)?.members?.get("auto").let { (it as? JBool)?.value != false }
             if (!auto && p.everyHours == null) continue
+            if (r.retryAt > now()) continue
             val appeared = r.connected && !was
             // a full audit (every file hashed) by itself every 30 days, while the copy is here and nothing else runs; a failed one is not retried for hours
             if (auditIsDue(p.id, now())) {

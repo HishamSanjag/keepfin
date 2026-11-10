@@ -578,3 +578,56 @@ test('a copy that holds a smart space holds what its rules gather; a finished ru
     await w.cleanup()
   }
 })
+
+test('a run that does not finish does not mark the changes as seen, says why it waits, and tries again on its own', async () => {
+  const w = await world()
+  try {
+    await w.addItem('rain.mp3', 'RAIN')
+    await w.addItem('wind.mp3', 'WIND')
+    const target = path.join(w.dir, 'Drive')
+    await fs.mkdir(target)
+    const draft: CopyDraft = {...everything('backup', target), schedule: {everyHours: null, auto: true}}
+    const preview = (await w.host.handle('copiesPreview', {draft})) as CopyPreview
+    await w.host.handle('copiesAdd', {placeId: preview.placeId})
+    await settle(w.host, preview.placeId, (s) => s.places[0].kept === 2 && s.places[0].waiting === 0)
+
+    const internals = w.host as unknown as {tick(): Promise<void>; deps: {workerUrl?: URL; now: () => number; changeDebounceMs?: number}; local: {places: Record<string, {seenLast?: number; lastRunAt?: number}>}}
+    const place = () => internals.local.places[preview.placeId]
+    const seenBefore = place().seenLast
+    let clock = Date.now()
+    internals.deps.now = () => clock
+    internals.deps.changeDebounceMs = 0
+    // a worker that ends without a verdict (the copy could not be reached), and one that crashes before any result
+    const ended = path.join(w.dir, 'ended-worker.mjs')
+    await fs.writeFile(ended, "import {parentPort} from 'node:worker_threads'\nparentPort.postMessage({t: 'done', summary: {status: 'disconnected', reason: 'The account could not be reached.', rounds: 0, generation: {copy: null, relationship: null, state: 'equal', committedAt: null}, summary: null, held: false, holdReason: null, additiveOnly: false, reviewCount: 0, review: [], committed: 0, skippedCount: 0, failedCount: 0, skipped: [], failed: [], bytes: 0, manifest: null, hashed: 0, finishedAt: 1, importsToLibrary: 0}})\n")
+    internals.deps.workerUrl = new URL(`file:///${ended.replace(/\\/g, '/')}`)
+
+    await w.revise('rain.mp3', 'RAIN, again')
+    await internals.tick() // sees the change
+    clock += 1000
+    await internals.tick() // starts the run
+    const stuck = await settle(w.host, preview.placeId, (s) => s.places[0].status === 'waiting')
+    assert.equal(place().seenLast, seenBefore, 'an unfinished run does not mark the changes as seen')
+    assert.match(stuck.places[0].statusText ?? '', /could not be reached.*Will try again at/s, 'the row says why it waits')
+
+    // before the back-off ends nothing starts; a crash before any result is also retried, later
+    await internals.tick()
+    assert.equal((await w.host.state()).places[0].status, 'waiting')
+    clock += 3 * 60_000
+    internals.deps.workerUrl = new URL('file:///does-not-exist/worker.mjs')
+    await internals.tick()
+    const crashed = await settle(w.host, preview.placeId, (s) => /Will try again/.test(s.places[0].statusText ?? '') || s.places[0].status === 'review')
+    assert.equal(place().seenLast, seenBefore)
+    assert.ok(crashed.places[0].statusText, 'a crash is explained')
+
+    // the real worker, once the second back-off is over, finishes the copy and only then are the changes seen
+    clock += 10 * 60_000
+    internals.deps.workerUrl = undefined
+    await internals.tick()
+    await settle(w.host, preview.placeId, (s) => s.places[0].waiting === 0 && s.places[0].status === 'upToDate')
+    assert.equal(await read(target, 'Music', 'rain.mp3'), 'RAIN, again')
+    assert.notEqual(place().seenLast, seenBefore)
+  } finally {
+    await w.cleanup()
+  }
+})

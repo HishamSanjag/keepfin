@@ -30,6 +30,10 @@ export type Runtime = {
   totalBytes?: number
   startedAt?: number
   error?: string
+  /** A run that did not finish: when the next automatic try is due, and why it stopped. Cleared by a finished run. */
+  retry?: {attempts: number; at: number; reason: string}
+  /** Queued behind other copies: their names, while this one waits for a free slot. */
+  waitingFor?: string
   /** Remove copy…: what it is doing now, or why it stopped. Cleared with the runtime when the copy is gone. */
   removal?: {state: 'removing' | 'failed'; text: string}
 }

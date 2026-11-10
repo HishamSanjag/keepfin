@@ -1,4 +1,5 @@
 // The state the window sees: the copies, their status and the snapshot of what each copy holds.
+import {retryText} from './retry.js'
 import fs from 'node:fs/promises'
 import path from 'node:path'
 import {Worker} from 'node:worker_threads'
@@ -64,6 +65,12 @@ export class CopiesView {
     else if (!rt.connected) {
       status = 'disconnected'
       statusText = cloudSpec ? (cloudAccount?.needsSignIn ? 'Sign in again to sync this copy.' : 'This account is not signed in on this computer.') : peerSpec ? `${peerName} is not connected right now. The copy continues when it is.` : 'The drive or folder is not connected.'
+    } else if (rt.retry && !rt.paused) {
+      status = 'waiting'
+      statusText = retryText(cloudSpec ? this.cloudPlaceView(cloudSpec, cloudAccount).providerName : p.name || 'The copy', rt.retry.reason, rt.retry.at)
+    } else if (rt.waitingFor) {
+      status = 'waiting'
+      statusText = `Waiting for ${rt.waitingFor} to finish.`
     } else if (last?.status === 'refused') {
       status = 'refused'
       statusText = last.reason
