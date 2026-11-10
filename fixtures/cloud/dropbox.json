@@ -159,6 +159,7 @@
     "request": {
      "method": "POST",
      "url": "https://api.dropboxapi.com/2/files/create_folder_v2",
+     "serial": true,
      "headers": {
       "Content-Type": "application/json"
      },
@@ -182,6 +183,7 @@
     "request": {
      "method": "POST",
      "url": "https://content.dropboxapi.com/2/files/upload",
+     "serial": true,
      "headers": {
       "Dropbox-API-Arg": "{\"path\":\"/Keepfin/.keepfin/lock.json\",\"mode\":\"add\",\"autorename\":false,\"mute\":true,\"strict_conflict\":true}",
       "Content-Type": "application/octet-stream"
@@ -206,6 +208,7 @@
     "request": {
      "method": "POST",
      "url": "https://content.dropboxapi.com/2/files/upload",
+     "serial": true,
      "headers": {
       "Dropbox-API-Arg": "{\"path\":\"/Keepfin/Caf\\u00e9.json\",\"mode\":\"add\",\"autorename\":false,\"mute\":true,\"strict_conflict\":true}",
       "Content-Type": "application/octet-stream"
@@ -230,6 +233,7 @@
     "request": {
      "method": "POST",
      "url": "https://content.dropboxapi.com/2/files/upload",
+     "serial": true,
      "headers": {
       "Dropbox-API-Arg": "{\"path\":\"id:abc\",\"mode\":{\".tag\":\"update\",\"update\":\"0123456789\"},\"autorename\":false,\"mute\":true,\"strict_conflict\":true}",
       "Content-Type": "application/octet-stream"
@@ -253,6 +257,7 @@
     "request": {
      "method": "POST",
      "url": "https://api.dropboxapi.com/2/files/delete_v2",
+     "serial": true,
      "headers": {
       "Content-Type": "application/json"
      },
@@ -275,6 +280,7 @@
     "request": {
      "method": "POST",
      "url": "https://api.dropboxapi.com/2/files/move_v2",
+     "serial": true,
      "headers": {
       "Content-Type": "application/json"
      },
@@ -426,6 +432,7 @@
     "request": {
      "method": "POST",
      "url": "https://content.dropboxapi.com/2/files/upload_session/finish",
+     "serial": true,
      "headers": {
       "Dropbox-API-Arg": "{\"cursor\":{\"session_id\":\"SID\",\"offset\":25165824},\"commit\":{\"path\":\"/Keepfin/media/big.flac\",\"mode\":\"add\",\"autorename\":false,\"mute\":true,\"strict_conflict\":true}}",
       "Content-Type": "application/octet-stream"
@@ -459,6 +466,7 @@
     "request": {
      "method": "POST",
      "url": "https://content.dropboxapi.com/2/files/upload_session/finish",
+     "serial": true,
      "headers": {
       "Dropbox-API-Arg": "{\"cursor\":{\"session_id\":\"SID\",\"offset\":0},\"commit\":{\"path\":\"id:abc\",\"mode\":{\".tag\":\"update\",\"update\":\"0123456789\"},\"autorename\":false,\"mute\":true,\"strict_conflict\":true}}",
       "Content-Type": "application/octet-stream"

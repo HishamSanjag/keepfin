@@ -88,7 +88,8 @@ internal class CloudResponse(val status: Int, val headers: Map<String, String>, 
     fun json(): JSONObject = JSONObject().put("status", status).put("headers", JSONObject(headers)).put("body", body)
 }
 
-internal class CloudRequest(val method: String, val url: String, val headers: Map<String, String>, val auth: Boolean, val body: String?, val bodyOffset: Long?, val bodyLength: Long?, val manualRedirect: Boolean) {
+/** [serial]: sent one at a time per account (a Dropbox change locks the whole Dropbox). */
+internal class CloudRequest(val method: String, val url: String, val headers: Map<String, String>, val auth: Boolean, val body: String?, val bodyOffset: Long?, val bodyLength: Long?, val manualRedirect: Boolean, val serial: Boolean = false) {
     companion object {
         fun of(o: JSONObject): CloudRequest {
             val h = LinkedHashMap<String, String>()
@@ -96,7 +97,7 @@ internal class CloudRequest(val method: String, val url: String, val headers: Ma
             val ref = o.optJSONObject("bodyRef")
             return CloudRequest(
                 o.getString("method"), o.getString("url"), h, o.optBoolean("auth", true), if (o.has("body") && !o.isNull("body")) o.getString("body") else null,
-                ref?.optLong("offset"), ref?.optLong("length"), o.optString("redirect") == "manual",
+                ref?.optLong("offset"), ref?.optLong("length"), o.optString("redirect") == "manual", o.optBoolean("serial", false),
             )
         }
     }

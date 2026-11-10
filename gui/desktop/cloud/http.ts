@@ -93,6 +93,8 @@ export class CloudHttp {
   private readonly random: () => number
   readonly limiter: RateLimiter
   readonly transfers: Semaphore
+  /** Requests the core marks serial go through here one at a time. */
+  private readonly serial = new Semaphore(1)
   /** Number of requests actually sent, retries included (tests read it). */
   sent = 0
   private refreshing: Promise<boolean> | null = null
@@ -148,6 +150,10 @@ export class CloudHttp {
    * the failure is returned, not thrown, once attempts run out or the failure is not retryable, so parsers can read it.
    */
   async send(req: CloudRequest, io: SendIo = {}, accept: number[] = []): Promise<CloudResponse> {
+    return req.serial ? this.serial.run(() => this.sendNow(req, io, accept)) : this.sendNow(req, io, accept)
+  }
+
+  private async sendNow(req: CloudRequest, io: SendIo, accept: number[]): Promise<CloudResponse> {
     const max = this.options.maxAttempts ?? 6
     let refreshed = false
     for (let attempt = 0; ; attempt++) {

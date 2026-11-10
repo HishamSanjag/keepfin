@@ -14,6 +14,8 @@ export interface CloudRequest {
   body?: string
   bodyRef?: {offset: number; length: number}
   redirect?: 'manual'
+  /** Sent one at a time per account (a Dropbox change locks the whole Dropbox). */
+  serial?: boolean
 }
 
 export interface CloudResponse {

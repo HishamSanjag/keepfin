@@ -115,6 +115,8 @@ internal class CloudHttp(val account: CloudAccount, private val options: HttpOpt
     private val client = options.client ?: Http.shared
     val limiter: RateLimiter = options.limiter ?: RateLimiter(0, 5000, options.now, options.sleep)
     private val transfers = options.transfers ?: Semaphore(4)
+    /** Requests the core marks serial go through here one at a time. */
+    private val serial = Semaphore(1)
     private val refreshLock = Any()
 
     /** Requests actually sent, retries included (tests read it). */
@@ -193,6 +195,16 @@ internal class CloudHttp(val account: CloudAccount, private val options: HttpOpt
      * not retryable, so the parsers can read it.
      */
     fun send(req: CloudRequest, io: SendIo = SendIo(), accept: List<Int> = emptyList()): CloudResponse {
+        if (!req.serial) return sendNow(req, io, accept)
+        serial.acquireUninterruptibly()
+        try {
+            return sendNow(req, io, accept)
+        } finally {
+            serial.release()
+        }
+    }
+
+    private fun sendNow(req: CloudRequest, io: SendIo, accept: List<Int>): CloudResponse {
         val max = options.maxAttempts
         var refreshed = false
         var attempt = 0

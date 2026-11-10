@@ -6,6 +6,9 @@ import app.keepfin.core.json.jsonQuote
 // path does, so Keepfin addresses objects by id once it has one. Create-only is mode=add with autorename=false and
 // strict_conflict=true; replace is mode=update with the rev (strict_conflict) and delete is delete_v2 with parent_rev, which
 // is the compare-and-swap. Upload sessions take 8 MiB appends and finish with the commit info (the condition lives there).
+// Every change to the folder (a commit, delete, move or new folder) takes a lock on the whole Dropbox, so parallel changes fail
+// with too_many_write_operations until the retries run out; they are marked serial and go one at a time. Session appends and
+// reads still run in parallel.
 
 internal object Dropbox {
     private const val API = "https://api.dropboxapi.com/2"
@@ -78,22 +81,22 @@ internal object Dropbox {
             }
         }
         "stat" -> linkedMapOf("request" to request("POST", "$API/files/get_metadata", JSON, "{\"path\":${q(pathOf(a["ref"]))}}"))
-        "createFolder" -> linkedMapOf("request" to request("POST", "$API/files/create_folder_v2", JSON, "{\"path\":${q(childPath(a["parent"], a.need("name")))},\"autorename\":false}"))
+        "createFolder" -> linkedMapOf("request" to request("POST", "$API/files/create_folder_v2", JSON, "{\"path\":${q(childPath(a["parent"], a.need("name")))},\"autorename\":false}", serial = true))
         "createSmall" -> {
             val headers = mapOf("Dropbox-API-Arg" to apiArg(commit(childPath(a["parent"], a.need("name")), a)), "Content-Type" to OCTET)
-            linkedMapOf("request" to request("POST", "$CONTENT/files/upload", headers, a.s("content") ?: ""))
+            linkedMapOf("request" to request("POST", "$CONTENT/files/upload", headers, a.s("content") ?: "", serial = true))
         }
         "replaceSmall" -> {
             val headers = mapOf("Dropbox-API-Arg" to apiArg(commit(pathOf(a["ref"]), JsonMode.replace(a))), "Content-Type" to OCTET)
-            linkedMapOf("request" to request("POST", "$CONTENT/files/upload", headers, a.s("content") ?: ""))
+            linkedMapOf("request" to request("POST", "$CONTENT/files/upload", headers, a.s("content") ?: "", serial = true))
         }
-        "deleteCas" -> linkedMapOf("request" to request("POST", "$API/files/delete_v2", JSON, "{\"path\":${q(pathOf(a["ref"]))},\"parent_rev\":${q(a.need("etag"))}}"))
+        "deleteCas" -> linkedMapOf("request" to request("POST", "$API/files/delete_v2", JSON, "{\"path\":${q(pathOf(a["ref"]))},\"parent_rev\":${q(a.need("etag"))}}", serial = true))
         "move" -> {
             val from = pathOf(a["ref"])
             val to = a.s("toPath") ?: childPath(a["newParent"], a.s("newName") ?: a.need("name"))
-            linkedMapOf("request" to request("POST", "$API/files/move_v2", JSON, "{\"from_path\":${q(from)},\"to_path\":${q(to)},\"allow_shared_folder\":false,\"autorename\":false,\"allow_ownership_transfer\":false}"))
+            linkedMapOf("request" to request("POST", "$API/files/move_v2", JSON, "{\"from_path\":${q(from)},\"to_path\":${q(to)},\"allow_shared_folder\":false,\"autorename\":false,\"allow_ownership_transfer\":false}", serial = true))
         }
-        "trash" -> linkedMapOf("request" to request("POST", "$API/files/delete_v2", JSON, "{\"path\":${q(pathOf(a["ref"]))}}"))
+        "trash" -> linkedMapOf("request" to request("POST", "$API/files/delete_v2", JSON, "{\"path\":${q(pathOf(a["ref"]))}}", serial = true))
         "quota" -> linkedMapOf("request" to request("POST", "$API/users/get_space_usage"))
         "parseQuota" -> {
             val r = Resp.of(a["response"])
@@ -153,7 +156,7 @@ internal object Dropbox {
                 arg = "{\"cursor\":$cursor,\"close\":false}"
             }
             val headers = mapOf("Dropbox-API-Arg" to apiArg(arg), "Content-Type" to OCTET)
-            linkedMapOf("request" to request("POST", url, headers, bodyRef = if (length > 0) offset to length else null))
+            linkedMapOf("request" to request("POST", url, headers, bodyRef = if (length > 0) offset to length else null, serial = final))
         }
         // No query endpoint exists: an append of nothing at the known offset answers with the right offset when it is wrong.
         "uploadQuery" -> {
