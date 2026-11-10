@@ -117,6 +117,7 @@ object SettingsIndex {
         SettingsEntry("Spaces", SettingsCategory.LIBRARY, SettingsGroups.LIBRARY, "add a space folder music videos podcasts"),
         SettingsEntry("Volume normalisation", SettingsCategory.LIBRARY, SettingsGroups.LIBRARY, "playback loudness volume normalization", "setting-normalize"),
         SettingsEntry("Import tags from sources", SettingsCategory.LIBRARY, SettingsGroups.LIBRARY, "genre tags categories", "setting-import-tags"),
+        SettingsEntry("Show new releases on Home", SettingsCategory.LIBRARY, SettingsGroups.LIBRARY, "follow following artists new releases card home dismiss hide", "setting-home-releases"),
         SettingsEntry("Find my earlier Keepfin files", SettingsCategory.LIBRARY, SettingsGroups.LIBRARY, "reinstall adopt old files"),
         // Storage & copies
         SettingsEntry("Keepfin folder", SettingsCategory.STORAGE, SettingsGroups.STORAGE, "storage free space path check files memory card"),

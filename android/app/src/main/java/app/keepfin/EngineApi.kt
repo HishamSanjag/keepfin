@@ -35,6 +35,8 @@ interface EngineApi {
     fun checkFollowing(id: String?) {}
     /** Downloads the release [id] with the default settings and marks it kept. Blocking: off the main thread. Returns how many downloads were queued. */
     fun keepRelease(id: String): Int = 0
+    /** The x on Home's card and "Mark all seen": every release listed now counts as seen. */
+    fun markReleasesSeen() {}
 
     // Inspection (blocking, cancellable through cancelInspection(session)).
     fun inspect(url: String, session: String): InspectResult

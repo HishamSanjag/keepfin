@@ -288,6 +288,8 @@ data class EngineSettings(
     val lyrics: Boolean = true,
     /** "Keep music videos automatically": the Capture and collection "music video" boxes start checked. It never starts a download by itself. */
     val keepMusicVideos: Boolean = false,
+    /** Home shows its slim card while artists you follow have new releases you have not seen. Off removes the card for good. */
+    val newReleasesOnHome: Boolean = true,
     /** Downloads go signed out first; when a site then asks for a sign-in, Keepfin's own is tried once. Off: they stay signed out. */
     val autoSignIn: Boolean = true,
     /** Spaces, gallery and player settings; 0.4.x installs migrate to the defaults. */

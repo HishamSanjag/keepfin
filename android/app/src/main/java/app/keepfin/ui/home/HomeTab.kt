@@ -109,7 +109,6 @@ fun HomeTab(vm: StudioViewModel, ui: LibraryUi, contentPadding: PaddingValues, m
     val loading = read == null || total == null || (snapshot.scanning && total == 0 && snapshot.scannedAt == null)
     val nothing = !loading && quick.isEmpty() && resume.isEmpty() && listening.isEmpty() && recent.isEmpty() && active.isEmpty() && musicVideos.isEmpty()
     val bottom = contentPadding.calculateBottomPadding()
-    val followState by vm.following.state.collectAsStateWithLifecycle()
     var allMixes by androidx.compose.runtime.saveable.rememberSaveable { androidx.compose.runtime.mutableStateOf(false) }
 
     val listState = androidx.compose.foundation.lazy.rememberLazyListState()
@@ -125,13 +124,15 @@ fun HomeTab(vm: StudioViewModel, ui: LibraryUi, contentPadding: PaddingValues, m
                 }
             }
         }
+        // the slim new-releases card: only while artists you follow have releases you have not seen
+        if (kind == HomeKind.ALL || kind == HomeKind.MUSIC) item("new-releases", contentType = "new-releases") { NewReleasesCard(vm) }
         if (quick.isNotEmpty()) item("quick", contentType = "quick") { QuickGrid(quick, ui, vm, Modifier.padding(horizontal = 16.dp, vertical = 4.dp).testTag(UiTags.HOME_GRID)) }
         if (resume.isNotEmpty()) shelf("continue", "Continue watching", { vm.openLibraryDeep(LibraryRoute.Section(HomeSection.CONTINUE)) }, Modifier.testTag(UiTags.homeRow("continue"))) {
             items(resume.take(12), key = { it.id }) { item -> ContinueCard(item, ui, resume) }
         }
-        // Made from your listening (mix tiles), Following and New releases: for the All and Music chips
-        if ((kind == HomeKind.ALL || kind == HomeKind.MUSIC) && !loading && (!nothing || followState.artists.isNotEmpty()))
-            followSections(vm, listening, shelves.topArtists, showEmpty = !nothing, allMixes = allMixes, onAllMixes = { allMixes = !allMixes })
+        // Made from your listening (mix tiles): for the All and Music chips
+        if ((kind == HomeKind.ALL || kind == HomeKind.MUSIC) && !loading && !nothing)
+            mixSections(vm, listening, allMixes = allMixes, onAllMixes = { allMixes = !allMixes })
         if (active.isNotEmpty()) {
             item("head-downloading", contentType = "head") {
                 Row(Modifier.fillMaxWidth().padding(start = 16.dp, end = 8.dp, top = 20.dp).testTag(UiTags.homeRow("downloading")), verticalAlignment = Alignment.CenterVertically) {
@@ -153,7 +154,7 @@ fun HomeTab(vm: StudioViewModel, ui: LibraryUi, contentPadding: PaddingValues, m
             EmptyState(art = EmptyArt.LIBRARY, title = title, body = body, modifier = Modifier.fillMaxWidth().heightIn(min = 280.dp).testTag(UiTags.HOME_EMPTY))
         }
     }
-    FollowingSheet(vm)
+    ReviewSheet(vm)
     }
 }
 

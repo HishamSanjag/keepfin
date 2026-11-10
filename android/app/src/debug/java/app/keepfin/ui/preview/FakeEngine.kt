@@ -63,6 +63,13 @@ class FakeEngine(private val context: Context? = null) : EngineApi {
         fakeFollowing.update { s -> s.copy(releases = s.releases.map { if (it.id == id) it.copy(kept = true) else it }) }
         return 1
     }
+    override fun markReleasesSeen() {
+        val now = System.currentTimeMillis()
+        fakeFollowing.update { s ->
+            val feed = s.releases.map { r -> app.keepfin.core.home.FeedRelease(r.id, s.artists.firstOrNull { it.id == r.artistId }?.key ?: "", r.title, r.foundAt, r.kept) }
+            s.copy(seenReleases = app.keepfin.core.home.ReleaseFeed.markSeen(feed, s.seenReleases.toSet(), now))
+        }
+    }
     val fakeLibrary = FakeLibrary({ _settings.value.library.spaces }) { transform -> _settings.update { s -> s.copy(library = s.library.copy(spaces = transform(s.library.spaces))) } }
     override val libraryApi: app.keepfin.LibraryApi get() = fakeLibrary
     /** The real Activity store, in memory only; scenes seed it and tests read or record into it. */

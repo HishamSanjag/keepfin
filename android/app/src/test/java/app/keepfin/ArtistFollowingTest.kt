@@ -206,5 +206,47 @@ class ArtistFollowingTest {
         assertNull(ArtistFollowing.pickChannel(rows, "oren vale"))
     }
 
+    // ---- seen releases (the x on Home's card, Mark all seen) ----------------------------------------
+
+    private fun foundTwo(): FollowedArtist {
+        val artist = following.follow("Pale Cassette")!!
+        host.releases = { listOf(release("a")) }
+        following.check(artist.id, manual = true)
+        now += 3 * ReleaseDay
+        host.releases = { listOf(release("a"), release("b"), release("c")) }
+        following.check(artist.id, manual = true)
+        return artist
+    }
+
+    @Test fun markSeenRecordsEveryListedReleaseAndItSurvivesARestart() {
+        foundTwo()
+        assertTrue(following.state.value.seenReleases.isEmpty())
+        following.markSeen()
+        assertEquals(following.state.value.releases.map { it.id }.toSet(), following.state.value.seenReleases.toSet())
+        assertEquals(2, ArtistFollowing(host, store, clock = { now }).state.value.seenReleases.size)
+    }
+
+    @Test fun aNewerReleaseIsNotSeenAndTheSeenListNeverOutgrowsTheKnownReleases() {
+        val artist = foundTwo()
+        following.markSeen()
+        now += ReleaseDay
+        host.releases = { listOf(release("a"), release("b"), release("c"), release("d")) }
+        following.check(artist.id, manual = true)
+        val state = following.state.value
+        assertEquals(3, state.releases.size)
+        assertFalse(state.releases.first { it.title == "Release d" }.id in state.seenReleases)
+        // an unfollowed artist's releases leave the seen list too
+        following.unfollow(artist.id)
+        assertTrue(following.state.value.seenReleases.isEmpty())
+    }
+
+    @Test fun aFileWrittenBeforeSeenReleasesLoadsAsNothingSeen() {
+        foundTwo()
+        val old = org.json.JSONObject(store.text!!).also { it.remove("seenReleases") }.toString()
+        val loaded = ArtistFollowing.decode(old)
+        assertTrue(loaded.seenReleases.isEmpty())
+        assertEquals(2, loaded.releases.size)
+    }
+
     private companion object { const val ReleaseDay = 86_400_000L }
 }

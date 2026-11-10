@@ -132,6 +132,7 @@ class MediaEngine(internal val context: Context) : EngineApi, app.keepfin.setup.
     override fun unfollowArtist(id: String) { artistFollowing.unfollow(id); FollowScheduler.rememberArtists(context, artistFollowing.any()) }
     override fun checkFollowing(id: String?) = FollowScheduler.checkArtists(context, id, manual = true)
     override fun keepRelease(id: String): Int = artistFollowing.keep(id)
+    override fun markReleasesSeen() = artistFollowing.markSeen()
     private val runner = DownloadRunner(this)
 
     private fun named(name: String) = ThreadFactory { task -> Thread(task, name).apply { isDaemon = true } }
@@ -254,7 +255,7 @@ class MediaEngine(internal val context: Context) : EngineApi, app.keepfin.setup.
                 options = JobCodec.decodeOptions(json.optJSONObject("options")), channel = json.optString("channel", "stable"),
                 autoUpdate = json.optBoolean("autoUpdate", true), wifiOnly = json.optBoolean("wifiOnly", false), turbo = json.optBoolean("turbo", false),
                 ytMusicAudio = json.optBoolean("ytMusicAudio", true), lyrics = LyricsLookup.enabledIn(json),
-                keepMusicVideos = json.optBoolean("keepMusicVideos", false), autoSignIn = json.optBoolean("autoSignIn", true),
+                keepMusicVideos = json.optBoolean("keepMusicVideos", false), newReleasesOnHome = json.optBoolean("newReleasesOnHome", true), autoSignIn = json.optBoolean("autoSignIn", true),
                 library = SpaceLogic.decode(json.optJSONObject("library")),
             )).also { loaded ->
                 // The one-time default change is written back with its marker, so a later explicit choice (even 2) sticks.
@@ -278,7 +279,7 @@ class MediaEngine(internal val context: Context) : EngineApi, app.keepfin.setup.
             val next = sanitize(transform(settingsFlow.value))
             settingsPrefs.edit().putString("json", JSONObject().put("organization", next.organization).put("concurrency", next.concurrency).put(Pacing.CONCURRENCY_MARKER, true)
                 .put("fragments", next.fragments).put("defaultPreset", next.defaultPreset.wire).put("options", JobCodec.encodeOptions(next.options))
-                .put("channel", next.channel).put("autoUpdate", next.autoUpdate).put("wifiOnly", next.wifiOnly).put("turbo", next.turbo).put("ytMusicAudio", next.ytMusicAudio).put("lyrics", next.lyrics).put("keepMusicVideos", next.keepMusicVideos).put("autoSignIn", next.autoSignIn)
+                .put("channel", next.channel).put("autoUpdate", next.autoUpdate).put("wifiOnly", next.wifiOnly).put("turbo", next.turbo).put("ytMusicAudio", next.ytMusicAudio).put("lyrics", next.lyrics).put("keepMusicVideos", next.keepMusicVideos).put("newReleasesOnHome", next.newReleasesOnHome).put("autoSignIn", next.autoSignIn)
                 .put("library", SpaceLogic.encode(next.library)).toString()).apply()
             context.getSharedPreferences("downloads", Context.MODE_PRIVATE).edit().putString("organization", next.organization).apply()
             val previous = settingsFlow.value

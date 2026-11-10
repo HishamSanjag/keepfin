@@ -109,6 +109,12 @@ fun LibraryGroup(vm: StudioViewModel, settings: EngineSettings) {
             subtitle = "Take genre, tags and categories from a download's source for the tag filter. Items you already have are not changed.", tag = UiTags.setting("import-tags"),
         )
         RowSeparator()
+        SwitchRow(
+            "Show new releases on Home", settings.newReleasesOnHome, { value -> vm.updateSettings { it.copy(newReleasesOnHome = value) } },
+            subtitle = "A small card on Home tells you when artists you follow have new releases. Off removes it for good; you can still follow artists from Library, Artists.",
+            tag = UiTags.SETTING_HOME_RELEASES,
+        )
+        RowSeparator()
         NavRow(
             "Find my earlier Keepfin files", subtitle = "After reinstalling, look for files an earlier install saved. Needs access to your audio and video, asked only here.",
             icon = Icons.Outlined.Search, modifier = Modifier.testTag("find-earlier"),

@@ -500,31 +500,6 @@ fun BulkActions(ui: LibraryUi, songs: List<LibraryItem>) {
 
 // ---- artists ------------------------------------------------------------------------------------------------
 
-@Composable
-private fun ArtistsView(ui: LibraryUi, space: Space, padding: PaddingValues) {
-    val artists = rememberArtists(ui, ItemQuery(spaces = listOf(space.id)))
-    val state = androidx.compose.foundation.lazy.rememberLazyListState()
-    artists.EndWatcher(state)
-    LazyColumn(Modifier.fillMaxSize().testTag(UiTags.LIB_LIST), state = state, contentPadding = PaddingValues(bottom = padding.calculateBottomPadding() + 24.dp)) {
-        items(artists.items, key = { it.key }) { artist ->
-            Row(
-                Modifier.fillMaxWidth().heightIn(min = if (LocalCompact.current) 56.dp else 64.dp).clickable { ui.vm.openLibraryDetail(LibraryRoute.Artist(space.id, artist.name)) }.padding(horizontal = 16.dp, vertical = 6.dp).testTag("artist-${artist.name}"),
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                ArtTile(artist.cover?.artModel(), artist.name, LibraryItemKind.AUDIO, Modifier.size(if (LocalCompact.current) 44.dp else 52.dp), CircleShape)
-                Spacer(Modifier.width(12.dp))
-                Column(Modifier.weight(1f)) {
-                    Text(artist.name, style = MaterialTheme.typography.bodyLarge, maxLines = 1, overflow = TextOverflow.Ellipsis)
-                    Text(
-                        listOfNotNull(if (artist.albums == 1) "1 album" else "${artist.albums} albums".takeIf { artist.albums > 0 }, if (artist.songs == 1) "1 song" else "${artist.songs} songs").joinToString(" · "),
-                        style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    )
-                }
-            }
-        }
-    }
-}
-
 private class ArtistData(val group: app.keepfin.ArtistGroup, val albums: List<app.keepfin.AlbumGroup>, val songs: List<LibraryItem>)
 
 @Composable

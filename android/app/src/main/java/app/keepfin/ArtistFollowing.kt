@@ -1,6 +1,7 @@
 package app.keepfin
 
 import android.util.Log
+import app.keepfin.core.home.FeedRelease
 import app.keepfin.core.home.ReleaseFeed
 import app.keepfin.core.music.ArtistReleaseItem
 import app.keepfin.core.music.ArtistReleases
@@ -41,7 +42,16 @@ data class ArtistRelease(
     val kept: Boolean = false,
 )
 
-data class FollowingState(val artists: List<FollowedArtist> = emptyList(), val releases: List<ArtistRelease> = emptyList(), val checking: Boolean = false) {
+/**
+ * [seenReleases] are the release ids the person has seen (the x on Home's card, Mark all seen): the card returns only for newer ones.
+ * Older files without the list load as empty.
+ */
+data class FollowingState(
+    val artists: List<FollowedArtist> = emptyList(),
+    val releases: List<ArtistRelease> = emptyList(),
+    val checking: Boolean = false,
+    val seenReleases: List<String> = emptyList(),
+) {
     fun isFollowing(name: String?): Boolean = ReleaseFeed.artistKey(name)?.let { key -> artists.any { it.key == key } } == true
     fun artistOf(name: String?): FollowedArtist? = ReleaseFeed.artistKey(name)?.let { key -> artists.firstOrNull { it.key == key } }
     companion object { val NONE: StateFlow<FollowingState> = MutableStateFlow(FollowingState()).asStateFlow() }
@@ -99,7 +109,21 @@ internal class ArtistFollowing(
     fun unfollow(id: String) = synchronized(lock) {
         val now = flow.value
         if (now.artists.none { it.id == id }) return
-        commit(now.copy(artists = now.artists.filterNot { it.id == id }, releases = now.releases.filterNot { it.artistId == id }))
+        val releases = now.releases.filterNot { it.artistId == id }
+        commit(now.copy(artists = now.artists.filterNot { it.id == id }, releases = releases, seenReleases = pruned(now.seenReleases, releases)))
+    }
+
+    /** The x on Home's card and "Mark all seen": every release now listed counts as seen, so the card returns only for newer ones. */
+    fun markSeen() = synchronized(lock) {
+        val now = flow.value
+        val feed = now.releases.map { r -> FeedRelease(r.id, now.artists.firstOrNull { it.id == r.artistId }?.key ?: "", r.title, r.foundAt, r.kept) }
+        commit(now.copy(seenReleases = ReleaseFeed.markSeen(feed, now.seenReleases.toSet(), clock())))
+    }
+
+    /** The seen list never outgrows the releases still known. */
+    private fun pruned(seen: List<String>, releases: List<ArtistRelease>): List<String> {
+        val known = releases.mapTo(HashSet()) { it.id }
+        return seen.filter { it in known }
     }
 
     /** True when any artist is followed (the hourly scan skips the engine otherwise). */
@@ -141,9 +165,10 @@ internal class ArtistFollowing(
             val cur = flow.value
             if (cur.artists.none { it.id == id }) return 0
             val keep = cur.releases.filter { it.foundAt >= now - PRUNE_MS }
+            val merged = (added + keep).distinctBy { it.id }
             commit(cur.copy(
                 artists = cur.artists.map { if (it.id == id) it.copy(url = url, checkedOnce = true, seen = (it.seen + releases.keys).distinct(), checkedAt = now, error = null) else it },
-                releases = (added + keep).distinctBy { it.id },
+                releases = merged, seenReleases = pruned(cur.seenReleases, merged),
             ))
         }
         return added.size
@@ -199,7 +224,8 @@ internal class ArtistFollowing(
             .put("releases", JSONArray(state.releases.map { r ->
                 JSONObject().put("id", r.id).put("artistId", r.artistId).put("title", r.title).put("kind", r.kind ?: JSONObject.NULL).put("url", r.url)
                     .put("thumbnail", r.thumbnail ?: JSONObject.NULL).put("foundAt", r.foundAt).put("kept", r.kept)
-            })).toString()
+            }))
+            .put("seenReleases", JSONArray(state.seenReleases)).toString()
 
         fun decode(text: String): FollowingState {
             val root = JSONObject(text)
@@ -218,7 +244,8 @@ internal class ArtistFollowing(
                     ArtistRelease(o.getString("id"), o.getString("artistId"), o.getString("title"), o.str("kind"), o.getString("url"), o.str("thumbnail"), o.getLong("foundAt"), o.optBoolean("kept"))
                 }
             } ?: emptyList()
-            return FollowingState(artists, releases)
+            val seen = root.optJSONArray("seenReleases")?.let { arr -> (0 until arr.length()).map { arr.getString(it) } } ?: emptyList()
+            return FollowingState(artists, releases, seenReleases = seen)
         }
     }
 }
