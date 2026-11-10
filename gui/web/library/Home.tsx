@@ -214,28 +214,39 @@ export function Home() {
       </div>
     )
   if (mixView) {
-    const back = (
-      <Button onClick={() => setMixView(null)}>
-        Back to Home
-      </Button>
-    )
+    const leave = () => setMixView(null)
+    const crumbs = [{label: 'Home', onSelect: leave}]
+    const songsOf = (mix: Mix) => mix.ids.map((id) => rows.byId.get(id)).filter((item): item is LibraryItem => !!item)
     if (mixView.type === 'all')
       return (
         <div className="screen home">
-          <PageHeader title="Made from your listening" caption="Mixes update as you play" actions={back} />
+          <PageHeader title="Made from your listening" caption="Mixes update as you play" crumbs={crumbs} onBack={leave} />
           {rows.mixes.map((mix) => (
-            <Shelf key={mix.id} title={mix.title} blurb={mix.blurb} items={mix.ids.map((id) => rows.byId.get(id)).filter((item): item is LibraryItem => !!item)} />
+            <Shelf key={mix.id} title={mix.title} blurb={mix.blurb} items={songsOf(mix)} />
           ))}
         </div>
       )
     const mix = rows.mixes.find((entry) => entry.id === mixView.id)
-    if (mix)
+    if (mix) {
+      const songs = songsOf(mix)
+      // The song list scrolls by itself, so it needs a fixed-height parent like the Library's.
       return (
-        <div className="screen home">
-          <PageHeader title={mix.title} caption={mix.blurb} actions={back} />
-          <SongList selecting={selecting} onSelectingChange={setSelecting} items={mix.ids.map((id) => rows.byId.get(id)).filter((item): item is LibraryItem => !!item)} label={mix.title} />
+        <div className="screen lib-shell">
+          <div className="space-view">
+            <PageHeader title={mix.title} caption={mix.blurb} crumbs={crumbs} onBack={leave} />
+            <div className="space-body">
+              {songs.length ? (
+                <SongList selecting={selecting} onSelectingChange={setSelecting} items={songs} label={mix.title} />
+              ) : (
+                <EmptyState icon="music" title="Nothing in this mix yet">
+                  It fills itself as you play and keep songs.
+                </EmptyState>
+              )}
+            </div>
+          </div>
         </div>
       )
+    }
   }
   const empty = !rows.playable.length
   const videoRows = filter === 'video' ? musicVideos : []

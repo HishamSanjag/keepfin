@@ -30,13 +30,18 @@ export async function registerHomeFollowSuite({test, calls, last}) {
 
   await test('Home: a mix opens as a song list and See all lists every mix', async (page) => {
     await home(page)
+    const crumbs = page.getByRole('navigation', {name: 'Breadcrumb'})
     await mixes(page).getByRole('button', {name: /^Recently added music/}).click()
     await page.getByRole('heading', {name: 'Recently added music'}).first().waitFor()
-    await page.getByRole('button', {name: 'Back to Home'}).click()
+    const first = page.getByRole('list', {name: 'Recently added music'}).getByRole('listitem').first()
+    await first.waitFor()
+    const box = await first.boundingBox()
+    assert.ok(box && box.height > 20 && box.y < (page.viewportSize()?.height ?? 800), `the first song is visible: ${JSON.stringify(box)}`)
+    await crumbs.getByRole('button', {name: 'Back'}).click()
     await mixes(page).getByRole('button', {name: 'See all mixes made from your listening'}).click()
     await page.getByRole('heading', {name: 'Made from your listening'}).first().waitFor()
     await page.getByRole('region', {name: 'Recently added music'}).waitFor()
-    await page.getByRole('button', {name: 'Back to Home'}).click()
+    await crumbs.getByRole('button', {name: 'Home'}).click()
     await mixes(page).waitFor()
   })
 

@@ -12,7 +12,7 @@ export type Crumb = {label: string; onSelect?: () => void}
  * "‹ Music › Albums": every parent is a link back; the page itself is the h1 below. The arrow goes back like the mouse's back button
  * (to where the page was scrolled); with nothing to go back to, it opens the nearest parent.
  */
-export function PageCrumbs({items}: {items: Crumb[]}) {
+export function PageCrumbs({items, onBack}: {items: Crumb[]; onBack?: () => void}) {
   if (!items.length) return null
   const parent = [...items].reverse().find((item) => item.onSelect)
   return (
@@ -22,7 +22,7 @@ export function PageCrumbs({items}: {items: Crumb[]}) {
         className="crumb-back"
         aria-label="Back"
         title="Back (Alt+Left)"
-        onClick={() => (canGoBack() ? goBack() : parent?.onSelect?.())}
+        onClick={() => (onBack ? onBack() : canGoBack() ? goBack() : parent?.onSelect?.())}
       >
         <Icon name="arrowLeft" size={15} />
       </button>
@@ -57,10 +57,13 @@ export function PageHeader({
   band,
   children,
   label,
+  onBack,
 }: {
   title: ReactNode
   caption?: ReactNode
   crumbs?: Crumb[]
+  /** Replaces the back arrow's history step, for views the history does not record. */
+  onBack?: () => void
   actions?: ReactNode
   /** Detail pages: the cover (or a mosaic), shown at the right of the header. */
   art?: ReactNode
@@ -74,7 +77,7 @@ export function PageHeader({
   const style = band ? ({'--hero-rgb': band} as CSSProperties) : undefined
   return (
     <section className={`page-header${art ? ' has-art' : ''}${band ? ' has-art-band' : ''}`} style={style} aria-label={label}>
-      {crumbs && <PageCrumbs items={crumbs} />}
+      {crumbs && <PageCrumbs items={crumbs} onBack={onBack} />}
       <div className="page-header-main">
         <div className="page-titles">
           <h1 className="page-title">{title}</h1>
