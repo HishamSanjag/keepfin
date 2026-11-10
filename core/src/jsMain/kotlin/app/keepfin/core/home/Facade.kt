@@ -51,6 +51,23 @@ private fun releases(text: String): List<FeedRelease> = items(text).mapNotNull {
 fun feedGroupsJson(releasesJson: String, now: Double): String =
     ReleaseFeed.group(releases(releasesJson), now.toLong()).joinToString(",", "[", "]") { "{\"label\":${jsonQuote(it.label)},\"ids\":${strings(it.ids)}}" }
 
+/** Home's card: {show, count, ids, artistKeys, title}. [seen] are the release ids already seen; [enabled] is the "Show new releases on Home" setting. */
+@JsExport
+fun feedCardJson(releasesJson: String, seen: Array<String>, enabled: Boolean, now: Double): String =
+    ReleaseFeed.card(releases(releasesJson), seen.toSet(), enabled, now.toLong()).let {
+        "{\"show\":${it.show},\"count\":${it.count},\"ids\":${strings(it.ids)},\"artistKeys\":${strings(it.artistKeys)},\"title\":${jsonQuote(it.title)}}"
+    }
+
+/** The Review window's groups: the feed without what was seen. */
+@JsExport
+fun feedUnseenGroupsJson(releasesJson: String, seen: Array<String>, now: Double): String =
+    ReleaseFeed.groupUnseen(releases(releasesJson), seen.toSet(), now.toLong()).joinToString(",", "[", "]") { "{\"label\":${jsonQuote(it.label)},\"ids\":${strings(it.ids)}}" }
+
+/** The seen ids after the card's x: what was seen plus every live release, pruned to releases still known. */
+@JsExport
+fun feedMarkSeen(releasesJson: String, seen: Array<String>, now: Double): Array<String> =
+    ReleaseFeed.markSeen(releases(releasesJson), seen.toSet(), now.toLong()).toTypedArray()
+
 @JsExport
 fun feedArtistsWithNew(releasesJson: String, now: Double): Array<String> = ReleaseFeed.artistsWithNew(releases(releasesJson), now.toLong()).toTypedArray()
 

@@ -5,10 +5,10 @@
 import {randomUUID} from 'node:crypto'
 import fs from 'node:fs/promises'
 import path from 'node:path'
-import {artistKey, freshReleases} from '../../shared/core/home.js'
+import {artistKey, freshReleases, markSeenIds, type FeedRelease} from '../../shared/core/home.js'
 import {artistChannelId, artistChannelUrl, isLegacyArtistAddress, type ArtistReleaseHit} from '../../shared/core/music.js'
 import type {PlaylistEntry} from '../../shared/contracts.js'
-import type {ArtistRelease, FollowedArtist, FollowingState} from '../../shared/following.js'
+import {noFollowing, type ArtistRelease, type FollowedArtist, type FollowingState} from '../../shared/following.js'
 
 export type ArtistHost = {
   /** The artist's channel id (UC...), or undefined when no result is surely this artist. Throws when the search fails. */
@@ -27,7 +27,7 @@ const CAP = 200
 const CHECK_FAILED = "Keepfin couldn't check this artist right now. It will try again later."
 
 export class ArtistFollowing {
-  private state: FollowingState = {artists: [], releases: [], checking: false}
+  private state: FollowingState = noFollowing
   private chain: Promise<unknown> = Promise.resolve()
   private loaded = false
 
@@ -46,7 +46,8 @@ export class ArtistFollowing {
       if (Array.isArray(raw.artists) && Array.isArray(raw.releases)) {
         // the first follow check read a channel's releases tab, which most channels lack: those artists were never read, so they are checked afresh
         const artists = (raw.artists as FollowedArtist[]).map((artist) => (artist.url && isLegacyArtistAddress(artist.url) ? {...artist, checkedAt: undefined, error: undefined} : artist))
-        this.state = {artists, releases: raw.releases, checking: false}
+        const seenReleases = Array.isArray(raw.seenReleases) ? (raw.seenReleases as unknown[]).filter((id): id is string => typeof id === 'string') : []
+        this.state = {artists, releases: raw.releases, seenReleases, checking: false}
       }
     } catch {}
   }
@@ -57,7 +58,7 @@ export class ArtistFollowing {
     try {
       await fs.mkdir(path.dirname(this.file), {recursive: true})
       const temp = `${this.file}.tmp`
-      await fs.writeFile(temp, JSON.stringify({v: 1, artists: next.artists, releases: next.releases}))
+      await fs.writeFile(temp, JSON.stringify({v: 1, artists: next.artists, releases: next.releases, seenReleases: next.seenReleases}))
       await fs.rename(temp, this.file)
     } catch {}
   }
@@ -118,6 +119,8 @@ export class ArtistFollowing {
       ...this.state,
       artists: this.state.artists.map((artist) => (artist.id === id ? {...artist, ...change} : artist)),
       releases: releases ?? this.state.releases,
+      // the seen list never outgrows the releases still known
+      seenReleases: releases ? this.state.seenReleases.filter((seen) => releases.some((release) => release.id === seen)) : this.state.seenReleases,
     }
   }
 
@@ -153,6 +156,14 @@ export class ArtistFollowing {
     const seen = [...new Set([...artist.seen, ...usable.keys()])]
     const merged = [...added, ...keepOld].filter((release, index, all) => all.findIndex((other) => other.id === release.id) === index)
     await this.commit(this.patch(id, {url, checkedOnce: true, seen, checkedAt: at, error: undefined}, merged))
+  }
+
+  /** The x on Home's card and "Mark all seen": every release now listed counts as seen, so the card returns only for newer ones. */
+  async markSeen(): Promise<FollowingState> {
+    await this.load()
+    const releases: FeedRelease[] = this.state.releases.map((release) => ({id: release.id, artistKey: this.state.artists.find((artist) => artist.id === release.artistId)?.key ?? '', title: release.title, foundAt: release.foundAt, kept: release.kept}))
+    await this.commit({...this.state, seenReleases: markSeenIds(releases, this.state.seenReleases, this.now())})
+    return this.snapshot()
   }
 
   /** Keeps a release: downloads it, and only then marks it kept (a failure leaves it in the feed). */

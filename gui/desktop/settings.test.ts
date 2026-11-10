@@ -59,6 +59,15 @@ test('update channel defaults to stable, validates, and migrates a missing value
   assert.equal(loadSettings(base(), {updateChannel: 'beta'}).updateChannel, 'beta')
 })
 
+test('the new-releases card on Home is on by default, can be turned off for good, and survives a missing value', () => {
+  assert.equal(base().newReleasesOnHome, true)
+  assert.equal(loadSettings(base(), {concurrency: 2}).newReleasesOnHome, true)
+  const off = mergeSettings(base(), {newReleasesOnHome: false})
+  assert.equal(off.newReleasesOnHome, false)
+  assert.equal(mergeSettings(off, {newReleasesOnHome: 'no'}).newReleasesOnHome, false)
+  assert.equal(loadSettings(base(), {newReleasesOnHome: false}).newReleasesOnHome, false)
+})
+
 test('start page defaults to downloads, validates, and migrates a missing value', () => {
   assert.equal(base().startPage, 'last')
   assert.equal(loadSettings(base(), {concurrency: 2}).startPage, 'last')

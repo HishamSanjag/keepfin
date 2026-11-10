@@ -21,8 +21,8 @@ import {Skeleton} from './Skeleton'
 import {ContinueRemove} from './LibraryHome'
 import {MusicVideoShelf} from './musicVideos/MusicVideoShelf'
 import {useMusicVideoRows} from './musicVideos/rows'
-import {ManageFollowing, MixSection, ReleaseSection} from './HomeFollow'
-import {useFollowing} from './following'
+import {NewReleasesCard} from './Follow'
+import {MixSection} from './HomeMixes'
 import {SongList} from './SongList'
 
 type Filter = 'all' | 'video' | 'audio' | 'image'
@@ -162,8 +162,6 @@ export function Home() {
   const all = lib.snapshot.items
   // a song's music video is a video: it shows with the Videos
   const musicVideos = useMusicVideoRows()
-  const following = useFollowing()
-  const [managing, setManaging] = useState(false)
   const [selecting, setSelecting] = useState(false)
   const [mixView, setMixView] = useState<{type: 'mix'; id: Mix['id']} | {type: 'all'} | null>(null)
   const rows = useMemo(() => {
@@ -266,11 +264,10 @@ export function Home() {
       ))}
       {(filter === 'all' || filter === 'audio') && (
         <>
+          <NewReleasesCard />
           {!empty && <MixSection mixes={rows.mixes} hasSongs={rows.songs.length > 0} onOpen={(mix) => setMixView({type: 'mix', id: mix.id})} onSeeAll={() => setMixView({type: 'all'})} />}
-          <ReleaseSection state={following} songs={rows.songs} onManage={() => setManaging(true)} />
         </>
       )}
-      <ManageFollowing open={managing} onClose={() => setManaging(false)} />
       {empty ? (
         <EmptyState
           icon="library"

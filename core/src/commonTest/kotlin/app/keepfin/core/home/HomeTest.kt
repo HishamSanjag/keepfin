@@ -146,4 +146,38 @@ class HomeTest {
         assertEquals("1 week ago", ReleaseFeed.ageWords(now - 8 * d, now))
         assertEquals("2 weeks ago", ReleaseFeed.ageWords(now - 15 * d, now))
     }
+
+    @Test
+    fun theCardShowsOnlyWhileSomethingUnseenIsLive() {
+        val list = listOf(rel("a", 3.0, artist = "pale"), rel("b", 5.0, artist = "oren"), rel("c", 6.0, artist = "pale"), rel("old", 40.0), rel("kept", 1.0, kept = true))
+        val card = ReleaseFeed.card(list, emptySet(), true, now)
+        assertTrue(card.show)
+        assertEquals(3, card.count)
+        assertEquals(listOf("a", "b", "c"), card.ids)
+        assertEquals(listOf("pale", "oren"), card.artistKeys)
+        assertEquals("3 new releases from artists you follow", card.title)
+        assertEquals("1 new release from artists you follow", ReleaseFeed.cardTitle(1))
+        assertFalse(ReleaseFeed.card(emptyList(), emptySet(), true, now).show, "nothing found: no card")
+        assertFalse(ReleaseFeed.card(list, emptySet(), false, now).show, "turned off for good: no card")
+    }
+
+    @Test
+    fun markingSeenHidesTheCardUntilANewerReleaseArrives() {
+        val first = listOf(rel("a", 3.0), rel("b", 5.0))
+        val seen = ReleaseFeed.markSeen(first, emptySet(), now).toSet()
+        assertEquals(setOf("a", "b"), seen)
+        assertFalse(ReleaseFeed.card(first, seen, true, now).show)
+        val later = first + rel("c", 0.5)
+        val card = ReleaseFeed.card(later, seen, true, now)
+        assertTrue(card.show)
+        assertEquals(listOf("c"), card.ids)
+        assertEquals(listOf("c"), ReleaseFeed.groupUnseen(later, seen, now).flatMap { it.ids })
+    }
+
+    @Test
+    fun theSeenListDropsReleasesNoLongerKnownAndKeepsKeptOnes() {
+        val after = ReleaseFeed.markSeen(listOf(rel("a", 3.0), rel("k", 2.0, kept = true)), setOf("gone", "k"), now)
+        assertEquals(listOf("k", "a"), after, "gone is pruned; k stays seen")
+        assertEquals(emptyList(), ReleaseFeed.markSeen(emptyList(), setOf("x"), now))
+    }
 }

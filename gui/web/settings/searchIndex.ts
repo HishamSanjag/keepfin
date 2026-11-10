@@ -34,6 +34,7 @@ export const settingsIndex: SettingEntry[] = [
   // Library & playback
   e('library', 'mode', 'Keepfin mode', 'downloader full library player home search', 'Library'),
   e('library', 'open-with', 'Open media with', 'player default app play external', 'Library'),
+  e('library', 'home-releases', 'Show new releases on Home', 'follow following artists new releases card home dismiss hide', 'Library'),
   e('library', 'routes', 'Where downloads go', 'spaces music routing everything else route', 'Where downloads go'),
   e('library', 'spaces', 'Spaces', 'folders smart new space edit remove music videos', 'Spaces'),
   e('library', 'tags', 'Import tags from sources', 'genres categories tag', 'Tags'),

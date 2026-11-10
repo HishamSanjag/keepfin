@@ -92,6 +92,51 @@ test('one follow per artist whatever the spelling; unfollowing drops its release
   }
 })
 
+test('seen releases: markSeen counts every listed release as seen, survives a restart, and a newer release is unseen again', async () => {
+  const f = await fixture()
+  try {
+    const follows = f.make()
+    await follows.follow('Pale Cassette')
+    await follows.check(undefined, true)
+    f.host.listing = [hit(3, 'Night Ferry', 'Single'), hit(1), hit(2)]
+    f.advance(HOUR)
+    let state = await follows.check(undefined, true)
+    assert.deepEqual(state.seenReleases, [], 'nothing is seen until the person says so')
+    state = await follows.markSeen()
+    assert.deepEqual(state.seenReleases, [hit(3).link])
+    // a release found later is not in the seen list
+    f.host.listing = [hit(4, 'Hollow Bloom', 'Single'), hit(3, 'Night Ferry', 'Single'), hit(1), hit(2)]
+    f.advance(HOUR)
+    state = await follows.check(undefined, true)
+    assert.deepEqual(state.releases.map((release) => release.id).filter((id) => !state.seenReleases.includes(id)), [hit(4).link])
+    const again = await f.make().current()
+    assert.deepEqual(again.seenReleases, [hit(3).link], 'persisted')
+  } finally {
+    await f.clean()
+  }
+})
+
+test('the seen list drops releases that are no longer known, and an older file without it loads as empty', async () => {
+  const f = await fixture()
+  try {
+    const follows = f.make()
+    await follows.follow('Pale Cassette')
+    await follows.check(undefined, true)
+    f.host.listing = [hit(3, 'Night Ferry', 'Single'), hit(1), hit(2)]
+    f.advance(HOUR)
+    await follows.check(undefined, true)
+    await follows.markSeen()
+    await follows.unfollow((await follows.current()).artists[0].id)
+    assert.deepEqual((await follows.markSeen()).seenReleases, [], 'the unfollowed artist releases are forgotten')
+    const old = JSON.parse(await fs.readFile(f.file, 'utf8'))
+    delete old.seenReleases
+    await fs.writeFile(f.file, JSON.stringify(old))
+    assert.deepEqual((await f.make().current()).seenReleases, [])
+  } finally {
+    await f.clean()
+  }
+})
+
 test('only due artists are checked automatically; Check now ignores the schedule', async () => {
   const f = await fixture()
   try {

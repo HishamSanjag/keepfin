@@ -81,8 +81,8 @@
         {
           "id": "follow-artists",
           "title": "Follow artists and keep their new releases",
-          "summary": "Follow an artist and Keepfin looks about every 12 hours for new releases on YouTube Music. They are listed on Home under This week and Earlier this month. Nothing downloads until you tap Keep it, which saves the release with your usual settings.",
-          "steps": ["Open an artist in Library and tap Follow, or open a song's menu and choose the Follow entry with the artist's name.", "On Home, tap Keep it beside a release to save it.", "Tap Manage beside Following to unfollow an artist or check now."]
+          "summary": "Follow an artist and Keepfin looks about every 12 hours for new releases on YouTube Music. When there are new ones, a small card on Home offers Review. Nothing downloads until you tap Keep it, which saves the release with your usual settings.",
+          "steps": ["In Library, open Artists and tap + Follow on an artist, or open a song's menu and choose the Follow entry.", "On Home, tap Review on the new releases card, then Keep it beside a release to save it. The x hides the card until newer releases arrive; Don't show on Home turns it off (Settings, Library, Show new releases on Home).", "In Library, Artists, choose Following to see who you follow, unfollow, or check now."]
         },
         {
           "id": "spaces",

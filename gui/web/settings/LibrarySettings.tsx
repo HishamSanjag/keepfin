@@ -65,6 +65,14 @@ export function LibrarySettings() {
             />
           }
         />
+        <SettingCard
+          anchor="home-releases"
+          icon="user"
+          title="Show new releases on Home"
+          description="A small card on Home tells you when artists you follow have new releases. Turn it off to remove it for good; you can still follow artists and see their releases from Library, Artists."
+          disabled={!library.enabled}
+          control={<Switch label="Show new releases on Home" checked={settings.newReleasesOnHome} disabled={disabled || !library.enabled} onChange={(newReleasesOnHome) => void updateSettings({newReleasesOnHome})} />}
+        />
       </Group>
       {library.enabled && (
         <>

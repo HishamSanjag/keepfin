@@ -1,4 +1,4 @@
-// Followed artists and their releases, for Home and the Follow actions. A small external store: the main process pushes {type: 'following'}
+// Followed artists and their releases, for Home card and the Follow actions. A small external store: the main process pushes {type: 'following'}
 // and every answer to a follow action carries the new state.
 import {useEffect, useSyncExternalStore} from 'react'
 import {request, messageOf, native} from '../bridge'
@@ -50,7 +50,7 @@ export const isFollowing = (current: FollowingState, name: string | undefined) =
 export async function followArtist(name: string) {
   try {
     setFollowing(await request<FollowingState>({op: 'followArtist', text: name}))
-    toast({tone: 'success', message: `Following ${name}. Keepfin looks for new releases and lists them on Home.`})
+    toast({tone: 'success', message: `Following ${name}. Keepfin looks for new releases and tells you on Home.`})
   } catch (error) {
     toast({message: messageOf(error), tone: 'error'})
   }
@@ -69,6 +69,15 @@ export async function unfollowArtist(id: string, name: string) {
 export async function checkFollowing(id?: string) {
   try {
     setFollowing(await request<FollowingState>({op: 'followingCheck', id}))
+  } catch (error) {
+    toast({message: messageOf(error), tone: 'error'})
+  }
+}
+
+/** The x on Home card and Mark all seen: the releases listed now count as seen, so the card returns only for newer ones. */
+export async function markReleasesSeen() {
+  try {
+    setFollowing(await request<FollowingState>({op: 'followingSeen'}))
   } catch (error) {
     toast({message: messageOf(error), tone: 'error'})
   }

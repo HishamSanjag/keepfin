@@ -12,7 +12,8 @@ import {Mosaic} from './Art'
 import {Hero} from './Hero'
 import {CollectionDetail} from './CollectionDetail'
 import {albumSub, artistSub, OpenCard, OpenRow} from './cells'
-import {FollowButton} from './HomeFollow'
+import {ArtistFilterBar, checkFailed, CHECK_FAILED_NOTE, isStub, useArtistRows} from './ArtistFollowBar'
+import {FollowButton, FollowToggle} from './Follow'
 import {useTileSelection} from './controller'
 import {sizes, type Density} from './density'
 import {openDialog} from './dialogState'
@@ -132,8 +133,9 @@ export function AlbumsGrid({albums, onOpen, selecting, onSelectingChange, densit
   )
 }
 
-export function ArtistsGrid({artists, onOpen, selecting, onSelectingChange, density, view}: {artists: Artist[]; onOpen: (artist: Artist) => void} & TileProps) {
+export function ArtistsGrid({artists: everyone, query = '', onOpen, selecting, onSelectingChange, density, view}: {artists: Artist[]; query?: string; onOpen: (artist: Artist) => void} & TileProps) {
   const size = sizes[density]
+  const {filter, rows: artists, failed} = useArtistRows(everyone, query)
   const picked = useTileSelection(
     artists.map((artist) => ({key: artist.key, items: artist.songs})),
     {selecting, onSelectingChange},
@@ -145,20 +147,43 @@ export function ArtistsGrid({artists, onOpen, selecting, onSelectingChange, dens
       rowHeight={size.songRow}
       minCell={size.artistMin}
       cellAspect={1}
-      cellExtra={size.cellExtra}
+      cellExtra={size.cellExtra + 40}
       gap={size.gap}
       density={density}
       onSelectAll={artists.length ? picked.selectAll : undefined}
-      header={<TileBar picked={picked} noun="artist" />}
+      header={
+        <>
+          <ArtistFilterBar />
+          <TileBar picked={picked} noun="artist" />
+        </>
+      }
       label="Artists"
       keyOf={(index) => artists[index].key}
       renderCell={(state) => {
         const artist = artists[state.index]
-        const menu = () => <Menu label={`More actions for ${artist.name}`} items={songsMenu(artist.songs)} tabbable={false} />
+        const stub = isStub(artist)
+        // a followed artist that is not in the library has no page to open and no songs to act on
+        const open = () => {
+          if (!stub) onOpen(artist)
+        }
+        const sub = stub ? 'Not in your library yet' : artistSub(artist)
+        const menu = stub ? undefined : () => <Menu label={`More actions for ${artist.name}`} items={songsMenu(artist.songs)} tabbable={false} />
+        const note = filter === 'following' && checkFailed(failed, artist) ? CHECK_FAILED_NOTE : undefined
         return view === 'grid' ? (
-          <OpenCard state={state} round title={artist.name} sub={artistSub(artist)} art={artist.artId ? [artist.artId] : []} icon="user" onOpen={() => onOpen(artist)} menu={menu} select={picked.forTile(artist.key)} />
+          <OpenCard state={state} round title={artist.name} sub={sub} note={note} art={artist.artId ? [artist.artId] : []} icon="user" onOpen={open} menu={menu} select={picked.forTile(artist.key)} follow={<FollowToggle name={artist.name} />} />
         ) : (
-          <OpenRow state={state} title={artist.name} sub={artistSub(artist)} art={artist.artId ? [artist.artId] : []} icon="user" onOpen={() => onOpen(artist)} menu={menu} select={picked.forTile(artist.key)} />
+          <OpenRow
+            state={state}
+            title={artist.name}
+            sub={sub}
+            note={note}
+            art={artist.artId ? [artist.artId] : []}
+            icon="user"
+            onOpen={open}
+            menu={menu}
+            select={picked.forTile(artist.key)}
+            follow={<FollowToggle name={artist.name} />}
+          />
         )
       }}
     />

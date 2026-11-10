@@ -52,6 +52,7 @@ export const previewSettings: Settings = {
   startPage: 'last',
   lyrics: true,
   musicVideos: false,
+  newReleasesOnHome: true,
   appIcon: '',
   engine: {channel: 'stable', autoUpdate: true},
   turbo: {enabled: false, connections: 8},

@@ -434,6 +434,8 @@ export type Settings = {
   lyrics: boolean
   /** Songs downloaded as audio also get their official music video: the Capture and collection check boxes start checked. Never starts a download. Off by default. */
   musicVideos: boolean
+  /** Home shows its slim card while artists you follow have new releases you have not seen. Off removes the card for good. On by default. */
+  newReleasesOnHome: boolean
   /** Windows app icon variant id (from the icon manifest). Empty = the main icon; an id that is not shipped also shows the main icon. */
   appIcon: string
   /** Parallel range-request transfer for direct https streams. */
@@ -566,6 +568,7 @@ export type Operation =
   | 'followArtist'
   | 'unfollowArtist'
   | 'followingCheck'
+  | 'followingSeen'
   | 'keepRelease'
   | 'playlistSave'
   | 'playlistDelete'

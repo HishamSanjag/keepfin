@@ -20,6 +20,7 @@ export type FollowedArtist = {
 /** A release found for a followed artist; `id` is its link, `foundAt` when Keepfin first saw it. */
 export type ArtistRelease = {id: string; artistId: string; title: string; kind?: string; url: string; thumbnail?: string; foundAt: number; kept: boolean}
 
-export type FollowingState = {artists: FollowedArtist[]; releases: ArtistRelease[]; checking: boolean}
+/** `seenReleases` are the release ids the person has seen (the card's x, Mark all seen): Home's card returns only for newer ones. */
+export type FollowingState = {artists: FollowedArtist[]; releases: ArtistRelease[]; seenReleases: string[]; checking: boolean}
 
-export const noFollowing: FollowingState = {artists: [], releases: [], checking: false}
+export const noFollowing: FollowingState = {artists: [], releases: [], seenReleases: [], checking: false}

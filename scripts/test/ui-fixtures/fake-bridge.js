@@ -556,6 +556,7 @@
     startPage: options.startPage || 'downloads',
     lyrics: options.lyrics ?? true,
     musicVideos: options.musicVideos ?? false,
+    newReleasesOnHome: options.newReleasesOnHome ?? true,
     autoSignIn: options.autoSignIn ?? true,
     appIcon: '',
     turbo: {enabled: false, connections: 8},
@@ -826,14 +827,22 @@
   }
   // Followed artists (Home's "New from artists you follow"): SYNTHETIC artists and releases; `following: 'seeded'` starts with five followed.
   const followKeyOf = (name) => String(name).toLowerCase().replace(/\s+/g, ' ').trim()
-  const followingFake = {artists: [], releases: [], checking: false}
+  const followingFake = {artists: [], releases: [], seenReleases: [], checking: false}
   if (options.following === 'seeded') {
     const names = ['Lumen Harbor', 'Pale Cassette', 'Oren Vale', 'The Quiet Tides', 'Sable & Ash']
     followingFake.artists = names.map((name, n) => ({id: `fa-${n}`, name, key: followKeyOf(name), seen: [], checkedOnce: true, url: `https://www.youtube.com/channel/UCfake${n}/releases`, checkedAt: now - hour}))
     const release = (n, artistId, title, kind, days) => ({id: `https://music.youtube.com/playlist?list=OLAKfake${n}`, artistId, title, kind, url: `https://music.youtube.com/playlist?list=OLAKfake${n}`, foundAt: now - days * day, kept: false})
     followingFake.releases = [release(1, 'fa-0', 'Salt Season', 'Album', 3), release(2, 'fa-2', 'Night Ferry', 'Single', 5), release(3, 'fa-4', 'Paper Moons', 'EP', 10), release(4, 'fa-1', 'Old Echoes', 'Album', 45)]
   }
+  // `followingFailed` makes the last check of The Quiet Tides fail (the artist list says so calmly); `followingSeen` starts with every release seen.
+  if (options.following === 'seeded' && options.followingFailed) followingFake.artists[3] = {...followingFake.artists[3], error: 'Keepfin could not reach YouTube Music right now. It will try again later.'}
+  if (options.following === 'seeded' && options.followingSeen) followingFake.seenReleases = followingFake.releases.map((release) => release.id)
   const followAnswer = () => clone(followingFake)
+  // Tests find a newer release for Lumen Harbor and push the state, as a background check would.
+  fake.followingNewRelease = (title) => {
+    followingFake.releases.unshift({id: `https://music.youtube.com/playlist?list=OLAKnew${followingFake.releases.length}`, artistId: 'fa-0', title, kind: 'Single', url: 'https://music.youtube.com/playlist?list=OLAKnew', foundAt: Date.now(), kept: false})
+    fake.push({type: 'following', state: followAnswer()})
+  }
   const pushLibrary = () => {
     const snap = libSnapshot()
     if (!libSent || !followsOrder(libSent.ids, snap.items) || !followsOrder(libSent.collectionIds, snap.collections)) {
@@ -1252,6 +1261,9 @@
         followingFake.artists = followingFake.artists.map((artist) => (req.id && artist.id !== req.id ? artist : {...artist, checkedOnce: true, checkedAt: Date.now()}))
         return followAnswer()
       }
+      case 'followingSeen':
+        followingFake.seenReleases = followingFake.releases.map((release) => release.id)
+        return followAnswer()
       case 'keepRelease': {
         const release = followingFake.releases.find((entry) => entry.id === req.id)
         if (!release) throw new Error('This release is no longer in the list.')

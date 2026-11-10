@@ -64,7 +64,7 @@ export const libraryOperations = new Set<string>([
   'libraryLyrics', 'libraryFindLyrics', 'songOfLink', 'libraryFindMusicVideo', 'libraryGetMusicVideo', 'libraryRemoveMusicVideo', 'librarySearchLyrics', 'libraryPrepare', 'libraryMatch', 'downloadAnyway', 'spaceSave',
   'spaceDelete', 'spaceReorder', 'libraryTag', 'libraryAddFrom', 'collectionSave', 'collectionDelete', 'collectionExport',
   'collectionAdd', 'collectionRemove', 'collectionReorder', 'collectionFollow', 'collectionCheck', 'collectionReview',
-  'collectionOpened', 'followingState', 'followArtist', 'unfollowArtist', 'followingCheck', 'keepRelease', 'playlistSave', 'playlistDelete', 'playlistExport', 'libraryUndo', 'libraryEraseTrashed',
+  'collectionOpened', 'followingState', 'followArtist', 'unfollowArtist', 'followingCheck', 'followingSeen', 'keepRelease', 'playlistSave', 'playlistDelete', 'playlistExport', 'libraryUndo', 'libraryEraseTrashed',
   'libraryTrashList', 'libraryTrashRestore', 'libraryTrashErase', 'libraryTrashEmpty',
 ])
 
@@ -416,6 +416,8 @@ export async function handleLibraryRequest(request: Request, deps: LibraryDeps):
       return deps.artists.unfollow(String(request.id))
     case 'followingCheck':
       return deps.artists.check(typeof request.id === 'string' ? request.id : undefined, true)
+    case 'followingSeen':
+      return deps.artists.markSeen()
     case 'keepRelease':
       return deps.artists.keep(String(request.id))
     case 'collectionOpened':

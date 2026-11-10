@@ -1,4 +1,4 @@
-/* ---------- Made from your listening, and new releases from followed artists ---------- */
+/* ---------- Made from your listening, the new-releases card, its Review window and the Follow controls ---------- */
 .mix-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
@@ -67,22 +67,71 @@
 .home-hint-title {
   font-weight: 600;
 }
-.home-follow {
+
+/* The one slim card: up to three covers, what is new, Review, and the two ways to put it away. */
+.release-card {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin: 0 0 18px;
+  padding: 10px 10px 10px 14px;
+  border-radius: var(--r-md);
+  background: var(--surface);
+  box-shadow: inset 0 0 0 1px var(--line);
+}
+.release-covers {
+  display: flex;
+  flex: none;
+}
+.release-cover {
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  overflow: hidden;
+  background: var(--raised);
+  box-shadow: 0 0 0 2px var(--surface);
+}
+.release-cover + .release-cover {
+  margin-left: -12px;
+}
+.release-cover > * {
+  width: 100%;
+  height: 100%;
+}
+.release-card-text {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 280px;
-  gap: 24px;
-  align-items: start;
+  flex: 1;
+  min-width: 0;
+  line-height: 1.35;
 }
-.home-follow .follow-panel {
-  grid-column: 2;
-  grid-row: 1;
+.release-card-title {
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
-.feed {
+.release-card-sub {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 2px 12px;
+  font-size: 12px;
+  color: var(--text-3);
+}
+.release-card-sub .link-btn {
+  font-size: 12px;
+  font-weight: 500;
+}
+.release-card .icon-btn {
+  flex: none;
+}
+
+/* Review window and the release rows in it. */
+.release-groups {
   display: grid;
   gap: 14px;
-  min-width: 0;
 }
-.feed-label {
+.release-group-label {
   margin: 0 0 4px;
   font-size: 11px;
   font-weight: 650;
@@ -90,9 +139,7 @@
   text-transform: uppercase;
   color: var(--text-3);
 }
-.release-list,
-.follow-list,
-.follow-manage {
+.release-list {
   display: grid;
   margin: 0;
   padding: 0;
@@ -105,6 +152,9 @@
   min-height: 56px;
   padding: 4px 0;
   border-bottom: 1px solid var(--line);
+}
+.release-row:last-child {
+  border-bottom: 0;
 }
 .release-art {
   flex: none;
@@ -136,99 +186,70 @@
   font-size: 12px;
   color: var(--text-3);
 }
-.follow-panel {
-  display: grid;
-  gap: 8px;
-  padding: 14px 16px;
-  border-radius: var(--r-md);
-  background: var(--surface);
-  box-shadow: inset 0 0 0 1px var(--line);
+
+/* Follow toggle on an artist row (+ Follow / Following) and the Following view bar. */
+.follow-toggle {
+  flex: none;
+  min-height: 32px;
+  padding: 0 12px;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text);
+  box-shadow: inset 0 0 0 1px var(--line-strong);
+  transition: background-color var(--t-fast) var(--ease);
 }
-.follow-row {
+.follow-toggle:hover {
+  background: var(--raised);
+}
+.follow-toggle.on {
+  color: var(--accent-text);
+  background: color-mix(in srgb, var(--accent) 14%, transparent);
+  box-shadow: none;
+}
+.row-follow {
   display: flex;
   align-items: center;
-  gap: 10px;
-  min-height: 36px;
-}
-.follow-avatar {
-  position: relative;
-  display: grid;
-  place-items: center;
   flex: none;
-  width: 32px;
-  height: 32px;
-  border-radius: 50%;
-  color: #fff;
-  font-size: 12px;
-  font-weight: 650;
+  padding-right: 6px;
 }
-.follow-dot {
-  position: absolute;
-  top: -1px;
-  right: -1px;
-  width: 9px;
-  height: 9px;
-  border-radius: 50%;
-  background: var(--accent);
-  box-shadow: 0 0 0 2px var(--surface);
+.follow-bar {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px 14px;
+  padding: 2px 0 10px;
 }
-.follow-name {
-  flex: 1;
-  min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-.follow-new {
-  flex: none;
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background: var(--accent);
-}
-.dialog.side-panel {
-  position: fixed;
-  inset: 0 0 0 auto;
-  width: min(380px, 100vw);
-  max-height: none;
-  height: 100dvh;
+.follow-bar .follow-checked {
   margin: 0;
-  border-radius: 0;
 }
-.side-head {
-  display: flex;
+.row-note {
+  display: inline-flex;
   align-items: center;
-  justify-content: space-between;
+  gap: 6px;
+  margin-left: 10px;
+  color: var(--text-3);
 }
-.follow-add {
+.card-sub:has(.row-note) {
+  white-space: normal;
+  min-height: 34px;
+}
+.card-sub .row-note {
+  margin-left: 0;
+}
+.card-follow {
   display: flex;
-  gap: 8px;
+  margin-top: 6px;
 }
-.follow-add input {
-  flex: 1;
-  min-width: 0;
+.row-note::before {
+  content: '';
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--warning);
 }
-.follow-manage-row {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  min-height: 56px;
-  border-bottom: 1px solid var(--line);
-}
-.follow-manage-text {
-  display: grid;
-  flex: 1;
-  min-width: 0;
-}
-.follow-error {
-  color: var(--danger);
-}
-@media (max-width: 1000px) {
-  .home-follow {
-    grid-template-columns: minmax(0, 1fr);
-  }
-  .home-follow .follow-panel {
-    grid-column: 1;
-    grid-row: 1;
+@media (max-width: 640px) {
+  .release-card {
+    flex-wrap: wrap;
   }
 }

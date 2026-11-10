@@ -13,9 +13,9 @@ A **space** is a home for one kind of thing, such as Music or Videos. Open **Lib
 ## Home: mixes and new releases
 
 - **Made from your listening:** Home builds mixes from your own plays and library: On repeat, Forgotten favourites, Recently added music, Never played, Because you play an artist you play a lot, and a Late-night mix (songs you play after 10 pm). They are made on your device and never leave it. A mix appears once it has five songs. Tap a mix to open it, or **See all**.
-- **Follow an artist:** open an artist in Library and press **Follow**, or open a song's menu and choose the **Follow** entry with the artist's name. On a phone the same actions are on the artist page and the song's action sheet.
-- **New from artists you follow:** Keepfin looks about every 12 hours for new releases on YouTube Music and lists them on Home under **This week** and **Earlier this month**. Nothing downloads on its own: press **Keep it** to save a release with your usual settings.
-- **Manage:** beside **Following** on Home. Unfollow an artist, follow one by name, or press **Check now** to look straight away.
+- **Follow an artist:** in Library, open **Artists** and press **+ Follow** on any row, or press **Follow** on the artist's page, or open a song's menu and choose the **Follow** entry with the artist's name.
+- **New releases card:** Keepfin looks about every 12 hours for new releases on YouTube Music. While there are releases you have not seen, Home shows one small card with a few covers and **Review**. Review lists them under **This week** and **Earlier this month**; nothing downloads on its own, press **Keep it** to save a release with your usual settings. The **x** hides the current releases (the card comes back only for newer ones). **Don't show on Home** removes the card for good; turn it back on in Settings, Library, **Show new releases on Home**.
+- **Who you follow:** in Library, Artists, choose **Following** to see everyone you follow, when they were last checked, and **Check now**. An artist that could not be checked shows a quiet note and is tried again later.
 
 ## Collections
 

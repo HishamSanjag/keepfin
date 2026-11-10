@@ -252,6 +252,8 @@ export const OpenCard = memo(function OpenCard({
   badge,
   icon,
   select,
+  follow,
+  note,
 }: {
   state: CellState
   title: string
@@ -265,6 +267,10 @@ export const OpenCard = memo(function OpenCard({
   icon?: string
   /** Makes the tile selectable: while selecting a click toggles it, and Ctrl+click starts selecting. */
   select?: TileSelect
+  /** A one-tap Follow toggle under the name (always visible). */
+  follow?: ReactNode
+  /** A calm note that takes the place of the sub line (a failed check). */
+  note?: ReactNode
 }) {
   return (
     <div className={`card${round ? ' card-round' : ''}${select?.selected ? ' is-selected' : ''}`}>
@@ -293,9 +299,10 @@ export const OpenCard = memo(function OpenCard({
         <span className="card-title" title={title}>
           {title}
         </span>
-        <span className="card-sub">{sub}</span>
+        <span className="card-sub">{note ? <span className="row-note">{note}</span> : sub}</span>
       </button>
       {menu && <span className="card-actions">{menu()}</span>}
+      {follow && <div className="card-follow">{follow}</div>}
     </div>
   )
 })
@@ -314,6 +321,8 @@ export const OpenRow = memo(function OpenRow({
   icon,
   menu,
   select,
+  follow,
+  note,
 }: {
   state: CellState
   title: string
@@ -323,6 +332,10 @@ export const OpenRow = memo(function OpenRow({
   icon?: string
   menu?: () => ReactNode
   select?: TileSelect
+  /** A persistent Follow toggle before the hover actions. */
+  follow?: ReactNode
+  /** A calm note after the sub line (a failed check). */
+  note?: ReactNode
 }) {
   return (
     <div className={`song-row open-row${select?.selected ? ' is-selected' : ''}`}>
@@ -345,10 +358,14 @@ export const OpenRow = memo(function OpenRow({
           <span className="row-title" title={title}>
             {title}
           </span>
-          <span className="row-sub">{sub}</span>
+          <span className="row-sub">
+            {sub}
+            {note && <span className="row-note">{note}</span>}
+          </span>
         </span>
         <Icon name="chevron" size={15} className="row-chevron" />
       </button>
+      {follow && <span className="row-follow">{follow}</span>}
       {menu && <span className="row-actions">{menu()}</span>}
     </div>
   )

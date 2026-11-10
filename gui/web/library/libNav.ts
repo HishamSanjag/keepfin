@@ -102,3 +102,23 @@ export const useLibFilter = () =>
     },
     () => filter,
   )
+
+/** The artist list shows everyone in the library, or only the artists followed. Lives here so Manage who you follow can aim it. */
+export type ArtistFilter = 'all' | 'following'
+let artistFilter: ArtistFilter = 'all'
+const artistFilterListeners = new Set<() => void>()
+export function setArtistFilter(next: ArtistFilter) {
+  if (artistFilter === next) return
+  artistFilter = next
+  artistFilterListeners.forEach((listener) => listener())
+}
+export const useArtistFilter = () =>
+  useSyncExternalStore(
+    (listener) => {
+      artistFilterListeners.add(listener)
+      return () => {
+        artistFilterListeners.delete(listener)
+      }
+    },
+    () => artistFilter,
+  )

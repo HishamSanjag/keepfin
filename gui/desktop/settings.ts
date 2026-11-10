@@ -60,6 +60,7 @@ export function defaultSettings(
     startPage: 'last',
     lyrics: true,
     musicVideos: false,
+    newReleasesOnHome: true,
     appIcon: '',
     turbo: {enabled: false, connections: 8},
     library: defaultLibrarySettings({downloads: outDir, ...folders}),
@@ -202,6 +203,7 @@ export function mergeSettings(current: Settings, input: unknown): Settings {
     )
   if (typeof patch.lyrics === 'boolean') next.lyrics = patch.lyrics
   if (typeof patch.musicVideos === 'boolean') next.musicVideos = patch.musicVideos
+  if (typeof patch.newReleasesOnHome === 'boolean') next.newReleasesOnHome = patch.newReleasesOnHome
   if (patch.startPage !== undefined)
     next.startPage = pick(
       patch.startPage,

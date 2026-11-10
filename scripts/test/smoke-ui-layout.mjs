@@ -312,16 +312,37 @@ const screens = [
     fake: {simulate: false, following: 'seeded'},
     setup: async (page) => {
       await nav(page, 'Home')
-      await page.getByRole('region', {name: 'New from artists you follow'}).getByRole('button', {name: 'Keep Salt Season'}).waitFor()
+      await page.getByRole('region', {name: 'New releases from artists you follow'}).getByRole('button', {name: 'Review'}).waitFor()
     },
   },
   {
-    name: 'home-follow-manage',
+    name: 'home-follow-review',
     fake: {simulate: false, following: 'seeded'},
     setup: async (page) => {
       await nav(page, 'Home')
-      await page.getByRole('region', {name: 'New from artists you follow'}).getByRole('button', {name: 'Manage'}).click()
-      await page.getByRole('dialog', {name: /^Following/}).getByRole('button', {name: 'Check now'}).waitFor()
+      await page.getByRole('region', {name: 'New releases from artists you follow'}).getByRole('button', {name: 'Review'}).click()
+      await page.getByRole('dialog', {name: 'New releases'}).getByRole('button', {name: 'Keep Salt Season'}).waitFor()
+    },
+  },
+  {
+    name: 'artist-list-following',
+    fake: {simulate: false, following: 'seeded', followingFailed: true},
+    setup: async (page) => {
+      await nav(page, 'Library')
+      await page.getByRole('group', {name: 'Show in Library'}).getByRole('button', {name: 'Artists', exact: true}).click()
+      await page.getByRole('group', {name: 'Show artists'}).getByRole('button', {name: 'Following (5)'}).click()
+      await page.getByText('Couldn’t check · will try again').waitFor()
+    },
+  },
+  {
+    name: 'artist-list-all',
+    fake: {simulate: false, following: 'seeded'},
+    setup: async (page) => {
+      await nav(page, 'Library')
+      await page.getByRole('group', {name: 'Show in Library'}).getByRole('button', {name: 'Artists', exact: true}).click()
+      await page.getByRole('button', {name: 'Follow Mira Halden'}).click()
+      await page.getByRole('button', {name: 'Following Mira Halden. Press to unfollow'}).waitFor()
+      await page.getByRole('button', {name: 'Follow The Overcast Choir'}).waitFor()
     },
   },
   {

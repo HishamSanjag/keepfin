@@ -270,7 +270,7 @@ export function SpaceView({space}: {space: Space}) {
           />
         )
       if (tab === 'albums') return <AlbumsGrid albums={albums} view={view} {...select} onOpen={(album) => setDetail({type: 'album', key: album.key})} />
-      if (tab === 'artists') return <ArtistsGrid artists={artists} view={view} {...select} onOpen={(artist: Artist) => setDetail({type: 'artist', key: artist.key})} />
+      if (tab === 'artists') return <ArtistsGrid artists={artists} query={query} view={view} {...select} onOpen={(artist: Artist) => setDetail({type: 'artist', key: artist.key})} />
       return <PlaylistTiles songs={allSongs} playlists={lib.playlists} query={query} view={view} {...select} onOpen={(target) => setDetail({type: 'playlist', target})} />
     }
     return (

@@ -88,7 +88,7 @@ export function KindPage({kind, lead}: {kind: Kind; lead: ReactNode}) {
         ) : kind === 'albums' ? (
           <AlbumsGrid albums={shownAlbums} view={mode} {...select} onOpen={(album) => setLibView({type: 'album', key: album.key})} />
         ) : kind === 'artists' ? (
-          <ArtistsGrid artists={shownArtists} view={mode} {...select} onOpen={(artist) => setLibView({type: 'artist', key: artist.key})} />
+          <ArtistsGrid artists={shownArtists} query={query} view={mode} {...select} onOpen={(artist) => setLibView({type: 'artist', key: artist.key})} />
         ) : (
           <PlaylistTiles
             songs={kind === 'collections' ? lib.snapshot.items : songs}

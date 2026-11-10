@@ -2,6 +2,9 @@
 // core's home package. The core decides which mixes exist, their songs and words, how the feed is grouped and who gets the dot; time is passed in.
 import {
   feedAgeWords,
+  feedCardJson,
+  feedMarkSeen,
+  feedUnseenGroupsJson,
   feedArtistsWithNew,
   feedFresh,
   feedGroupsJson,
@@ -27,6 +30,15 @@ export const feedGroups = (releases: readonly FeedRelease[], now = Date.now()): 
 export const artistsWithNew = (releases: readonly FeedRelease[], now = Date.now()): Set<string> => new Set(feedArtistsWithNew(JSON.stringify(releases), now))
 export const freshReleases = (known: readonly string[], found: readonly string[], firstCheck: boolean): string[] => Array.from(feedFresh(known as string[], found as string[], firstCheck))
 export const ageWords = (foundAt: number, now = Date.now()): string => feedAgeWords(foundAt, now)
+/** Home's one slim card: shown only while the setting is on and something unseen is live (the core rule, shared with the phone). */
+export type ReleaseCard = {show: boolean; count: number; ids: string[]; artistKeys: string[]; title: string}
+export const releaseCard = (releases: readonly FeedRelease[], seen: readonly string[], enabled: boolean, now = Date.now()): ReleaseCard =>
+  JSON.parse(feedCardJson(JSON.stringify(releases), seen as string[], enabled, now)) as ReleaseCard
+/** The Review window groups: the feed without what was seen. */
+export const unseenGroups = (releases: readonly FeedRelease[], seen: readonly string[], now = Date.now()): FeedGroup[] =>
+  JSON.parse(feedUnseenGroupsJson(JSON.stringify(releases), seen as string[], now)) as FeedGroup[]
+/** The seen ids after the x on the card: everything live is seen; ids of releases no longer known are dropped. */
+export const markSeenIds = (releases: readonly FeedRelease[], seen: readonly string[], now = Date.now()): string[] => Array.from(feedMarkSeen(JSON.stringify(releases), seen as string[], now))
 /** The key an artist is followed under (empty when the name has none). */
 export const artistKey = (name: string | undefined): string => (name ? followKey(name) : '')
 /** The channel id for the artist among search results, or undefined: never a guess. */
