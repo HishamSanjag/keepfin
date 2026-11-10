@@ -186,7 +186,8 @@ export function Home() {
       mixes,
       quick,
       resume: filter === 'all' || filter === 'video' ? continueWatching(all) : [],
-      added: filter === 'audio' ? [] : sortItems(playable.filter((item) => (item.kind === 'video' || item.kind === 'image') && wanted(item)), 'added'),
+      videos: filter === 'all' || filter === 'video' ? sortItems(playable.filter((item) => item.kind === 'video'), 'added') : [],
+      photos: filter === 'all' || filter === 'image' ? sortItems(playable.filter((item) => item.kind === 'image'), 'added') : [],
     }
   }, [all, filter])
 
@@ -250,7 +251,7 @@ export function Home() {
   }
   const empty = !rows.playable.length
   const videoRows = filter === 'video' ? musicVideos : []
-  const nothingForFilter = !empty && !rows.quick.length && !rows.resume.length && !rows.mixes.length && !rows.added.length && !videoRows.length
+  const nothingForFilter = !empty && !rows.quick.length && !rows.resume.length && !rows.mixes.length && !rows.videos.length && !rows.photos.length && !videoRows.length
   return (
     <div className="screen home">
       <PageHeader title="Home" caption={`${greeting()}. Paste a link in the search bar to keep something, or find what you already have.`} />
@@ -300,7 +301,8 @@ export function Home() {
           <Shelf title="Continue watching" items={rows.resume} removable />
           <DownloadingNow />
           <MusicVideoShelf rows={videoRows} onSeeAll={() => (setLibView({type: 'musicVideos'}), navigate('Library'))} />
-          <Shelf title="New videos and photos" items={rows.added} />
+          <Shelf title="New videos" items={rows.videos} />
+          <Shelf title="New photos" items={rows.photos} />
           {nothingForFilter && (
             <p className="muted pane-note">
               Nothing in {filters.find((entry) => entry.id === filter)?.label} yet.{' '}

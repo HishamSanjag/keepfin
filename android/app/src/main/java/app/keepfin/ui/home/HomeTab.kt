@@ -143,7 +143,10 @@ fun HomeTab(vm: StudioViewModel, ui: LibraryUi, contentPadding: PaddingValues, m
             items(active, key = { "dl-" + it.id }, contentType = { "download" }) { job -> DownloadingRow(job) { vm.openFromNotification("Downloads", job.id) } }
         }
         musicVideoShelf(musicVideos, ui) { vm.openLibraryDeep(LibraryRoute.MusicVideos) }
-        if (recent.isNotEmpty()) itemShelf("recent", "Recently added", recent.take(12), ui, { vm.openLibraryDeep(LibraryRoute.Section(HomeSection.RECENTLY_ADDED)) }, Modifier.testTag(UiTags.homeRow("recent")))
+        val recentVideos = recent.filter { it.kind == LibraryItemKind.VIDEO }
+        val recentPhotos = recent.filter { it.kind == LibraryItemKind.IMAGE }
+        if (recentVideos.isNotEmpty()) itemShelf("recent-videos", "New videos", recentVideos.take(12), ui, { vm.openLibraryDeep(LibraryRoute.Section(HomeSection.RECENTLY_ADDED)) }, Modifier.testTag(UiTags.homeRow("recent-videos")))
+        if (recentPhotos.isNotEmpty()) itemShelf("recent-photos", "New photos", recentPhotos.take(12), ui, { vm.openLibraryDeep(LibraryRoute.Section(HomeSection.RECENTLY_ADDED)) }, Modifier.testTag(UiTags.homeRow("recent-photos")))
         if (nothing) item("empty", contentType = "empty") {
             val (title, body) = when (kind) {
                 HomeKind.ALL -> "Nothing here yet" to "Paste a link above to download your first video, song or photo. Everything you save shows up here."
