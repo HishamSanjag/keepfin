@@ -693,6 +693,7 @@ export class CopiesHost {
     let problems = 0
     const notReached: string[] = []
     const needOk: string[] = []
+    let cloud = false
     for (const [id, s] of done) {
       if (s?.status === 'paused') continue
       if (s?.status === 'done') {
@@ -700,10 +701,13 @@ export class CopiesHost {
         changed += s.committed
         problems += s.failedCount
       } else if (s && (s.status === 'held' || s.status === 'refused' || s.status === 'preview')) needOk.push(nameOf(id))
-      else notReached.push(nameOf(id))
+      else {
+        notReached.push(nameOf(id))
+        cloud = !!this.local.places[id]?.cloud
+      }
     }
     if (!synced && !notReached.length && !needOk.length) return
-    const report = syncReport(synced, changed, problems, notReached, needOk)
+    const report = syncReport(synced, changed, problems, notReached, needOk, cloud)
     this.report = {...report, at: this.deps.now()}
     this.schedulePush()
     this.deps.notify?.(report)

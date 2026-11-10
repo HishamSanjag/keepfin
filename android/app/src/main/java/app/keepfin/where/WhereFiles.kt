@@ -26,7 +26,7 @@ sealed interface WhereTap {
 data class WherePlace(
     val id: String,
     val kind: PlaceKind,
-    /** The platform of a device (windows, android...), for its icon. */
+    /** For the icon: a device's platform (windows, android...) or a cloud copy's provider (drive, dropbox...). */
     val platform: String?,
     val name: String,
     /** "Everything", "Music, Favourites", "Road trip and 2 more". */
@@ -197,7 +197,7 @@ object WhereCompose {
             val kind = if (c.cloud != null) PlaceKind.CLOUD else if (c.peer != null) PlaceKind.DEVICE else PlaceKind.DRIVE
             val peerDevice = c.peer?.let { p -> i.devices.firstOrNull { it.deviceId == p.deviceId } }
             val tap = if (c.peer != null) WhereTap.Device(c.peer.deviceId) else WhereTap.Copy(c.id)
-            places.add(WherePlace("copy:" + c.id, kind, peerDevice?.platform, c.name, WhereWords.holds(c.holds, i.spaces, i.playlists), held?.second ?: 0L, WhereWords.copyState(c, i.now), tap, if (c.peer == null) WhereWords.type(c.mode) else null))
+            places.add(WherePlace("copy:" + c.id, kind, peerDevice?.platform ?: c.cloud?.provider, c.name, WhereWords.holds(c.holds, i.spaces, i.playlists), held?.second ?: 0L, WhereWords.copyState(c, i.now), tap, if (c.peer == null) WhereWords.type(c.mode) else null))
         }
         val nameOfReplica: (String) -> String = { r -> if (r == i.selfReplica) WhereWords.THIS_PHONE else deviceByReplica[r]?.name ?: "another device" }
         val grouped = LinkedHashMap<Pair<String, SingleKind>, Triple<Long, MutableSet<String>, Boolean>>()

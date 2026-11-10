@@ -25,6 +25,7 @@ class SyncReportTest {
     fun copiesThatWereNotReachedAreNamed() {
         assertEquals(SyncReport("Everything is up to date", "Nothing needed copying. Backup could not be reached.", true), syncReport(1, 0, 0, listOf("Backup"), emptyList()))
         assertEquals(SyncReport("Backup could not be reached", "Check that it is plugged in or online, then try again.", true), syncReport(0, 0, 0, listOf("Backup"), emptyList()))
+        assertEquals(SyncReport("Dropbox could not be reached", "Keepfin will try again by itself. If it keeps failing, check your internet connection.", true), syncReport(0, 0, 0, listOf("Dropbox"), emptyList(), cloud = true))
         assertEquals(SyncReport("No copy could be synced", "Media, USB and Backup could not be reached.", true), syncReport(0, 0, 0, listOf("Media", "USB", "Backup"), emptyList()))
     }
 

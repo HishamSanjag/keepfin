@@ -114,7 +114,7 @@ internal class CloudRuntime(
         val (accountId, _) = CloudAddress.parse(address) ?: return null
         val a = accounts.get(accountId) ?: return CloudCardUi(accountId, "Cloud", "an account that is not on this phone", true, false)
         val waiting = if (a.needsSignIn) null else gate?.invoke(accountId, a.mobileData) ?: if (gate != null) null else context?.let { NetworkRule.reason(it, a.mobileData) }
-        return CloudCardUi(accountId, PROVIDER_NAMES[a.provider] ?: "Cloud", a.label, a.needsSignIn, a.mobileData, waiting)
+        return CloudCardUi(accountId, PROVIDER_NAMES[a.provider] ?: "Cloud", a.label, a.needsSignIn, a.mobileData, waiting, a.provider)
     }
 
     // ---------------------------------------------------------------------------------------------- what the screens show

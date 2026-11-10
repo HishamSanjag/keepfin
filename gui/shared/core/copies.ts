@@ -433,7 +433,7 @@ export const removeFilesStay = (): string => copiesRemoveFilesStay()
 export type SyncReport = {title: string; detail: string; warn: boolean}
 
 /** Said once when every copy of a Sync all or Sync now has finished, even when there was nothing to do. */
-export function syncReport(synced: number, changed: number, problems: number, notReached: readonly string[], needOk: readonly string[]): SyncReport {
-  const r = copiesSyncReport(synced, changed, problems, [...notReached], [...needOk])
+export function syncReport(synced: number, changed: number, problems: number, notReached: readonly string[], needOk: readonly string[], cloud = false): SyncReport {
+  const r = copiesSyncReport(synced, changed, problems, [...notReached], [...needOk], cloud)
   return {title: r.title, detail: r.detail, warn: r.warn}
 }

@@ -36,6 +36,7 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import app.keepfin.ui.Format
 import app.keepfin.ui.components.RowSeparator
@@ -126,7 +127,9 @@ private fun PlaceRow(p: WherePlace, onOpen: (WhereTap) -> Unit) {
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Box(Modifier.size(36.dp).clip(CircleShape).background(MaterialTheme.colorScheme.surfaceContainerHighest), contentAlignment = Alignment.Center) {
-            Icon(placeIcon(p), contentDescription = null, tint = muted, modifier = Modifier.size(20.dp))
+            val mark = if (p.kind == PlaceKind.CLOUD) providerMark(p.platform) else null
+        if (mark != null) Icon(mark, contentDescription = null, tint = Color.Unspecified, modifier = Modifier.size(20.dp))
+        else Icon(placeIcon(p), contentDescription = null, tint = muted, modifier = Modifier.size(20.dp))
         }
         Spacer(Modifier.size(12.dp))
         Column(Modifier.weight(1f)) {

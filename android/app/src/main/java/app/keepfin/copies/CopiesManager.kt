@@ -801,14 +801,18 @@ internal class CopiesManager(
         var problems = 0
         val notReached = ArrayList<String>()
         val needOk = ArrayList<String>()
+        var onCloud = false
         for ((id, run) in done) when (run?.status) {
             "paused" -> Unit
             "done" -> { synced++; changed += run.exec?.committed ?: 0; problems += run.exec?.failedCount ?: 0 }
             "held", "refused", "preview" -> needOk.add(nameOf(id))
-            else -> notReached.add(nameOf(id))
+            else -> {
+                notReached.add(nameOf(id))
+                onCloud = cloud?.isCloud(local[id]?.treeUri) == true
+            }
         }
         if (synced == 0 && notReached.isEmpty() && needOk.isEmpty()) return
-        val words = syncReport(synced, changed, problems, notReached, needOk)
+        val words = syncReport(synced, changed, problems, notReached, needOk, onCloud)
         val made = SyncReportUi(words.title, words.detail, words.warn, now())
         synchronized(this) {
             report = made

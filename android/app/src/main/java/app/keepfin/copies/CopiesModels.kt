@@ -103,6 +103,8 @@ data class CloudCardUi(
     val mobileData: Boolean,
     /** Why the copy is waiting right now (no Wi-Fi, no network), or null. */
     val waiting: String? = null,
+    /** "drive", "dropbox", "graph" or "webdav". */
+    val provider: String = "",
 )
 
 enum class ReviewAction { CONFIRM_DELETE, RESTORE, KEEP_BOTH, DISMISS, SAME_DRIVE, SEPARATE_COPY, CONFIRM_HELD, TAKE_MAIN, TAKE_COPY }

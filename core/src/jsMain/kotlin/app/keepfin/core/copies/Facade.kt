@@ -397,8 +397,8 @@ fun copiesProblemRetry(): String = COPY_PROBLEM_RETRY
 class JsSyncReport(val title: String, val detail: String, val warn: Boolean)
 
 @JsExport
-fun copiesSyncReport(synced: Int, changed: Int, problems: Int, notReached: Array<String>, needOk: Array<String>): JsSyncReport =
-    syncReport(synced, changed, problems, notReached.toList(), needOk.toList()).let { JsSyncReport(it.title, it.detail, it.warn) }
+fun copiesSyncReport(synced: Int, changed: Int, problems: Int, notReached: Array<String>, needOk: Array<String>, cloud: Boolean): JsSyncReport =
+    syncReport(synced, changed, problems, notReached.toList(), needOk.toList(), cloud).let { JsSyncReport(it.title, it.detail, it.warn) }
 
 // ---- Free up space… and Remove copy… (CopyActions.kt) ----
 

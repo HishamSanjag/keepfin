@@ -2,7 +2,7 @@ import {useEffect, useState} from 'react'
 import '../../styles/copies.css'
 import '../../styles/where.css'
 import {useNav, navigate} from '../../nav'
-import type {CopiesState, CopyMode, CopyPlaceView} from '../../../shared/copies'
+import type {CloudProviderId, CopiesState, CopyMode, CopyPlaceView} from '../../../shared/copies'
 import {librarySafety, type OnePlace} from '../../../shared/core/safety'
 import type {WhereKind, WherePlace} from '../../../shared/where'
 import {messageOf} from '../../bridge'
@@ -14,6 +14,7 @@ import {Group} from '../../ui/SettingCard'
 import {agoWords, copyLine, holdsWords, sizeWords, statusTone, statusWords} from '../whereText'
 import {useNow, useWhere} from '../where/useWhere'
 import {AddCopy} from './AddCopy'
+import {ProviderIcon} from './ProviderIcon'
 import {syncCopies} from './copiesApi'
 import {copyFiles, holdsText, modeWords, statusWords as copyStatus} from './copyText'
 import {CloudAccountCards, type CloudNote} from './CloudAccounts'
@@ -109,7 +110,7 @@ export function Places({copies}: {copies: Copies}) {
         <ul className="where-list" aria-label="Places that keep your library">
           {(here?.places ?? []).map((place) => (
             <li key={place.id}>
-              <PlaceRow place={place} now={now} mode={place.link?.to === 'copy' ? state.places.find((p) => p.id === place.link!.id)?.mode : undefined} removal={place.link?.to === 'copy' ? state.places.find((p) => p.id === place.link!.id)?.removal : undefined} onOpen={() => (place.link?.to === 'device' ? navigate('Settings', 'devices', `device-${place.link.id}`) : place.link && setOpen({copy: place.link.id}))} />
+              <PlaceRow place={place} now={now} mode={place.link?.to === 'copy' ? state.places.find((p) => p.id === place.link!.id)?.mode : undefined} removal={place.link?.to === 'copy' ? state.places.find((p) => p.id === place.link!.id)?.removal : undefined} provider={place.link?.to === 'copy' ? state.places.find((p) => p.id === place.link!.id)?.cloud?.provider : undefined} onOpen={() => (place.link?.to === 'device' ? navigate('Settings', 'devices', `device-${place.link.id}`) : place.link && setOpen({copy: place.link.id}))} />
             </li>
           ))}
           {/* before "where" has answered: the copies alone */}
@@ -123,7 +124,7 @@ export function Places({copies}: {copies: Copies}) {
                 <li key={place.id}>
                   <button type="button" className="where-row" aria-label={`${place.name}: ${holds}, ${status.label}. Open the copy`} onClick={() => setOpen({copy: place.id})}>
                     <span className="where-icon" aria-hidden="true">
-                      <Icon name={place.cloud ? 'globe' : 'folder'} size={18} />
+                      {place.cloud ? <ProviderIcon provider={place.cloud.provider} /> : <Icon name="folder" size={18} />}
                     </span>
                     <span className="where-text">
                       <span className="where-name">
@@ -213,7 +214,7 @@ export function Places({copies}: {copies: Copies}) {
 /** A copy being removed, or that could not be: the row says so in place of its sync status. */
 const removalWords = (removal: NonNullable<CopyPlaceView['removal']>) => (removal.state === 'removing' ? `Removing · ${removal.text}` : 'Not removed')
 
-function PlaceRow({place, now, mode, removal, onOpen}: {place: WherePlace; now: number; mode?: CopyMode; removal?: CopyPlaceView['removal']; onOpen: () => void}) {
+function PlaceRow({place, now, mode, removal, provider, onOpen}: {place: WherePlace; now: number; mode?: CopyMode; removal?: CopyPlaceView['removal']; provider?: CloudProviderId; onOpen: () => void}) {
   const size = sizeWords(place)
   // every row counts the same thing: the person's files held there (the main storage says how many the library has)
   const count = place.thisDevice && place.holds.files ? place.holds.files.of : place.items
@@ -222,7 +223,7 @@ function PlaceRow({place, now, mode, removal, onOpen}: {place: WherePlace; now: 
   const body = (
     <>
       <span className="where-icon" aria-hidden="true">
-        <Icon name={iconOf[place.kind]} size={18} />
+        {place.kind === 'cloud' ? <ProviderIcon provider={provider} /> : <Icon name={iconOf[place.kind]} size={18} />}
       </span>
       <span className="where-text">
         <span className="where-name">

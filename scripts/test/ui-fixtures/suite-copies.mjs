@@ -573,6 +573,8 @@ export async function registerCopiesSuite({test, sent}) {
   for (const mode of ['dark', 'light']) {
     await test(`copies (${mode}): a copy that needs a new sign-in says so on its card and in Needs review, and Sign in again fixes it`, async (page) => {
       await openCopies(page)
+      assert.equal(await row(page, 'Cloud backup').locator('path[fill="#34A853"]').count(), 1, 'a Google Drive copy shows the Drive mark')
+      await shoot(page, `cloud-copy-rows-${mode}`, page.getByRole('list', {name: 'Places that keep your library'}))
       const drive = await openCopy(page, 'Cloud backup')
       assert.match(await drive.textContent(), /Google Drive · me@example\.org · Music/)
       assert.match(await drive.textContent(), /218 GB free of 2(,048|\.0)? ?GB|2(\.0)? TB/)
