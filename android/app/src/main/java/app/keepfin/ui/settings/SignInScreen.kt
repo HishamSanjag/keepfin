@@ -146,6 +146,8 @@ private fun SignInWebView(site: SignInSite, onProgress: (Int) -> Unit, onHistory
     val context = LocalContext.current
     val view = remember {
         WebView(context).apply {
+            // With wrap-content height a page's 100vh is 0, and Instagram's login shows nothing.
+            layoutParams = android.view.ViewGroup.LayoutParams(android.view.ViewGroup.LayoutParams.MATCH_PARENT, android.view.ViewGroup.LayoutParams.MATCH_PARENT)
             settings.javaScriptEnabled = true
             settings.domStorageEnabled = true
             settings.mixedContentMode = WebSettings.MIXED_CONTENT_NEVER_ALLOW
