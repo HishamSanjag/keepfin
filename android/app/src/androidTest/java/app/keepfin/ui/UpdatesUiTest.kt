@@ -7,6 +7,7 @@ import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import app.keepfin.ui.preview.FakeUpdates
+import app.keepfin.ui.settings.SettingsCategory
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
@@ -170,6 +171,16 @@ class UpdatesUiTest {
         rule.onNodeWithText("Keepfin $NEXT is available").assertExists()
         rule.onNodeWithTag(UiTags.settingsCategory("ABOUT")).performClick()
         rule.waitForTag(UiTags.UPDATES_APP)
+    }
+
+    @Test fun settingsReopensAnUpdateThatIsAlreadyDownloaded() {
+        val h = Harness("library", updates = FakeUpdates.scene("ready"))
+        h.openSettings(SettingsCategory.ABOUT)
+        h.show(rule)
+        rule.waitForTag(UiTags.SETTINGS_LIST)
+        rule.scrollListTo(UiTags.SETTINGS_LIST, UiTags.UPDATE_CHECK)
+        rule.onNodeWithTag(UiTags.UPDATE_CHECK).performClick()
+        rule.waitForTag(UiTags.UPDATE_INSTALL, 15_000)
     }
 
     @Test fun noDotInSettingsWhenUpToDate() {

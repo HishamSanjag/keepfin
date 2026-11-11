@@ -75,6 +75,8 @@ internal class UpdatesFlow(private val host: UpdatesFlowHost) {
         host.updates.switchChannel(channel)
     }
     fun checkForUpdates() { host.scope.launch(Dispatchers.IO) { runCatching { host.updates.check() } } }
+    /** Settings' button: an update already downloading or downloaded reopens its sheet, since a check skips it. */
+    fun checkOrShowUpdate() { if (host.updateState.phase in setOf("downloading", "ready")) showUpdateSheet() else checkForUpdates() }
 
     /** Marks entries read; the page calls this for everything it shows. */
     fun activityRead(ids: Collection<String>) { host.scope.launch(Dispatchers.IO) { runCatching { host.engine.activity.markRead(ids) } } }

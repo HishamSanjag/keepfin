@@ -353,7 +353,9 @@ private fun UpdatesGroup(vm: StudioViewModel, settings: EngineSettings, tools: L
             Text(
                 when (snapshot.phase) {
                     "checking" -> "Checking for updates…"
-                    "available", "downloading", "ready" -> "Version ${snapshot.version} is available"
+                    "available" -> "Version ${snapshot.version} is available"
+                    "downloading" -> "Downloading version ${snapshot.version} · ${snapshot.percent}%"
+                    "ready" -> "Version ${snapshot.version} is ready to install"
                     "error" -> "Could not check for updates"
                     "current" -> snapshot.message.ifBlank { "You're up to date" }
                     else -> "Keepfin updates are checked when you open the app."
@@ -363,7 +365,9 @@ private fun UpdatesGroup(vm: StudioViewModel, settings: EngineSettings, tools: L
             )
             Spacer(Modifier.size(8.dp))
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.fillMaxWidth()) {
-                FilledTonalButton(onClick = vm.updatesFlow::checkForUpdates, enabled = snapshot.phase != "checking", modifier = Modifier.heightIn(min = 48.dp).testTag(UiTags.UPDATE_CHECK)) { Text("Check for updates", maxLines = 1) }
+                FilledTonalButton(onClick = vm.updatesFlow::checkOrShowUpdate, enabled = snapshot.phase != "checking", modifier = Modifier.heightIn(min = 48.dp).testTag(UiTags.UPDATE_CHECK)) {
+                    Text(if (snapshot.phase in setOf("downloading", "ready")) "Show update" else "Check for updates", maxLines = 1)
+                }
                 OutlinedButton(onClick = vm.updatesFlow::showWhatsNew, modifier = Modifier.heightIn(min = 48.dp).testTag(UiTags.UPDATE_WHATS_NEW)) { Text("What's new", maxLines = 1) }
             }
         }
