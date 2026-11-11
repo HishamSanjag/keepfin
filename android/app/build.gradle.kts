@@ -132,5 +132,15 @@ val generateGuide by tasks.registering {
 android.sourceSets.getByName("main").assets.srcDir(guideAssets)
 tasks.named("preBuild").configure { dependsOn(generateGuide) }
 
+// What's new pages for this version (content/whats-new/<version>/): optional; without them What's new shows the notes alone.
+val whatsNewSource = rootProject.file("../content/whats-new/$releaseNotesVersion")
+val whatsNewAssets = layout.buildDirectory.dir("generated/whatsNew/assets")
+val generateWhatsNew by tasks.registering(Sync::class) {
+    from(whatsNewSource) { include("pages.json", "*-android.png") }
+    into(whatsNewAssets.map { it.dir("whats-new") })
+}
+android.sourceSets.getByName("main").assets.srcDir(whatsNewAssets)
+tasks.named("preBuild").configure { dependsOn(generateWhatsNew) }
+
 // The generated profile lives in src/main/generated/baselineProfiles and is committed (regenerate with :app:generateBaselineProfile).
 baselineProfile { mergeIntoMain = true }

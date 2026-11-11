@@ -1,0 +1,30 @@
+{
+  "version": "1.1.0",
+  "pages": [
+    {
+      "id": "photos",
+      "windows": {"title": "Save the photos from a post", "text": "Instagram, Pinterest, Reddit, X and more: one photo or a whole carousel. Click a photo to leave it out."},
+      "android": {"title": "Save the photos from a post", "text": "Instagram, Pinterest, Reddit, X and more: one photo or a whole carousel. Tap a photo to leave it out."}
+    },
+    {
+      "id": "signin",
+      "windows": {"title": "Sign-in happens by itself", "text": "Downloads go signed out. When a site asks for a sign-in, Keepfin uses one it finds (Firefox, or Keepfin's own) and tries again."},
+      "android": {"title": "Sign-in happens by itself", "text": "Downloads go signed out. When a site asks for a sign-in, Keepfin uses yours and tries again."}
+    },
+    {
+      "id": "mixes",
+      "windows": {"title": "Mixes and new releases on Home", "text": "Mixes made from your own plays, on this PC. Follow an artist and Home tells you when something new is out."},
+      "android": {"title": "Mixes and new releases on Home", "text": "Mixes made from your own plays, on this phone. Follow an artist and Home tells you when something new is out."}
+    },
+    {
+      "id": "arrange",
+      "windows": {"title": "Make Keepfin yours", "text": "Dock or float the sidebar and drag its width. Edit Home and Library: show, hide and move sections, rows or grids, and the card size."},
+      "android": {"title": "Arrange Home and Library", "text": "Show, hide and move sections, pick a row or a grid, and set the card size."}
+    },
+    {
+      "id": "copies",
+      "windows": {"title": "Faster, safer copies", "text": "Google Drive needs half the requests, Dropbox syncs again, and a renamed file moves instead of copying twice."},
+      "android": {"title": "Faster, safer copies", "text": "Google Drive needs half the requests, Dropbox syncs again, and a renamed file moves instead of copying twice."}
+    }
+  ]
+}

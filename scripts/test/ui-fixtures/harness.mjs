@@ -35,10 +35,10 @@ export async function launch() {
  * Opens the app. `fake` options go to the synthetic bridge (scenario, simulate, latency, engine);
  * pass fake:false for the honest browser preview with no bridge.
  */
-export async function openApp(browser, url, {fake = {}, width = 1280, height = 820, theme = 'dark', scale = 100, reducedMotion = false, intro = false} = {}) {
+export async function openApp(browser, url, {fake = {}, width = 1280, height = 820, theme = 'dark', scale = 100, reducedMotion = false, intro = false, deviceScaleFactor = 1} = {}) {
   const context = await browser.newContext({
     viewport: {width, height},
-    deviceScaleFactor: 1,
+    deviceScaleFactor,
     reducedMotion: reducedMotion ? 'reduce' : 'no-preference',
     colorScheme: theme === 'light' ? 'light' : 'dark',
   })

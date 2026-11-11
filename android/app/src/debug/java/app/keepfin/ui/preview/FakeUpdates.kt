@@ -3,6 +3,7 @@ package app.keepfin.ui.preview
 import android.content.Context
 import app.keepfin.UpdateSnapshot
 import app.keepfin.ui.updates.UpdateSource
+import app.keepfin.ui.updates.WhatsNewPage
 import java.io.File
 import java.util.concurrent.atomic.AtomicInteger
 
@@ -32,6 +33,12 @@ class FakeUpdates(
     override fun cancel() { cancels.incrementAndGet(); state = state.copy(phase = "available", message = "Download cancelled.") }
     override fun installFile(): File = File("/dev/null")
     override fun installedNotes(context: Context) = notes
+    /** Pages for tests and screenshots; empty by default so the plain notes sheet stays what other tests see. */
+    @Volatile var pages: List<WhatsNewPage> = emptyList()
+    /** Pictures by page id; a page without one has no picture. */
+    @Volatile var pictures: Map<String, androidx.compose.ui.graphics.ImageBitmap> = emptyMap()
+    override fun installedPages(context: Context) = pages
+    override fun pagePicture(context: Context, id: String) = pictures[id]
 
     companion object {
         const val AVAILABLE_NOTES = "# Keepfin v0.4.0\n\n## Windows\n- Faster playlist discovery.\n\n## Android\n- Spaces on the Library home, easier to switch\n- Settings split into simple sections\n- Select all, and smaller items that fit more"

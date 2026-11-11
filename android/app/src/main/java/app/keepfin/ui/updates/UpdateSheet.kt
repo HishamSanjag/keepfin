@@ -27,6 +27,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
@@ -253,9 +254,21 @@ fun WhatsNewSheet(vm: StudioViewModel) {
     val version = vm.whatsNew ?: return
     val context = LocalContext.current
     val notes = remember(version) { runCatching { vm.updates.installedNotes(context) }.getOrDefault("Release notes are unavailable.") }
+    // pages.json is a few hundred bytes, so it is read with the notes; pictures load off the main thread
+    val pages = remember(version) { runCatching { vm.updates.installedPages(context) }.getOrDefault(emptyList()) }
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     val scope = rememberCoroutineScope()
+    val hide: (() -> Unit) -> Unit = { after -> scope.launch { sheetState.hide() }.invokeOnCompletion { after() } }
     StudioSheet(onDismissRequest = vm.updatesFlow::dismissWhatsNew, sheetState = sheetState, modifier = Modifier.testTag(UiTags.WHATS_NEW_SHEET)) {
+        if (pages.isNotEmpty()) {
+            WhatsNewPager(
+                version, pages, notes, { id -> vm.updates.pagePicture(context, id) }, rememberPagerState { pages.size + 1 },
+                onGuide = { hide { vm.updatesFlow.dismissWhatsNew(); vm.open(app.keepfin.ui.SubPage.GUIDE) } },
+                onDone = { hide { vm.updatesFlow.dismissWhatsNew() } },
+                modifier = Modifier.fillMaxWidth().height((LocalConfiguration.current.screenHeightDp * 0.88f).dp).navigationBarsPadding().padding(horizontal = 24.dp).padding(bottom = 16.dp),
+            )
+            return@StudioSheet
+        }
         Column(Modifier.fillMaxWidth().navigationBarsPadding().padding(horizontal = 24.dp).padding(bottom = 16.dp)) {
             Text("What's new in v$version", style = MaterialTheme.typography.titleLarge, modifier = Modifier.semantics { heading() })
             Column(Modifier.padding(top = 12.dp).heightIn(max = (LocalConfiguration.current.screenHeightDp * 0.55f).dp).verticalScroll(rememberScrollState())) {

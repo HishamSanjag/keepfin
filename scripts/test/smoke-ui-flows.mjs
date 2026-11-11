@@ -24,6 +24,7 @@ import {registerPlayerStylesSuite} from './ui-fixtures/suite-player-styles.mjs'
 import {registerSongVideosSuite} from './ui-fixtures/suite-song-videos.mjs'
 import {registerPreviewSuite} from './ui-fixtures/suite-preview.mjs'
 import {registerHomeFollowSuite} from './ui-fixtures/suite-home-follow.mjs'
+import {registerWhatsNewSuite} from './ui-fixtures/suite-whats-new.mjs'
 
 const YT = 'https://www.youtube.com/watch?v=lofoten8k'
 const MUSIC = 'https://music.youtube.com/watch?v=tidal88'
@@ -1033,6 +1034,7 @@ await registerLibrarySuite({test, calls, last, sent, field})
 await registerSpacesV2Suite({test, calls, last, sent})
 await registerGuideSuite({test, last, sent})
 await registerActivitySuite({test, calls, last, sent})
+await registerWhatsNewSuite({test})
 await registerRefreshSuite({test, calls, last, sent})
 await registerBeta2Suite({test, calls, last, sent})
 await registerStorageSuite({test, sent})

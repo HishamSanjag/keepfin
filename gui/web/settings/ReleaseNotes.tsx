@@ -5,6 +5,8 @@ import {native, request} from '../bridge'
 import {navigate} from '../nav'
 import {Button} from '../ui/controls'
 import {Dialog} from '../ui/Dialog'
+import {whatsNewPages} from '../whatsNewContent'
+import {WhatsNewPages} from './WhatsNewPages'
 
 /** Sanitized markdown body shared by the What's new dialog and the update popover. */
 export function ReleaseMarkdown({notes, onError, compact}: {notes: string; onError: (message: string) => void; compact?: boolean}) {
@@ -95,6 +97,10 @@ export function ReleaseNotes({
   onError: (message: string) => void
   title?: string
 }) {
+  const pages = whatsNewPages(version)
+  if (pages.length) {
+    return <WhatsNewPages pages={pages} version={version} close={close} notesBody={<ReleaseMarkdown notes={notes} onError={onError} />} />
+  }
   return (
     <Dialog
       title={title}

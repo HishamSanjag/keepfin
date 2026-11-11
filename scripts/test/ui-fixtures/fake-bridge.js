@@ -591,7 +591,7 @@
   const signInState = () => ({canKeep: options.canKeepSignIn !== false, sites: signInSites.map(([key, name]) => ({key, name, signedIn: signedIn.has(key), ...(key === 'youtube' ? {hint: 'Needs Firefox: Google blocks sign-in here'} : {})}))})
   // options.signedIn: a download that used a sign-in the site asked for (its row says so quietly)
   if (options.signedIn)
-    jobs.unshift(job({url: 'https://www.instagram.com/p/DfW56Yoim48/', title: 'Harbour photos', provider: 'Instagram', kind: 'gallery', label: '2 photos', status: 'downloading', percent: 30, signedIn: options.signedIn}))
+    jobs.unshift(job({url: 'https://www.instagram.com/p/DfW56Yoim48/', title: options.signedInFinished ? 'Sunset carousel' : 'Harbour photos', provider: 'Instagram', kind: 'gallery', label: '2 photos', status: options.signedInFinished ? 'completed' : 'downloading', percent: options.signedInFinished ? 100 : 30, ...(options.signedInFinished ? {fileSize: 18.4e6, file: 'C:/Users/me/Downloads/Keepfin/Instagram/Harbour photos.zip', completedAt: now - 20 * min} : {}), signedIn: options.signedIn}))
   const snapshot = () => clone({jobs, settings, engine, platform: 'desktop', hasCookieFile})
   fake.jobs = () => clone(jobs)
 
@@ -1785,17 +1785,23 @@
       {id: 'webdav', name: 'WebDAV', available: !hidden.includes('webdav'), scope: 'A folder on your own server (Nextcloud, a NAS, any WebDAV address).'},
     ]
     copiesData.cloudAccounts = []
-    if (options.copies === 'cloud') {
+    // 'cloud-ok': only the backup drive and a Google Drive copy, nothing waiting (for pictures)
+    const cloudOk = options.copies === 'cloud-ok'
+    if (options.copies === 'cloud' || cloudOk) {
+      if (cloudOk) {
+        copiesData.places = copiesData.places.filter((p) => p.id === 'p-backup')
+        copiesData.review = []
+      }
       copiesData.cloudAccounts.push(
         {id: 'acct-drive', provider: 'drive', providerName: 'Google Drive', label: 'me@example.org', needsSignIn: false, freeBytes: 218 * GB, totalBytes: 2048 * GB, copies: 1},
-        {id: 'acct-ms', provider: 'graph', providerName: 'OneDrive', label: 'OneDrive', needsSignIn: true, copies: 1},
+        ...(cloudOk ? [] : [{id: 'acct-ms', provider: 'graph', providerName: 'OneDrive', label: 'OneDrive', needsSignIn: true, copies: 1}]),
       )
       const cloudFor = (provider, providerName, accountId, accountLabel, folder, needsSignIn) => ({provider, providerName, accountId, accountLabel, folder, needsSignIn, signedInHere: true})
       copiesData.places.push(
         {id: 'p-cloud-drive', name: 'Cloud backup', path: '', mode: 'backup', holds: {all: true, spaces: [], playlists: [], favourites: false}, schedule: {everyHours: 24, auto: true}, connected: true, status: 'upToDate', lastVerifiedAt: Date.now() - 5 * 3600_000, kept: 1548, waiting: 0, review: 0, freeBytes: 218 * GB, totalBytes: 2048 * GB, versions: {files: 6, deletedFiles: 1}, previewPending: false, cells: copyAllCells('kept'), cloud: cloudFor('drive', 'Google Drive', 'acct-drive', 'me@example.org', 'Music', false)},
-        {id: 'p-cloud-ms', name: 'Shared with the phone', path: '', mode: 'twoWay', holds: {all: true, spaces: [], playlists: [], favourites: false}, schedule: {everyHours: null, auto: true}, connected: false, status: 'disconnected', statusText: 'Sign in again to sync this copy.', lastVerifiedAt: Date.now() - 3 * 86400_000, kept: 902, waiting: 4, review: 0, previewPending: false, cells: copyAllCells('waiting'), cloud: cloudFor('graph', 'OneDrive', 'acct-ms', 'OneDrive', 'Shared', true)},
+        ...(cloudOk ? [] : [{id: 'p-cloud-ms', name: 'Shared with the phone', path: '', mode: 'twoWay', holds: {all: true, spaces: [], playlists: [], favourites: false}, schedule: {everyHours: null, auto: true}, connected: false, status: 'disconnected', statusText: 'Sign in again to sync this copy.', lastVerifiedAt: Date.now() - 3 * 86400_000, kept: 902, waiting: 4, review: 0, previewPending: false, cells: copyAllCells('waiting'), cloud: cloudFor('graph', 'OneDrive', 'acct-ms', 'OneDrive', 'Shared', true)}]),
       )
-      copiesData.review.unshift({id: 'r-signin', placeId: 'p-cloud-ms', placeName: 'Shared with the phone', kind: 'signIn', title: 'Sign in to OneDrive again', detail: 'OneDrive needs a new sign-in before this copy can sync. Nothing was changed, and your files are safe where they are.', actions: ['signIn']})
+      if (!cloudOk) copiesData.review.unshift({id: 'r-signin', placeId: 'p-cloud-ms', placeName: 'Shared with the phone', kind: 'signIn', title: 'Sign in to OneDrive again', detail: 'OneDrive needs a new sign-in before this copy can sync. Nothing was changed, and your files are safe where they are.', actions: ['signIn']})
     }
     return copiesData
   }

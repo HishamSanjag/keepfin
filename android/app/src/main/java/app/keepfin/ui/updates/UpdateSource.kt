@@ -27,6 +27,10 @@ interface UpdateSource {
     fun switchChannel(next: UpdateChannel) {}
     /** Release notes bundled at build time for the installed version. */
     fun installedNotes(context: Context): String
+    /** The swipeable What's new pages bundled for the installed version; empty keeps the plain notes sheet. */
+    fun installedPages(context: Context): List<WhatsNewPage> = WhatsNewPages.bundled(context, app.keepfin.BuildConfig.VERSION_NAME)
+    /** The picture of one page, or null when it is missing. Called off the main thread. */
+    fun pagePicture(context: Context, id: String): androidx.compose.ui.graphics.ImageBitmap? = WhatsNewPages.picture(context, id)
 }
 
 class AppUpdatesSource(private val updates: AppUpdates) : UpdateSource {

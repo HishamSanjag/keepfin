@@ -36,6 +36,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import app.keepfin.core.layout.CardPrefs
 import app.keepfin.core.layout.CardSizes
@@ -126,16 +127,15 @@ fun EditBar(prefs: UiPreferences, editor: PageEditor, modifier: Modifier = Modif
                     )
                     Text("${(card.scale * 100).roundToInt()}%", style = MaterialTheme.typography.labelLarge, modifier = Modifier.padding(start = 8.dp).width(44.dp))
                 }
-                Row(Modifier.heightIn(min = 48.dp), verticalAlignment = Alignment.CenterVertically) {
-                    Text("Text", style = MaterialTheme.typography.labelLarge, modifier = Modifier.width(80.dp))
-                    SingleChoiceSegmentedButtonRow(Modifier.weight(1f)) {
-                        TextChoices.forEachIndexed { index, (value, label) ->
-                            SegmentedButton(
-                                selected = card.text == value, onClick = { prefs.chooseCardPrefs(card.copy(text = value)) },
-                                shape = SegmentedButtonDefaults.itemShape(index, TextChoices.size),
-                                modifier = Modifier.heightIn(min = 48.dp).testTag("card-text-${value.wire}"),
-                            ) { Text(label, maxLines = 1, style = MaterialTheme.typography.labelMedium) }
-                        }
+                // The label sits above the control so each choice gets a third of the width; a long choice wraps instead of clipping.
+                Text("Text", style = MaterialTheme.typography.labelLarge, modifier = Modifier.padding(top = 4.dp, bottom = 4.dp))
+                SingleChoiceSegmentedButtonRow(Modifier.fillMaxWidth()) {
+                    TextChoices.forEachIndexed { index, (value, label) ->
+                        SegmentedButton(
+                            selected = card.text == value, onClick = { prefs.chooseCardPrefs(card.copy(text = value)) },
+                            shape = SegmentedButtonDefaults.itemShape(index, TextChoices.size), icon = {},
+                            modifier = Modifier.heightIn(min = 48.dp).testTag("card-text-${value.wire}"),
+                        ) { Text(label, maxLines = 2, textAlign = TextAlign.Center, style = MaterialTheme.typography.labelMedium, modifier = Modifier.testTag("card-text-label-${value.wire}")) }
                     }
                 }
                 Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
