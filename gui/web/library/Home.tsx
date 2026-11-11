@@ -1,25 +1,25 @@
-// Home (full mode): the paste/search box first, then what to pick up next. Videos, music and photos get equal
-// weight; every row hides when it has nothing to show.
-import {useMemo, useState, type MouseEvent} from 'react'
+// Home (full mode): the sections of the saved layout in order. Videos, music and photos get equal weight; every section hides
+// when it has nothing to show.
+import {useMemo, useState} from 'react'
 import {homeMixes, type Mix} from '../../shared/core/home'
-import type {LibraryItem} from '../../shared/library'
+import {musicVideoWords, type LibraryItem} from '../../shared/library'
+import {ItemSection} from '../media/ItemSection'
+import {SectionFrame} from '../media/Section'
+import {EditBar, EditPageButton, PageSections, usePageEdit, type SectionView} from '../media/PageEdit'
+import {useCardSizes} from '../media/useCardSizes'
 import {navigate} from '../nav'
 import {usePreference} from '../prefs'
 import {isLiveEntry, useIndex, useJob} from '../store'
 import {Button, EmptyState, InlineAlert, ProgressBar} from '../ui/controls'
-import {Art, ProgressTick} from './Art'
-import {CollectionContext, ItemCard, useCollectionApi} from './cells'
-import {useCollectionController} from './controller'
 import {openDialog} from './dialogState'
-import {setLibView, type LibView} from './libNav'
-import {loadLibrary, useLibItem, useLibrary, useLibrarySettings} from './libStore'
-import {continueWatching, progressFraction, sortItems} from './model'
+import {setLibView} from './libNav'
+import {loadLibrary, useLibrary, useLibrarySettings} from './libStore'
+import {continueWatching, sortItems} from './model'
 import {PasteLinkButton} from './Empty'
 import {PageHeader} from '../shell/PageHeader'
 import {PageToolbar} from '../shell/PageToolbar'
 import {Skeleton} from './Skeleton'
-import {ContinueRemove} from './LibraryHome'
-import {MusicVideoShelf} from './musicVideos/MusicVideoShelf'
+import {MusicVideoSection} from './musicVideos/MusicVideoSection'
 import {useMusicVideoRows} from './musicVideos/rows'
 import {NewReleasesCard} from './Follow'
 import {MixSection} from './HomeMixes'
@@ -34,87 +34,13 @@ const filters: {id: Filter; label: string}[] = [
 ]
 const filterIds = filters.map((entry) => entry.id)
 
-function Shelf({title, blurb, items, seeAll, label, removable}: {title: string; blurb?: string; items: LibraryItem[]; seeAll?: LibView; label?: string; removable?: boolean}) {
-  const shown = items.slice(0, 14)
-  const controller = useCollectionController(shown)
-  if (!shown.length) return null
-  return (
-    <section className="home-section" aria-label={label || title}>
-      <header className="shelf-head">
-        <div className="shelf-heading">
-          <h3 className="shelf-title">{title}</h3>
-          {blurb && <p className="muted small">{blurb}</p>}
-        </div>
-        {seeAll && (
-          <button type="button" className="link-btn" onClick={() => (setLibView(seeAll), navigate('Library'))} aria-label={`See all ${title}`}>
-            See all
-          </button>
-        )}
-      </header>
-      <CollectionContext.Provider value={controller.api}>
-        <div className="shelf shelf-posters" role="list" aria-label={title}>
-          {shown.map((item, index) => (
-            <div key={item.id} role="listitem" className="shelf-item">
-              <ItemCard id={item.id} state={{index, focused: false, tabIndex: index === 0 ? 0 : -1}} />
-              {removable && <ContinueRemove item={item} />}
-            </div>
-          ))}
-        </div>
-        {controller.menuNode}
-      </CollectionContext.Provider>
-    </section>
-  )
+const stateWords: Record<string, string> = {
+  queued: 'Waiting',
+  preparing: 'Preparing',
+  processing: 'Finishing',
+  paused: 'Paused',
+  downloading: 'Downloading',
 }
-
-const kindWord: Record<LibraryItem['kind'], string> = {video: 'Video', audio: 'Song', image: 'Photo', other: 'File'}
-
-function QuickTile({id, index}: {id: string; index: number}) {
-  const item = useLibItem(id)
-  const api = useCollectionApi()
-  if (!item) return null
-  return (
-    <button
-      type="button"
-      className="quick-tile"
-      aria-label={`${item.title}, ${kindWord[item.kind]}`}
-      onClick={(event: MouseEvent) => api.activate(id, index, event)}
-      onContextMenu={(event) => {
-        event.preventDefault()
-        api.menuAt(id, {x: event.clientX, y: event.clientY})
-      }}
-    >
-      <span className="quick-art">
-        <Art id={item.id} hasArt={item.hasArt} kind={item.kind} size={18} />
-        {progressFraction(item) > 0 && <ProgressTick item={item} />}
-      </span>
-      <span className="quick-text">
-        <span className="quick-title">{item.title}</span>
-        <span className="quick-sub">{item.artist || kindWord[item.kind]}</span>
-      </span>
-    </button>
-  )
-}
-
-function QuickGrid({items}: {items: LibraryItem[]}) {
-  const controller = useCollectionController(items)
-  if (!items.length) return null
-  return (
-    <section className="home-section" aria-label="Jump back in">
-      <CollectionContext.Provider value={controller.api}>
-        <div className="quick-grid" role="list" aria-label="Jump back in">
-          {items.map((item, index) => (
-            <div key={item.id} role="listitem">
-              <QuickTile id={item.id} index={index} />
-            </div>
-          ))}
-        </div>
-        {controller.menuNode}
-      </CollectionContext.Provider>
-    </section>
-  )
-}
-
-const stateWords: Record<string, string> = {queued: 'Waiting', preparing: 'Preparing', processing: 'Finishing', paused: 'Paused', downloading: 'Downloading'}
 function LiveJob({id}: {id: string}) {
   const job = useJob(id)
   if (!job) return null
@@ -125,7 +51,12 @@ function LiveJob({id}: {id: string}) {
         {job.title}
       </span>
       <span className="muted small tabular">{job.status === 'downloading' ? `${Math.round(percent)}%` : stateWords[job.status] || job.status}</span>
-      <ProgressBar value={percent} label={`Progress of ${job.title}`} mode={job.status === 'downloading' ? 'determinate' : 'indeterminate'} tone={job.status === 'paused' ? 'paused' : undefined} />
+      <ProgressBar
+        value={percent}
+        label={`Progress of ${job.title}`}
+        mode={job.status === 'downloading' ? 'determinate' : 'indeterminate'}
+        tone={job.status === 'paused' ? 'paused' : undefined}
+      />
     </li>
   )
 }
@@ -134,19 +65,21 @@ function DownloadingNow() {
   const live = useIndex().filter(isLiveEntry)
   if (!live.length) return null
   return (
-    <section className="home-section" aria-label="Downloading now">
-      <header className="shelf-head">
-        <h3 className="shelf-title">Downloading now</h3>
+    <SectionFrame
+      id="downloading"
+      title="Downloading now"
+      tools={
         <button type="button" className="link-btn" onClick={() => navigate('Downloads')}>
           All downloads
         </button>
-      </header>
+      }
+    >
       <ul className="dl-now" aria-label="Active downloads">
         {live.slice(0, 3).map((entry) => (
           <LiveJob key={entry.id} id={entry.id} />
         ))}
       </ul>
-    </section>
+    </SectionFrame>
   )
 }
 
@@ -158,6 +91,8 @@ const greeting = () => {
 export function Home() {
   const lib = useLibrary()
   const settings = useLibrarySettings()!
+  const edit = usePageEdit('home')
+  const cardSizes = useCardSizes()
   const [filter, setFilter] = usePreference<Filter>('keepfin-home-filter', 'all', (value) => filterIds.includes(value as Filter))
   const all = lib.snapshot.items
   // a song's music video is a video: it shows with the Videos
@@ -169,7 +104,10 @@ export function Home() {
     const wanted = (item: LibraryItem) => filter === 'all' || item.kind === filter
     const seen = new Set<string>()
     const quick: LibraryItem[] = []
-    const recentPlayed = sortItems(playable.filter((item) => item.lastPlayedAt), 'added').sort((a, b) => (b.lastPlayedAt ?? 0) - (a.lastPlayedAt ?? 0))
+    const recentPlayed = sortItems(
+      playable.filter((item) => item.lastPlayedAt),
+      'added',
+    ).sort((a, b) => (b.lastPlayedAt ?? 0) - (a.lastPlayedAt ?? 0))
     for (const item of [...recentPlayed, ...sortItems(playable, 'added')])
       if (wanted(item) && !seen.has(item.id) && quick.length < 8) {
         seen.add(item.id)
@@ -178,7 +116,16 @@ export function Home() {
     const music = filter === 'all' || filter === 'audio'
     const songs = music ? playable.filter((item) => item.kind === 'audio') : []
     const byId = new Map(songs.map((item) => [item.id, item]))
-    const mixes = homeMixes(songs.map((item) => ({id: item.id, artist: item.artist || item.albumArtist, plays: item.plays, lastPlayedAt: item.lastPlayedAt, addedAt: item.addedAt, favorite: item.favorite})))
+    const mixes = homeMixes(
+      songs.map((item) => ({
+        id: item.id,
+        artist: item.artist || item.albumArtist,
+        plays: item.plays,
+        lastPlayedAt: item.lastPlayedAt,
+        addedAt: item.addedAt,
+        favorite: item.favorite,
+      })),
+    )
     return {
       playable,
       songs,
@@ -186,8 +133,21 @@ export function Home() {
       mixes,
       quick,
       resume: filter === 'all' || filter === 'video' ? continueWatching(all) : [],
-      videos: filter === 'all' || filter === 'video' ? sortItems(playable.filter((item) => item.kind === 'video'), 'added') : [],
-      photos: filter === 'all' || filter === 'image' ? sortItems(playable.filter((item) => item.kind === 'image'), 'added') : [],
+      videos:
+        filter === 'all' || filter === 'video'
+          ? sortItems(
+              playable.filter((item) => item.kind === 'video'),
+              'added',
+            )
+          : [],
+      music: sortItems(songs, 'added'),
+      photos:
+        filter === 'all' || filter === 'image'
+          ? sortItems(
+              playable.filter((item) => item.kind === 'image'),
+              'added',
+            )
+          : [],
     }
   }, [all, filter])
 
@@ -220,10 +180,10 @@ export function Home() {
     const songsOf = (mix: Mix) => mix.ids.map((id) => rows.byId.get(id)).filter((item): item is LibraryItem => !!item)
     if (mixView.type === 'all')
       return (
-        <div className="screen home">
+        <div className="screen home" ref={cardSizes}>
           <PageHeader title="Made from your listening" caption="Mixes update as you play" crumbs={crumbs} onBack={leave} />
           {rows.mixes.map((mix) => (
-            <Shelf key={mix.id} title={mix.title} blurb={mix.blurb} items={songsOf(mix)} />
+            <ItemSection key={mix.id} id={mix.id} title={mix.title} blurb={mix.blurb} kind="square" items={songsOf(mix)} />
           ))}
         </div>
       )
@@ -250,18 +210,74 @@ export function Home() {
     }
   }
   const empty = !rows.playable.length
-  const videoRows = filter === 'video' ? musicVideos : []
-  const nothingForFilter = !empty && !rows.quick.length && !rows.resume.length && !rows.mixes.length && !rows.videos.length && !rows.photos.length && !videoRows.length
+  const music = !empty && (filter === 'all' || filter === 'audio')
+  const videoRows = filter === 'all' || filter === 'video' ? musicVideos : []
+  const nothingForFilter =
+    !empty && !rows.quick.length && !rows.resume.length && !rows.mixes.length && !rows.videos.length && !rows.photos.length && !videoRows.length
+  const views: Record<string, SectionView> = {
+    downloading: {title: 'Downloading now', render: () => <DownloadingNow />},
+    'jump-back-in': {
+      title: 'Jump back in',
+      render: (style) => <ItemSection id="jump-back-in" title="Jump back in" kind="tile" style={style} items={rows.quick} />,
+    },
+    continue: {
+      title: 'Continue watching',
+      render: (style) => <ItemSection id="continue" title="Continue watching" kind="video" style={style} items={rows.resume} resume />,
+    },
+    mixes: {
+      title: 'Made from your listening',
+      render: (style) =>
+        music && (
+          <MixSection
+            mixes={rows.mixes}
+            style={style}
+            hasSongs={rows.songs.length > 0}
+            onOpen={(mix) => setMixView({type: 'mix', id: mix.id})}
+            onSeeAll={() => setMixView({type: 'all'})}
+          />
+        ),
+    },
+    'new-releases': {
+      title: 'New from artists you follow',
+      render: () => music && <NewReleasesCard />,
+    },
+    'added-videos': {
+      title: 'New videos',
+      render: (style) => <ItemSection id="added-videos" title="New videos" kind="video" style={style} items={rows.videos} />,
+    },
+    'added-music': {
+      title: 'New music',
+      render: (style) => <ItemSection id="added-music" title="New music" kind="square" style={style} items={rows.music} />,
+    },
+    'music-videos': {
+      title: musicVideoWords.shelf,
+      render: (style) => <MusicVideoSection rows={videoRows} style={style} onSeeAll={() => (setLibView({type: 'musicVideos'}), navigate('Library'))} />,
+    },
+    photos: {
+      title: 'New photos',
+      render: (style) => <ItemSection id="photos" title="New photos" kind="photo" style={style} items={rows.photos} />,
+    },
+  }
   return (
-    <div className="screen home">
-      <PageHeader title="Home" caption={`${greeting()}. Paste a link in the search bar to keep something, or find what you already have.`} />
+    <div className="screen home" ref={cardSizes}>
+      <PageHeader
+        title="Home"
+        caption={`${greeting()}. Paste a link in the search bar to keep something, or find what you already have.`}
+        actions={!empty && <EditPageButton edit={edit} name="Home" />}
+      />
       {!empty && (
         <PageToolbar
           label="Home toolbar"
           left={
             <div className="chips" role="group" aria-label="Show on Home">
               {filters.map((entry) => (
-                <button key={entry.id} type="button" className={`chip${filter === entry.id ? ' on' : ''}`} aria-pressed={filter === entry.id} onClick={() => setFilter(entry.id)}>
+                <button
+                  key={entry.id}
+                  type="button"
+                  className={`chip${filter === entry.id ? ' on' : ''}`}
+                  aria-pressed={filter === entry.id}
+                  onClick={() => setFilter(entry.id)}
+                >
                   {entry.label}
                 </button>
               ))}
@@ -274,12 +290,7 @@ export function Home() {
           {problem.message}
         </InlineAlert>
       ))}
-      {(filter === 'all' || filter === 'audio') && (
-        <>
-          <NewReleasesCard />
-          {!empty && <MixSection mixes={rows.mixes} hasSongs={rows.songs.length > 0} onOpen={(mix) => setMixView({type: 'mix', id: mix.id})} onSeeAll={() => setMixView({type: 'all'})} />}
-        </>
-      )}
+      <PageSections edit={edit} views={views} />
       {empty ? (
         <EmptyState
           icon="library"
@@ -293,28 +304,20 @@ export function Home() {
             </>
           }
         >
-          Videos, music and photos you save land in spaces, each in its own folder. Paste a link in the search bar to save something, or add files you already have.
+          Videos, music and photos you save land in spaces, each in its own folder. Paste a link in the search bar to save something, or add files you already
+          have.
         </EmptyState>
       ) : (
-        <>
-          <QuickGrid items={rows.quick} />
-          <Shelf title="Continue watching" items={rows.resume} removable />
-          <DownloadingNow />
-          <MusicVideoShelf rows={videoRows} onSeeAll={() => (setLibView({type: 'musicVideos'}), navigate('Library'))} />
-          <Shelf title="New videos" items={rows.videos} />
-          <Shelf title="New photos" items={rows.photos} />
-          {nothingForFilter && (
-            <p className="muted pane-note">
-              Nothing in {filters.find((entry) => entry.id === filter)?.label} yet.{' '}
-              <button type="button" className="link-btn" onClick={() => setFilter('all')}>
-                Show everything
-              </button>
-            </p>
-          )}
-        </>
+        nothingForFilter && (
+          <p className="muted pane-note">
+            Nothing in {filters.find((entry) => entry.id === filter)?.label} yet.{' '}
+            <button type="button" className="link-btn" onClick={() => setFilter('all')}>
+              Show everything
+            </button>
+          </p>
+        )
       )}
-      {empty && <DownloadingNow />}
+      <EditBar edit={edit} />
     </div>
   )
 }
-

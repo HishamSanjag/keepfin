@@ -4,6 +4,7 @@
 import {useMemo, useState} from 'react'
 import {ageWords, artistKey as keyOf, releaseCard, unseenGroups, type FeedRelease} from '../../shared/core/home'
 import type {ArtistRelease, FollowedArtist, FollowingState} from '../../shared/following'
+import {SectionFrame} from '../media/Section'
 import {navigate} from '../nav'
 import {updateSettings, useMeta} from '../store'
 import {toast} from '../toasts'
@@ -69,37 +70,39 @@ export function NewReleasesCard() {
   return (
     <>
       {card.show && (
-        <section className="release-card" aria-label="New releases from artists you follow">
-          <span className="release-covers" aria-hidden="true">
-            {card.ids.slice(0, 3).map((id) => (
-              <span key={id} className="release-cover">
-                <Thumbnail url={byId.get(id)?.thumbnail} kind="audio" lazy label="" />
-              </span>
-            ))}
-          </span>
-          <span className="release-card-text">
-            <span className="release-card-title">{card.title}</span>
-            <span className="release-card-sub">
-              <span>{namesLine(names)}</span>
-              <button
-                type="button"
-                className="link-btn"
-                onClick={() => {
-                  void updateSettings({newReleasesOnHome: false})
-                  toast({tone: 'info', message: 'New releases are off on Home. You can turn them back on in Settings, under Library.'})
-                }}
-              >
-                Don’t show on Home
-              </button>
+        <SectionFrame id="new-releases" title="New from artists you follow">
+          <div className="release-card">
+            <span className="release-covers" aria-hidden="true">
+              {card.ids.slice(0, 3).map((id) => (
+                <span key={id} className="release-cover">
+                  <Thumbnail url={byId.get(id)?.thumbnail} kind="audio" lazy label="" />
+                </span>
+              ))}
             </span>
-          </span>
-          <Button size="sm" variant="primary" onClick={() => setReviewing(true)}>
-            Review
-          </Button>
-          <button type="button" className="icon-btn" aria-label="Dismiss new releases" onClick={() => void markReleasesSeen()}>
-            <Icon name="close" size={16} />
-          </button>
-        </section>
+            <span className="release-card-text">
+              <span className="release-card-title">{card.title}</span>
+              <span className="release-card-sub">
+                <span>{namesLine(names)}</span>
+                <button
+                  type="button"
+                  className="link-btn"
+                  onClick={() => {
+                    void updateSettings({newReleasesOnHome: false})
+                    toast({tone: 'info', message: 'New releases are off on Home. You can turn them back on in Settings, under Library.'})
+                  }}
+                >
+                  Don’t show on Home
+                </button>
+              </span>
+            </span>
+            <Button size="sm" variant="primary" onClick={() => setReviewing(true)}>
+              Review
+            </Button>
+            <button type="button" className="icon-btn" aria-label="Dismiss new releases" onClick={() => void markReleasesSeen()}>
+              <Icon name="close" size={16} />
+            </button>
+          </div>
+        </SectionFrame>
       )}
       <ReviewReleases open={reviewing} state={state} onClose={() => setReviewing(false)} />
     </>

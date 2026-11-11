@@ -17,7 +17,7 @@ export async function registerGuideSuite({test, last, sent}) {
   const settingsNav = (page) => page.getByRole('navigation', {name: 'Settings sections'})
   const side = (page) => page.getByRole('navigation', {name: 'Your library'})
   const openGuide = async (page) => {
-    await page.getByRole('navigation', {name: 'Main navigation'}).getByRole('button', {name: 'Settings', exact: true}).click()
+    await page.locator('aside.rail').getByRole('button', {name: 'Settings', exact: true}).click()
     await settingsNav(page).getByRole('button', {name: 'Help'}).click()
     await page.getByRole('searchbox', {name: 'Search features'}).waitFor()
   }

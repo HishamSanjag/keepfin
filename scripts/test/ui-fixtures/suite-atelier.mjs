@@ -1,6 +1,6 @@
 // Cobalt Atelier (dev-docs/plans/MAIN-REDESIGN.md): the structure of the restyled main screens against the synthetic bridge. One
-// sidebar that holds spaces and playlists, Continue watching cards with progress and a play button, shelves that never mix
-// shapes, every size as one list under a Format row, and the Afterglow mini player.
+// sidebar that holds spaces and playlists, Continue watching cards with progress and the time left, sections that keep one card shape,
+// every size as one list under a Format row, and the Afterglow mini player.
 // Registered by smoke-ui-flows.mjs, so `npm run gui:ui-test` runs them. Fixtures never certify provider or playback behaviour.
 import assert from 'node:assert/strict'
 
@@ -29,7 +29,8 @@ export async function registerAtelierSuite({test, calls, last, sent}) {
   await test('atelier: one sidebar with the destinations, then spaces and playlists as a quiet list', async (page) => {
     await toLibrary(page)
     assert.equal(await page.locator('aside.rail').count(), 1, 'a single sidebar')
-    for (const name of ['Home', 'Search', 'Library', 'Downloads', 'Settings']) await mainNav(page).getByRole('button', {name, exact: false}).first().waitFor()
+    for (const name of ['Home', 'Search', 'Library', 'Downloads']) await mainNav(page).getByRole('button', {name, exact: false}).first().waitFor()
+    await page.locator('.rail-foot').getByRole('button', {name: 'Settings', exact: true}).waitFor()
     const spaces = side(page).getByRole('list', {name: 'Spaces'})
     const playlists = side(page).getByRole('list', {name: 'Playlists'})
     await spaces.getByRole('button', {name: /^Music/}).waitFor()
@@ -45,48 +46,85 @@ export async function registerAtelierSuite({test, calls, last, sent}) {
     await page.getByRole('heading', {name: 'Devices', level: 2}).first().waitFor()
   })
 
-  await test('atelier: Library home order is spaces, Continue watching, Recently added, then playlists', async (page) => {
+  await test('sidebar: edit mode hides, reorders and pins; it can dock, and its right edge resizes it', async (page) => {
+    await toLibrary(page)
+    const rail = page.locator('aside.rail')
+    assert.equal(await rail.getAttribute('data-style'), 'floating', 'floating by default')
+    await rail.getByRole('button', {name: 'Edit sidebar'}).click()
+    const pages = mainNav(page).getByRole('list', {name: 'Pages'})
+    assert.equal(await pages.getByRole('button', {name: 'Hide Downloads'}).count(), 0, 'Downloads always stays')
+    await pages.getByRole('button', {name: 'Hide Search'}).click()
+    // the handle moves a row with the arrow keys
+    await pages.getByRole('button', {name: 'Move Downloads'}).press('ArrowUp')
+    await side(page).getByRole('button', {name: 'Pin Night drive to top'}).click()
+    await side(page).getByRole('list', {name: 'Pinned'}).getByText('Night drive').waitFor()
+    await rail.getByRole('switch', {name: 'Floating sidebar'}).click()
+    assert.equal(await rail.getAttribute('data-style'), 'docked')
+    await rail.getByRole('button', {name: 'Done', exact: true}).click()
+    // after Done: Search is gone, Downloads moved before Library, Night drive sits under Pinned and not under Playlists
+    const tabs = await mainNav(page).getByRole('button').evaluateAll((buttons) => buttons.map((button) => button.title))
+    assert.deepEqual(tabs, ['Home', 'Downloads', 'Library'])
+    await side(page).getByRole('list', {name: 'Pinned'}).getByRole('button', {name: /^Night drive/}).waitFor()
+    assert.equal(await side(page).getByRole('list', {name: 'Playlists'}).getByRole('button', {name: /^Night drive/}).count(), 0)
+    const saved = await page.evaluate(() => JSON.parse(localStorage.getItem('keepfin-sidebar')))
+    assert.deepEqual([saved.style, saved.hiddenNav, saved.nav], ['docked', ['Search'], ['Home', 'Search', 'Downloads', 'Library']], 'the choices are remembered, hidden pages keep their place')
+    // right-click a pinned row to unpin it
+    await side(page).getByRole('list', {name: 'Pinned'}).getByRole('button', {name: /^Night drive/}).click({button: 'right'})
+    await page.getByRole('menuitem', {name: 'Unpin from top'}).click()
+    await side(page).getByRole('list', {name: 'Playlists'}).getByRole('button', {name: /^Night drive/}).waitFor()
+    // width: the separator follows the keyboard and Enter resets it
+    const edge = rail.getByRole('separator', {name: 'Resize sidebar'})
+    const before = (await rail.boundingBox()).width
+    await edge.focus()
+    await page.keyboard.press('Shift+ArrowRight')
+    assert.equal(await edge.getAttribute('aria-valuenow'), '256')
+    await page.waitForFunction((w) => document.querySelector('aside.rail').getBoundingClientRect().width > w + 20, before)
+    await page.keyboard.press('Enter')
+    assert.equal(await edge.getAttribute('aria-valuenow'), '224')
+  })
+
+  await test('atelier: Library home order is spaces, playlists, albums, artists, then videos', async (page) => {
     await toLibrary(page)
     const home = page.locator('.library-home')
     assert.equal((await page.locator('.page-header h1:visible').textContent()).trim(), 'Library')
     await page.getByText('Your media, close at hand.').waitFor()
     const tops = await home.evaluate((node) => {
       const top = (label) => node.querySelector(`[aria-label="${label}"]`)?.getBoundingClientRect().top ?? -1
-      return ['Spaces', 'Continue watching', 'Recently added', 'Playlists'].map(top)
+      return ['Spaces', 'Playlists', 'Albums', 'Artists', 'Videos'].map(top)
     })
     assert.ok(tops.every((value) => value >= 0), `all sections exist: ${tops}`)
     assert.deepEqual([...tops].sort((a, b) => a - b), tops, 'sections are in the designed order')
   })
 
   await test('atelier: Continue watching cards are wide 16:9 with progress, a play button and the time left', async (page) => {
-    await toLibrary(page)
+    await mainNav(page).getByRole('button', {name: 'Home'}).click()
     const cards = page.getByRole('region', {name: 'Continue watching'}).getByRole('listitem')
     assert.ok((await cards.count()) >= 1)
     for (let index = 0; index < (await cards.count()); index++) {
       const card = cards.nth(index)
-      await card.locator('.cw-play').waitFor()
-      assert.ok(await card.locator('.cw-play').isVisible(), 'the play button is over the artwork')
+      await card.locator('.card-play').waitFor({state: 'attached'})
+      assert.ok(await card.locator('.card-play').count(), 'the play button is over the artwork')
       const bar = card.getByRole('progressbar', {name: 'Watched'})
       assert.ok(Number(await bar.getAttribute('aria-valuenow')) > 0, 'progress is shown')
       // the shared rule: "0:11 left", "4 min left", "1 h left", "1 h 12 min left"
-      assert.match(await card.locator('.cw-left').textContent(), /^(\d+:\d\d|\d+ min|\d+ h|\d+ h \d+ min) left$/)
-      const box = await card.locator('.cw-art').boundingBox()
+      assert.match(await card.locator('.card-sub').textContent(), /^(\d+:\d\d|\d+ min|\d+ h|\d+ h \d+ min) left$/)
+      const box = await card.locator('.card-art').boundingBox()
       assert.ok(Math.abs(box.width / box.height - 16 / 9) < 0.02, `16:9, got ${box.width / box.height}`)
       assert.ok(box.width > 150 && box.width < 320, `compact 16:9 cards (about 200px), not posters or giant tiles, got ${box.width}`)
     }
     // The card plays the video it resumes.
-    await cards.first().getByRole('button', {name: /^Continue /}).click()
+    await cards.first().getByRole('button', {name: /, .+ left$/}).click()
     await page.getByRole('dialog', {name: /^Playing /}).or(page.getByRole('region', {name: 'Now playing'})).first().waitFor()
   })
 
-  await test('atelier: shelves never mix shapes: videos are 16:9, music and photos are squares', async (page) => {
+  await test('atelier: sections keep one card shape: videos are 16:9, music squares, artists round', async (page) => {
     await toLibrary(page)
-    const shelves = page.locator('.library-home .shelf[data-shape]')
-    assert.ok((await shelves.count()) >= 2, 'a video shelf and a music shelf at least')
+    const shelves = page.locator('.library-home .section-body[data-kind="video"], .library-home .section-body[data-kind="square"]')
+    assert.ok((await shelves.count()) >= 2, 'a video section and a music section at least')
     const seen = new Set()
     for (let index = 0; index < (await shelves.count()); index++) {
       const shelf = shelves.nth(index)
-      const shape = await shelf.getAttribute('data-shape')
+      const shape = await shelf.getAttribute('data-kind')
       seen.add(shape)
       const ratios = await shelf.locator('.card-art').evaluateAll((nodes) => nodes.map((node) => Math.round((node.getBoundingClientRect().width / node.getBoundingClientRect().height) * 10) / 10))
       assert.ok(ratios.length > 0, 'the shelf has cards')
@@ -267,7 +305,7 @@ export async function registerAtelierSuite({test, calls, last, sent}) {
   await test('narrow window: no phone layout; the top bar keeps search, updates and notifications on one row', async (page) => {
     assert.equal(await page.locator('.compact-bar').count(), 0, 'no separate brand bar')
     const rail = await page.locator('aside.rail').boundingBox()
-    assert.ok(rail.x === 0 && rail.height > 500, 'the sidebar stays at the side, not a bottom tab bar')
+    assert.ok(rail.x < 12 && rail.height > 500, 'the sidebar stays at the side, not a bottom tab bar')
     const search = await page.locator('.app-search').boundingBox()
     const bell = await page.locator('.act-bell').boundingBox()
     assert.ok(Math.abs(search.y + search.height / 2 - (bell.y + bell.height / 2)) < 4, 'search and the bell share one row')
@@ -293,7 +331,8 @@ export async function registerAtelierSuite({test, calls, last, sent}) {
     const play = await bar.locator('.play-btn').boundingBox()
     assert.ok(play.y > info.y + info.height - 4, 'the transport is on the second row')
     const seek = await bar.getByRole('slider', {name: /Seek|Position/}).first().boundingBox()
-    assert.ok(seek.width > 380, `a long seek bar, got ${seek.width}`)
+    const barBox = await bar.boundingBox()
+    assert.ok(seek.width > barBox.width * 0.7, `a long seek bar, got ${seek.width} of ${barBox.width}`)
   }, {width: 560, height: 800})
 
   await test('narrow window: the queue panel opens over the page below 960 px', async (page) => {

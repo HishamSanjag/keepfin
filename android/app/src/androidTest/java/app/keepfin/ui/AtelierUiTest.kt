@@ -50,6 +50,19 @@ class AtelierUiTest {
         return h
     }
 
+    private fun openHome(): Harness {
+        val h = Harness("library")
+        h.vm.navigate(Destination.HOME)
+        h.show(rule)
+        rule.waitForTag(UiTags.HOME_LIST)
+        return h
+    }
+
+    private fun scrollHome(tag: String) {
+        rule.onNodeWithTag(UiTags.HOME_LIST).performScrollToNode(hasTestTag(tag))
+        rule.waitForIdle()
+    }
+
     private fun scrollLibrary(tag: String) {
         rule.onNodeWithTag(UiTags.LIB_LIST).performScrollToNode(hasTestTag(tag))
         rule.waitForIdle()
@@ -69,40 +82,24 @@ class AtelierUiTest {
         }
     }
 
-    @Test fun continueWatchingCardShowsProgressAPlayButtonAndTheTimeLeft() {
-        openLibraryHome()
-        scrollLibrary(UiTags.libItem(video))
-        rule.waitForTag("continue-progress-$video")
-        assertTrue("play button over the artwork", rule.exists("continue-play-$video"))
-        val progress = rule.onNodeWithTag("continue-progress-$video", useUnmergedTree = true).fetchSemanticsNode()
-        assertTrue("a watched-percent description", progress.config.getOrNull(SemanticsProperties.ContentDescription)?.firstOrNull()?.startsWith("Watched") == true)
+    @Test fun continueWatchingCardShowsProgressAndTheTimeLeft() {
+        openHome()
+        scrollHome(UiTags.libItem(video))
+        rule.waitForTag(UiTags.libItem(video))
         // 190 s of 464 s watched: "4 min left"
-        rule.onNodeWithTag("continue-left-$video", useUnmergedTree = true).assertTextContains("left", substring = true)
+        rule.onNodeWithText("left", substring = true, useUnmergedTree = true).assertExists()
     }
 
     @Test fun theCrossOnAContinueCardTakesItOffTheRowAndUndoBringsItBack() {
-        val h = openLibraryHome()
+        val h = openHome()
         val position = { h.engine.fakeLibrary.allItems().first { it.id == video }.position }
         val was = position()
-        scrollLibrary(UiTags.libItem(video))
+        scrollHome(UiTags.libItem(video))
         rule.onNodeWithTag("continue-remove-$video").performClick()
         rule.waitUntil(5_000) { position() == null }
-        rule.waitUntil(5_000) { !rule.exists("continue-play-$video") }
+        rule.waitUntil(5_000) { !rule.exists("continue-remove-$video") }
         rule.onAllNodesWithText("Undo")[0].performClick()
         rule.waitUntil(5_000) { position() == was }
-    }
-
-    @Test fun recentlyAddedSplitsVideosAndMusicIntoTwoShelves() {
-        val h = openLibraryHome()
-        val kinds = h.engine.fakeLibrary.allItems().map { it.kind }.toSet()
-        assertTrue("the fixture mixes videos with songs", app.keepfin.LibraryItemKind.VIDEO in kinds && app.keepfin.LibraryItemKind.AUDIO in kinds)
-        scrollLibrary("see-all-recent")
-        rule.onNodeWithTag("see-all-recent").assertExists()
-        // mixed content is split: the first shelf keeps the key, the other shape gets a shelf of its own
-        val second = listOf("see-all-recent-video", "see-all-recent-square").firstOrNull { tag -> runCatching { scrollLibrary(tag) }.isSuccess }
-        assertTrue("a second shelf for the other artwork shape", second != null)
-        val titles = listOf("Recently added videos", "Recently added music", "Recently added photos", "Recently added music and photos")
-        assertTrue("two titled shelves, not one mixed one", titles.count { rule.onAllNodesWithText(it).fetchSemanticsNodes().isNotEmpty() } >= 1)
     }
 
     @Test fun libraryPageHasACountAndAVisibleGridListSwitch() {

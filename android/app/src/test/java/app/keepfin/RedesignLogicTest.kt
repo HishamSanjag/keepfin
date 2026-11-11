@@ -4,8 +4,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.luminance
 import app.keepfin.ui.FormatChoice
 import app.keepfin.ui.downloads.choiceSize
-import app.keepfin.ui.library.Shelves
-import app.keepfin.ui.library.ShelfShape
 import app.keepfin.ui.library.coverInitials
 import app.keepfin.ui.player.LIGHT_WASH_SCRIM
 import app.keepfin.ui.player.OnWash
@@ -53,26 +51,6 @@ class RedesignLogicTest {
         val m = media(listOf(video("v1080", 1080, size = 145 * MB, approx = true)))
         assertEquals("about 138 MB", choiceSize(m, FormatChoice(videoId = "v1080")))
         assertNull(choiceSize(media(listOf(video("v1080", 1080, size = null))), FormatChoice(videoId = "v1080")))
-    }
-
-    private fun item(id: String, kind: LibraryItemKind) = LibraryItem(id = id, space = "s", uri = id, folder = "", kind = kind, title = id, size = 1, modifiedAt = 0, addedAt = 0)
-
-    @Test fun shelvesNeverMixVideoAndSquareArtwork() {
-        val items = listOf(item("v1", LibraryItemKind.VIDEO), item("s1", LibraryItemKind.AUDIO), item("v2", LibraryItemKind.VIDEO), item("p1", LibraryItemKind.IMAGE))
-        val groups = Shelves.split(items)
-        assertEquals(listOf(ShelfShape.VIDEO, ShelfShape.SQUARE), groups.map { it.shape })
-        assertEquals(listOf("v1", "v2"), groups[0].items.map { it.id })
-        assertEquals(listOf("s1", "p1"), groups[1].items.map { it.id })
-        assertEquals("videos", groups[0].noun)
-        assertEquals("music and photos", groups[1].noun)
-        assertTrue(groups.all { g -> g.items.all { Shelves.shapeOf(it) == g.shape } })
-    }
-
-    @Test fun aSingleKindStaysOneShelfInItsOrder() {
-        assertEquals(1, Shelves.split(listOf(item("a", LibraryItemKind.AUDIO), item("b", LibraryItemKind.AUDIO))).size)
-        assertEquals("music", Shelves.split(listOf(item("a", LibraryItemKind.AUDIO))).single().noun)
-        assertEquals("photos", Shelves.split(listOf(item("a", LibraryItemKind.IMAGE))).single().noun)
-        assertTrue(Shelves.split(emptyList()).isEmpty())
     }
 
     @Test fun fallbackCoversUseInitials() {

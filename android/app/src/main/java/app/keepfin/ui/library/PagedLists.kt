@@ -1,5 +1,6 @@
 package app.keepfin.ui.library
 
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.lazy.LazyColumn
@@ -30,7 +31,11 @@ import app.keepfin.ArtistGroup
 import app.keepfin.ItemQuery
 import app.keepfin.LibraryBrowse
 import app.keepfin.LibraryItem
+import app.keepfin.core.layout.CardKind
 import app.keepfin.ui.UiTags
+import app.keepfin.ui.media.CardGap
+import app.keepfin.ui.media.ItemCard
+import app.keepfin.ui.media.rememberCardWidth
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
@@ -73,46 +78,30 @@ fun PagedItemsColumn(
     }
 }
 
-/** Items of [query] as a grid of cover cards (songs). */
+/** Items of [query] as a grid of cards (songs): as many columns as fit the card size. */
 @Composable
-fun PagedCoverGrid(ui: LibraryUi, query: ItemQuery, padding: PaddingValues, columns: Int, header: LazyGridScope.(count: Int) -> Unit = {}) {
-    val paging = rememberItemPaging(ui.browse, query)
-    val count by rememberCount(ui.browse, query)
-    val published = count
-    SideEffect { ui.selection.publishQuery(query, published) }
-    LazyVerticalGrid(
-        GridCells.Fixed(columns), Modifier.fillMaxSize().testTag(UiTags.LIB_LIST),
-        contentPadding = PaddingValues(start = 10.dp, end = 10.dp, bottom = padding.calculateBottomPadding() + 24.dp),
-    ) {
-        header(count)
-        items(paging.itemCount, key = paging.itemKey { it.id }) { index ->
-            val song = paging[index]
-            if (song != null) {
-                val picked = song.id in ui.selection.ids
-                CoverCard(
-                    song.title, (if (ui.vm.isVideoSong(song)) app.keepfin.core.spaces.Songs.VIDEO_TAG + " · " else "") + (song.artist ?: song.album.orEmpty()), song.artModel(), song.album ?: song.title, song.kind, Modifier.testTag(UiTags.libItem(song.id)),
-                    selected = if (ui.selection.mode) picked else null, onLongClick = { ui.selection.start(song.id) },
-                ) { if (ui.selection.mode) ui.selection.toggle(song.id) else ui.playFrom(query, song) }
-            }
-        }
-    }
-}
+fun PagedCoverGrid(ui: LibraryUi, query: ItemQuery, padding: PaddingValues, header: LazyGridScope.(count: Int) -> Unit = {}) =
+    PagedCardGrid(ui, query, padding, CardKind.Square, Modifier, header)
 
-/** Items of [query] as a grid of posters (videos and mixed spaces). */
+/** Items of [query] as a grid of cards (videos and mixed spaces). */
 @Composable
-fun PagedPosterGrid(ui: LibraryUi, query: ItemQuery, padding: PaddingValues, columns: Int, modifier: Modifier = Modifier, header: LazyGridScope.(count: Int) -> Unit = {}) {
+fun PagedPosterGrid(ui: LibraryUi, query: ItemQuery, padding: PaddingValues, modifier: Modifier = Modifier, header: LazyGridScope.(count: Int) -> Unit = {}) =
+    PagedCardGrid(ui, query, padding, CardKind.Video, modifier, header)
+
+@Composable
+private fun PagedCardGrid(ui: LibraryUi, query: ItemQuery, padding: PaddingValues, kind: CardKind, modifier: Modifier, header: LazyGridScope.(count: Int) -> Unit) {
     val paging = rememberItemPaging(ui.browse, query)
     val count by rememberCount(ui.browse, query)
     val published = count
     SideEffect { ui.selection.publishQuery(query, published) }
     LazyVerticalGrid(
-        GridCells.Fixed(columns), modifier.fillMaxSize().testTag(UiTags.LIB_LIST),
+        GridCells.Adaptive(rememberCardWidth(kind)), modifier.fillMaxSize().testTag(UiTags.LIB_LIST),
         contentPadding = PaddingValues(start = 10.dp, end = 10.dp, bottom = padding.calculateBottomPadding() + 24.dp),
+        horizontalArrangement = Arrangement.spacedBy(CardGap), verticalArrangement = Arrangement.spacedBy(CardGap),
     ) {
         header(count)
         items(paging.itemCount, key = paging.itemKey { it.id }) { index ->
-            val item = paging[index]
-            if (item != null) PosterCard(item, ui, Modifier) { ui.playFrom(query, item) }
+            paging[index]?.let { item -> ItemCard(item, ui, selectable = true) { ui.playFrom(query, item) } }
         }
     }
 }

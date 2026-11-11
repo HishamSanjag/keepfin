@@ -8,10 +8,11 @@ import {addToQueue, playNext} from '../player/playerStore'
 import {EmptyState, IconButton} from '../ui/controls'
 import {Icon} from '../ui/Icon'
 import {Menu, type MenuItem} from '../ui/Menu'
-import {Mosaic} from './Art'
+import {Section} from '../media/Section'
+import {useCardSizes} from '../media/useCardSizes'
 import {Hero} from './Hero'
 import {CollectionDetail} from './CollectionDetail'
-import {albumSub, artistSub, OpenCard, OpenRow} from './cells'
+import {albumSub, artistSub, OpenCard, OpenRow, sectionCell} from './cells'
 import {ArtistFilterBar, checkFailed, CHECK_FAILED_NOTE, isStub, useArtistRows} from './ArtistFollowBar'
 import {FollowButton, FollowToggle} from './Follow'
 import {useTileSelection} from './controller'
@@ -111,7 +112,7 @@ export function AlbumsGrid({albums, onOpen, selecting, onSelectingChange, densit
       count={albums.length}
       mode={view}
       rowHeight={size.songRow}
-      minCell={size.albumMin}
+      cardKind="square"
       cellAspect={1}
       cellExtra={size.cellExtra}
       gap={size.gap}
@@ -145,7 +146,7 @@ export function ArtistsGrid({artists: everyone, query = '', onOpen, selecting, o
       count={artists.length}
       mode={view}
       rowHeight={size.songRow}
-      minCell={size.artistMin}
+      cardKind="round"
       cellAspect={1}
       cellExtra={size.cellExtra + 40}
       gap={size.gap}
@@ -170,7 +171,7 @@ export function ArtistsGrid({artists: everyone, query = '', onOpen, selecting, o
         const menu = stub ? undefined : () => <Menu label={`More actions for ${artist.name}`} items={songsMenu(artist.songs)} tabbable={false} />
         const note = filter === 'following' && checkFailed(failed, artist) ? CHECK_FAILED_NOTE : undefined
         return view === 'grid' ? (
-          <OpenCard state={state} round title={artist.name} sub={sub} note={note} art={artist.artId ? [artist.artId] : []} icon="user" onOpen={open} menu={menu} select={picked.forTile(artist.key)} follow={<FollowToggle name={artist.name} />} />
+          <OpenCard state={state} kind="round" title={artist.name} sub={sub} note={note} art={artist.artId ? [artist.artId] : []} icon="user" onOpen={open} menu={menu} select={picked.forTile(artist.key)} follow={<FollowToggle name={artist.name} />} />
         ) : (
           <OpenRow
             state={state}
@@ -217,6 +218,24 @@ export function AlbumDetail({album, ...select}: {album: Album} & SelectProps) {
   )
 }
 
+function ArtistAlbums({artist, onOpenAlbum}: {artist: Artist; onOpenAlbum: (album: Album) => void}) {
+  const cardSizes = useCardSizes()
+  return (
+    <div ref={cardSizes}>
+      <Section
+        id="albums"
+        title="Albums"
+        kind="square"
+        items={artist.albums}
+        itemKey={(album) => album.key}
+        renderItem={(album, index) => (
+          <OpenCard state={sectionCell(index)} title={album.title} sub={album.year ? String(album.year) : plural(album.items.length, 'song')} art={album.artId ? [album.artId] : []} onOpen={() => onOpenAlbum(album)} label={`${album.title}${album.year ? `, ${album.year}` : ''}`} />
+        )}
+      />
+    </div>
+  )
+}
+
 export function ArtistDetail({artist, onOpenAlbum, ...select}: {artist: Artist; onOpenAlbum: (album: Album) => void} & SelectProps) {
   const songs = useMemo(() => artist.songs.slice().sort((a, b) => (a.album || '').localeCompare(b.album || '') || trackOrder(a, b)), [artist])
   return (
@@ -230,19 +249,10 @@ export function ArtistDetail({artist, onOpenAlbum, ...select}: {artist: Artist; 
       below={
         <>
           {artist.albums.length > 0 && (
-            <div className="shelf-block">
-              <h3 className="shelf-title">Albums</h3>
-              <div className="shelf" role="list" aria-label={`Albums by ${artist.name}`}>
-                {artist.albums.map((album) => (
-                  <button key={album.key} type="button" role="listitem" className="shelf-card" onClick={() => onOpenAlbum(album)} aria-label={`${album.title}${album.year ? `, ${album.year}` : ''}`}>
-                    <span className="shelf-art"><Mosaic ids={album.artId ? [album.artId] : []} kind="audio" /></span>
-                    <span className="card-title">{album.title}</span>
-                    <span className="card-sub">{album.year || plural(album.items.length, 'song')}</span>
-                  </button>
-                ))}
-              </div>
+            <>
+              <ArtistAlbums artist={artist} onOpenAlbum={onOpenAlbum} />
               <h3 className="shelf-title">All songs</h3>
-            </div>
+            </>
           )}
         </>
       }
@@ -315,7 +325,7 @@ export function PlaylistTiles({
       count={tiles.length}
       mode={view}
       rowHeight={size.songRow}
-      minCell={size.playlistMin}
+      cardKind="square"
       cellAspect={1}
       cellExtra={size.cellExtra}
       gap={size.gap}

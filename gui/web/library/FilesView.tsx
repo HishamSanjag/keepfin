@@ -4,6 +4,8 @@ import {plural} from '../format'
 import {playAll} from '../player/play'
 import {Button} from '../ui/controls'
 import {Icon} from '../ui/Icon'
+import {ItemSection} from '../media/ItemSection'
+import {useCardSizes} from '../media/useCardSizes'
 import {CollectionContext, FileRow, folderSub, ItemCard, OpenCard, OpenRow} from './cells'
 import {useCollectionController, useTileSelection} from './controller'
 import {sizes, type Density} from './density'
@@ -11,7 +13,6 @@ import {continueWatching, folderLevel, sortItems, type FolderCard, type SortKey}
 import {SelectionBar, type ViewMode} from './Toolbar'
 import {VirtualCollection} from './VirtualCollection'
 import {NoMatches} from './Empty'
-import {ContinueRemove} from './LibraryHome'
 
 export type KindFilter = 'all' | 'video' | 'audio' | 'image'
 
@@ -47,6 +48,7 @@ export function FilesView({
   density: Density
 }) {
   const size = sizes[density]
+  const cardSizes = useCardSizes()
   const flat = !!query.trim() || kind !== 'all'
   const filtered = useMemo(() => (kind === 'all' ? items : items.filter((item) => item.kind === kind)), [items, kind])
   const level = useMemo(() => (flat ? {folders: [] as FolderCard[], loose: filtered} : folderLevel(filtered, path)), [filtered, flat, path])
@@ -95,17 +97,9 @@ export function FilesView({
         </nav>
       )}
       {resume.length > 0 && (
-        <section className="shelf-block" aria-label="Continue watching">
-          <h3 className="shelf-title">Continue watching</h3>
-          <div className="shelf shelf-posters" role="list">
-            {resume.map((item, index) => (
-              <div key={item.id} role="listitem" className="shelf-item">
-                <ItemCard id={item.id} state={{index, focused: false, tabIndex: 0}} />
-                <ContinueRemove item={item} />
-              </div>
-            ))}
-          </div>
-        </section>
+        <div ref={cardSizes}>
+          <ItemSection id="continue" title="Continue watching" kind="video" items={resume} resume />
+        </div>
       )}
       <div className="list-actions">
         {loose.some((item) => item.kind === 'audio') && (
@@ -147,7 +141,7 @@ export function FilesView({
         count={entries.length}
         mode={view}
         rowHeight={size.fileRow}
-        minCell={view === 'grid' && aspect < 1 ? size.posterMin : size.coverMin}
+        cardKind={aspect < 1 ? 'video' : 'square'}
         cellAspect={aspect}
         cellExtra={size.cellExtra}
         gap={size.gap}

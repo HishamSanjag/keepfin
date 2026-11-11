@@ -33,7 +33,7 @@ export async function registerRefreshSuite({test, calls, last, sent}) {
     assert.equal(await page.getByRole('heading', {name: 'How will you use Keepfin?'}).count(), 0)
   })
   await test('mode: Settings › Library & playback switches between the two modes', async (page) => {
-    await page.getByRole('navigation', {name: 'Main navigation'}).getByRole('button', {name: 'Settings', exact: true}).click()
+    await page.locator('aside.rail').getByRole('button', {name: 'Settings', exact: true}).click()
     await page.getByRole('navigation', {name: 'Settings sections'}).getByRole('button', {name: 'Library & playback'}).click()
     const mode = page.getByRole('radiogroup', {name: 'Keepfin mode'}).first()
     await mode.getByRole('radio', {name: 'Just downloads'}).click()

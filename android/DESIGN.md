@@ -119,11 +119,12 @@ are shared with desktop: see "Motion system" in the root DESIGN.md (`ui/theme/Mo
 
 ## Atelier screens
 
-- **Library home.** Large "Your library" title with a one-line subtitle; the spaces as a wrapping row of 48dp chips (same cards,
-  menus and tags as before); then shelves. Continue watching uses wide 16:9 cards (`ContinueCard`) with an outlined play
-  button, a progress bar and the time left over the artwork. Recently added, Recently played and Favorites never mix shapes:
-  `Shelves.split` gives a 16:9 video shelf and a square music/photo shelf (two shelves with "videos" and "music" titles when
-  both kinds are present). Items without artwork get a gradient cover with the title's initials or a type glyph (`ArtTile`).
+- **Home and Library.** One job each, the same split as Windows (dev-docs/plans/MEDIA-SURFACES.md): Home is what to play next,
+  Library is everything kept by kind (spaces as a wrapping row of 48dp chips, then playlists, albums, artists, videos, photos,
+  collections). Every card is `ui/media/MediaCard` (video 16:9, square, round artist, mix, photo, tile) at the core's compact size
+  times Card size, in a `section` frame: a snapping row or a grid of at most three rows. Edit Home and Edit Library (pencil in the
+  top bar) show, hide and reorder sections (⋮ › Move up / Move down) and switch Row or Grid, with a bar above the navigation for
+  Card size and Text. Items without artwork get a gradient cover with the title's initials or a type glyph (`ArtTile`).
 - **Library pages.** The header shows the count, a sort and view menu and a visible grid/list switch (`library-view-toggle`).
 - **Downloads.** Large title, the link field with Paste, the inspected card, then the sizes as one list under a Format row
   (see the preview section above; the preset cards and "All formats (n)" were replaced on 2026-11-02). The button reads "Download · {size}". Queue rows show at most two visible

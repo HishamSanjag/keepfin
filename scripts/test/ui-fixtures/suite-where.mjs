@@ -18,7 +18,7 @@ const shoot = async (page, name, locator) => {
 
 export async function registerWhereSuite({test, sent}) {
   const settings = async (page, category) => {
-    await page.getByRole('navigation', {name: 'Main navigation'}).getByRole('button', {name: 'Settings', exact: true}).click()
+    await page.locator('aside.rail').getByRole('button', {name: 'Settings', exact: true}).click()
     await page.getByRole('navigation', {name: 'Settings sections'}).getByRole('button', {name: category}).click()
   }
   // Devices: the view below Your devices

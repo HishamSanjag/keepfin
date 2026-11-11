@@ -196,7 +196,7 @@ export async function registerStorageSuite({test, sent}) {
   }, {fake: {storagePhase: 'resumeSetup'}})
 
   await test('settings: dragging Interface size previews the number and applies the size on release; keys apply at once', async (page) => {
-    await page.getByRole('navigation', {name: 'Main navigation'}).getByRole('button', {name: 'Settings', exact: true}).click()
+    await page.locator('aside.rail').getByRole('button', {name: 'Settings', exact: true}).click()
     await page.getByRole('navigation', {name: 'Settings sections'}).getByRole('button', {name: 'Appearance'}).click()
     const slider = page.getByRole('slider', {name: 'Interface size'})
     await slider.waitFor()
@@ -248,7 +248,7 @@ export async function registerStorageSuite({test, sent}) {
   })
 
   await test('settings: Storage shows the folder, its health, Check files and the Windows Music switch', async (page) => {
-    await page.getByRole('navigation', {name: 'Main navigation'}).getByRole('button', {name: 'Settings', exact: true}).click()
+    await page.locator('aside.rail').getByRole('button', {name: 'Settings', exact: true}).click()
     await page.getByRole('navigation', {name: 'Settings sections'}).getByRole('button', {name: 'Storage'}).click()
     await sent(page, 'storageOverview')
     await page.getByText('C:\\Users\\you\\Keepfin').first().waitFor()
@@ -263,7 +263,7 @@ export async function registerStorageSuite({test, sent}) {
   })
 
   await test('settings: Storage counts the music videos in a line of their own, only when there are some', async (page) => {
-    await page.getByRole('navigation', {name: 'Main navigation'}).getByRole('button', {name: 'Settings', exact: true}).click()
+    await page.locator('aside.rail').getByRole('button', {name: 'Settings', exact: true}).click()
     await page.getByRole('navigation', {name: 'Settings sections'}).getByRole('button', {name: 'Storage'}).click()
     await sent(page, 'storageOverview')
     await page.getByText('C:\\Users\\you\\Keepfin').first().waitFor()
@@ -271,14 +271,14 @@ export async function registerStorageSuite({test, sent}) {
     assert.equal(await page.getByText(/^Music videos · /).count(), 0, 'no videos, no line')
   })
   await test('settings: Storage shows Music videos with their size', async (page) => {
-    await page.getByRole('navigation', {name: 'Main navigation'}).getByRole('button', {name: 'Settings', exact: true}).click()
+    await page.locator('aside.rail').getByRole('button', {name: 'Settings', exact: true}).click()
     await page.getByRole('navigation', {name: 'Settings sections'}).getByRole('button', {name: 'Storage'}).click()
     await page.getByRole('list', {name: 'What is in it'}).getByText('Music videos · 4.1 GB').waitFor()
   }, {fake: {musicVideoBytes: 4.1 * 1024 ** 3}})
 
   // Storage › Change location (dev-docs/plans/KEEPFIN-FOLDER-MOVE.md)
   const openStorage = async (page) => {
-    await page.getByRole('navigation', {name: 'Main navigation'}).getByRole('button', {name: 'Settings', exact: true}).click()
+    await page.locator('aside.rail').getByRole('button', {name: 'Settings', exact: true}).click()
     await page.getByRole('navigation', {name: 'Settings sections'}).getByRole('button', {name: 'Storage'}).click()
     await sent(page, 'storageOverview')
   }
@@ -356,7 +356,7 @@ export async function registerStorageSuite({test, sent}) {
 
   await test('space editor: a new space lives in the Keepfin folder; Use the default folder brings a linked one back', async (page) => {
     await page.getByRole('navigation', {name: 'Main navigation'}).getByRole('button', {name: 'Library'}).click()
-    await page.getByRole('button', {name: 'Edit', exact: true}).first().click()
+    await page.getByRole('button', {name: 'Edit Library'}).click()
     await page.getByRole('button', {name: 'Edit Kids'}).click()
     const edit = page.getByRole('dialog', {name: 'Edit Kids'})
     await edit.getByRole('button', {name: 'Use the default folder'}).click()

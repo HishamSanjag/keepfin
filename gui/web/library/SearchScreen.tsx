@@ -3,14 +3,16 @@ import {useDeferredValue, useEffect, useMemo, useState} from 'react'
 import type {Collection, LibraryItem} from '../../shared/library'
 import {plural} from '../format'
 import {navigate} from '../nav'
+import {ItemSection} from '../media/ItemSection'
+import {Section, SectionFrame} from '../media/Section'
+import {useCardSizes} from '../media/useCardSizes'
 import {Button, EmptyState} from '../ui/controls'
 import {Icon} from '../ui/Icon'
-import {Mosaic} from './Art'
-import {CollectionContext, ItemCard, SongRow} from './cells'
+import {CollectionContext, OpenCard, sectionCell, SongRow} from './cells'
 import {useCollectionController} from './controller'
 import {setLibView, type LibView} from './libNav'
 import {isSong, useLibrary} from './libStore'
-import {MusicVideoCards} from './musicVideos/MusicVideoShelf'
+import {MusicVideoSection} from './musicVideos/MusicVideoSection'
 import {matchingRows, useMusicVideoRows} from './musicVideos/rows'
 import {groupAlbums, groupArtists, matchesQuery, norm, queryWords, type Album, type Artist} from './model'
 import {routeLinks} from './OmniBox'
@@ -44,7 +46,7 @@ function SongResults({songs}: {songs: LibraryItem[]}) {
       <div className="search-songs" role="list" aria-label="Songs">
         {shown.map((item, index) => (
           <div key={item.id} role="listitem">
-            <SongRow id={item.id} state={{index, focused: false, tabIndex: index === 0 ? 0 : -1}} lead={false} />
+            <SongRow id={item.id} state={sectionCell(index)} lead={false} />
           </div>
         ))}
       </div>
@@ -54,46 +56,9 @@ function SongResults({songs}: {songs: LibraryItem[]}) {
   )
 }
 
-function MediaResults({items, label}: {items: LibraryItem[]; label: string}) {
-  const shown = items.slice(0, 20)
-  const controller = useCollectionController(shown)
-  return (
-    <CollectionContext.Provider value={controller.api}>
-      <div className="shelf shelf-posters" role="list" aria-label={label}>
-        {shown.map((item, index) => (
-          <div key={item.id} role="listitem" className="shelf-item">
-            <ItemCard id={item.id} state={{index, focused: false, tabIndex: index === 0 ? 0 : -1}} />
-          </div>
-        ))}
-      </div>
-      {controller.menuNode}
-    </CollectionContext.Provider>
-  )
-}
-
-function TileShelf({label, children}: {label: string; children: React.ReactNode}) {
-  return (
-    <div className="shelf" role="list" aria-label={label}>
-      {children}
-    </div>
-  )
-}
-
-function Section({title, count, children}: {title: string; count: number; children: React.ReactNode}) {
-  return (
-    <section className="home-section search-section" aria-label={title}>
-      <header className="shelf-head">
-        <h3 className="shelf-title">
-          {title} <span className="muted small tabular">{count}</span>
-        </h3>
-      </header>
-      {children}
-    </section>
-  )
-}
-
 export function SearchScreen() {
   const lib = useLibrary()
+  const cardSizes = useCardSizes()
   const query = useSearchQuery()
   const [filter, setFilter] = useState<Filter>('all')
   const musicVideoRows = useMusicVideoRows()
@@ -140,7 +105,7 @@ export function SearchScreen() {
   }, [])
 
   return (
-    <div className="screen home search-screen">
+    <div className="screen home search-screen" ref={cardSizes}>
       <PageHeader title="Search" caption="Your library first. Paste a link in the search bar any time to download it." />
       {lib.loaded && text && results && (
         <PageToolbar
@@ -172,77 +137,60 @@ export function SearchScreen() {
               </p>
             )}
             {show(['song']) && results.songs.length > 0 && (
-              <Section title="Songs" count={results.songs.length}>
+              <SectionFrame id="songs" title="Songs" count={results.songs.length}>
                 <SongResults songs={results.songs} />
-              </Section>
+              </SectionFrame>
             )}
-            {show(['video']) && results.videos.length + results.musicVideos.length > 0 && (
-              <Section title="Videos" count={results.videos.length + results.musicVideos.length}>
-                {results.videos.length > 0 && <MediaResults items={results.videos} label="Videos" />}
-                {results.musicVideos.length > 0 && <MusicVideoCards rows={results.musicVideos} limit={20} />}
-              </Section>
+            {show(['video']) && <ItemSection id="videos" title="Videos" count={results.videos.length} kind="video" items={results.videos} />}
+            {show(['video']) && <MusicVideoSection rows={results.musicVideos} />}
+            {show(['artist']) && (
+              <Section
+                id="artists"
+                title="Artists"
+                count={results.artists.length}
+                kind="round"
+                items={results.artists}
+                itemKey={(artist) => artist.key}
+                renderItem={(artist, index) => (
+                  <OpenCard state={sectionCell(index)} kind="round" title={artist.name} sub={plural(artist.songs.length, 'song')} art={artist.artId ? [artist.artId] : []} icon="user" onOpen={() => open({type: 'artist', key: artist.key})} />
+                )}
+              />
             )}
-            {show(['video']) && results.photos.length > 0 && (
-              <Section title="Photos" count={results.photos.length}>
-                <MediaResults items={results.photos} label="Photos" />
-              </Section>
+            {show(['album']) && (
+              <Section
+                id="albums"
+                title="Albums"
+                count={results.albums.length}
+                kind="square"
+                items={results.albums}
+                itemKey={(album) => album.key}
+                renderItem={(album, index) => (
+                  <OpenCard state={sectionCell(index)} title={album.title} sub={album.artist} art={album.artId ? [album.artId] : []} label={`${album.title}, ${album.artist}`} onOpen={() => open({type: 'album', key: album.key})} />
+                )}
+              />
             )}
-            {show(['album']) && results.albums.length > 0 && (
-              <Section title="Albums" count={results.albums.length}>
-                <TileShelf label="Albums">
-                  {results.albums.slice(0, 20).map((album) => (
-                    <div key={album.key} role="listitem" className="shelf-li">
-                    <button type="button" className="shelf-card" onClick={() => open({type: 'album', key: album.key})} aria-label={`${album.title}, ${album.artist}`}>
-                      <span className="shelf-art">
-                        <Mosaic ids={album.artId ? [album.artId] : []} kind="audio" />
-                      </span>
-                      <span className="card-title">{album.title}</span>
-                      <span className="card-sub">{album.artist}</span>
-                    </button>
-                  </div>
-                  ))}
-                </TileShelf>
-              </Section>
+            {show(['playlist']) && (
+              <Section
+                id="playlists"
+                title="Playlists"
+                count={results.playlists.length}
+                kind="square"
+                items={results.playlists}
+                itemKey={(collection) => collection.id}
+                renderItem={(collection, index) => (
+                  <OpenCard
+                    state={sectionCell(index)}
+                    title={collection.name}
+                    sub={plural(collection.itemIds.length, 'item')}
+                    art={coverOf(collection)}
+                    icon="queue"
+                    label={`${collection.name}, ${collection.kind === 'own' ? 'playlist' : 'collection'}`}
+                    onOpen={() => open(collection.kind === 'own' ? {type: 'playlist', id: collection.id} : {type: 'collection', id: collection.id})}
+                  />
+                )}
+              />
             )}
-            {show(['artist']) && results.artists.length > 0 && (
-              <Section title="Artists" count={results.artists.length}>
-                <TileShelf label="Artists">
-                  {results.artists.slice(0, 20).map((artist) => (
-                    <div key={artist.key} role="listitem" className="shelf-li">
-                    <button type="button" className="shelf-card shelf-card-round" onClick={() => open({type: 'artist', key: artist.key})} aria-label={artist.name}>
-                      <span className="shelf-art">
-                        <Mosaic ids={artist.artId ? [artist.artId] : []} kind="audio" />
-                      </span>
-                      <span className="card-title">{artist.name}</span>
-                      <span className="card-sub">{plural(artist.songs.length, 'song')}</span>
-                    </button>
-                  </div>
-                  ))}
-                </TileShelf>
-              </Section>
-            )}
-            {show(['playlist']) && results.playlists.length > 0 && (
-              <Section title="Playlists" count={results.playlists.length}>
-                <TileShelf label="Playlists">
-                  {results.playlists.slice(0, 20).map((collection) => (
-                    <div key={collection.id} role="listitem" className="shelf-li">
-                    <button
-                      type="button"
-                      className="shelf-card"
-                      onClick={() => open(collection.kind === 'own' ? {type: 'playlist', id: collection.id} : {type: 'collection', id: collection.id})}
-                      aria-label={`${collection.name}, ${collection.kind === 'own' ? 'playlist' : 'collection'}`}
-                    >
-                      <span className="shelf-art">
-                        <Mosaic ids={coverOf(collection)} kind="audio" />
-                      </span>
-                      <span className="card-title">{collection.name}</span>
-                      <span className="card-sub">{plural(collection.itemIds.length, 'item')}</span>
-                    </button>
-                  </div>
-                  ))}
-                </TileShelf>
-              </Section>
-            )}
+            {show(['video']) && <ItemSection id="photos" title="Photos" count={results.photos.length} kind="photo" items={results.photos} />}
           </section>
           <section className="search-group" aria-label="On YouTube">
             <h3 className="group-title">On YouTube</h3>

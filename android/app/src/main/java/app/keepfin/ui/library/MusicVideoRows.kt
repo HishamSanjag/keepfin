@@ -50,15 +50,16 @@ import app.keepfin.LibraryItemKind
 import app.keepfin.core.spaces.MusicVideoRow
 import app.keepfin.core.spaces.MusicVideoRows
 import app.keepfin.core.spaces.VideoSource
+import app.keepfin.core.layout.CardKind
 import app.keepfin.ui.UiTags
 import app.keepfin.ui.components.EmptyArt
 import app.keepfin.ui.components.EmptyState
+import app.keepfin.ui.media.CardActions
+import app.keepfin.ui.media.MediaCard
 import app.keepfin.ui.player.MusicVideoLengths
 import app.keepfin.ui.player.MusicVideoLogic
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-
-private const val SHELF_LIMIT = 12
 
 // A song's music video shown on its own (dev-docs/plans/MUSIC-VIDEOS.md, "A video is usable on its own"): the core lists the rows and words them,
 // the file stays the song's companion, a tap plays the video alone on the video screen. These are the shelf, the "See all" page and the row.
@@ -91,17 +92,13 @@ private fun rememberVideoLength(ui: LibraryUi, id: String): String? {
     return MusicVideoLogic.length(seconds)
 }
 
-/** The shelf on Library home and on Home's Videos filter: only when there are rows. [onSeeAll] opens the page with all of them. */
-internal fun LazyListScope.musicVideoShelf(entries: List<MusicVideoEntry>, ui: LibraryUi, onSeeAll: () -> Unit) {
-    if (entries.isEmpty()) return
-    shelf("music-videos", MusicVideoRows.SHELF, onSeeAll, Modifier.testTag(UiTags.MUSIC_VIDEO_SHELF)) {
-        items(entries.take(SHELF_LIMIT), key = { "mv-" + it.row.id }) { entry ->
-            CoverCard(
-                entry.row.title, listOfNotNull(MusicVideoRows.LABEL, entry.row.artist).joinToString(" · "), entry.item.artModel(), entry.row.title, LibraryItemKind.AUDIO,
-                Modifier.width(120.dp).testTag(UiTags.musicVideoRow(entry.row.id)),
-            ) { ui.vm.playMusicVideo(entry.item.id) }
-        }
-    }
+/** A music video as a square card: its song's cover; a tap plays the video alone. */
+@Composable
+internal fun MusicVideoCard(entry: MusicVideoEntry, ui: LibraryUi) {
+    MediaCard(
+        CardKind.Square, entry.row.title, listOfNotNull(MusicVideoRows.LABEL, entry.row.artist).joinToString(" · "),
+        CardActions({ ui.vm.playMusicVideo(entry.item.id) }), Modifier.testTag(UiTags.musicVideoRow(entry.row.id)),
+    ) { ArtTile(entry.item.artModel(), entry.row.title, LibraryItemKind.AUDIO, Modifier.fillMaxSize(), iconSize = 36.dp) }
 }
 
 /** One row: cover, title, then the label, the artist and the length; a tap plays the video alone, the menu has Play, Go to song and Delete video. */

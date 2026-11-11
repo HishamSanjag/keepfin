@@ -1,0 +1,224 @@
+/* ---------- Card sections: sizes come from the --card-<kind> variables each page sets (media/useCardSizes.ts) ---------- */
+.media-section {
+  display: grid;
+  gap: 10px;
+  min-width: 0;
+}
+.section-tools {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.section-body {
+  min-width: 0;
+}
+.section-body[data-kind='video'] {
+  --card-w: var(--card-video);
+}
+.section-body[data-kind='square'] {
+  --card-w: var(--card-square);
+}
+.section-body[data-kind='round'] {
+  --card-w: var(--card-round);
+}
+.section-body[data-kind='mix'] {
+  --card-w: var(--card-mix);
+}
+.section-body[data-kind='tile'] {
+  --card-w: var(--card-tile);
+}
+.section-body[data-kind='photo'] {
+  --card-w: max-content;
+}
+.section-item {
+  min-width: 0;
+}
+
+/* A row is one sideways line that never widens the page; the buttons in the header page it, so it has no scrollbar. */
+.section-row {
+  contain: inline-size;
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: var(--card-w);
+  gap: 16px;
+  overflow-x: auto;
+  padding: 2px 2px 6px;
+  scroll-snap-type: x proximity;
+  scrollbar-width: none;
+}
+.section-row > .section-item {
+  scroll-snap-align: start;
+}
+
+/* A grid wraps and shows at most three rows; the cards past them wait behind See all. */
+.section-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, var(--card-w));
+  justify-content: start;
+  gap: 16px;
+  padding: 2px;
+}
+.section-grid[data-kind='photo'] {
+  display: flex;
+  flex-wrap: wrap;
+}
+
+/* ---------- The card family: one shape per kind ---------- */
+.card[data-kind='photo'] {
+  width: calc(var(--card-photo) * clamp(0.6, var(--ratio, 1), 2.2));
+}
+.card-art.photo {
+  height: var(--card-photo);
+}
+.card[data-kind='mix'] .card-time {
+  top: 6px;
+  right: auto;
+  bottom: auto;
+  left: 6px;
+  letter-spacing: 0.06em;
+}
+.card[data-kind='tile'] .card-main {
+  grid-template-columns: 56px minmax(0, 1fr);
+  grid-template-areas:
+    'art title'
+    'art sub';
+  align-items: center;
+  column-gap: 12px;
+  row-gap: 0;
+  min-height: 56px;
+  padding: 4px 36px 4px 4px;
+  border-radius: var(--r-md);
+  background: var(--surface);
+  box-shadow: inset 0 0 0 1px var(--line);
+  transition: background-color var(--t-fast) var(--ease);
+}
+.card[data-kind='tile'] .card-main:hover {
+  background: var(--raised);
+}
+.card[data-kind='tile'] .card-art {
+  grid-area: art;
+  width: 56px;
+  border-radius: 6px;
+}
+.card[data-kind='tile'] .card-title {
+  grid-area: title;
+  align-self: end;
+}
+.card[data-kind='tile'] .card-sub {
+  grid-area: sub;
+  align-self: start;
+}
+.card[data-kind='tile'] .card-play {
+  display: none;
+}
+.card[data-kind='tile'] .card-actions {
+  top: 14px;
+  right: 8px;
+}
+@media (prefers-reduced-motion: reduce) {
+  .card[data-kind='tile'] .card-main {
+    transition: none;
+  }
+}
+
+/* ---------- Text under cards (Settings > Appearance); a tile always keeps its words ---------- */
+[data-card-text='title'] .card:not([data-kind='tile']) .card-sub,
+[data-card-text='none'] .card:not([data-kind='tile']) .card-sub,
+[data-card-text='none'] .card:not([data-kind='tile']) .card-title {
+  display: none;
+}
+
+/* ---------- Edit mode (Edit Home / Edit Library): section tools, dimmed hidden sections, the bar at the bottom ---------- */
+.edit-slot {
+  position: relative;
+  display: grid;
+  gap: 10px;
+  min-width: 0;
+  padding: 8px;
+  border-radius: var(--r-md);
+  box-shadow: inset 0 0 0 1px var(--line);
+}
+.edit-slot.is-hidden {
+  opacity: 0.5;
+}
+.edit-tools {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.edit-handle {
+  cursor: grab;
+}
+.edit-slot-bar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 32px;
+}
+.edit-slot:has(.media-section) > .edit-slot-bar {
+  display: none;
+}
+.edit-slot-bar .edit-tools {
+  margin-left: auto;
+}
+.edit-slot-bar:not(:last-child) .edit-slot-empty {
+  display: none;
+}
+.edit-bar {
+  position: sticky;
+  bottom: 12px;
+  z-index: 5;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 20px;
+  padding: 10px 14px;
+  border-radius: var(--r-md);
+  background: var(--raised);
+  box-shadow: 0 0 0 1px var(--line), 0 8px 24px rgb(0 0 0 / 0.25);
+}
+.edit-bar-field {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.edit-bar-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-2);
+}
+.edit-bar > .btn:first-of-type {
+  margin-left: auto;
+}
+.card-size {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.card-size input[type='range'] {
+  width: 140px;
+}
+.card-size-glyph {
+  flex: none;
+  border-radius: 2px;
+  background: var(--text-3);
+}
+.card-size-glyph.small {
+  width: 8px;
+  height: 8px;
+}
+.card-size-glyph.large {
+  width: 14px;
+  height: 14px;
+}
+.card-size-value {
+  min-width: 4ch;
+  font-size: 12px;
+  color: var(--text-2);
+}
+.card-settings {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px 24px;
+}

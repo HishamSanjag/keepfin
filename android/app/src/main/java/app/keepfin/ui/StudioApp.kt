@@ -270,7 +270,7 @@ private fun StudioScaffold(vm: StudioViewModel) {
     BackHandler(enabled = vm.subPage != null || vm.destination != Destination.DOWNLOADS || vm.fullPlayer || vm.video != null || vm.photos != null) { vm.back() }
 
     val motion = rememberPlayerMotion()
-    CompositionLocalProvider(LocalPlayerMotion provides motion) {
+    CompositionLocalProvider(LocalPlayerMotion provides motion, app.keepfin.ui.media.LocalCardPrefs provides vm.prefs.cardPrefs) {
     Box(Modifier.fillMaxSize()) {
         val reduced = Studio.reducedMotion
         val page = vm.subPage

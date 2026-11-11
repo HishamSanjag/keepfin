@@ -81,7 +81,7 @@ try {
   const nav = page.getByRole('navigation', {name: 'Main navigation'})
   const open = {
     Library: () => nav.getByRole('button', {name: 'Library', exact: true}),
-    Settings: () => page.getByRole('navigation', {name: 'Main navigation'}).getByRole('button', {name: 'Settings', exact: true}),
+    Settings: () => page.locator('aside.rail').getByRole('button', {name: 'Settings', exact: true}),
     Downloads: () => nav.getByRole('button', {name: 'Downloads', exact: true}),
   }
   for (const [tab, button] of Object.entries(open)) {

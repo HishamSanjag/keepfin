@@ -96,7 +96,32 @@
           "title": "Reorder and pin spaces",
           "summary": "Edit keeps the same grid you see on Library home. Pinned spaces show on home, and the rest are under All spaces.",
           "steps": ["Library › Edit.", "Drag a card to move it. Built-in spaces move too.", "Tap the pin to show or hide a space on home. Tap + New space to add one.", "Tap Done."],
+          "notes": {"desktop": "On Windows, Edit Library at the top of Library edits the spaces and the page's sections together."},
           "try": "library-edit"
+        },
+        {
+          "id": "arrange-pages",
+          "title": "Arrange Home and Library",
+          "summary": "Choose which sections Home and Library show, in which order, and whether each is one sideways row or a grid.",
+          "steps": ["Open Home or Library and tap the pencil (Edit Home or Edit Library).", "Tap the eye on a section to hide or show it, and Row or Grid to change how it shows.", "Move a section to change the order.", "Tap Done. Reset puts the page back as it came."],
+          "notes": {"desktop": "Drag a section's handle, or focus it and press the up and down arrow keys. Esc also ends editing.", "android": "Use the section's ⋮ menu: Move up or Move down."},
+          "try": "library"
+        },
+        {
+          "id": "card-size",
+          "title": "Card size and text",
+          "summary": "Make every card smaller or larger (80% to 125%) and choose the text under them: title and info, title only, or none. A wider window shows more cards; they grow only a little.",
+          "steps": ["Tap Edit Home or Edit Library.", "Use Card size and Text in the bar at the bottom.", "Tap Done."],
+          "notes": {"desktop": "Also in Settings › Appearance › Cards, and with Ctrl + and Ctrl − (Ctrl 0 resets) or Ctrl and the mouse wheel."},
+          "try": "library"
+        },
+        {
+          "id": "sidebar",
+          "title": "Customize the sidebar",
+          "summary": "Reorder or hide Home, Search and Library, pin spaces and playlists to the top, choose floating or docked, and set the width.",
+          "steps": ["Press the pencil at the bottom of the sidebar (Edit sidebar).", "Drag the handles to reorder, press the eye to hide a row and the pin to keep it on top.", "Turn Floating on or off, then press Done.", "Drag the sidebar's right edge to change its width; double-click it to go back."],
+          "notes": {"desktop": "Right-click any row for Pin to top or Hide. Floating or docked is also in Settings › Appearance › Sidebar. Ctrl+B collapses the sidebar."},
+          "platforms": ["desktop"]
         },
         {
           "id": "smart-spaces",

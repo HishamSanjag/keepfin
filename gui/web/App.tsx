@@ -46,6 +46,8 @@ import {onFollowFound, onReveal, requestGroupFocus, useMeta} from './store'
 import {reportCheck} from './library/collectionActions'
 import {startUpdates} from './updates'
 import {Mark} from './ui/Icon'
+import {setCardScale, stepCardScale, getCardPrefs} from './media/layoutStore'
+import {toast} from './toasts'
 
 const VideoPlayer = lazy(() => import('./player/VideoPlayer').then((module) => ({default: module.VideoPlayer})))
 
@@ -68,6 +70,36 @@ function editable(target: EventTarget | null) {
 function pressable(target: EventTarget | null) {
   const element = target as HTMLElement | null
   return !!element?.closest?.('button, a[href], summary, video, audio, [role=button], [role=radio], [role=tab], [role=switch], [role=menuitem], [role=menuitemradio], [role=checkbox], [role=slider], [role=option], [role=separator]')
+}
+
+const CARD_STEP = 0.05
+
+/** Ctrl + / Ctrl − / Ctrl 0 and Ctrl + wheel over the page change Card size, never while typing. */
+function useCardSizeKeys() {
+  useEffect(() => {
+    const announce = () => toast({tone: 'info', key: 'card-size', duration: 1500, message: `Card size ${Math.round(getCardPrefs().scale * 100)}%`})
+    const keydown = (event: KeyboardEvent) => {
+      if (!(event.ctrlKey || event.metaKey) || event.altKey || editable(event.target)) return
+      if (event.key === '+' || event.key === '=') stepCardScale(CARD_STEP)
+      else if (event.key === '-' || event.key === '_') stepCardScale(-CARD_STEP)
+      else if (event.key === '0') setCardScale(1)
+      else return
+      event.preventDefault()
+      announce()
+    }
+    const wheel = (event: WheelEvent) => {
+      if (!event.ctrlKey || editable(document.activeElement) || !(event.target as Element).closest('#main')) return
+      event.preventDefault()
+      stepCardScale(event.deltaY < 0 ? CARD_STEP : -CARD_STEP)
+      announce()
+    }
+    window.addEventListener('keydown', keydown)
+    window.addEventListener('wheel', wheel, {passive: false})
+    return () => {
+      window.removeEventListener('keydown', keydown)
+      window.removeEventListener('wheel', wheel)
+    }
+  }, [])
 }
 
 function useGlobalCapture() {
@@ -180,6 +212,7 @@ export function App() {
   const libraryOn = useLibraryEnabled()
   useLibraryBoot(libraryOn)
   const dragging = useGlobalCapture()
+  useCardSizeKeys()
   const railMode = useRailMode()
   const panels = usePanels()
   const hasSong = usePlayer((s) => !!s.currentId)

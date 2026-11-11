@@ -4,6 +4,10 @@ import android.content.Context
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import app.keepfin.core.layout.CardPrefs
+import app.keepfin.core.layout.LayoutJson
+import app.keepfin.core.layout.Page
+import app.keepfin.core.layout.PageLayout
 import app.keepfin.ui.theme.ThemeMode
 
 /**
@@ -63,6 +67,19 @@ class UiPreferences(context: Context, name: String = "studio-ui") {
     var homeFilter by mutableStateOf(prefs.getString("homeFilter", null) ?: "all")
         private set
     fun chooseHomeFilter(value: String) { homeFilter = value; prefs.edit().putString("homeFilter", value).apply() }
+
+    /** Which sections Home and Library show, in what order and as a row or a grid: the shared core's JSON, the same text as on Windows. */
+    var homeLayout by mutableStateOf(LayoutJson.readLayout(Page.Home, prefs.getString("homeLayout", null)))
+        private set
+    fun chooseHomeLayout(value: PageLayout) { homeLayout = value; prefs.edit().putString("homeLayout", LayoutJson.writeLayout(value)).apply() }
+    var libraryLayout by mutableStateOf(LayoutJson.readLayout(Page.Library, prefs.getString("libraryLayout", null)))
+        private set
+    fun chooseLibraryLayout(value: PageLayout) { libraryLayout = value; prefs.edit().putString("libraryLayout", LayoutJson.writeLayout(value)).apply() }
+
+    /** Card size and the text under cards, for every page. */
+    var cardPrefs by mutableStateOf(LayoutJson.readCardPrefs(prefs.getString("cardPrefs", null)))
+        private set
+    fun chooseCardPrefs(value: CardPrefs) { cardPrefs = value; prefs.edit().putString("cardPrefs", LayoutJson.writeCardPrefs(value)).apply() }
 
     /** Devices > Available devices as a circle or a list ("circle" / "list"); null until the person chooses, when the page picks by how many were found. */
     var devicesView by mutableStateOf<String?>(prefs.getString("devicesView", null)?.takeIf { it == "circle" || it == "list" })

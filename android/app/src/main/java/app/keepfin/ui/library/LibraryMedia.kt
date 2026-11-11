@@ -57,6 +57,8 @@ import app.keepfin.LibraryItemKind
 import app.keepfin.Space
 import app.keepfin.ui.Format
 import app.keepfin.ui.UiTags
+import app.keepfin.ui.media.CardGap
+import app.keepfin.ui.media.ItemCard
 import app.keepfin.ui.components.EmptyArt
 import app.keepfin.ui.components.EmptyState
 import app.keepfin.ui.components.NavRow
@@ -108,7 +110,6 @@ fun MediaSpace(ui: LibraryUi, space: Space, path: String, base: ItemQuery, paddi
     val folders by rememberBrowsed(ui.browse, filteredBase to path, emptyList<app.keepfin.FolderGroup>()) { if (searching) emptyList() else it.folders(space.id, path) }
     val continueItems by rememberTop(ui.browse, filteredBase.copy(subtree = null, resumable = true, order = ItemOrder.RECENT, kinds = emptySet()), 10)
     val showContinue = !searching && path.isEmpty()
-    val compact = LocalCompact.current
     val subtitle = remember(head, counts, snapshot.collections) { if (head == null) null else if (tabs) spaceSubtitle(counts.total, snapshot.collections.filter { it.space == space.id }, space.countLabel(1).substringAfter(' ')) else "${space.countLabel(counts.total)} · ${Format.bytes(counts.bytes)}" }
     SideEffect { ui.selection.publishQuery(listed, listedCount) }
 
@@ -136,7 +137,7 @@ fun MediaSpace(ui: LibraryUi, space: Space, path: String, base: ItemQuery, paddi
             searching && listedCount == 0 -> EmptyState(art = EmptyArt.SEARCH, title = "Nothing matches", body = "No item in ${space.name} matches “${query.trim()}”.", modifier = Modifier.weight(1f))
             filteredEmpty -> EmptyState(art = EmptyArt.LIBRARY, title = "Nothing here", body = "This folder is empty.", modifier = Modifier.weight(1f))
             else -> {
-                if (grid) PagedPosterGrid(ui, listed, padding, if (compact) 2 else 1, Modifier.weight(1f)) { _ ->
+                if (grid) PagedPosterGrid(ui, listed, padding, Modifier.weight(1f)) { _ ->
                     if (folders.isNotEmpty()) {
                         if (continueItems.isNotEmpty() && showContinue || listedCount > 0) item(span = { GridItemSpan(maxLineSpan) }, key = "folders-head") { Text("Folders", style = MaterialTheme.typography.titleMedium, modifier = Modifier.padding(start = 6.dp, top = 8.dp, bottom = 4.dp).semantics { heading() }) }
                         items(folders, key = { "folder-" + it.path }) { card -> FolderCardView(card) { vm.openLibraryDetail(LibraryRoute.Folder(space.id, card.path)) } }
@@ -144,7 +145,7 @@ fun MediaSpace(ui: LibraryUi, space: Space, path: String, base: ItemQuery, paddi
                     if (showContinue && continueItems.isNotEmpty()) {
                         item(span = { GridItemSpan(maxLineSpan) }, key = "continue-head") { Text("Continue watching", style = MaterialTheme.typography.titleMedium, modifier = Modifier.padding(start = 6.dp, top = 8.dp, bottom = 4.dp).semantics { heading() }) }
                         item(span = { GridItemSpan(maxLineSpan) }, key = "continue-row") {
-                            LazyRow(horizontalArrangement = Arrangement.spacedBy(4.dp)) { items(continueItems, key = { it.id }) { item -> PosterCard(item, ui, Modifier.width(180.dp)) { vm.play(continueItems, continueItems.indexOf(item)) } } }
+                            LazyRow(horizontalArrangement = Arrangement.spacedBy(CardGap)) { items(continueItems, key = { it.id }) { item -> ItemCard(item, ui) { vm.play(continueItems, continueItems.indexOf(item)) } } }
                         }
                     }
                     if (listedCount > 0 && folders.isNotEmpty()) item(span = { GridItemSpan(maxLineSpan) }, key = "loose-head") { Text("Files", style = MaterialTheme.typography.titleMedium, modifier = Modifier.padding(start = 6.dp, top = 8.dp, bottom = 4.dp).semantics { heading() }) }
@@ -152,8 +153,8 @@ fun MediaSpace(ui: LibraryUi, space: Space, path: String, base: ItemQuery, paddi
                     if (showContinue && continueItems.isNotEmpty()) {
                         item("continue-head") { Text("Continue watching", style = MaterialTheme.typography.titleMedium, modifier = Modifier.padding(start = 16.dp, top = 8.dp, bottom = 4.dp).semantics { heading() }) }
                         item("continue-row") {
-                            LazyRow(contentPadding = PaddingValues(horizontal = 10.dp), horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-                                items(continueItems, key = { it.id }) { item -> PosterCard(item, ui, Modifier.width(180.dp)) { vm.play(continueItems, continueItems.indexOf(item)) } }
+                            LazyRow(contentPadding = PaddingValues(horizontal = 16.dp), horizontalArrangement = Arrangement.spacedBy(CardGap)) {
+                                items(continueItems, key = { it.id }) { item -> ItemCard(item, ui) { vm.play(continueItems, continueItems.indexOf(item)) } }
                             }
                         }
                     }

@@ -1,5 +1,7 @@
-import {createContext, memo, useContext, type DragEvent, type MouseEvent, type ReactNode} from 'react'
+import {createContext, memo, useContext, type CSSProperties, type DragEvent, type MouseEvent, type ReactNode} from 'react'
 import {request} from '../bridge'
+import type {CardKind} from '../../shared/core/layout'
+import {timeLeft} from '../../shared/core/playback'
 import {formatBytes, formatDuration, relativeTime} from '../format'
 import {usePlayer} from '../player/playerStore'
 import {IconButton} from '../ui/controls'
@@ -9,7 +11,7 @@ import {Art, Mosaic, ProgressTick} from './Art'
 import {itemMenu} from './itemMenu'
 import {useElsewhereHint} from './elsewhere'
 import {isVideoSong, toggleFavorite, useLibItem} from './libStore'
-import {songWords} from '../../shared/library'
+import {songWords, type LibraryItem} from '../../shared/library'
 import type {Album, Artist, FolderCard as FolderModel} from './model'
 import type {CellState} from './VirtualCollection'
 import type {TileSelect} from './controller'
@@ -183,19 +185,33 @@ export const FileRow = memo(function FileRow({id, state}: {id: string; state: Ce
   )
 })
 
-/** A poster or cover tile in a grid. */
-export const ItemCard = memo(function ItemCard({id, state}: {id: string; state: CellState}) {
+/** The cell state of a card in a section: the first card is the section's tab stop. */
+export const sectionCell = (index: number): CellState => ({index, focused: false, tabIndex: index === 0 ? 0 : -1})
+
+const kindWord: Record<LibraryItem['kind'], string> = {video: 'Video', audio: 'Song', image: 'Photo', other: 'File'}
+
+/** "4 min left", or "0:11 left" under a minute, from a resume position. */
+const timeLeftLabel = (item: LibraryItem) => (item.duration && item.position !== undefined ? timeLeft(Math.max(0, item.duration - item.position)) : '')
+
+/** The art box of a card: 16:9, a square, or a photo's own shape at the page's photo height. */
+const artShape = (kind: CardKind) => (kind === 'video' ? '' : kind === 'photo' ? ' photo' : kind === 'round' ? ' square round' : ' square')
+
+/** A poster, cover, photo or tile of one library item. `kind` is its card shape; a video is 16:9 and anything else a square unless said. */
+export const ItemCard = memo(function ItemCard({id, state, kind, resume}: {id: string; state: CellState; kind?: CardKind; resume?: {onRemove: () => void}}) {
   const item = useLibItem(id)
   const away = useElsewhereHint(item)
   const api = useCollectionApi()
   const playing = usePlayer((s) => s.currentId === id)
   if (!item) return <div className="card is-gone" />
   const selected = api.selected.has(id)
-  const square = item.kind !== 'video'
-  const sub = item.missing ? away ?? 'File missing' : [item.artist, item.kind === 'video' ? formatDuration(item.duration) : item.kind === 'image' && item.width ? `${item.width}×${item.height}` : item.album].filter(Boolean).join(' · ')
+  const shape = kind ?? (item.kind === 'video' ? 'video' : 'square')
+  const details = [item.artist, item.kind === 'video' ? formatDuration(item.duration) : item.kind === 'image' && item.width ? `${item.width}×${item.height}` : item.album].filter(Boolean).join(' · ')
+  const sub = item.missing ? away ?? 'File missing' : resume ? timeLeftLabel(item) : details || (shape === 'tile' ? kindWord[item.kind] : '')
   return (
     <div
       className={`card${selected ? ' is-selected' : ''}${playing ? ' is-current' : ''}`}
+      data-kind={shape}
+      style={shape === 'photo' && item.width && item.height ? ({'--ratio': item.width / item.height} as CSSProperties) : undefined}
       onContextMenu={(event) => {
         event.preventDefault()
         api.menuAt(id, {x: event.clientX, y: event.clientY})
@@ -206,15 +222,15 @@ export const ItemCard = memo(function ItemCard({id, state}: {id: string; state: 
         className="card-main"
         data-focus
         tabIndex={state.tabIndex}
-        aria-label={item.title}
+        aria-label={resume ? `${item.title}, ${sub}` : item.title}
         aria-pressed={api.selecting ? selected : undefined}
         draggable
         onDragStart={(event) => dragOut(event, api.dragIds(id))}
         onClick={rowSelect(api, id, state.index)}
       >
-        <span className={`card-art${square ? ' square' : ''}`}>
+        <span className={`card-art${artShape(shape)}`}>
           <Art id={item.id} hasArt={item.hasArt} kind={item.kind} label={item.title} size={30} space={item.space} />
-          {item.kind === 'video' && item.duration ? <span className="card-time tabular">{formatDuration(item.duration)}</span> : null}
+          {item.kind === 'video' && item.duration && !resume ? <span className="card-time tabular">{formatDuration(item.duration)}</span> : null}
           <ProgressTick item={item} />
           {api.selecting ? (
             <span className={`check-box card-check${selected ? ' on' : ''}`} aria-hidden="true">
@@ -232,6 +248,7 @@ export const ItemCard = memo(function ItemCard({id, state}: {id: string; state: 
         <span className="card-sub">{sub}</span>
       </button>
       <span className="card-actions">
+        {resume && <IconButton icon="close" size="sm" label={`Remove ${item.title} from Continue watching`} onClick={resume.onRemove} />}
         {(item.kind === 'video' || item.kind === 'audio') && <Heart id={id} favorite={item.favorite} title={item.title} />}
         <Menu label={`More actions for ${item.title}`} items={itemMenu([item])} tabbable={false} />
       </span>
@@ -245,11 +262,14 @@ export const OpenCard = memo(function OpenCard({
   title,
   sub,
   art,
-  round,
+  kind = 'square',
   onOpen,
   menu,
+  onContextMenu,
   label,
   badge,
+  tag,
+  play,
   icon,
   select,
   follow,
@@ -259,11 +279,17 @@ export const OpenCard = memo(function OpenCard({
   title: string
   sub?: string
   art?: string[]
-  round?: boolean
+  kind?: Extract<CardKind, 'square' | 'round' | 'mix'>
   onOpen: () => void
   menu?: () => ReactNode
+  onContextMenu?: (at: {x: number; y: number}) => void
   label?: string
+  /** A small tag on the artwork (a length, "MIX"). */
   badge?: string
+  /** A word before the sub line ("Music video"). */
+  tag?: string
+  /** The card plays something rather than opening a page. */
+  play?: boolean
   icon?: string
   /** Makes the tile selectable: while selecting a click toggles it, and Ctrl+click starts selecting. */
   select?: TileSelect
@@ -273,7 +299,17 @@ export const OpenCard = memo(function OpenCard({
   note?: ReactNode
 }) {
   return (
-    <div className={`card${round ? ' card-round' : ''}${select?.selected ? ' is-selected' : ''}`}>
+    <div
+      className={`card${select?.selected ? ' is-selected' : ''}`}
+      data-kind={kind}
+      onContextMenu={
+        onContextMenu &&
+        ((event) => {
+          event.preventDefault()
+          onContextMenu({x: event.clientX, y: event.clientY})
+        })
+      }
+    >
       <button
         type="button"
         className="card-main"
@@ -283,7 +319,7 @@ export const OpenCard = memo(function OpenCard({
         aria-pressed={select?.selecting ? select.selected : undefined}
         onClick={(event) => (select && (select.selecting || event.ctrlKey || event.metaKey) ? select.toggle() : onOpen())}
       >
-        <span className={`card-art square${round ? ' round' : ''}`}>
+        <span className={`card-art${artShape(kind)}`}>
           {art && art.length ? <Mosaic ids={art} kind="audio" /> : <span className="art art-placeholder"><Icon name={icon || 'disc'} size={30} /></span>}
           {badge && <span className="card-time tabular">{badge}</span>}
           {select?.selecting ? (
@@ -292,14 +328,17 @@ export const OpenCard = memo(function OpenCard({
             </span>
           ) : (
             <span className="card-play" aria-hidden="true">
-              <Icon name="chevron" size={18} />
+              <Icon name={play ? 'play' : 'chevron'} size={18} />
             </span>
           )}
         </span>
         <span className="card-title" title={title}>
           {title}
         </span>
-        <span className="card-sub">{note ? <span className="row-note">{note}</span> : sub}</span>
+        <span className="card-sub">
+          {tag && <span className="row-tag">{tag}</span>}
+          {note ? <span className="row-note">{note}</span> : sub}
+        </span>
       </button>
       {menu && <span className="card-actions">{menu()}</span>}
       {follow && <div className="card-follow">{follow}</div>}

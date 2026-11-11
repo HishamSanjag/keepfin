@@ -96,9 +96,10 @@ class HomeShelves(
     val resume: List<LibraryItem>,
     val listening: List<HomeMix>,
     val recent: List<LibraryItem>,
+    val recentMusic: List<LibraryItem>,
 ) {
     companion object {
-        val EMPTY = HomeShelves(emptyList(), emptyList(), emptyList(), emptyList())
+        val EMPTY = HomeShelves(emptyList(), emptyList(), emptyList(), emptyList(), emptyList())
 
         private fun kinds(kind: HomeKind): Set<LibraryItemKind> = when (kind) {
             HomeKind.ALL -> setOf(LibraryItemKind.VIDEO, LibraryItemKind.AUDIO, LibraryItemKind.IMAGE)
@@ -126,7 +127,8 @@ class HomeShelves(
             val resume = HomeLogic.continueWatching(b.top(ItemQuery(resumable = true, order = app.keepfin.ItemOrder.RECENT), 24), kind)
             val recent = if (kind == HomeKind.MUSIC) emptyList() else b.top(ItemQuery(kinds = shown - LibraryItemKind.AUDIO, order = app.keepfin.ItemOrder.ADDED), 40).filterNot { HomeLogic.isSong(it, musicSpaces) }
             val listening = if (kind == HomeKind.VIDEOS || kind == HomeKind.PHOTOS) emptyList() else mixes(b, kind, now, musicSpaces)
-            return HomeShelves(quick, resume, listening, recent)
+            val recentMusic = if (kind == HomeKind.ALL || kind == HomeKind.MUSIC) b.top(ItemQuery(songs = true, order = app.keepfin.ItemOrder.ADDED), 12) else emptyList()
+            return HomeShelves(quick, resume, listening, recent, recentMusic)
         }
 
         /**

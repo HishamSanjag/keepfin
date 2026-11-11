@@ -47,6 +47,7 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import app.keepfin.ArtistRelease
 import app.keepfin.LibraryItemKind
+import app.keepfin.core.home.ReleaseCard
 import app.keepfin.core.home.ReleaseFeed
 import app.keepfin.ui.StudioSheet
 import app.keepfin.ui.StudioViewModel
@@ -54,17 +55,22 @@ import app.keepfin.ui.UiTags
 import app.keepfin.ui.library.ArtTile
 import app.keepfin.ui.theme.tabular
 
-/**
- * Home's one slim card (GitHub #51): shown only while the setting is on and artists you follow have releases you have not seen. Review
- * opens the sheet, x marks them seen (the card returns only for newer ones) and "Don't show on Home" turns it off for good. Shows nothing otherwise.
- */
+/** Home's new-releases card when it should show: the setting is on and artists you follow have releases you have not seen. Null otherwise. */
 @Composable
-internal fun NewReleasesCard(vm: StudioViewModel, modifier: Modifier = Modifier) {
+internal fun rememberReleaseCard(vm: StudioViewModel): ReleaseCard? {
     val state by vm.following.state.collectAsState()
     val settings by vm.engine.settings.collectAsStateWithLifecycle()
     val now = remember(state) { System.currentTimeMillis() }
-    val card = remember(state, settings.newReleasesOnHome, now) { FollowCard.card(state, settings.newReleasesOnHome, now) }
-    if (!card.show) return
+    return remember(state, settings.newReleasesOnHome, now) { FollowCard.card(state, settings.newReleasesOnHome, now).takeIf { it.show } }
+}
+
+/**
+ * Home's one slim card. Review opens the sheet, x marks the releases seen (the card returns only for newer ones) and
+ * "Don't show on Home" turns it off for good.
+ */
+@Composable
+internal fun NewReleasesCard(vm: StudioViewModel, card: ReleaseCard, modifier: Modifier = Modifier) {
+    val state by vm.following.state.collectAsState()
     val byId = remember(state) { state.releases.associateBy { it.id } }
     val names = remember(state, card) { FollowCard.namesLine(FollowCard.names(state, card)) }
     val colors = MaterialTheme.colorScheme

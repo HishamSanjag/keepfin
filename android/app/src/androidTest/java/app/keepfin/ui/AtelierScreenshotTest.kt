@@ -61,10 +61,8 @@ class AtelierScreenshotTest {
         h.show(rule)
         rule.waitForTag(UiTags.LIB_LIST)
         shot("lib-home", dark)
-        rule.onNodeWithTag(UiTags.LIB_LIST).performScrollToNode(hasTestTag("see-all-recent"))
+        rule.onNodeWithTag(UiTags.LIB_LIST).performScrollToNode(hasTestTag(UiTags.LIB_SHELF_COLLECTIONS))
         shot("lib-home-shelves", dark)
-        rule.onNodeWithTag(UiTags.LIB_LIST).performScrollToNode(hasTestTag("see-all-played"))
-        shot("lib-home-played", dark)
     }
 
     @Test fun spaceLight() = space(false)

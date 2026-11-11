@@ -88,3 +88,12 @@ export const usePanelWidth = panel.use
 export const getPanelWidth = panel.get
 export const setPanelWidth = (width: number) => panel.set(Math.round(Math.min(PANEL_MAX, Math.max(PANEL_MIN, width))))
 export const resetPanelWidth = () => panel.set(PANEL_DEFAULT)
+
+export const RAIL_DEFAULT = 224
+export const RAIL_MIN = 200
+export const RAIL_MAX = 320
+const railWidth = makeStore<number>('keepfin-rail-width', RAIL_DEFAULT, (v) => typeof v === 'number' && v >= RAIL_MIN && v <= RAIL_MAX)
+export const useRailWidth = railWidth.use
+export const getRailWidth = railWidth.get
+export const setRailWidth = (width: number) => railWidth.set(Math.round(Math.min(RAIL_MAX, Math.max(RAIL_MIN, width))))
+export const resetRailWidth = () => railWidth.set(RAIL_DEFAULT)

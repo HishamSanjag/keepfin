@@ -16,7 +16,7 @@ const labels = ['Downloads', 'Library & playback', 'Storage & copies', 'Devices'
 export async function registerSettingsSuite({test, sent}) {
   const rail = (page) => page.getByRole('navigation', {name: 'Settings sections'})
   const open = async (page, label) => {
-    await page.getByRole('navigation', {name: 'Main navigation'}).getByRole('button', {name: 'Settings', exact: true}).click()
+    await page.locator('aside.rail').getByRole('button', {name: 'Settings', exact: true}).click()
     if (label) await rail(page).getByRole('button', {name: label}).click()
   }
   const title = (page) => page.locator('.settings-title')
@@ -204,8 +204,8 @@ export async function registerSettingsSuite({test, sent}) {
     assert.equal(await rail(page).getByRole('button').filter({hasText: /^(General|Updates|Performance|Network|Support)$/}).count(), 0)
   }, {fake: {engine: 'error'}})
 
-  await test('settings: Support Keepfin is its own page, apart from Help, and the sidebar’s Support button opens it', async (page) => {
-    await page.locator('.rail-foot').getByRole('button', {name: 'Support Keepfin'}).click()
+  await test('settings: Support Keepfin is its own page, apart from Help', async (page) => {
+    await open(page, 'Support Keepfin')
     assert.equal(await title(page).textContent(), 'Support Keepfin')
     await page.getByRole('heading', {name: 'Hisham Sanjag'}).waitFor()
     await open(page, 'Help')
@@ -215,14 +215,14 @@ export async function registerSettingsSuite({test, sent}) {
     await page.getByRole('heading', {name: 'Hisham Sanjag'}).waitFor()
   })
 
-  await test('sidebar: the last row is the version number, beside Support, and opens About Keepfin', async (page) => {
-    const entry = page.locator('.rail-foot .side-about')
+  await test('sidebar: the last row is the version number, beside Edit sidebar and Settings, and opens About Keepfin', async (page) => {
+    const entry = page.locator('.rail-foot .side-version')
     await entry.waitFor()
     assert.match(await entry.textContent(), /^0\.4\.0$/)
     assert.match(await entry.getAttribute('aria-label'), /About Keepfin, version 0\.4\.0/)
-    // two chips of one kind, side by side
-    const [a, s] = [await entry.boundingBox(), await page.locator('.rail-foot .side-support').boundingBox()]
-    assert.ok(Math.abs(a.y - s.y) < 2 && Math.abs(a.height - s.height) < 2, 'the version and Support are one row of the same height')
+    // one row: the version, then the two buttons
+    const [a, s] = [await entry.boundingBox(), await page.locator('.rail-foot').getByRole('button', {name: 'Settings', exact: true}).boundingBox()]
+    assert.ok(Math.abs(a.y + a.height / 2 - (s.y + s.height / 2)) < 2 && s.x > a.x, 'the version and Settings share one row')
     await entry.click()
     assert.equal(await title(page).textContent(), 'About Keepfin')
     assert.equal(await entry.getAttribute('aria-current'), 'page')

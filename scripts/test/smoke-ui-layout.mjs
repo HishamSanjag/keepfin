@@ -26,7 +26,7 @@ const finishedList = async (page) => {
   await nav(page, 'Downloads')
   await page.getByRole('radio', {name: /^Finished/}).click()
 }
-const nav = (page, name) => (name === 'Settings' ? page.getByRole('navigation', {name: 'Main navigation'}).getByRole('button', {name: 'Settings', exact: true}) : page.getByRole('navigation', {name: 'Main navigation'}).getByRole('button', {name})).click()
+const nav = (page, name) => (name === 'Settings' ? page.locator('aside.rail').getByRole('button', {name: 'Settings', exact: true}) : page.getByRole('navigation', {name: 'Main navigation'}).getByRole('button', {name})).click()
 const group = (page, name) => page.getByRole('navigation', {name: 'Settings sections'}).getByRole('button', {name}).click()
 
 /** Screens: name, fake options, optional file name for screenshots, setup. */
@@ -312,7 +312,7 @@ const screens = [
     fake: {simulate: false, following: 'seeded'},
     setup: async (page) => {
       await nav(page, 'Home')
-      await page.getByRole('region', {name: 'New releases from artists you follow'}).getByRole('button', {name: 'Review'}).waitFor()
+      await page.getByRole('region', {name: 'New from artists you follow'}).getByRole('button', {name: 'Review'}).waitFor()
     },
   },
   {
@@ -320,7 +320,7 @@ const screens = [
     fake: {simulate: false, following: 'seeded'},
     setup: async (page) => {
       await nav(page, 'Home')
-      await page.getByRole('region', {name: 'New releases from artists you follow'}).getByRole('button', {name: 'Review'}).click()
+      await page.getByRole('region', {name: 'New from artists you follow'}).getByRole('button', {name: 'Review'}).click()
       await page.getByRole('dialog', {name: 'New releases'}).getByRole('button', {name: 'Keep Salt Season'}).waitFor()
     },
   },
@@ -495,7 +495,7 @@ const screens = [
     fake: {simulate: false, libraryScenario: 'v2'},
     setup: async (page) => {
       await nav(page, 'Library')
-      await page.getByRole('region', {name: 'Spaces', exact: true}).getByRole('button', {name: 'Edit', exact: true}).click()
+      await page.getByRole('button', {name: 'Edit Library'}).click()
       await page.getByRole('list', {name: 'Spaces, in order'}).waitFor()
     },
   },
@@ -588,7 +588,7 @@ const screens = [
     fake: {simulate: false, libraryScenario: 'v2'},
     setup: async (page) => {
       await nav(page, 'Library')
-      await page.getByRole('region', {name: 'Spaces', exact: true}).getByRole('button', {name: 'Edit', exact: true}).click()
+      await page.getByRole('button', {name: 'Edit Library'}).click()
       await page.getByRole('region', {name: 'Spaces', exact: true}).getByRole('button', {name: 'New space'}).click()
       const dialog = page.getByRole('dialog', {name: 'New space'})
       await dialog.getByLabel('Name').fill('Workout mix')

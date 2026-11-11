@@ -7,7 +7,7 @@ import assert from 'node:assert/strict'
 export async function registerHomeFollowSuite({test, calls, last}) {
   const nav = (page) => page.getByRole('navigation', {name: 'Main navigation'})
   const home = (page) => nav(page).getByRole('button', {name: 'Home'}).click()
-  const card = (page) => page.getByRole('region', {name: 'New releases from artists you follow'})
+  const card = (page) => page.getByRole('region', {name: 'New from artists you follow'})
   const mixes = (page) => page.getByRole('region', {name: 'Made from your listening'})
   const review = (page) => page.getByRole('dialog', {name: 'New releases'})
   const artistList = async (page) => {
@@ -24,7 +24,6 @@ export async function registerHomeFollowSuite({test, calls, last}) {
     await mixes(page).getByRole('button', {name: /^Recently added music/}).waitFor()
     assert.equal(await mixes(page).getByRole('button', {name: /^On repeat/}).count(), 0, 'a mix with too little data is not shown')
     assert.equal(await card(page).count(), 0, 'nobody followed: no card')
-    assert.equal(await page.getByText('New from artists you follow').count(), 0, 'the old Home feed is gone')
     assert.equal(await page.getByRole('complementary', {name: 'Following'}).count(), 0, 'and its side panel')
   })
 
@@ -87,7 +86,7 @@ export async function registerHomeFollowSuite({test, calls, last}) {
     await page.evaluate(() => window.__fake.followingNewRelease('Fresh Tide'))
     await mixes(page).waitFor()
     assert.equal(await card(page).count(), 0)
-    await nav(page).getByRole('button', {name: 'Settings', exact: true}).click()
+    await page.locator('aside.rail').getByRole('button', {name: 'Settings', exact: true}).click()
     await page.getByRole('navigation', {name: 'Settings sections'}).getByRole('button', {name: 'Library'}).click()
     const toggle = page.getByRole('switch', {name: 'Show new releases on Home'})
     await toggle.waitFor()

@@ -53,10 +53,11 @@ class MusicVideoRowsUiTest {
     @Before fun setUp() { StudioEngine.override = null }
     @After fun tearDown() { StudioEngine.override = null; SimulatedPlayerPort.ticks = true }
 
-    private fun openLibraryHome(withVideo: Boolean = true): Harness {
+    private fun openHome(withVideo: Boolean = true): Harness {
         val h = Harness("library")
         if (withVideo) h.engine.fakeLibrary.addSongWithMusicVideo(sintel)
-        h.vm.navigate(Destination.LIBRARY)
+        h.vm.prefs.chooseHomeFilter("videos")
+        h.vm.navigate(Destination.HOME)
         h.show(rule)
         return h
     }
@@ -73,19 +74,17 @@ class MusicVideoRowsUiTest {
     // ---- the shelf and the rows ------------------------------------------------------------------------------------------------------------
 
     @Test fun theShelfShowsOnlyWhenSomeSongHasAVideoAndHasSeeAll() {
-        openLibraryHome(withVideo = false)
-        rule.waitForTag(UiTags.LIB_LIST)
-        // the Collections shelf is above where the Music videos shelf would be: with it on screen, the next shelf head is the one after
-        rule.scrollListTo(UiTags.LIB_LIST, "see-all-collections")
+        openHome(withVideo = false)
+        rule.waitForTag(UiTags.HOME_LIST)
         rule.waitForIdle()
         assertFalse("no shelf without a video", rule.exists(UiTags.MUSIC_VIDEO_SHELF))
         assertFalse(rule.exists("see-all-music-videos"))
     }
 
     @Test fun theShelfHasTheTitleSeeAllAndOneCardPerVideo() {
-        openLibraryHome()
-        rule.waitForTag(UiTags.LIB_LIST)
-        rule.scrollListTo(UiTags.LIB_LIST, UiTags.MUSIC_VIDEO_SHELF)
+        openHome()
+        rule.waitForTag(UiTags.HOME_LIST)
+        rule.scrollListTo(UiTags.HOME_LIST, UiTags.MUSIC_VIDEO_SHELF)
         rule.onNodeWithText(MusicVideoRows.SHELF).assertExists()
         rule.waitForTag(UiTags.musicVideoRow(rowId))
         rule.onNodeWithTag("see-all-music-videos").performClick()

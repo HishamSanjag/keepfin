@@ -16,13 +16,18 @@ export async function registerSpacesV2Suite({test, last, calls, sent}) {
   }
   const rows = (page, label) => page.getByRole('list', {name: label}).locator('[role=listitem]').count()
 
-  await test('sidebar: Edit beside Spaces opens the Library in edit mode from any page, and ends it', async (page) => {
+  await test('sidebar: hiding a space in Edit sidebar is the same switch as Home, and New space beside Spaces opens the dialog', async (page) => {
     await mainNav(page).getByRole('button', {name: 'Downloads'}).click()
-    await side(page).getByRole('button', {name: 'Edit spaces'}).click()
-    await hub(page).getByRole('button', {name: 'New space'}).waitFor()
-    await hub(page).getByRole('button', {name: 'Move Videos up'}).waitFor()
-    await side(page).getByRole('button', {name: 'Done editing spaces'}).click()
-    await hub(page).getByRole('button', {name: 'New space'}).waitFor({state: 'detached'})
+    await page.locator('aside.rail').getByRole('button', {name: 'Edit sidebar'}).click()
+    await side(page).getByRole('button', {name: 'Hide Videos'}).click()
+    await sent(page, 'spaceSave')
+    const saved = await last(page, 'spaceSave')
+    assert.equal(saved.spaceDef.id, 'videos')
+    assert.equal(saved.spaceDef.pinned, false)
+    await page.locator('aside.rail').getByRole('button', {name: 'Done', exact: true}).click()
+    await side(page).getByRole('button', {name: 'New space'}).click()
+    await page.getByRole('dialog').waitFor()
+    await page.keyboard.press('Escape')
   }, {fake: V2})
 
   await test('Favorites is a kept space: listed with the others right after Videos, and offers no Remove', async (page) => {
@@ -57,8 +62,8 @@ export async function registerSpacesV2Suite({test, last, calls, sent}) {
     const cards = hub(page).getByRole('list', {name: 'Pinned spaces'})
     for (const name of ['Downloads', 'Music', 'Videos']) await cards.getByRole('button', {name: new RegExp('^' + name)}).waitFor()
     await cards.getByRole('button', {name: 'All spaces · 3 more'}).waitFor()
-    assert.equal(await page.getByRole('button', {name: /New space/}).count(), 0, 'no New space outside edit mode')
-    await hub(page).getByRole('button', {name: 'Edit', exact: true}).click()
+    assert.equal(await page.locator('main.main').getByRole('button', {name: /New space/}).count(), 0, 'no New space outside edit mode')
+    await page.getByRole('button', {name: 'Edit Library'}).click()
     await hub(page).getByRole('button', {name: 'New space'}).waitFor()
     // Keyboard-accessible reorder.
     await hub(page).getByRole('button', {name: 'Move Videos up'}).click()
@@ -73,12 +78,12 @@ export async function registerSpacesV2Suite({test, last, calls, sent}) {
     // Built-ins can be moved like any other space; pinning shows a space on home.
     await hub(page).getByRole('switch', {name: 'Show Kids on home'}).click()
     await page.waitForFunction(() => window.__calls.some((c) => c.op === 'spaceSave' && c.spaceDef.id === 'kids' && c.spaceDef.pinned === true))
-    await hub(page).getByRole('button', {name: 'Done'}).click()
+    await page.getByRole('group', {name: 'Edit page layout'}).getByRole('button', {name: 'Done'}).click()
     await cards.getByRole('button', {name: /^Kids/}).waitFor()
     await cards.getByRole('button', {name: 'All spaces · 2 more'}).click()
     await page.getByRole('searchbox', {name: 'Filter spaces'}).waitFor()
     assert.equal(await page.getByRole('group', {name: 'Show in Library'}).getByRole('button', {name: 'Spaces', exact: true}).getAttribute('aria-pressed'), 'true')
-    assert.equal(await page.getByRole('button', {name: /New space/}).count(), 1, 'All spaces offers New space on its header')
+    assert.equal(await page.locator('main.main').getByRole('button', {name: /New space/}).count(), 1, 'All spaces offers New space on its header')
     await page.getByRole('searchbox', {name: 'Filter spaces'}).fill('gym')
     await page.getByRole('region', {name: 'Smart spaces'}).getByRole('button', {name: /^Gym/}).waitFor()
     assert.equal(await page.getByRole('region', {name: 'Folders'}).count(), 0)
@@ -86,7 +91,7 @@ export async function registerSpacesV2Suite({test, last, calls, sent}) {
 
   await test('smart space: create with rules and a live count, then open and play it as a whole', async (page) => {
     await toLibrary(page)
-    await hub(page).getByRole('button', {name: 'Edit', exact: true}).click()
+    await page.getByRole('button', {name: 'Edit Library'}).click()
     await hub(page).getByRole('button', {name: 'New space'}).click()
     const dialog = page.getByRole('dialog', {name: 'New space'})
     await dialog.getByLabel('Name').fill('Workout mix')
@@ -113,7 +118,7 @@ export async function registerSpacesV2Suite({test, last, calls, sent}) {
     assert.equal(def.color, 'teal')
     assert.equal(def.icon, 'dumbbell')
     assert.deepEqual(def.rules.rules, [{field: 'tag', values: ['workout']}])
-    await hub(page).getByRole('button', {name: 'Done'}).click()
+    await page.getByRole('group', {name: 'Edit page layout'}).getByRole('button', {name: 'Done'}).click()
     await side(page).getByRole('button', {name: /^Workout mix/}).click()
     await page.getByText(/Smart · 2 matches/).waitFor()
     await page.getByRole('button', {name: 'Play all'}).first().click()
@@ -425,7 +430,7 @@ export async function registerSpacesV2Suite({test, last, calls, sent}) {
   }, {fake: {libraryScenario: 'off'}})
 
   await test('settings: "Keep music videos automatically" is off, turns on, and is found by search', async (page) => {
-    await page.getByRole('navigation', {name: 'Main navigation'}).getByRole('button', {name: 'Settings', exact: true}).click()
+    await page.locator('aside.rail').getByRole('button', {name: 'Settings', exact: true}).click()
     const switchEl = page.getByRole('switch', {name: 'Keep music videos automatically'})
     await switchEl.waitFor()
     await page.getByText('Songs you download as audio also get their official music video, where there is one. Videos are large.').waitFor()
@@ -483,7 +488,7 @@ export async function registerSpacesV2Suite({test, last, calls, sent}) {
   }, {fake: V2})
 
   await test('settings: Open Keepfin on, Import tags, and the Settings › trail', async (page) => {
-    await page.getByRole('navigation', {name: 'Main navigation'}).getByRole('button', {name: 'Settings', exact: true}).click()
+    await page.locator('aside.rail').getByRole('button', {name: 'Settings', exact: true}).click()
     await page.getByRole('navigation', {name: 'Settings sections'}).getByRole('button', {name: 'Library'}).click()
     await page.getByRole('heading', {name: 'Settings', level: 1}).waitFor()
     await page.getByRole('heading', {name: 'Library & playback', level: 2}).waitFor()

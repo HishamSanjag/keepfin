@@ -21,7 +21,7 @@ export async function registerDevicesSuite({test, sent}) {
     return page.evaluate((op) => [...window.__calls].reverse().find((c) => c.op === op), op)
   }
   const openDevices = async (page) => {
-    await page.getByRole('navigation', {name: 'Main navigation'}).getByRole('button', {name: 'Settings', exact: true}).click()
+    await page.locator('aside.rail').getByRole('button', {name: 'Settings', exact: true}).click()
     await page.getByRole('navigation', {name: 'Settings sections'}).getByRole('button', {name: 'Devices'}).click()
     await sent(page, 'devicesState')
   }
@@ -817,7 +817,7 @@ export async function registerDevicesSuite({test, sent}) {
   // ---------------------------------------------------------------- Add a copy -> A paired device
   for (const mode of ['dark', 'light']) {
     await test(`copies (${mode}): Add a copy offers a paired device that allows it, and says what to turn on for one that does not`, async (page) => {
-      await page.getByRole('navigation', {name: 'Main navigation'}).getByRole('button', {name: 'Settings', exact: true}).click()
+      await page.locator('aside.rail').getByRole('button', {name: 'Settings', exact: true}).click()
       await page.getByRole('navigation', {name: 'Settings sections'}).getByRole('button', {name: 'Storage'}).click()
       await sent(page, 'copiesState')
       await page.getByRole('button', {name: /^Backup drive \(E:\):/}).waitFor()
@@ -856,7 +856,7 @@ export async function registerDevicesSuite({test, sent}) {
   }
 
   await test('copies: when no paired device allows a copy the choices are shown disabled with the reason', async (page) => {
-    await page.getByRole('navigation', {name: 'Main navigation'}).getByRole('button', {name: 'Settings', exact: true}).click()
+    await page.locator('aside.rail').getByRole('button', {name: 'Settings', exact: true}).click()
     await page.getByRole('navigation', {name: 'Settings sections'}).getByRole('button', {name: 'Storage'}).click()
     await page.getByRole('button', {name: /^Backup drive \(E:\):/}).waitFor()
     await page.getByRole('button', {name: 'Add a copy'}).first().click()

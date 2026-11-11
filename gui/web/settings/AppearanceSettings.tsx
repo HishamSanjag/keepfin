@@ -1,8 +1,10 @@
 import {useCallback, useEffect, useRef, useState} from 'react'
 import {setScale, setTheme, useAppearance} from '../appearance'
 import {native} from '../bridge'
+import {CardSizeSlider, CardTextChoice} from '../media/CardControls'
 import {useKeepfinMode} from '../mode'
 import {layoutById, layouts, usePlayerLayout} from '../player/full/layouts'
+import {setSidebarStyle, useSidebarPrefs, type SidebarStyle} from '../shell/sidebarPrefs'
 import {updateSettings, useMeta} from '../store'
 import {Button, Segmented} from '../ui/controls'
 import {Group, SettingCard} from '../ui/SettingCard'
@@ -114,6 +116,7 @@ export function AppearanceSettings() {
   const appearance = useAppearance()
   const {settings} = useMeta()
   const mode = useKeepfinMode()
+  const sidebar = useSidebarPrefs()
   return (
     <>
       <Group cards title="When Keepfin opens">
@@ -155,8 +158,33 @@ export function AppearanceSettings() {
             />
           }
         />
+        <SettingCard
+          anchor="sidebar-style"
+          icon="sidebar"
+          title="Sidebar"
+          description="Floating sits as a rounded panel beside the page; docked runs along the window's edge. Drag its right edge to change its width."
+          control={
+            <Segmented<SidebarStyle>
+              label="Sidebar"
+              value={sidebar.style}
+              onChange={setSidebarStyle}
+              options={[
+                {value: 'floating', label: 'Floating'},
+                {value: 'docked', label: 'Docked'},
+              ]}
+            />
+          }
+        />
         {mode === 'full' && <PlayerStyleSetting />}
         <SettingCard anchor="size" icon="zoomIn" title="Interface size" description="Scales text and controls from 80% to 140%." control={<ScaleControl scale={appearance.scale} />} />
+        {mode === 'full' && (
+          <SettingCard anchor="cards" icon="grid" title="Cards" description="How big the covers and thumbnails are, from 80% to 125%, and the words under them. Ctrl + and Ctrl − change the size anywhere.">
+            <div className="card-settings">
+              <CardSizeSlider />
+              <CardTextChoice />
+            </div>
+          </SettingCard>
+        )}
       </Group>
     </>
   )

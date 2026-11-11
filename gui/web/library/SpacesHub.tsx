@@ -9,7 +9,7 @@ import {PageToolbar} from '../shell/PageToolbar'
 import {Button, IconButton, Switch} from '../ui/controls'
 import {Icon} from '../ui/Icon'
 import {openDialog} from './dialogState'
-import {setLibFilter, setLibView, setSpacesEditing, useSpacesEditing} from './libNav'
+import {setLibFilter, setLibView, useSpacesEditing} from './libNav'
 import {libraryAct, useLibrarySettings} from './libStore'
 import {SearchBox} from './Toolbar'
 import {dropId, useSpaceCounts} from './spacesModel'
@@ -134,12 +134,12 @@ export function SpacesHub() {
   const pinnedCount = settings.spaces.filter(isPinned).length
   return (
     <section className="hub" aria-label="Spaces">
-      <header className="shelf-head">
-        <h3 className="shelf-title">Spaces</h3>
-        <Button size="sm" variant={editing ? 'primary' : 'secondary'} icon={editing ? 'check' : 'edit'} disabled={!native} aria-pressed={editing} onClick={() => setSpacesEditing(!editing)}>
-          {editing ? 'Done' : 'Edit'}
-        </Button>
-      </header>
+      {/* Edit Library turns editing on; its own bar then carries the title */}
+      {!editing && (
+        <header className="shelf-head">
+          <h3 className="shelf-title">Spaces</h3>
+        </header>
+      )}
       {editing ? (
         <>
           <p className="muted small hub-help">

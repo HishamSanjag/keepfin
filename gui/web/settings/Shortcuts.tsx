@@ -11,6 +11,7 @@ const shortcuts: [string[], string][] = [
   [['Ctrl', 'L'], 'Focus the link field on Downloads'],
   [['Ctrl', 'V'], 'Paste and inspect a link from anywhere'],
   [['Ctrl', 'A'], 'Select everything in a list'],
+  [['Ctrl', '+'], 'Make cards bigger (Ctrl + − smaller, Ctrl + 0 back to 100%, or Ctrl + the mouse wheel)'],
   [['Alt', '←'], 'Go back (Alt + → goes forward)'],
   [['Shift', 'Click'], 'Select a range of entries'],
 ]

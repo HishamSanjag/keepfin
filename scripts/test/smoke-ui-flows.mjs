@@ -3,6 +3,7 @@
 // provider behaviour; real engine behaviour is covered by engine:test and gui:real-test.
 import assert from 'node:assert/strict'
 import {startServer, launch, openApp} from './ui-fixtures/harness.mjs'
+import {registerEditModeSuite} from './ui-fixtures/suite-edit-mode.mjs'
 import {registerLibrarySuite} from './ui-fixtures/suite-library.mjs'
 import {registerSpacesV2Suite} from './ui-fixtures/suite-spaces-v2.mjs'
 import {registerGuideSuite} from './ui-fixtures/suite-guide.mjs'
@@ -74,7 +75,7 @@ const finished = async (page, filter = 'Finished') => {
   await page.getByRole('navigation', {name: 'Main navigation'}).getByRole('button', {name: 'Downloads'}).click()
   await page.getByRole('radio', {name: new RegExp('^' + filter)}).click()
 }
-const nav = (page, name) => name === 'Settings' ? page.getByRole('navigation', {name: 'Main navigation'}).getByRole('button', {name: 'Settings', exact: true}).click() : page.getByRole('navigation', {name: 'Main navigation'}).getByRole('button', {name}).or(page.getByRole('navigation', {name: 'Main navigation'}).getByRole('link', {name})).first().click()
+const nav = (page, name) => name === 'Settings' ? page.locator('aside.rail').getByRole('button', {name: 'Settings', exact: true}).click() : page.getByRole('navigation', {name: 'Main navigation'}).getByRole('button', {name}).or(page.getByRole('navigation', {name: 'Main navigation'}).getByRole('link', {name})).first().click()
 
 // The preview is one window: "What to keep" (Video, Audio, Both) and the sizes on the first tab, everything else under Extras.
 const keep = (page, name) => page.getByRole('radiogroup', {name: 'What to keep'}).getByRole('radio', {name, exact: true})
@@ -845,7 +846,7 @@ await test('a gallery engine that installs when needed is not a problem', async 
   await page.getByRole('navigation', {name: 'Main navigation'}).waitFor()
   await page.waitForTimeout(500)
   assert.equal(await page.getByText(/needs attention|is missing/).count(), 0)
-  await page.getByRole('navigation', {name: 'Main navigation'}).getByRole('button', {name: 'Settings', exact: true}).click()
+  await page.locator('aside.rail').getByRole('button', {name: 'Settings', exact: true}).click()
   await page.getByRole('navigation', {name: 'Settings sections'}).getByRole('button', {name: /Updates|About Keepfin/}).first().click()
   // the per-tool list is folded away; the badge is there, the status line above it is not a warning
   await page.getByText('Installs when needed').waitFor({state: 'attached'})
@@ -1049,6 +1050,7 @@ await registerPlayerStylesSuite({test, calls})
 await registerSongVideosSuite({test, calls, last, sent, capture})
 await registerPreviewSuite({test, calls, last, sent, field, capture})
 await registerHomeFollowSuite({test, calls, last})
+await registerEditModeSuite({test})
 
 await browser.close()
 await srv.close()

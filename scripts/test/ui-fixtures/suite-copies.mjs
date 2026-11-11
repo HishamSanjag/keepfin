@@ -20,7 +20,7 @@ export async function registerCopiesSuite({test, sent}) {
     return page.evaluate((op) => [...window.__calls].reverse().find((c) => c.op === op), op)
   }
   const openCopies = async (page) => {
-    await page.getByRole('navigation', {name: 'Main navigation'}).getByRole('button', {name: 'Settings', exact: true}).click()
+    await page.locator('aside.rail').getByRole('button', {name: 'Settings', exact: true}).click()
     await page.getByRole('navigation', {name: 'Settings sections'}).getByRole('button', {name: 'Storage'}).click()
     await sent(page, 'copiesState')
     await row(page, 'Backup drive (E:)').waitFor()
@@ -442,7 +442,7 @@ export async function registerCopiesSuite({test, sent}) {
   }, {fake: {reviewGroup: true}})
 
   await test('copies: with no copies the page offers to add one; without a library it shows nothing', async (page) => {
-    await page.getByRole('navigation', {name: 'Main navigation'}).getByRole('button', {name: 'Settings', exact: true}).click()
+    await page.locator('aside.rail').getByRole('button', {name: 'Settings', exact: true}).click()
     await page.getByRole('navigation', {name: 'Settings sections'}).getByRole('button', {name: 'Storage'}).click()
     await page.getByText('No copies yet').waitFor()
     await page.getByRole('button', {name: 'Add a copy'}).first().waitFor()
@@ -451,7 +451,7 @@ export async function registerCopiesSuite({test, sent}) {
   }, {fake: {copies: 'empty'}})
 
   await test('copies: unavailable behind first start and setup', async (page) => {
-    await page.getByRole('navigation', {name: 'Main navigation'}).getByRole('button', {name: 'Settings', exact: true}).click()
+    await page.locator('aside.rail').getByRole('button', {name: 'Settings', exact: true}).click()
     await page.getByRole('navigation', {name: 'Settings sections'}).getByRole('button', {name: 'Storage'}).click()
     await sent(page, 'copiesState')
     await page.waitForTimeout(200)

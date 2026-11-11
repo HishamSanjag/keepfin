@@ -103,7 +103,14 @@ import app.keepfin.ItemQuery
 import app.keepfin.LibraryItem
 import app.keepfin.LibraryItemKind
 import app.keepfin.Space
+import app.keepfin.AlbumGroup
+import app.keepfin.ArtistGroup
+import app.keepfin.core.layout.CardKind
 import app.keepfin.ui.UiTags
+import app.keepfin.ui.media.CardActions
+import app.keepfin.ui.media.CardGap
+import app.keepfin.ui.media.MediaCard
+import app.keepfin.ui.media.rememberCardWidth
 import app.keepfin.ui.components.EmptyArt
 import app.keepfin.ui.components.EmptyState
 import app.keepfin.ui.theme.Studio
@@ -184,7 +191,7 @@ private fun MusicSpace(ui: LibraryUi, space: Space, padding: PaddingValues) {
                 query.isNotBlank() && visibleCount == 0 -> EmptyState(art = EmptyArt.SEARCH, title = "Nothing matches", body = "No song in ${space.name} matches “${query.trim()}”.")
                 query.isNotBlank() -> PagedItemsColumn(ui, songs, padding)
                 tab == MusicTab.SONGS && visibleCount == 0 -> EmptyState(art = EmptyArt.SEARCH, title = "No song has these tags", body = "Change the tag filter to see more of ${space.name}.")
-                tab == MusicTab.SONGS -> if (grid) PagedCoverGrid(ui, songs, padding, if (LocalCompact.current) 3 else 2) { _ ->
+                tab == MusicTab.SONGS -> if (grid) PagedCoverGrid(ui, songs, padding) { _ ->
                     item(span = { GridItemSpan(maxLineSpan) }, key = "play-buttons") { PlayButtons(ui, Songs.Rows(songs, visibleCount)) }
                 } else PagedItemsColumn(ui, songs, padding, header = { _ -> playButtons(ui, Songs.Rows(songs, visibleCount)) })
                 tab == MusicTab.ALBUMS -> AlbumsView(ui, space, sort, grid, padding)
@@ -352,6 +359,22 @@ fun SongsColumn(
 /** Drag to reorder on a collection of yours; "Remove from" is in each row's ⋮ and in the selection bar. */
 class PlaylistReorder(val onCommit: (List<String>) -> Unit)
 
+/** An album as a square card: its cover, title, and artist and year. */
+@Composable
+internal fun AlbumCard(album: AlbumGroup, modifier: Modifier = Modifier, onClick: () -> Unit) {
+    MediaCard(
+        CardKind.Square, album.title, listOfNotNull(album.artist, album.year?.toString()).joinToString(" · "), CardActions(onClick), modifier,
+    ) { ArtTile(album.cover?.artModel(), album.title, LibraryItemKind.AUDIO, Modifier.fillMaxSize(), iconSize = 36.dp) }
+}
+
+/** An artist as a round card: their picture, name and song count. */
+@Composable
+internal fun ArtistCard(artist: ArtistGroup, modifier: Modifier = Modifier, onClick: () -> Unit) {
+    MediaCard(
+        CardKind.Round, artist.name, if (artist.songs == 1) "1 song" else "${artist.songs} songs", CardActions(onClick), modifier,
+    ) { ArtTile(artist.cover?.artModel(), artist.name, LibraryItemKind.AUDIO, Modifier.fillMaxSize(), iconSize = 36.dp) }
+}
+
 // ---- albums -------------------------------------------------------------------------------------------------
 
 @Composable
@@ -365,12 +388,12 @@ private fun AlbumsView(ui: LibraryUi, space: Space, sort: LibraryViews.Sort, gri
         val state = androidx.compose.foundation.lazy.grid.rememberLazyGridState()
         albums.GridEndWatcher(state)
         LazyVerticalGrid(
-            GridCells.Fixed(if (LocalCompact.current) 3 else 2), Modifier.fillMaxSize().testTag(UiTags.LIB_LIST), state = state,
+            GridCells.Adaptive(rememberCardWidth(CardKind.Square)), Modifier.fillMaxSize().testTag(UiTags.LIB_LIST), state = state,
             contentPadding = PaddingValues(start = 10.dp, end = 10.dp, top = 6.dp, bottom = padding.calculateBottomPadding() + 24.dp),
+            horizontalArrangement = Arrangement.spacedBy(CardGap), verticalArrangement = Arrangement.spacedBy(CardGap),
         ) {
             items(albums.items, key = { it.key }) { album ->
-                CoverCard(album.title, listOfNotNull(album.artist, album.year?.toString()).joinToString(" · "), album.cover?.artModel(), album.title, LibraryItemKind.AUDIO,
-                    Modifier.testTag(UiTags.album(album.routeKey))) { ui.vm.openLibraryDetail(LibraryRoute.Album(space.id, album.routeKey)) }
+                AlbumCard(album, Modifier.testTag(UiTags.album(album.routeKey))) { ui.vm.openLibraryDetail(LibraryRoute.Album(space.id, album.routeKey)) }
             }
         }
     } else {
@@ -539,11 +562,9 @@ fun ArtistScreen(ui: LibraryUi, route: LibraryRoute.Artist, padding: PaddingValu
             if (loaded.albums.isNotEmpty()) {
                 item("albums-head") { Text("Albums", style = MaterialTheme.typography.titleMedium, modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp).semantics { heading() }) }
                 item("albums-row") {
-                    LazyRow(contentPadding = PaddingValues(horizontal = 10.dp)) {
+                    LazyRow(contentPadding = PaddingValues(horizontal = 16.dp), horizontalArrangement = Arrangement.spacedBy(CardGap)) {
                         items(loaded.albums, key = { it.key }) { album ->
-                            CoverCard(album.title, album.year?.toString() ?: "${album.tracks} songs", album.cover?.artModel(), album.title, LibraryItemKind.AUDIO, Modifier.width(144.dp)) {
-                                ui.vm.openLibraryDetail(LibraryRoute.Album(route.space, album.routeKey))
-                            }
+                            AlbumCard(album) { ui.vm.openLibraryDetail(LibraryRoute.Album(route.space, album.routeKey)) }
                         }
                     }
                 }

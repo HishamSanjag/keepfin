@@ -47,7 +47,7 @@ export async function registerLibrarySuite({test, calls, last, sent, field}) {
 
   await test('Library: a new space gets a teaching empty state with Add files', async (page) => {
     await toLibrary(page)
-    await page.getByRole('region', {name: 'Spaces', exact: true}).getByRole('button', {name: 'Edit', exact: true}).click()
+    await page.getByRole('button', {name: 'Edit Library'}).click()
     await page.getByRole('region', {name: 'Spaces', exact: true}).getByRole('button', {name: /^New space/}).click()
     const dialog = page.getByRole('dialog', {name: 'New space'})
     await dialog.getByLabel('Name').fill('Watch later')
@@ -259,7 +259,7 @@ export async function registerLibrarySuite({test, calls, last, sent, field}) {
     await bar.waitFor()
     await page.waitForFunction(() => window.__keepfinTest.audio().active.currentTime > 0.3)
     assert.equal((await audio(page)).paused, false)
-    await page.getByRole('navigation', {name: 'Main navigation'}).getByRole('button', {name: 'Settings', exact: true}).click()
+    await page.locator('aside.rail').getByRole('button', {name: 'Settings', exact: true}).click()
     await bar.waitFor()
     assert.match(await bar.textContent(), /Glass Harbour/)
     await bar.getByRole('button', {name: 'Pause'}).click()
@@ -512,7 +512,7 @@ export async function registerLibrarySuite({test, calls, last, sent, field}) {
 
   // ---------------------------------------------------------------- the Trash page
   const toTrashCard = async (page) => {
-    await page.getByRole('navigation', {name: 'Main navigation'}).getByRole('button', {name: 'Settings', exact: true}).click()
+    await page.locator('aside.rail').getByRole('button', {name: 'Settings', exact: true}).click()
     await page.getByRole('navigation', {name: 'Settings sections'}).getByRole('button', {name: 'Storage & copies'}).click()
     return page.locator('#setting-trash')
   }
@@ -749,9 +749,9 @@ export async function registerLibrarySuite({test, calls, last, sent, field}) {
   })
 
   await test('undo: removing a space can be undone, and an Undo that is gone says "Could not undo"', async (page) => {
-    await page.getByRole('navigation', {name: 'Main navigation'}).getByRole('button', {name: 'Settings', exact: true}).click()
+    await page.locator('aside.rail').getByRole('button', {name: 'Settings', exact: true}).click()
     await page.getByRole('navigation', {name: 'Settings sections'}).getByRole('button', {name: 'Library'}).click()
-    await page.getByRole('button', {name: 'New space'}).click()
+    await page.locator('main.main').getByRole('button', {name: 'New space'}).click()
     const create = page.getByRole('dialog', {name: 'New space'})
     await create.getByLabel('Name').fill('Watch later')
     await create.getByRole('button', {name: 'Choose…'}).click()
@@ -1123,7 +1123,7 @@ export async function registerLibrarySuite({test, calls, last, sent, field}) {
     await view.getByRole('button', {name: 'Open in another app'}).click()
     await sent(page, 'libraryOpen')
     await view.getByRole('button', {name: 'Close', exact: true}).click()
-    await page.getByRole('navigation', {name: 'Main navigation'}).getByRole('button', {name: 'Settings', exact: true}).click()
+    await page.locator('aside.rail').getByRole('button', {name: 'Settings', exact: true}).click()
     await page.getByRole('navigation', {name: 'Settings sections'}).getByRole('button', {name: 'Library'}).click()
     await page.getByRole('radio', {name: 'Default app'}).click()
     const before = (await calls(page, 'libraryOpen')).length
@@ -1227,7 +1227,7 @@ export async function registerLibrarySuite({test, calls, last, sent, field}) {
 
   // ---------------------------------------------------------------- settings, library off, onboarding
   await test('settings: Library page controls send the library settings; spaces can be edited and removed', async (page) => {
-    await page.getByRole('navigation', {name: 'Main navigation'}).getByRole('button', {name: 'Settings', exact: true}).click()
+    await page.locator('aside.rail').getByRole('button', {name: 'Settings', exact: true}).click()
     await page.getByRole('navigation', {name: 'Settings sections'}).getByRole('button', {name: 'Library'}).click()
     const lastLibrary = async () => (await last(page, 'updateSettings')).settings.library
     await page.getByRole('switch', {name: 'Volume normalisation'}).click()
@@ -1247,7 +1247,7 @@ export async function registerLibrarySuite({test, calls, last, sent, field}) {
     assert.equal((await last(page, 'spaceSave')).spaceDef.name, 'Films')
     // Built-in spaces can be renamed and re-pointed but never removed.
     assert.equal(await page.getByRole('button', {name: 'Remove Films'}).count(), 0)
-    await page.getByRole('button', {name: 'New space'}).click()
+    await page.locator('main.main').getByRole('button', {name: 'New space'}).click()
     const create = page.getByRole('dialog', {name: 'New space'})
     await create.getByLabel('Name').fill('Watch later')
     await create.getByRole('button', {name: 'Choose…'}).click()
@@ -1275,7 +1275,7 @@ export async function registerLibrarySuite({test, calls, last, sent, field}) {
   }, {fake: {library: 'off'}})
 
   await test('library: switching it off in Settings reverts the app to the plain downloader', async (page) => {
-    await page.getByRole('navigation', {name: 'Main navigation'}).getByRole('button', {name: 'Settings', exact: true}).click()
+    await page.locator('aside.rail').getByRole('button', {name: 'Settings', exact: true}).click()
     await page.getByRole('navigation', {name: 'Settings sections'}).getByRole('button', {name: 'Library'}).click()
     await page.getByRole('radio', {name: 'Just downloads'}).click()
     assert.equal((await last(page, 'updateSettings')).settings.library.enabled, false)
@@ -1538,15 +1538,14 @@ export async function registerLibrarySuite({test, calls, last, sent, field}) {
     assert.equal(Math.round(await rowHeight('Songs')), 56)
   })
 
-  await test('density: compact poster and album grids start at 150 and 140 px', async (page) => {
-    await openSpace(page, 'Videos')
-    const list = page.getByRole('list', {name: /Videos items/})
-    await list.waitFor()
-    const width = await list.locator('.vc-cell').first().evaluate((el) => el.getBoundingClientRect().width)
-    assert.ok(width >= 150 && width < 230, `poster cell ${width}px`)
+  await test('grids: tiles keep one width and follow Card size', async (page) => {
     await openSpace(page, 'Music')
     await page.getByRole('tab', {name: /^Albums/}).click()
-    const album = await page.getByRole('list', {name: 'Albums'}).locator('.vc-cell').first().evaluate((el) => el.getBoundingClientRect().width)
-    assert.ok(album >= 140 && album < 200, `album cell ${album}px`)
+    const cell = page.getByRole('list', {name: 'Albums'}).locator('.vc-cell').first()
+    const width = () => cell.evaluate((el) => el.getBoundingClientRect().width)
+    const before = await width()
+    await page.keyboard.press('Control+=')
+    await page.keyboard.press('Control+=')
+    await page.waitForFunction((was) => document.querySelector('[aria-label=Albums] .vc-cell')?.getBoundingClientRect().width > was, before)
   })
 }

@@ -6,7 +6,7 @@ The library keeps everything you've saved organized and ready to play. If you'd 
 
 A **space** is a home for one kind of thing, such as Music or Videos. Open **Library** and tap a space to open it.
 
-- **Create, color, pin or reorder:** Library › Edit. Drag a card to move it, tap the pin to show or hide it on the home page, and tap **+ New space** to add one.
+- **Create, color, pin or reorder:** on Windows press **Edit Library** at the top of Library; on the phone, Library › Edit. Drag a card to move it, tap the pin to show or hide it on the home page, and tap **+ New space** to add one.
 - **Smart spaces** fill themselves: choose **Smart**, add rules, and watch the live count.
 - **Show one kind at a time:** tap a chip such as Videos. Tap All to see everything again.
 
@@ -16,6 +16,18 @@ A **space** is a home for one kind of thing, such as Music or Videos. Open **Lib
 - **Follow an artist:** in Library, open **Artists** and press **+ Follow** on any row, or press **Follow** on the artist's page, or open a song's menu and choose the **Follow** entry with the artist's name.
 - **New releases card:** Keepfin looks about every 12 hours for new releases on YouTube Music. While there are releases you have not seen, Home shows one small card with a few covers and **Review**. Review lists them under **This week** and **Earlier this month**; nothing downloads on its own, press **Keep it** to save a release with your usual settings. The **x** hides the current releases (the card comes back only for newer ones). **Don't show on Home** removes the card for good; turn it back on in Settings, Library, **Show new releases on Home**.
 - **Who you follow:** in Library, Artists, choose **Following** to see everyone you follow, when they were last checked, and **Check now**. An artist that could not be checked shows a quiet note and is tried again later.
+
+## Arrange Home and Library
+
+- **Sections:** tap the pencil at the top of Home or Library (**Edit Home**, **Edit Library**). Each section gets an eye to hide or show it and **Row** or **Grid**. On Windows, drag a section's handle (or focus it and press the up and down arrow keys); on the phone, use the section's **⋮** menu, **Move up** or **Move down**. Tap **Done**; **Reset** puts the page back as it came.
+- **Card size and text:** while editing, the bar at the bottom has **Card size** (80% to 125%) and **Text** under cards: title and info, title only, or none. On Windows they are also in **Settings › Appearance › Cards**, and **Ctrl +** and **Ctrl −** change the size anywhere (**Ctrl 0** resets, or hold Ctrl and turn the mouse wheel).
+- **A wider window shows more cards.** They grow only a little, never all at once.
+
+## The sidebar (Windows)
+
+- **Edit sidebar:** press the pencil at the bottom of the sidebar. Drag the handles to reorder Home, Search, Library and Downloads, press the eye to hide a row, and the pin to keep a space or playlist at the top under **Pinned**. Right-click any row for **Pin to top** or **Hide**.
+- **Floating or docked:** the **Floating** switch while editing, or **Settings › Appearance › Sidebar**.
+- **Width:** drag the sidebar's right edge; double-click it to go back. **Ctrl+B** collapses it to icons.
 
 ## Collections
 

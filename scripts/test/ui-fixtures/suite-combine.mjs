@@ -24,7 +24,7 @@ export async function registerCombineSuite({test, sent}) {
   const list = (page) => page.getByRole('list', {name: 'Paired devices'})
   const card = (page, name) => list(page).getByRole('article', {name, exact: true})
   const openDevices = async (page) => {
-    await page.getByRole('navigation', {name: 'Main navigation'}).getByRole('button', {name: 'Settings', exact: true}).click()
+    await page.locator('aside.rail').getByRole('button', {name: 'Settings', exact: true}).click()
     await page.getByRole('navigation', {name: 'Settings sections'}).getByRole('button', {name: 'Devices'}).click()
     await sent(page, 'devicesState')
   }

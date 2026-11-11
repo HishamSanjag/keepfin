@@ -42,6 +42,21 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.compose.foundation.layout.fillMaxSize
+import app.keepfin.AlbumGroup
+import app.keepfin.ArtistGroup
+import app.keepfin.LibraryCollection
+import app.keepfin.core.layout.CardKind
+import app.keepfin.core.layout.SectionStyle
+import app.keepfin.ui.library.AlbumCard
+import app.keepfin.ui.library.ArtistCard
+import app.keepfin.ui.library.MusicVideoCard
+import app.keepfin.ui.library.MusicVideoEntry
+import app.keepfin.ui.media.CardActions
+import app.keepfin.ui.media.ItemCard
+import app.keepfin.ui.media.MediaCard
+import app.keepfin.ui.media.SectionHead
+import app.keepfin.ui.media.section
 import app.keepfin.LibraryItem
 import app.keepfin.LibraryItemKind
 import app.keepfin.ui.Links
@@ -84,6 +99,9 @@ import app.keepfin.ui.theme.tabular
 
 private const val GROUP_LIMIT = 5
 
+/** How many cards a group shows in the overview before See all. */
+private const val CARD_LIMIT = 12
+
 /**
  * Search: your library first (songs, videos, photos, albums, artists, playlists, with a filter row), then "Search YouTube for ..."
  * below, which opens the download flow on YouTube's results. A pasted link goes straight to capture.
@@ -116,10 +134,10 @@ fun SearchTab(vm: StudioViewModel, ui: LibraryUi, contentPadding: PaddingValues,
     val playlists = remember(snapshot.collections, terms) { if (terms.isEmpty()) emptyList() else snapshot.collections.filter { c -> terms.all { LibraryViews.fold(c.name).contains(it) } } }
     val focus = filter
     val songRows by rememberTop(browse, songsQ, if (typed && focus == SearchFilter.ALL) shown else 0)
-    val videoRows by rememberTop(browse, videosQ, if (typed && focus == SearchFilter.ALL) shown else 0)
+    val videoRows by rememberTop(browse, videosQ, if (typed && focus == SearchFilter.ALL) CARD_LIMIT else 0)
     // a song's music video is a video too: it shows with the Videos
     val musicVideos by rememberMusicVideos(browse, query, if (typed && (focus == SearchFilter.ALL || focus == SearchFilter.VIDEOS)) 500 else 0)
-    val photoRows by rememberTop(browse, photosQ, if (typed && focus == SearchFilter.ALL) shown else 0)
+    val photoRows by rememberTop(browse, photosQ, if (typed && focus == SearchFilter.ALL) CARD_LIMIT else 0)
     val songsPaged = if (typed && focus == SearchFilter.SONGS) rememberItemPaging(browse, songsQ) else null
     val videosPaged = if (typed && focus == SearchFilter.VIDEOS) rememberItemPaging(browse, videosQ) else null
     val photosPaged = if (typed && focus == SearchFilter.PHOTOS) rememberItemPaging(browse, photosQ) else null
@@ -175,29 +193,40 @@ fun SearchTab(vm: StudioViewModel, ui: LibraryUi, contentPadding: PaddingValues,
             if (filter == SearchFilter.ALL || filter == SearchFilter.SONGS) itemRowsGroup("songs", "Songs", songCount, songRows, songsPaged, shown, { filter = SearchFilter.SONGS }) { item ->
                 ItemRow(item, ui, subtitleOf(item), playing = playing.value == item.id, onClick = { ui.playFrom(songsQ, item) })
             }
-            if (filter == SearchFilter.ALL || filter == SearchFilter.VIDEOS) itemRowsGroup("videos", "Videos", videoCount, videoRows, videosPaged, shown, { filter = SearchFilter.VIDEOS }) { item ->
-                ItemRow(item, ui, subtitleOf(item), onClick = { ui.vm.play(listOf(item), 0) })
-            }
-            if (filter == SearchFilter.ALL || filter == SearchFilter.VIDEOS) itemGroup("musicvideos", MusicVideoRows.SHELF, musicVideos.size, musicVideos.take(shown), shown, { filter = SearchFilter.VIDEOS }, key = { it.row.id }) { _, entry ->
-                MusicVideoRowItem(entry, ui)
-            }
-            if (filter == SearchFilter.ALL || filter == SearchFilter.PHOTOS) itemRowsGroup("photos", "Photos", photoCount, photoRows, photosPaged, shown, { filter = SearchFilter.PHOTOS }) { item ->
-                ItemRow(item, ui, subtitleOf(item), onClick = { ui.playFrom(photosQ, item) })
-            }
-            if (albumRows != null) itemGroup("albums", "Albums", albumCount, albumRows.items.take(shown), shown, { filter = SearchFilter.ALBUMS }, key = { it.key }) { _, album ->
-                CardRow(
-                    album.title, album.artist + " · " + album.tracks + (if (album.tracks == 1) " song" else " songs"), album.cover?.artModel(), album.title, LibraryItemKind.AUDIO,
-                    Modifier.testTag("search-album-${album.routeKey}"),
-                ) { vm.openLibraryDeep(LibraryRoute.Album(album.space, album.routeKey)) }
-            }
-            if (artistRows != null) itemGroup("artists", "Artists", artistCount, artistRows.items.take(shown), shown, { filter = SearchFilter.ARTISTS }, key = { it.key }) { _, artist ->
-                val space = artist.cover?.space.orEmpty()
-                CardRow(artist.name, artist.songs.let { if (it == 1) "1 song" else "$it songs" }, artist.cover?.artModel(), artist.name, LibraryItemKind.AUDIO, Modifier.testTag("search-artist-${artist.name}")) {
-                    vm.openLibraryDeep(LibraryRoute.Artist(space, artist.name))
+            if (filter == SearchFilter.ALL) {
+                cardGroups(
+                    SearchCards(
+                        ui, vm, videoRows, videoCount, musicVideos, artistRows?.items.orEmpty(), artistCount, albumRows?.items.orEmpty(), albumCount, playlists,
+                        photoRows, photoCount,
+                    ),
+                ) { filter = it }
+            } else {
+                if (filter == SearchFilter.VIDEOS) {
+                    itemRowsGroup("videos", "Videos", videoCount, videoRows, videosPaged, shown, { filter = SearchFilter.VIDEOS }) { item ->
+                        ItemRow(item, ui, subtitleOf(item), onClick = { ui.vm.play(listOf(item), 0) })
+                    }
+                    itemGroup("musicvideos", MusicVideoRows.SHELF, musicVideos.size, musicVideos, shown, { filter = SearchFilter.VIDEOS }, key = { it.row.id }) { _, entry ->
+                        MusicVideoRowItem(entry, ui)
+                    }
                 }
-            }
-            if (filter == SearchFilter.ALL || filter == SearchFilter.PLAYLISTS) itemGroup("playlists", "Playlists", playlists.size, playlists.take(shown), shown, { filter = SearchFilter.PLAYLISTS }, key = { it.id }) { _, c ->
-                CollectionCardRow(c, ui, vm)
+                if (filter == SearchFilter.PHOTOS) itemRowsGroup("photos", "Photos", photoCount, photoRows, photosPaged, shown, { filter = SearchFilter.PHOTOS }) { item ->
+                    ItemRow(item, ui, subtitleOf(item), onClick = { ui.playFrom(photosQ, item) })
+                }
+                if (albumRows != null) itemGroup("albums", "Albums", albumCount, albumRows.items, shown, { filter = SearchFilter.ALBUMS }, key = { it.key }) { _, album ->
+                    CardRow(
+                        album.title, album.artist + " · " + album.tracks + (if (album.tracks == 1) " song" else " songs"), album.cover?.artModel(), album.title, LibraryItemKind.AUDIO,
+                        Modifier.testTag("search-album-${album.routeKey}"),
+                    ) { vm.openLibraryDeep(LibraryRoute.Album(album.space, album.routeKey)) }
+                }
+                if (artistRows != null) itemGroup("artists", "Artists", artistCount, artistRows.items, shown, { filter = SearchFilter.ARTISTS }, key = { it.key }) { _, artist ->
+                    val space = artist.cover?.space.orEmpty()
+                    CardRow(artist.name, artist.songs.let { if (it == 1) "1 song" else "$it songs" }, artist.cover?.artModel(), artist.name, LibraryItemKind.AUDIO, Modifier.testTag("search-artist-${artist.name}")) {
+                        vm.openLibraryDeep(LibraryRoute.Artist(space, artist.name))
+                    }
+                }
+                if (filter == SearchFilter.PLAYLISTS) itemGroup("playlists", "Playlists", playlists.size, playlists, shown, { filter = SearchFilter.PLAYLISTS }, key = { it.id }) { _, c ->
+                    CollectionCardRow(c, ui, vm)
+                }
             }
             item("online-head", contentType = "head") {
                 Text("On YouTube", fontSize = 17.sp, fontWeight = FontWeight.SemiBold, modifier = Modifier.padding(start = 16.dp, end = 16.dp, top = 20.dp, bottom = 2.dp).semantics { heading() })
@@ -223,6 +252,57 @@ private fun CollectionCardRow(c: app.keepfin.LibraryCollection, ui: LibraryUi, v
     CardRow(c.name, collectionCardLine(c, c.itemIds.size), cover?.artModel(), c.name, LibraryItemKind.AUDIO, Modifier.testTag("search-playlist-${c.id}")) {
         vm.openLibraryDeep(collectionRoute(c))
     }
+}
+
+/** What the overview of Search shows as cards: the first rows of each group and how many there are in all. */
+private class SearchCards(
+    val ui: LibraryUi,
+    val vm: StudioViewModel,
+    val videos: List<LibraryItem>,
+    val videoCount: Int,
+    val musicVideos: List<MusicVideoEntry>,
+    val artists: List<ArtistGroup>,
+    val artistCount: Int,
+    val albums: List<AlbumGroup>,
+    val albumCount: Int,
+    val playlists: List<LibraryCollection>,
+    val photos: List<LibraryItem>,
+    val photoCount: Int,
+)
+
+/** The overview groups in Search's order after Songs: videos, artists, albums, playlists and collections, photos. */
+private fun LazyListScope.cardGroups(c: SearchCards, openGroup: (SearchFilter) -> Unit) {
+    fun head(name: String, shown: Int, count: Int, filter: SearchFilter) =
+        SectionHead(if (count > shown) ({ openGroup(filter) }) else null, "See all $count", "search-seeall-$name")
+    section("videos", "Videos", c.videos, CardKind.Video, SectionStyle.Row, { "videos-" + it.id }, head("videos", c.videos.size, c.videoCount, SearchFilter.VIDEOS)) { item ->
+        ItemCard(item, c.ui) { c.vm.play(listOf(item), 0) }
+    }
+    section(
+        "musicvideos", MusicVideoRows.SHELF, c.musicVideos.take(CARD_LIMIT), CardKind.Square, SectionStyle.Row, { "musicvideos-" + it.row.id },
+        head("musicvideos", CARD_LIMIT, c.musicVideos.size, SearchFilter.VIDEOS),
+    ) { MusicVideoCard(it, c.ui) }
+    section("artists", "Artists", c.artists.take(CARD_LIMIT), CardKind.Round, SectionStyle.Row, { "artists-" + it.key }, head("artists", CARD_LIMIT, c.artistCount, SearchFilter.ARTISTS)) { artist ->
+        ArtistCard(artist, Modifier.testTag("search-artist-${artist.name}")) { c.vm.openLibraryDeep(LibraryRoute.Artist(artist.cover?.space.orEmpty(), artist.name)) }
+    }
+    section("albums", "Albums", c.albums.take(CARD_LIMIT), CardKind.Square, SectionStyle.Row, { "albums-" + it.key }, head("albums", CARD_LIMIT, c.albumCount, SearchFilter.ALBUMS)) { album ->
+        AlbumCard(album, Modifier.testTag("search-album-${album.routeKey}")) { c.vm.openLibraryDeep(LibraryRoute.Album(album.space, album.routeKey)) }
+    }
+    section(
+        "playlists", "Playlists and collections", c.playlists.take(CARD_LIMIT), CardKind.Square, SectionStyle.Row, { "playlists-" + it.id },
+        head("playlists", CARD_LIMIT, c.playlists.size, SearchFilter.PLAYLISTS),
+    ) { collection -> CollectionSearchCard(collection, c.ui, c.vm) }
+    section("photos", "Photos", c.photos, CardKind.Photo, SectionStyle.Row, { "photos-" + it.id }, head("photos", c.photos.size, c.photoCount, SearchFilter.PHOTOS)) { item ->
+        ItemCard(item, c.ui) { c.vm.play(c.photos, c.photos.indexOf(item)) }
+    }
+}
+
+/** A playlist found by a search, as a card: its cover and line come from a few members. */
+@Composable
+private fun CollectionSearchCard(c: LibraryCollection, ui: LibraryUi, vm: StudioViewModel) {
+    val cover by rememberItem(ui.browse, c.coverItemId ?: c.itemIds.firstOrNull())
+    MediaCard(
+        CardKind.Square, c.name, collectionCardLine(c, c.itemIds.size), CardActions({ vm.openLibraryDeep(collectionRoute(c)) }), Modifier.testTag("search-playlist-${c.id}"),
+    ) { ArtTile(cover?.artModel(), c.name, LibraryItemKind.AUDIO, Modifier.fillMaxSize(), iconSize = 36.dp) }
 }
 
 /** A group of item rows: the first [shown] rows of the overview, or a Paging list when the group has the page to itself. */

@@ -57,8 +57,10 @@ export const settingsIndex: SettingEntry[] = [
   e('devices', 'advanced', 'Advanced', 'fingerprint port libraries signed', 'Advanced'),
   // Appearance
   e('appearance', 'theme', 'Theme', 'dark light system colour mode', 'Look'),
+  e('appearance', 'sidebar-style', 'Sidebar', 'sidebar floating docked panel width resize pin hide reorder edit', 'Look'),
   e('appearance', 'player-style', 'Player style', 'full player stage cinema afterglow layout lyrics visualizer glow video picture', 'Look'),
   e('appearance', 'size', 'Interface size', 'scale zoom text size 80% 140% bigger smaller', 'Look'),
+  e('appearance', 'cards', 'Cards', 'card size bigger smaller 80% 125% text under cards title info none thumbnails tiles covers', 'Look'),
   e('appearance', 'start-page', 'Open Keepfin on', 'startup start page home downloads where i left off last page', 'When Keepfin opens'),
   // Notifications
   e('notifications', 'notify-enabled', 'System notifications', 'alerts banners windows toast', 'Alerts'),

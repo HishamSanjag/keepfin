@@ -9,6 +9,8 @@ export async function registerSongVideosSuite({test, calls, last, sent, capture}
   const keep = (page, name) => page.getByRole('radiogroup', {name: 'What to keep'}).getByRole('radio', {name, exact: true})
   const mainNav = (page) => page.getByRole('navigation', {name: 'Main navigation'})
   const openLibrary = (page) => mainNav(page).getByRole('button', {name: 'Library'}).click()
+  // music videos moved from Library to Home (under All and Videos)
+  const openHome = (page) => mainNav(page).getByRole('button', {name: 'Home'}).click()
   const openMusic = async (page) => {
     await openLibrary(page)
     await page.getByRole('region', {name: 'Spaces', exact: true}).getByRole('button', {name: /^Music/}).click()
@@ -47,8 +49,8 @@ export async function registerSongVideosSuite({test, calls, last, sent, capture}
   })
 
   // ---------------------------------------------------------------- a video of its own
-  await test('Music videos: the Library shelf, See all, a row that plays the video alone, and a menu of four things', async (page) => {
-    await openLibrary(page)
+  await test('Music videos: the Home shelf, See all, a row that plays the video alone, and a menu of four things', async (page) => {
+    await openHome(page)
     await shelf(page).waitFor()
     await shelf(page).getByText('Cold Front').waitFor()
     await shelf(page).getByText('Music video', {exact: true}).first().waitFor()
@@ -72,7 +74,7 @@ export async function registerSongVideosSuite({test, calls, last, sent, capture}
     await page.getByRole('menuitem', {name: 'Go to song'}).click()
     await page.getByRole('heading', {name: 'Weather Systems', level: 1}).waitFor()
     // clicking a row plays the video alone in the video player from its start: no song queue, no play counted
-    await openLibrary(page)
+    await openHome(page)
     await shelf(page).getByRole('button', {name: /^Cold Front, Music video/}).click()
     const player = page.getByRole('dialog', {name: 'Playing Cold Front'})
     await player.waitFor()
@@ -83,7 +85,7 @@ export async function registerSongVideosSuite({test, calls, last, sent, capture}
   })
 
   await test('Music videos: Delete video asks first, removes only the video, and the shelf goes with it; the song stays', async (page) => {
-    await openLibrary(page)
+    await openHome(page)
     await shelf(page).getByRole('button', {name: /^More actions for Cold Front/}).click()
     await page.getByRole('menuitem', {name: 'Delete video'}).click()
     const dialog = page.getByRole('dialog', {name: 'Delete this music video? The song stays.'})
@@ -100,17 +102,20 @@ export async function registerSongVideosSuite({test, calls, last, sent, capture}
     await song(page, 'Cold Front').waitFor()
   })
 
-  await test('Music videos: Search lists them with the videos, and Home has them under Videos only', async (page) => {
+  await test('Music videos: Search lists them with the videos, and Home has them under All and Videos, not Music', async (page) => {
     await mainNav(page).getByRole('button', {name: 'Search'}).click()
     await page.getByRole('searchbox').or(page.getByRole('textbox', {name: /Search your library, or paste a link/})).first().fill('cold front')
     const videos = page.getByRole('region', {name: 'Videos'})
     await videos.getByText('Cold Front').first().waitFor()
     await videos.getByText('Music video', {exact: true}).waitFor()
-    // Home: the Videos filter shows the shelf, All does not
+    // Home: All and Videos show the shelf, Music does not
     await mainNav(page).getByRole('button', {name: 'Home'}).click()
-    await page.getByRole('group', {name: 'Show on Home'}).getByRole('button', {name: 'All'}).click()
+    const show = page.getByRole('group', {name: 'Show on Home'})
+    await show.getByRole('button', {name: 'All'}).click()
+    await shelf(page).getByText('Cold Front').waitFor()
+    await show.getByRole('button', {name: 'Music'}).click()
     assert.equal(await shelf(page).count(), 0)
-    await page.getByRole('group', {name: 'Show on Home'}).getByRole('button', {name: 'Videos'}).click()
+    await show.getByRole('button', {name: 'Videos'}).click()
     await shelf(page).getByText('Cold Front').waitFor()
   })
 

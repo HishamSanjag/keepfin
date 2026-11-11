@@ -861,12 +861,6 @@ input[type='range'].range:disabled {
   color: var(--accent-text);
 }
 
-/* ---------- Home shelves, hero ---------- */
-.home-section,
-.shelf-block {
-  display: grid;
-  gap: 8px;
-}
 .shelf-head {
   display: flex;
   align-items: baseline;
@@ -875,60 +869,6 @@ input[type='range'].range:disabled {
 .shelf-title {
   font-size: 15px;
   font-weight: 650;
-}
-/* A shelf is one row of whole cards, like Spotify: the page width decides how many fit (cards at least 160px,
-   posters at least 180px) and the cards stretch to fill the row exactly. More items stay one sideways scroll away. */
-.shelf {
-  --cols: 2;
-  display: grid;
-  grid-auto-flow: column;
-  grid-auto-columns: calc((100% - (var(--cols) - 1) * 16px) / var(--cols));
-  gap: 16px;
-  overflow-x: auto;
-  padding: 2px 2px 10px;
-  scroll-snap-type: x proximity;
-}
-.shelf > * {
-  min-width: 0;
-  scroll-snap-align: start;
-}
-.shelf.shelf-posters {
-  --cols: 2;
-}
-@container main (min-width: 512px) { .shelf { --cols: 3; } }
-@container main (min-width: 688px) { .shelf { --cols: 4; } }
-@container main (min-width: 864px) { .shelf { --cols: 5; } }
-@container main (min-width: 1040px) { .shelf { --cols: 6; } }
-@container main (min-width: 1216px) { .shelf { --cols: 7; } }
-@container main (min-width: 1392px) { .shelf { --cols: 8; } }
-@container main (min-width: 1568px) { .shelf { --cols: 9; } }
-@container main (min-width: 1744px) { .shelf { --cols: 10; } }
-@container main (min-width: 1920px) { .shelf { --cols: 11; } }
-@container main (min-width: 2096px) { .shelf { --cols: 12; } }
-@container main (min-width: 572px) { .shelf.shelf-posters { --cols: 3; } }
-@container main (min-width: 768px) { .shelf.shelf-posters { --cols: 4; } }
-@container main (min-width: 964px) { .shelf.shelf-posters { --cols: 5; } }
-@container main (min-width: 1160px) { .shelf.shelf-posters { --cols: 6; } }
-@container main (min-width: 1356px) { .shelf.shelf-posters { --cols: 7; } }
-@container main (min-width: 1552px) { .shelf.shelf-posters { --cols: 8; } }
-@container main (min-width: 1748px) { .shelf.shelf-posters { --cols: 9; } }
-@container main (min-width: 1944px) { .shelf.shelf-posters { --cols: 10; } }
-@container main (min-width: 2140px) { .shelf.shelf-posters { --cols: 11; } }
-.shelf-card {
-  flex: 0 0 140px;
-  display: grid;
-  gap: 4px;
-  text-align: left;
-}
-.shelf-card .card-title,
-.shelf-card .card-sub {
-  padding-right: 0;
-}
-.shelf-art {
-  display: block;
-  aspect-ratio: 1;
-  border-radius: var(--r-md);
-  overflow: hidden;
 }
 /* ---------- Dialog parts ---------- */
 .dialog-wide {

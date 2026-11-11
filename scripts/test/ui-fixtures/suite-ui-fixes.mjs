@@ -183,7 +183,7 @@ export async function registerUiFixesSuite({test, sent}) {
       await mainNav(page).getByRole('button', {name}).click()
       await page.locator('.lyrics-overlay').waitFor({state: 'detached'})
     }
-    await page.getByRole('navigation', {name: 'Main navigation'}).getByRole('button', {name: 'Settings', exact: true}).click().catch(() => {})
+    await page.locator('aside.rail').getByRole('button', {name: 'Settings', exact: true}).click().catch(() => {})
     // A space chosen in the sidebar while the Library is already open is a navigation too.
     await toLibrary(page)
     await openLyrics(page)
@@ -287,8 +287,8 @@ export async function registerUiFixesSuite({test, sent}) {
   }, {fake: {lyricLines: manyLines}})
 
   // ---------------------------------------------------------------- cards
-  const cardChecks = async (page, label) => {
-    const cards = page.locator('.card:not(.is-gone)')
+  const cardChecks = async (page, label, scope = page) => {
+    const cards = scope.locator('.card:not(.is-gone):not([data-kind="tile"])')
     const total = await cards.count()
     assert.ok(total > 0, `${label}: there are cards`)
     let checked = 0
@@ -361,15 +361,16 @@ export async function registerUiFixesSuite({test, sent}) {
       await toLibrary(page)
       // Home shelves (video and square cards).
       await mainNav(page).getByRole('button', {name: 'Home'}).click()
-      await page.locator('.shelf .card').first().waitFor()
+      await page.locator('.section-row .card').first().waitFor()
       await cardChecks(page, 'home shelves')
-      await page.locator('.shelf .card').first().hover()
+      await page.locator('.section-row .card').first().hover()
       await page.waitForTimeout(220)
       assert.ok((await chipContrast(page)) >= 3, 'chip icon contrast is at least 3:1 on any picture')
       await shot(page, `home-card-hover-${theme}`)
       // Library home shelves and the spaces' grids.
       await toLibrary(page)
-      await cardChecks(page, 'library home')
+      // its item cards (heart and menu) are in Videos; playlists, albums and artists open instead
+      await cardChecks(page, 'library home', page.locator('[data-section="videos"]'))
       await side(page).getByRole('list', {name: 'Spaces'}).getByRole('button', {name: /^Videos/}).click()
       await page.getByText(/\d+ items? ·/).first().waitFor()
       const toolbar = page.getByRole('toolbar', {name: 'Library toolbar'})
@@ -435,7 +436,7 @@ export async function registerUiFixesSuite({test, sent}) {
     // At rest nothing animates, and the shell never transitions its columns: the page lays out once when the sidebar is toggled, only the sidebar eases.
     assert.equal(await page.locator('aside.rail').evaluate((node) => getComputedStyle(node).animationName), 'none')
     assert.ok(parseFloat(await page.locator('.app').evaluate((node) => getComputedStyle(node).transitionDuration)) < 0.01)
-    assert.equal(await railWidth(page), 208)
+    assert.equal(await railWidth(page), 216, 'the floating panel: 224 px less its 8 px margin')
     const sample = (selector) =>
       page.evaluate(
         (selector) =>
@@ -462,7 +463,7 @@ export async function registerUiFixesSuite({test, sent}) {
     const widths = collapse.map((s) => s.width)
     assert.ok(widths[0] > 100, `the rail does not jump on the first frame, got ${widths[0]}`)
     assert.ok(widths.some((value) => value > 80 && value < 200), `the width passes through in-between values, got ${widths.filter((_, i) => i % 3 === 0)}`)
-    assert.equal(Math.round(widths.at(-1)), 68)
+    assert.equal(Math.round(widths.at(-1)), 60, 'the 68 px rail less the floating margins')
     assert.ok(widths.every((value, index) => index === 0 || value <= widths[index - 1] + 0.5), 'it only narrows')
     assert.ok(collapse.some((s) => s.labelOpacity > 0.05 && s.labelOpacity < 0.95), 'the labels fade through in-between values')
     assert.equal(new Set(collapse.map((s) => Math.round(s.labelHeight))).size, 1, 'a label never wraps to two lines')
@@ -473,7 +474,7 @@ export async function registerUiFixesSuite({test, sent}) {
     assert.equal(new Set(expand.map((s) => Math.round(s.mainLeft))).size, 1, 'and again when the sidebar opens')
     const grow = expand.map((s) => s.width)
     assert.ok(grow.some((value) => value > 80 && value < 200), 'it widens through in-between values too')
-    assert.equal(Math.round(grow.at(-1)), 208)
+    assert.equal(Math.round(grow.at(-1)), 216)
     assert.equal(new Set(expand.map((s) => Math.round(s.labelHeight))).size, 1, 'labels do not wrap while opening either')
     assert.ok(expand.some((s) => s.labelOpacity > 0.05 && s.labelOpacity < 0.95), 'and fade in')
   })
@@ -535,7 +536,8 @@ export async function registerUiFixesSuite({test, sent}) {
     await appBar.getByRole('textbox', {name: 'Search your library, or paste a link'}).waitFor()
     await appBar.getByRole('button', {name: /^Activity/}).waitFor()
     for (const name of ['Home', 'Search', 'Library', 'Downloads', 'Settings']) {
-      await mainNav(page).getByRole('button', {name: new RegExp('^' + name)}).click()
+      const nav = name === 'Settings' ? page.locator('.rail-foot') : mainNav(page)
+      await nav.getByRole('button', {name: new RegExp('^' + name)}).first().click()
       assert.equal(await page.locator('.app-bar').count(), 1, `one app bar on ${name}`)
       assert.equal(await page.locator('.main').getByRole('button', {name: 'Settings', exact: true}).count(), 0, `no Settings gear on ${name}`)
       assert.equal(await page.locator('.main .page-header h1:visible').count(), 1, `one h1 on ${name}`)

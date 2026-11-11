@@ -140,7 +140,7 @@
   /* Motion: 160-220ms fades and short slides (none with reduced motion, see base.css). */
   --t-fast: 160ms;
   --t: 200ms;
-  --rail-w: 208px;
+  --rail-w: var(--rail-open-w, 224px);
   /* The page structure (dev-docs/plans/PAGE-LAYOUT.md): app bar, page header, toolbar. */
   --appbar-h: 48px;
   --page-top: 26px;

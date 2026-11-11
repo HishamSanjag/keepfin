@@ -1,7 +1,13 @@
 import {useVirtualizer} from '@tanstack/react-virtual'
 import {useCallback, useEffect, useLayoutEffect, useRef, useState, type KeyboardEvent, type ReactNode} from 'react'
+import {cardSize, type CardKind} from '../../shared/core/layout'
+import {useCardPrefs} from '../media/layoutStore'
 
 export type CellState = {index: number; focused: boolean; tabIndex: 0 | -1}
+
+/** One line of title or info under a card, in px; the Text setting takes them away. */
+const TEXT_LINE = 20
+const textHeight = (full: number, text: 'full' | 'title' | 'none') => (text === 'full' ? full : text === 'title' ? Math.max(0, full - TEXT_LINE) : 0)
 
 /**
  * A virtualised list or grid with one tab stop and arrow-key navigation (roving focus). Cells render their main
@@ -12,7 +18,7 @@ export function VirtualCollection({
   count,
   mode,
   rowHeight,
-  minCell = 168,
+  cardKind = 'square',
   cellAspect = 1,
   cellExtra = 56,
   gap = 16,
@@ -30,7 +36,8 @@ export function VirtualCollection({
   mode: 'list' | 'grid'
   /** List row height in px. */
   rowHeight: number
-  minCell?: number
+  /** Grid: the kind of card, whose width follows the Card size setting. */
+  cardKind?: CardKind
   /** Grid: height of the media part as a fraction of the cell width. */
   cellAspect?: number
   /** Grid: px of text under the media part. */
@@ -49,6 +56,7 @@ export function VirtualCollection({
   onSelectAll?: () => void
   density?: string
 }) {
+  const {scale, text} = useCardPrefs()
   const scroller = useRef<HTMLDivElement>(null)
   const headerBox = useRef<HTMLDivElement>(null)
   const [width, setWidth] = useState(0)
@@ -76,9 +84,9 @@ export function VirtualCollection({
   }, [!!header])
 
   const inner = Math.max(0, width - 32)
-  const cols = mode === 'list' ? 1 : Math.max(1, Math.floor((inner + gap) / (minCell + gap)))
-  const cellWidth = mode === 'list' ? inner : (inner - gap * (cols - 1)) / cols
-  const rowH = mode === 'list' ? rowHeight : Math.round(cellWidth * cellAspect + cellExtra + gap)
+  const cellWidth = mode === 'list' ? inner : Math.round(cardSize(cardKind, inner, scale))
+  const cols = mode === 'list' ? 1 : Math.max(1, Math.floor((inner + gap) / (cellWidth + gap)))
+  const rowH = mode === 'list' ? rowHeight : Math.round(cellWidth * cellAspect + textHeight(cellExtra, text) + gap)
   const rows = Math.ceil(count / cols)
 
   const virtualizer = useVirtualizer({
@@ -187,6 +195,7 @@ export function VirtualCollection({
       }}
       data-mode={mode}
       data-density={density}
+      data-card-text={text}
     >
       {header && (
         <div ref={headerBox} className="vc-header">
@@ -211,7 +220,7 @@ export function VirtualCollection({
                 style={{
                   height: rowH,
                   transform: `translateY(${row.start - margin}px)`,
-                  gridTemplateColumns: mode === 'grid' ? `repeat(${cols}, minmax(0, 1fr))` : undefined,
+                  gridTemplateColumns: mode === 'grid' ? `repeat(${cols}, ${cellWidth}px)` : undefined,
                 }}
               >
                 {cells}

@@ -6,12 +6,12 @@ import {LyricsPanel, QueuePanel} from './full/lyricsQueue'
 import {closeLyrics, closeNowPlaying, qualityChip, sourceWords, usePanels} from './panels'
 import {usePlayer} from './playerStore'
 import {ArtWash} from './Wash'
-import {getPanelWidth, PANEL_DEFAULT, PANEL_MAX, PANEL_MIN, resetPanelWidth, setPanelWidth, usePanelWidth} from '../shell/layoutState'
+import {getPanelWidth, getRailWidth, PANEL_DEFAULT, PANEL_MAX, PANEL_MIN, resetPanelWidth, setPanelWidth, usePanelWidth} from '../shell/layoutState'
 
-/** The widest the panel may be so the main column keeps room: the rail (up to 216) and about 440 px stay for the page. */
+/** The widest the panel may be so the main column keeps room: the sidebar and about 440 px stay for the page. */
 const maxWidth = () => {
   const zoom = Number(getComputedStyle(document.documentElement).getPropertyValue('--zoom')) || 1
-  return Math.max(PANEL_MIN, Math.min(PANEL_MAX, Math.floor(window.innerWidth / zoom - 216 - 440)))
+  return Math.max(PANEL_MIN, Math.min(PANEL_MAX, Math.floor(window.innerWidth / zoom - getRailWidth() - 440)))
 }
 
 /** Drag or arrow-key the panel's left edge. Double-click resets. The width is remembered per viewer. */

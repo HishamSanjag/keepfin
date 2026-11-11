@@ -114,7 +114,7 @@ export async function registerBeta2Suite({test, calls, last, sent}) {
     assert.equal(await mainNav(page).getByRole('button', {name: 'Home'}).getAttribute('aria-current'), 'page')
   })
   await test('logo: goes to Downloads in downloader-only mode', async (page) => {
-    await page.getByRole('navigation', {name: 'Main navigation'}).getByRole('button', {name: 'Settings', exact: true}).click()
+    await page.locator('aside.rail').getByRole('button', {name: 'Settings', exact: true}).click()
     await page.getByRole('button', {name: 'Keepfin, add a link'}).click()
     await page.getByRole('heading', {name: 'Downloads', level: 1}).waitFor()
   }, {fake: {library: 'off'}})
@@ -173,10 +173,12 @@ export async function registerBeta2Suite({test, calls, last, sent}) {
     await settled(false)
   })
 
-  await test('sidebar footer: one compact status line, no theme switch, and Support beside the version', async (page) => {
+  await test('sidebar footer: one compact status line, no theme switch, and the version beside Edit sidebar and Settings', async (page) => {
     assert.equal(await page.locator('.rail .foot-item').count(), 0, 'no footer links')
     assert.equal(await page.locator('.rail .theme-toggle').count(), 0, 'no theme switch in the sidebar')
-    assert.equal(await page.locator('.rail-foot').getByRole('button', {name: 'Support Keepfin'}).count(), 1, 'Support beside the version')
+    assert.equal(await page.locator('.rail').getByRole('button', {name: 'Support Keepfin'}).count(), 0, 'Support lives in Settings')
+    const foot = page.locator('.rail-foot .side-foot-row')
+    for (const name of ['Edit sidebar', 'Settings']) await foot.getByRole('button', {name, exact: true}).waitFor()
     // Downloads and devices share one row at the bottom.
     assert.equal(await page.locator('.rail .side-status-row').count(), 1, 'one status line')
     assert.ok((await page.locator('.rail .side-status-row > *').count()) >= 1)

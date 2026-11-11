@@ -1,50 +1,38 @@
 package app.keepfin.ui.home
 
 import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.semantics.Role
-import androidx.compose.ui.semantics.heading
-import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import app.keepfin.LibraryItemKind
+import app.keepfin.core.layout.CardKind
+import app.keepfin.core.layout.SectionStyle
 import app.keepfin.ui.StudioViewModel
 import app.keepfin.ui.UiTags
-import app.keepfin.ui.components.RowTextAction
-import app.keepfin.ui.library.ArtTile
 import app.keepfin.ui.library.artModel
+import app.keepfin.ui.media.CardActions
+import app.keepfin.ui.media.CardMarks
+import app.keepfin.ui.media.MediaCard
+import app.keepfin.ui.media.MixArt
+import app.keepfin.ui.media.SectionEdit
+import app.keepfin.ui.media.SectionHead
+import app.keepfin.ui.media.emptySection
+import app.keepfin.ui.media.section
+import app.keepfin.ui.media.sectionHeader
 
-/** How many mixes the grid shows before See all. */
-private const val MIXES_FIRST = 4
-
-@Composable
-private fun SectionHead(title: String, modifier: Modifier = Modifier, action: (@Composable () -> Unit)? = null) {
-    Row(modifier.fillMaxWidth().padding(start = 16.dp, end = 8.dp, top = 20.dp), verticalAlignment = Alignment.CenterVertically) {
-        Text(title, style = MaterialTheme.typography.titleLarge, modifier = Modifier.weight(1f).semantics { heading() })
-        action?.invoke()
-    }
-}
+private const val TITLE = "Made from your listening"
 
 @Composable
 private fun EmptyCard(title: String, body: String, modifier: Modifier = Modifier) {
@@ -59,21 +47,14 @@ private fun EmptyCard(title: String, body: String, modifier: Modifier = Modifier
 }
 
 /**
- * Home's "Made from your listening": mix tiles built from the person's own plays, nothing leaves the device. Hidden for the Videos and
- * Photos chips and on a brand-new library, which has its own empty state.
+ * Home's "Made from your listening": mix cards built from the person's own plays, nothing leaves the device. With no mixes yet it explains
+ * how they appear, when [explainEmpty] (the Videos and Photos chips and a brand-new library say nothing).
  */
-internal fun LazyListScope.mixSections(vm: StudioViewModel, mixes: List<HomeMix>, allMixes: Boolean, onAllMixes: () -> Unit) {
+internal fun LazyListScope.mixesSection(vm: StudioViewModel, mixes: List<HomeMix>, style: SectionStyle, edit: SectionEdit?, explainEmpty: Boolean) {
     if (mixes.isNotEmpty()) {
-        item("mixes-head", contentType = "head") {
-            SectionHead("Made from your listening") {
-                if (mixes.size > MIXES_FIRST) RowTextAction(if (allMixes) "Show less" else "See all", onAllMixes, Modifier.testTag(UiTags.HOME_MIXES_ALL))
-            }
-        }
-        item("mixes", contentType = "mixes") {
-            MixGrid(vm, if (allMixes) mixes else mixes.take(MIXES_FIRST), Modifier.padding(horizontal = 16.dp, vertical = 4.dp).testTag(UiTags.HOME_MIXES))
-        }
-    } else {
-        item("mixes-empty-head", contentType = "head") { SectionHead("Made from your listening") }
+        section("mixes", TITLE, mixes, CardKind.Mix, style, { it.mix.id }, SectionHead(modifier = Modifier.testTag(UiTags.HOME_MIXES)), edit) { MixCard(vm, it) }
+    } else if (explainEmpty) {
+        sectionHeader("mixes", TITLE, edit = edit)
         item("mixes-empty", contentType = "empty-card") {
             EmptyCard(
                 "Nothing played yet",
@@ -81,35 +62,15 @@ internal fun LazyListScope.mixSections(vm: StudioViewModel, mixes: List<HomeMix>
                 Modifier.testTag(UiTags.HOME_NO_LISTENING),
             )
         }
-    }
-}
-
-@Composable
-private fun MixGrid(vm: StudioViewModel, mixes: List<HomeMix>, modifier: Modifier) {
-    Column(modifier, verticalArrangement = Arrangement.spacedBy(8.dp)) {
-        mixes.chunked(2).forEach { pair ->
-            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                pair.forEach { MixTile(vm, it, Modifier.weight(1f)) }
-                if (pair.size == 1) Spacer(Modifier.weight(1f))
-            }
-        }
-    }
+    } else emptySection("mixes", TITLE, edit)
 }
 
 /** A mix: tapping plays it. */
 @Composable
-private fun MixTile(vm: StudioViewModel, mix: HomeMix, modifier: Modifier) {
-    val cover = remember(mix) { mix.songs.firstOrNull { it.art != null }?.artModel() ?: mix.songs.firstOrNull()?.artModel() }
-    Surface(shape = MaterialTheme.shapes.medium, color = MaterialTheme.colorScheme.surfaceContainerHigh, modifier = modifier.heightIn(min = 64.dp).testTag(UiTags.homeMix(mix.mix.id))) {
-        Row(
-            Modifier.heightIn(min = 64.dp).clickable(role = Role.Button, onClickLabel = "Play ${mix.mix.title}") { vm.play(mix.songs, 0) },
-            verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp),
-        ) {
-            ArtTile(cover, mix.mix.title, LibraryItemKind.AUDIO, Modifier.size(64.dp), MaterialTheme.shapes.medium, iconSize = 22.dp)
-            Column(Modifier.weight(1f).padding(end = 8.dp)) {
-                Text(mix.mix.title, fontSize = 13.sp, lineHeight = 17.sp, fontWeight = FontWeight.SemiBold, maxLines = 2, overflow = TextOverflow.Ellipsis)
-                Text(mix.mix.blurb, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 2, overflow = TextOverflow.Ellipsis)
-            }
-        }
-    }
+private fun MixCard(vm: StudioViewModel, mix: HomeMix) {
+    val covers = remember(mix) { mix.songs.filter { it.art != null }.take(4).map { it.artModel() } }
+    MediaCard(
+        CardKind.Mix, mix.mix.title, mix.mix.blurb, CardActions({ vm.play(mix.songs, 0) }, clickLabel = "Play ${mix.mix.title}"),
+        Modifier.testTag(UiTags.homeMix(mix.mix.id)), marks = CardMarks(tag = "MIX"),
+    ) { MixArt(covers.ifEmpty { listOfNotNull(mix.songs.firstOrNull()?.artModel()) }, mix.mix.title) }
 }

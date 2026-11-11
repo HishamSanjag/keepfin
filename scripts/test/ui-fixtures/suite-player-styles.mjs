@@ -81,7 +81,7 @@ export async function registerPlayerStylesSuite({test, calls}) {
   })
 
   await test('player style: Settings > Appearance has the same choice', async (page) => {
-    await mainNav(page).getByRole('button', {name: 'Settings', exact: true}).click()
+    await page.locator('aside.rail').getByRole('button', {name: 'Settings', exact: true}).click()
     await page.getByRole('navigation', {name: 'Settings sections'}).getByRole('button', {name: 'Appearance'}).click()
     const group = page.getByRole('radiogroup', {name: 'Player style'})
     await group.waitFor()
@@ -518,7 +518,7 @@ export async function registerPlayerStylesSuite({test, calls}) {
         const r = document.querySelector(selector)?.getBoundingClientRect()
         return r ? {x: r.left, y: r.top, right: r.right, bottom: r.bottom, w: r.width, h: r.height} : null
       }
-      return {bar: rect('.now-bar'), left: rect('.now-left'), center: rect('.now-center'), right: rect('.now-right'), main: rect('main.main'), vw: innerWidth, vh: innerHeight, pillText: document.querySelector('.video-pill-text') ? getComputedStyle(document.querySelector('.video-pill-text')).display : null}
+      return {bar: rect('.now-bar'), rail: rect('aside.rail'), left: rect('.now-left'), center: rect('.now-center'), right: rect('.now-right'), main: rect('main.main'), vw: innerWidth, vh: innerHeight, pillText: document.querySelector('.video-pill-text') ? getComputedStyle(document.querySelector('.video-pill-text')).display : null}
     })
   const apart = (a, b) => a.right <= b.x + 1 || b.right <= a.x + 1 || a.bottom <= b.y + 1 || b.bottom <= a.y + 1
 
@@ -527,8 +527,9 @@ export async function registerPlayerStylesSuite({test, calls}) {
     await song(page, 'Night Swim').first().click()
     await bar(page).waitFor()
     const g = await boxes(page)
-    assert.ok(Math.abs(g.bar.x - 16) < 1.5 && Math.abs(g.vw - g.bar.right - 16) < 1.5, `16px from the sides (${g.bar.x}, ${g.vw - g.bar.right})`)
-    assert.ok(Math.abs(g.vh - g.bar.bottom - 16) < 1.5, `16px from the bottom (${g.vh - g.bar.bottom})`)
+    // beside the floating sidebar with its 8 px gutters
+    assert.ok(Math.abs(g.bar.x - g.rail.right - 8) < 1.5 && Math.abs(g.vw - g.bar.right - 8) < 1.5, `8px from the sidebar and the window (${g.bar.x - g.rail.right}, ${g.vw - g.bar.right})`)
+    assert.ok(Math.abs(g.vh - g.bar.bottom - 8) < 1.5, `8px from the bottom (${g.vh - g.bar.bottom})`)
     assert.ok(g.main.bottom <= g.bar.y + 1, 'the page is not hidden behind the bar')
     const look = await page.locator('.now-bar').evaluate((el) => {
       const s = getComputedStyle(el)
@@ -590,13 +591,13 @@ export async function registerPlayerStylesSuite({test, calls}) {
   }, {fake: {videoSong: true}})
 
   for (const width of [1000, 860, 700, 560]) {
-    await test(`mini bar: at ${width} px the groups never overlap, the bar stays 16 px inside the window${width <= 1099 ? ' and the Video pill keeps only its icon' : ''}`, async (page) => {
+    await test(`mini bar: at ${width} px the groups never overlap, the bar stays 8 px inside the window beside the sidebar${width <= 1099 ? ' and the Video pill keeps only its icon' : ''}`, async (page) => {
       await openMusic(page)
       await song(page, 'Night Swim').first().click()
       await bar(page).waitFor()
       await page.waitForTimeout(200)
       const g = await boxes(page)
-      assert.ok(g.bar.x >= 15 && g.vw - g.bar.right >= 15 && g.vh - g.bar.bottom >= 15, 'inside the window')
+      assert.ok(g.bar.x >= g.rail.right + 7 && g.vw - g.bar.right >= 7 && g.vh - g.bar.bottom >= 7, 'inside the window, beside the sidebar')
       assert.ok(g.bar.right <= g.vw && g.bar.bottom <= g.vh)
       for (const [a, b] of [['left', 'center'], ['left', 'right'], ['center', 'right']]) assert.ok(apart(g[a], g[b]), `${a} and ${b} overlap: ${JSON.stringify([g[a], g[b]])}`)
       for (const key of ['left', 'center', 'right']) assert.ok(g[key].x >= g.bar.x - 1 && g[key].right <= g.bar.right + 1, `${key} stays inside the bar`)
