@@ -202,3 +202,27 @@ test('a different post, or one that lost a photo while saving, is never reported
     await f.cleanup()
   }
 })
+
+test('the preview fetches the picture of every item of a post: photos and video covers, nothing else', async () => {
+  const f = await setup()
+  try {
+    const url = 'https://www.instagram.com/p/MIX/'
+    f.engine.inspectResult = (u) => ({
+      type: 'media',
+      media: fakeMedia(u, {
+        title: 'Mixed',
+        engine: 'gallery-dl',
+        gallery: {count: 2, previews: ['https://cdn.example/1.jpg'], truncated: false, items: [
+          {position: 1, url: 'https://cdn.example/1.jpg', photo: true},
+          {position: 2, url: 'https://cdn.example/2.mp4', photo: false, cover: 'https://cdn.example/2-cover.jpg'},
+        ]},
+      }),
+    })
+    await f.manager.inspect(url)
+    assert.deepEqual(f.manager.thumbnailSource(undefined, 'https://cdn.example/1.jpg'), {url: 'https://cdn.example/1.jpg'})
+    assert.deepEqual(f.manager.thumbnailSource(undefined, 'https://cdn.example/2-cover.jpg'), {url: 'https://cdn.example/2-cover.jpg'})
+    assert.throws(() => f.manager.thumbnailSource(undefined, 'https://elsewhere.example/x.jpg'), /not part of an inspected link/)
+  } finally {
+    await f.cleanup()
+  }
+})

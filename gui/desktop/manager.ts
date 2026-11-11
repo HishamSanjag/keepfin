@@ -567,7 +567,8 @@ export class DownloadManager {
       if (
         result.type === 'media' &&
         (result.media.thumbnail === url ||
-          result.media.gallery?.previews.includes(url))
+          result.media.gallery?.previews.includes(url) ||
+          result.media.gallery?.items.some((item) => item.url === url || item.cover === url))
       )
         return {url}
     if (this.collections.hasThumbnail(url)) return {url}
