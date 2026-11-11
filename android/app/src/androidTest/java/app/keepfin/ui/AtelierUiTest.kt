@@ -87,7 +87,8 @@ class AtelierUiTest {
         scrollHome(UiTags.libItem(video))
         rule.waitForTag(UiTags.libItem(video))
         // 190 s of 464 s watched: "4 min left"
-        rule.onNodeWithText("left", substring = true, useUnmergedTree = true).assertExists()
+        // the same video can also sit in "New videos", so more than one card may say it
+        assertTrue(rule.onAllNodesWithText("left", substring = true, useUnmergedTree = true).fetchSemanticsNodes().isNotEmpty())
     }
 
     @Test fun theCrossOnAContinueCardTakesItOffTheRowAndUndoBringsItBack() {

@@ -89,7 +89,8 @@ class LibraryUiTest {
         assertFalse(rule.exists(UiTags.LIB_SPACE_NEW))
         rule.onNodeWithTag(UiTags.LIB_SPACES_EDIT).assertIsDisplayed()
         assertFalse(rule.exists("library-chips"))
-        rule.onNodeWithText("Continue watching").assertExists()
+        // Continue watching lives on Home now
+        rule.onNodeWithText("Continue watching").assertDoesNotExist()
         rule.onNodeWithTag(UiTags.nav(Destination.DOWNLOADS)).assertExists()
         rule.onNodeWithTag(UiTags.nav(Destination.SETTINGS)).assertExists()
     }

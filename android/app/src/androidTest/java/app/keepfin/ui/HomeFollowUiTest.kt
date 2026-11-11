@@ -66,6 +66,12 @@ class HomeFollowUiTest {
         return h
     }
 
+    // The card is a section lower on Home, so the list has to reach it first.
+    private fun showReleaseCard() {
+        rule.waitUntil(10_000) { runCatching { rule.onNodeWithTag(UiTags.HOME_LIST).performScrollToNode(hasTestTag(UiTags.RELEASE_CARD)) }.isSuccess }
+        rule.waitForTag(UiTags.RELEASE_CARD)
+    }
+
     private fun artists(h: Harness, failed: Boolean = false) {
         seeded(h, releases = false, failed = failed)
         h.vm.chooseMusicTab("music", MusicTab.ARTISTS)
@@ -91,7 +97,7 @@ class HomeFollowUiTest {
 
     @Test fun theCardNamesTheCountAndReviewKeepsOnlyOnTheTap() {
         val h = home()
-        rule.waitForTag(UiTags.RELEASE_CARD)
+        showReleaseCard()
         rule.onNodeWithText("2 new releases from artists you follow").assertIsDisplayed()
         rule.onNodeWithTag(UiTags.RELEASE_REVIEW).performClick()
         rule.waitForTag(UiTags.RELEASES_SHEET)
@@ -108,19 +114,19 @@ class HomeFollowUiTest {
 
     @Test fun theXHidesTheCardUntilANewerReleaseArrives() {
         val h = home()
-        rule.waitForTag(UiTags.RELEASE_CARD)
+        showReleaseCard()
         rule.onNodeWithTag(UiTags.RELEASE_DISMISS).performClick()
         rule.waitUntil(5_000) { !rule.exists(UiTags.RELEASE_CARD) }
         assertEquals(2, h.engine.fakeFollowing.value.seenReleases.size)
         // a newer release brings it back, counting only itself
         h.engine.fakeFollowing.value = h.engine.fakeFollowing.value.let { it.copy(releases = it.releases + ArtistRelease(link3, "fa-1", "Hollow Bloom", "Single", link3, null, System.currentTimeMillis())) }
-        rule.waitForTag(UiTags.RELEASE_CARD)
+        showReleaseCard()
         rule.onNodeWithText("1 new release from artists you follow").assertIsDisplayed()
     }
 
     @Test fun dontShowOnHomeTurnsTheCardOffAndSettingsTurnsItBackOn() {
         val h = home()
-        rule.waitForTag(UiTags.RELEASE_CARD)
+        showReleaseCard()
         assertTrue(h.engine.settings.value.newReleasesOnHome)
         rule.onNodeWithTag(UiTags.RELEASE_HIDE).performClick()
         rule.waitUntil(5_000) { !h.engine.settings.value.newReleasesOnHome }
@@ -140,12 +146,12 @@ class HomeFollowUiTest {
         rule.waitUntil(5_000) { h.engine.settings.value.newReleasesOnHome }
         rule.onNodeWithTag(UiTags.SETTING_HOME_RELEASES).assertIsOn()
         h.vm.navigate(Destination.HOME)
-        rule.waitForTag(UiTags.RELEASE_CARD)
+        showReleaseCard()
     }
 
     @Test fun markAllSeenClosesTheSheetAndTheCardGoes() {
         val h = home()
-        rule.waitForTag(UiTags.RELEASE_CARD)
+        showReleaseCard()
         rule.onNodeWithTag(UiTags.RELEASE_REVIEW).performClick()
         rule.waitForTag(UiTags.RELEASES_SHEET)
         rule.onNodeWithTag(UiTags.REVIEW_MARK_ALL).performClick()
@@ -155,7 +161,7 @@ class HomeFollowUiTest {
 
     @Test fun manageWhoYouFollowOpensTheArtistListOnFollowing() {
         home()
-        rule.waitForTag(UiTags.RELEASE_CARD)
+        showReleaseCard()
         rule.onNodeWithTag(UiTags.RELEASE_REVIEW).performClick()
         rule.waitForTag(UiTags.RELEASES_SHEET)
         rule.onNodeWithTag(UiTags.REVIEW_MANAGE).performClick()

@@ -17,6 +17,9 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import app.keepfin.PlaybackItems
 import app.keepfin.ui.library.LibraryRoute
 
+import app.keepfin.core.layout.CardKind
+import app.keepfin.core.layout.CardPrefs
+import app.keepfin.core.layout.CardSizes
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
@@ -74,21 +77,24 @@ class BetaTwoUiTest {
 
     @Test fun recentlyAddedKeepsOneShapePerShelfVideoCardsWideAndSongCoversSquare() {
         val h = Harness("library")
-        h.vm.navigate(Destination.LIBRARY)
+        h.vm.navigate(Destination.HOME)
         h.show(rule)
         val video = "content://media/external/video/media/302"
         val song = "content://media/external/audio/media/104"
-        rule.waitForTag(UiTags.LIB_LIST)
-        rule.onNodeWithTag(UiTags.LIB_LIST).performScrollToNode(hasTestTag(UiTags.libItem(video)))
+        rule.waitForTag(UiTags.HOME_LIST)
+        rule.onNodeWithTag(UiTags.HOME_LIST).performScrollToNode(hasTestTag(UiTags.libItem(video)))
         rule.waitForTag(UiTags.libItem(video))
-        // Shelves never mix shapes: videos are 16:9 cards in their own row, songs are square covers in another.
+        // Home's New videos and New music sections never mix shapes: videos are 16:9 cards in their own row, songs are square covers in another.
         val v = rule.onNodeWithTag(UiTags.libItem(video), useUnmergedTree = true).getUnclippedBoundsInRoot()
-        rule.onNodeWithTag(UiTags.LIB_LIST).performScrollToNode(hasTestTag(UiTags.libItem(song)))
+        rule.onNodeWithTag(UiTags.HOME_LIST).performScrollToNode(hasTestTag(UiTags.libItem(song)))
         rule.waitForTag(UiTags.libItem(song))
-        // the song can be on Recently played too: the first one is Recently added's
+        // the song can also be in Jump back in: any card of it is a square cover
         val s = rule.onAllNodesWithTag(UiTags.libItem(song), useUnmergedTree = true)[0].getUnclippedBoundsInRoot()
-        assertEquals("video card is 180dp wide", 180f, (v.right - v.left).value, 0.5f)
-        assertEquals("song cover card is 120dp wide", 120f, (s.right - s.left).value, 0.5f)
+        // card widths follow the screen now, through the shared size rule
+        val page = androidx.test.platform.app.InstrumentationRegistry.getInstrumentation().targetContext.resources.configuration.screenWidthDp.toDouble()
+        val scale = CardPrefs().scale
+        assertEquals("video card is the wide size", CardSizes.size(CardKind.Video, page, scale).toFloat(), (v.right - v.left).value, 0.5f)
+        assertEquals("song cover card is the square size", CardSizes.size(CardKind.Square, page, scale).toFloat(), (s.right - s.left).value, 0.5f)
     }
 
     private val linkedSong = "content://media/external/audio/media/102"

@@ -124,6 +124,12 @@ class HomeSearchUiTest {
         return h
     }
 
+    // The overview shows videos as cards (long press for actions); the Videos group lists rows with a menu button.
+    private fun openVideosGroup() {
+        rule.onNodeWithTag(UiTags.SEARCH_SCREEN).performScrollToNode(hasTestTag(UiTags.searchChip("videos")))
+        rule.onNodeWithTag(UiTags.searchChip("videos")).performClick()
+    }
+
     @Test fun searchShowsYourLibraryFirstThenYouTubeAndFiltersByKind() {
         search("sintel")
         rule.waitForTag(UiTags.SEARCH_LIBRARY)
@@ -223,6 +229,7 @@ class HomeSearchUiTest {
     @Test fun aVideoCanDoWhatASongCanAndSaysWhatIsMissing() {
         val video = "content://media/external/video/media/202"
         search("Sintel - Open")
+        openVideosGroup()
         rule.waitForTag(UiTags.libMenu(video))
         rule.onNodeWithTag(UiTags.libMenu(video)).performClick()
         sheetActions()
@@ -254,6 +261,7 @@ class HomeSearchUiTest {
     @Test fun playAsAudioPutsTheVideoInTheMusicQueueWithoutOpeningTheVideoScreen() {
         val video = "content://media/external/video/media/202"
         val h = search("Sintel - Open")
+        openVideosGroup()
         rule.waitForTag(UiTags.libMenu(video))
         rule.onNodeWithTag(UiTags.libMenu(video)).performClick()
         sheetActions()
