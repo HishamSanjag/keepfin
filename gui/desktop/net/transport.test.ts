@@ -11,9 +11,8 @@ import {World, type Node} from './testkit.js'
 
 const idOf = (bytes: Buffer) => 'sha256:' + createHash('sha256').update(bytes).digest('hex')
 
-// The host's lease is 5 s against a 100 ms heartbeat, so a busy machine (heartbeats are TLS requests) cannot lose the lock in the
-// middle of a test; the test of an expiring lease asks for a short one.
-async function rig(leaseMs = 5_000) {
+// The host keeps the app's own lease, so a stalled CI runner cannot lose the lock mid-test; the expiring-lease test asks for a short one.
+async function rig(leaseMs?: number) {
   const w = await World.create()
   const host = await w.node('Host', {leaseMs})
   const guest = await w.node('Guest')

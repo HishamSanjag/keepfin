@@ -15,7 +15,7 @@ const idOf = (bytes: Buffer) => 'sha256:' + createHash('sha256').update(bytes).d
 
 async function rig(actions: DeviceAction[] = ['metadata.read', 'metadata.write', 'inventory.read', 'media.read', 'copy.mutate']) {
   const w = await World.create()
-  const host = await w.node('Host', {leaseMs: 2000})
+  const host = await w.node('Host')
   const guest = await w.node('Guest')
   await w.pair(guest, host)
   await host.service.setAccess(guest.identity.deviceId, w.libraryId, [...actions])

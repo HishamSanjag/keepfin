@@ -17,7 +17,7 @@ test('a copy on a device: upload, replace (old bytes kept by the device), rename
   const net = await World.create()
   const cw = await makeWorld('kf-peer-direct-')
   try {
-    const host = await net.node('Host', {leaseMs: 5000})
+    const host = await net.node('Host')
     const guest = await net.node('Guest')
     await net.pair(guest, host)
     await host.service.setAccess(guest.identity.deviceId, net.libraryId, ['metadata.read', 'metadata.write', 'inventory.read', 'media.read', 'copy.mutate'])
