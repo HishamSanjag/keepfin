@@ -21,3 +21,12 @@ Rules:
 `saved.json` rule `label`: input `photos` and `videos` (counts); expected `label`: "6 photos", "1 video", "2 photos, 8 videos". Rule `savedLabel` for a mixed label reads "7 of 10 items" while some files are missing.
 
 `range.json`: input `chosen` (positions) and `count`; expected `range` (null when every position 1..count is chosen, else sorted and compact, for example `1,3-5`) or `invalid: true` for an empty list, a position outside 1..count, a repeat, or more than 500 values.
+
+## Public posts
+
+`public.json`, decided by `app.keepfin.core.gallery.PublicPost`: a post its site shows to signed-out visitors, read from the pages the download engine prints. Three inputs:
+
+- `link`: expected `supports` (an Instagram `/p/<code>` link, also under a profile name).
+- `pages` (the engine's output): expected `answer`, the line after the notice of the post request (base64), or null when the notice or the page is missing.
+- `url` and `answer` (the decoded page), optional `limit`: the same result as a gallery read. Files come from `carousel_media` (else the post itself): a photo is its first `image_versions2` candidate (else `display_uri`); a video is its first `video_versions` link with the picture as `cover`. Title: the caption cut to 120, else `<Provider> post`; uploader: full name, else username. `empty` (the apps use the usual route) for unreadable or gated answers, a file without an `https://` link, and a post that is one video.
+

@@ -22,7 +22,8 @@ import {buildDownloadArgs, ENCODING_ARGS, type CookieSource} from '../../shared/
 import {settleOutputs} from './outputs.js'
 import {isCollectionUrl, isGalleryHost, isShortMusicLink, isYouTube, musicLink, musicLinkUrl} from '../../shared/providers.js'
 import {MusicChoices} from './choices.js'
-import {downloadGallery, inspectGallery, type GalleryContext} from './gallery.js'
+import {downloadGallery, downloadLinks, inspectGallery, type GalleryContext} from './gallery.js'
+import {inspectPublicPost, publicPostLinks, publicPostSupported} from './publicPost.js'
 import {
   classifyProbe,
   isMusicLike,
@@ -234,6 +235,10 @@ export class StudioEngine implements Engine {
   async inspect(url: string, ctx: EngineContext): Promise<InspectResult> {
     await ctx.guard?.(url, ctx.signal)
     if (musicLink(url) || isShortMusicLink(url)) return this.inspectMusic(url, ctx)
+    if (!ctx.cookies && publicPostSupported(url)) {
+      const media = await inspectPublicPost(await this.ytdlp(ctx), url)
+      if (media) return {type: 'media', media}
+    }
     if (isGalleryHost(url)) {
       try {
         return {type: 'media', media: await inspectGallery(await this.gallery(ctx), url)}
@@ -530,9 +535,12 @@ export class StudioEngine implements Engine {
     if (task.format.type === 'gallery') {
       const folder = path.join(task.folder, task.stem)
       events.onStage('downloading')
-      const {files} = await downloadGallery(await this.gallery(ctx), task.url, folder, task.expectedCount, task.format.items, (done, total) =>
-        events.onProgress({percent: total ? Math.min(99, (done / total) * 100) : 0, downloadedBytes: undefined}),
-      )
+      const onProgress = (done: number, total?: number) => events.onProgress({percent: total ? Math.min(99, (done / total) * 100) : 0, downloadedBytes: undefined})
+      if (!ctx.cookies && publicPostSupported(task.url)) {
+        const saved = await this.downloadPublicPost(task, folder, ctx, onProgress)
+        if (saved) return saved
+      }
+      const {files} = await downloadGallery(await this.gallery(ctx), task.url, folder, task.expectedCount, task.format.items, onProgress)
       return {file: files[0], files: files.slice(1)}
     }
     if (musicLink(task.url) || isShortMusicLink(task.url)) return this.downloadMusic(task, ctx, events)
@@ -547,6 +555,25 @@ export class StudioEngine implements Engine {
     } catch (error) {
       if (ctx.signal?.aborted || !isYouTube(task.url) || !isGenericUnavailable(errorText(error))) throw error
       return this.recoverRestricted(task, ctx, events, error, matched ? [matched] : [])
+    }
+  }
+
+  /** Saves a signed-out post from its direct links; undefined when the post cannot be read that way or nothing was saved. */
+  private async downloadPublicPost(
+    task: DownloadTask,
+    folder: string,
+    ctx: EngineContext,
+    onProgress: (done: number, total?: number) => void,
+  ): Promise<DownloadOutcome | undefined> {
+    const chosen = task.format.type === 'gallery' ? task.format.items : undefined
+    const links = await publicPostLinks(await this.ytdlp(ctx), task.url, chosen, task.expectedCount)
+    if (!links) return
+    try {
+      const {files} = await downloadLinks(await this.gallery(ctx), links, folder, onProgress)
+      return {file: files[0], files: files.slice(1)}
+    } catch (error) {
+      if (ctx.signal?.aborted) throw error
+      return
     }
   }
 

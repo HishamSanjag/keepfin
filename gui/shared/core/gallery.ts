@@ -2,14 +2,29 @@
 // and the desktop's gallery code. This is the only file that imports the core's gallery package.
 //
 // The core reads the gallery engine's `-j` output (passed as text) and decides the post, a reported failure, or nothing usable.
-import {galleryAlreadySaved, galleryLabel, galleryRange, galleryRead, gallerySavedLabel, JsEarlierSave} from '../../../build/core-js/keepfin-core.mjs'
+import {
+  galleryAlreadySaved,
+  galleryLabel,
+  galleryRange,
+  galleryRead,
+  gallerySavedLabel,
+  JsEarlierSave,
+  publicPostAnswer,
+  publicPostRead,
+  publicPostSupports,
+} from '../../../build/core-js/keepfin-core.mjs'
 import type {FormatRequest, MediaInfo} from '../contracts.js'
 
 export type GalleryResult = {kind: 'post'; media: MediaInfo} | {kind: 'failed'; message: string} | {kind: 'empty'}
 
 /** Reads the engine's parsed `-j` output (message tuples) for the link `url`. */
 export function readGallery(data: unknown, url: string, limit: number): GalleryResult {
-  const read = galleryRead(JSON.stringify(data) ?? '', url, limit)
+  return galleryResult(galleryRead(JSON.stringify(data) ?? '', url, limit), url)
+}
+
+type CoreRead = ReturnType<typeof galleryRead>
+
+function galleryResult(read: CoreRead, url: string): GalleryResult {
   if (read.kind === 'failed') return {kind: 'failed', message: read.message ?? ''}
   if (read.kind !== 'post') return {kind: 'empty'}
   const previews = Array.from(read.previews)
@@ -34,6 +49,22 @@ export function readGallery(data: unknown, url: string, limit: number): GalleryR
         truncated: read.truncated,
       },
     },
+  }
+}
+
+/** True for a link worth reading signed out (an Instagram post). */
+export function publicPostSupported(url: string): boolean {
+  return publicPostSupports(url)
+}
+
+/** Reads a signed-out post from the download engine's printed pages; empty when the answer is missing or unusable. */
+export function readPublicPost(engineOutput: string, url: string, limit: number): GalleryResult {
+  const encoded = publicPostAnswer(engineOutput)
+  if (!encoded) return {kind: 'empty'}
+  try {
+    return galleryResult(publicPostRead(Buffer.from(encoded, 'base64').toString('utf8'), url, limit), url)
+  } catch {
+    return {kind: 'empty'}
   }
 }
 

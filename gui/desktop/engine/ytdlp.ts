@@ -52,7 +52,7 @@ export class EngineError extends Error {
   }
 }
 
-function baseArgs(ctx: YtDlpContext) {
+export function baseArgs(ctx: YtDlpContext) {
   return [
     ...toolArgs({ffmpeg: ctx.ffmpeg, jsRuntime: ctx.jsRuntime, cacheDir: ctx.cacheDir}),
     ...networkArgs(ctx.network, ctx.cookies),

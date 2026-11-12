@@ -3,6 +3,7 @@ package app.keepfin
 import android.os.SystemClock
 import com.yausername.youtubedl_android.YoutubeDL
 import com.yausername.youtubedl_android.YoutubeDLRequest
+import com.yausername.youtubedl_android.YoutubeDLResponse
 import java.util.UUID
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.Executors
@@ -23,7 +24,14 @@ internal class MetadataRequests {
         }
     }
     fun cancelled(session: String) = cancelledSessions.containsKey(session)
-    fun execute(request: YoutubeDLRequest, session: String, timeoutMs: Long, init: () -> Unit, onLine: ((String) -> Unit)? = null): String {
+    fun execute(request: YoutubeDLRequest, session: String, timeoutMs: Long, init: () -> Unit, onLine: ((String) -> Unit)? = null): String =
+        run(request, session, timeoutMs, init, onLine).out
+
+    /** Like [execute] but everything the engine printed: standard output, then its messages. */
+    fun executeAll(request: YoutubeDLRequest, session: String, timeoutMs: Long, init: () -> Unit): String =
+        run(request, session, timeoutMs, init, null).let { it.out + "\n" + it.err }
+
+    private fun run(request: YoutubeDLRequest, session: String, timeoutMs: Long, init: () -> Unit, onLine: ((String) -> Unit)?): YoutubeDLResponse {
         require(timeoutMs in 100..120_000) { "Invalid metadata deadline." }
         val now = SystemClock.elapsedRealtime()
         cancelledSessions.entries.removeIf { now - it.value > 600_000 }
@@ -60,7 +68,7 @@ internal class MetadataRequests {
                     }
                 }
             }
-            val response = ToolsUpdater.reading { YoutubeDL.execute(request, call.process, callback).out }
+            val response = ToolsUpdater.reading { YoutubeDL.execute(request, call.process, callback) }
             check()
             return response
         } catch (error: Exception) {

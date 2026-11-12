@@ -139,6 +139,10 @@ internal object GalleryLogic {
     fun downloadArgs(url: String, folder: String, range: String?, cookiesFile: String?): List<String> =
         base(cookiesFile) + listOf("-D", folder) + (if (range != null) listOf("--range", range) else emptyList()) + listOf("--", url)
 
+    /** Saves direct file links (no site extractor) into [folder] under their own names. */
+    fun directArgs(folder: String, urls: List<String>): List<String> =
+        base(null) + listOf("-D", folder, "-f", "{filename}.{extension}", "--") + urls
+
     /** The engine stderr as the failure text the shared error rules read ("[site][error] x" becomes "ERROR: x"). */
     fun errorText(stderr: String, timedOut: Boolean): String = when {
         timedOut -> "The download timed out."

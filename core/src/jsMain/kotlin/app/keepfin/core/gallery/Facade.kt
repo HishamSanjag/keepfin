@@ -22,7 +22,21 @@ class JsGalleryRead(
 )
 
 @JsExport
-fun galleryRead(json: String, url: String, limit: Int): JsGalleryRead = when (val r = Gallery.read(json, url, limit)) {
+fun galleryRead(json: String, url: String, limit: Int): JsGalleryRead = js(Gallery.read(json, url, limit))
+
+/** True when the link is a post worth reading signed out first. */
+@JsExport
+fun publicPostSupports(url: String): Boolean = PublicPost.supports(url)
+
+/** The post's answer (base64) inside the download engine's printed pages, or null. */
+@JsExport
+fun publicPostAnswer(output: String): String? = PublicPost.encodedAnswer(output)
+
+/** Reads the decoded answer of a signed-out post; "empty" means use the usual route. */
+@JsExport
+fun publicPostRead(answer: String, url: String, limit: Int): JsGalleryRead = js(PublicPost.read(answer, url, limit))
+
+private fun js(read: GalleryRead): JsGalleryRead = when (val r = read) {
     is GalleryRead.Post -> JsGalleryRead("post", null, r.title, r.uploader, r.category, r.provider, r.previews.toTypedArray(), r.items.map { JsGalleryItem(it.position, it.url, it.photo, it.cover) }.toTypedArray(), r.count, r.truncated)
     is GalleryRead.Failed -> JsGalleryRead("failed", r.message, null, null, null, null, emptyArray(), emptyArray(), 0, false)
     GalleryRead.Empty -> JsGalleryRead("empty", null, null, null, null, null, emptyArray(), emptyArray(), 0, false)

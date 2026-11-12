@@ -148,6 +148,18 @@ internal class Inspector(private val engine: MediaEngine) {
         InspectResult.Media(media)
     }
 
+    /** A post the site shows signed out, read from the download engine's pages; null for anything else so the usual route goes on. */
+    private fun inspectPublic(url: String, session: String): InspectResult? =
+        readPublic(url, session)?.let { InspectResult.Media(PhotoPosts.media(it, url)) }
+
+    /** The signed-out read of [url] under [session] (no cookies); null when it fails or is not a post. Throws only when [session] was cancelled. */
+    fun readPublic(url: String, session: String): GalleryRead.Post? {
+        val request = request(url, null).also { r -> PublicPhotos.OPTIONS.forEach { r.addOption(it) } }
+        val output = try { engine.metadata.executeAll(request, session, PublicPhotos.TIMEOUT_MS, engine.toolsUpdater::ensureInit) }
+            catch (error: Exception) { if (engine.metadata.cancelled(session)) throw error; return null }
+        return PublicPhotos.read(output, url)
+    }
+
     /** A photo post: the gallery engine lists its files and the shared core reads the listing. */
     private fun inspectPhotos(url: String, session: String): InspectResult = withCookies { cookies ->
         val listing = engine.galleryEngine.inspect(url, cookies?.absolutePath, cancelled = { engine.metadata.cancelled(session) })

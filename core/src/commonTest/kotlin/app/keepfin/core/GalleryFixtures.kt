@@ -3,6 +3,7 @@ package app.keepfin.core
 import app.keepfin.core.gallery.EarlierSave
 import app.keepfin.core.gallery.Gallery
 import app.keepfin.core.gallery.GalleryRead
+import app.keepfin.core.gallery.PublicPost
 import app.keepfin.core.json.JsonArray
 import app.keepfin.core.json.JsonBool
 import app.keepfin.core.json.JsonNumber
@@ -15,10 +16,12 @@ import app.keepfin.core.json.JsonValue
 internal fun galleryHandler(input: JsonObject): JsonValue {
     if ("chosen" in input.members) return galleryRangeHandler(input)
     if ("rule" in input.members) return gallerySavedHandler(input)
-    val output = (input.members.getValue("output") as JsonString).value
+    if ("link" in input.members) return obj("supports" to JsonBool(PublicPost.supports((input.members.getValue("link") as JsonString).value)))
+    if ("pages" in input.members) return obj("answer" to jstr(PublicPost.encodedAnswer((input.members.getValue("pages") as JsonString).value)))
+    val output = (input.members["output"] as? JsonString)?.value ?: ""
     val url = (input.members.getValue("url") as JsonString).value
     val limit = (input.members["limit"] as? JsonNumber)?.value?.toInt() ?: 200
-    return when (val r = Gallery.read(output, url, limit)) {
+    return when (val r = if ("answer" in input.members) PublicPost.read((input.members.getValue("answer") as JsonString).value, url, limit) else Gallery.read(output, url, limit)) {
         is GalleryRead.Post -> obj(
             "kind" to jstr("post"), "title" to jstr(r.title), "uploader" to jstr(r.uploader), "category" to jstr(r.category),
             "provider" to jstr(r.provider), "previews" to arr(r.previews.map { jstr(it) }),

@@ -81,8 +81,33 @@ export async function downloadGallery(
   items: number[] | undefined,
   onProgress: (done: number, total?: number) => void,
 ): Promise<{files: string[]}> {
+  return runGalleryDownload(ctx, galleryDownloadArgs(ctx, url, folder, items), expected, onProgress)
+}
+
+/** The arguments that save direct file links into `folder`, named by the link's own file name; never with cookies. */
+export function galleryLinksArgs(ctx: GalleryContext, links: string[], folder: string) {
+  const {cookies: _signedIn, ...signedOut} = ctx
+  return [...galleryArgs(signedOut), ...UTF8_STDOUT, '-f', '{filename}.{extension}', '-D', folder, '--', ...links.map(validateUrl)]
+}
+
+/** Saves direct links (a signed-out post's photos) into `folder`. */
+export async function downloadLinks(
+  ctx: GalleryContext,
+  links: string[],
+  folder: string,
+  onProgress: (done: number, total?: number) => void,
+): Promise<{files: string[]}> {
+  return runGalleryDownload(ctx, galleryLinksArgs(ctx, links, folder), links.length, onProgress)
+}
+
+async function runGalleryDownload(
+  ctx: GalleryContext,
+  args: string[],
+  expected: number | undefined,
+  onProgress: (done: number, total?: number) => void,
+): Promise<{files: string[]}> {
   const files: string[] = []
-  const result = await run(ctx.binary, galleryDownloadArgs(ctx, url, folder, items), {
+  const result = await run(ctx.binary, args, {
     env: ctx.env,
     signal: ctx.signal,
     onStdoutLine: (line) => {
