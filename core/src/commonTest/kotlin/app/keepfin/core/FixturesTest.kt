@@ -47,6 +47,9 @@ class FixturesTest {
     fun gallery() = check("gallery", runCategory("gallery", ::galleryHandler))
 
     @Test
+    fun devicemusic() = check("devicemusic", runCategory("devicemusic", ::deviceMusicHandler))
+
+    @Test
     fun signin() = check("signin", runCategory("signin", ::signinHandler))
 
     @Test
