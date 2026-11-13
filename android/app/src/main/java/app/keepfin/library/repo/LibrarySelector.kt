@@ -89,6 +89,8 @@ internal object LibrarySelector {
             deviceDir = deviceDir,
             imports = ResolverImports(context.contentResolver),
             linked = MediaStoreLinked(context),
+            // the folder tree id is `primary:Keepfin`: the part after the colon is where its files sit on the storage
+            device = app.keepfin.devicemusic.AndroidDeviceMusicPlatform(context, android.provider.DocumentsContract.getTreeDocumentId(tree).substringAfter(':', "")),
         )
     }
 }

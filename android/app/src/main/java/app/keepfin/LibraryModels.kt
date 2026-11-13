@@ -70,6 +70,8 @@ data class Space(
     val pinned: Boolean? = null,
     /** Smart spaces only. */
     val rules: SmartRules? = null,
+    /** The synthesized "This device" space (music already on this phone): never saved, never a download, route or move target. */
+    val device: Boolean = false,
 ) {
     /** Downloads, Music or Videos: the folder spaces every library has. Only these are folder-only (never smart). */
     val builtin get() = id in BUILTIN_SPACE_IDS
@@ -80,6 +82,29 @@ data class Space(
 }
 
 val BUILTIN_SPACE_IDS = setOf("downloads", "music", "videos")
+
+/** The id of the "This device" space and the prefix of its item ids (`dm-<volume>-<key>`, from the shared core). */
+const val DEVICE_SPACE_ID = "device"
+const val DEVICE_ITEM_PREFIX = "dm-"
+
+fun isDeviceItem(id: String): Boolean = id.startsWith(DEVICE_ITEM_PREFIX)
+
+/** The "This device" space: music already on the phone, listed in place and never copied. */
+fun deviceSpace(): Space = Space(
+    DEVICE_SPACE_ID, "This device", SpaceKind.MUSIC, "", FolderLayout.FLAT, SpaceNaming.TITLE, skipExisting = false, color = SpaceColor.TEAL, icon = SpaceIcon.MUSIC,
+    pinned = true, device = true,
+)
+
+/** What a library without the feature answers for [LibraryApi.deviceMusic]. */
+val NO_DEVICE_MUSIC: kotlinx.coroutines.flow.StateFlow<DeviceMusicState> = kotlinx.coroutines.flow.MutableStateFlow(DeviceMusicState.Off)
+
+/** Where [LibraryApi.deviceMusic] stands: off, waiting for the audio permission, reading the phone's music, or listing [Ready.count] songs. */
+sealed interface DeviceMusicState {
+    data object Off : DeviceMusicState
+    data object NeedsPermission : DeviceMusicState
+    data class Scanning(val found: Int) : DeviceMusicState
+    data class Ready(val count: Int) : DeviceMusicState
+}
 
 /** The three folder built-ins, then Favorites: what a new library starts with. */
 fun defaultSpaces(): List<Space> = defaultFolderSpaces() + favoritesSpace()
@@ -136,7 +161,7 @@ data class LibrarySettings(
     val offered: List<String> = emptyList(),
 ) {
     /** Spaces that store files and can receive downloads, routes and moves. Smart spaces are never in this list. */
-    val folderSpaces: List<Space> get() = spaces.filter { it.type == SpaceType.FOLDER }
+    val folderSpaces: List<Space> get() = spaces.filter { it.type == SpaceType.FOLDER && !it.device }
 }
 
 enum class LibraryItemKind(val wire: String) { VIDEO("video"), AUDIO("audio"), IMAGE("image"), OTHER("other") }

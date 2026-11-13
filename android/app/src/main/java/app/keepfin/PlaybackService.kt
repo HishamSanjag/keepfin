@@ -230,6 +230,7 @@ class PlaybackService : MediaLibraryService() {
         return when {
             !settings.library.enabled -> emptyList()
             parent == PlaybackItems.ROOT -> musicSpaces().map { PlaybackItems.folderItem(PlaybackItems.space(it.id), it.name) } +
+                listOfNotNull(PlaybackItems.folderItem(PlaybackItems.space(app.keepfin.DEVICE_SPACE_ID), "This device").takeIf { library.deviceMusic.value is app.keepfin.DeviceMusicState.Ready }) +
                 listOf(PlaybackItems.folderItem(PlaybackItems.PLAYLISTS, "Playlists"), PlaybackItems.folderItem(PlaybackItems.FAVORITES, "Favorites"),
                     PlaybackItems.folderItem(PlaybackItems.RECENT, "Recently added"))
             parent == PlaybackItems.FAVORITES -> playable(browse.top(query(order = ItemOrder.ADDED, favorite = true), MAX_CHILDREN))

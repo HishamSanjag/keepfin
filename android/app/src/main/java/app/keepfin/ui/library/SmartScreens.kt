@@ -216,7 +216,7 @@ fun RulesEditorScreen(ui: LibraryUi, route: LibraryRoute.Rules, spaces: List<Spa
         if (cleaned.rules.isEmpty()) Pair(Counts(), emptyMap()) else b.spaceCounts(matchQuery).let { by -> Pair(b.counts(matchQuery), by.mapValues { it.value.total }) }
     }
     val matches = matchCounts.first
-    val folderSpaces = remember(spaces) { spaces.filter { it.type == SpaceType.FOLDER } }
+    val folderSpaces = remember(spaces) { spaces.filter { it.type == SpaceType.FOLDER && !it.device } }
     val spaceNames = remember(spaces) { spaces.associate { it.id to it.name } }
     val draftName = route.draft.name.ifBlank { "New smart space" }
 

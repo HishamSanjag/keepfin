@@ -90,7 +90,7 @@ fun itemActions(ui: LibraryUi, item: LibraryItem, from: OwnCollection? = null): 
     val sound = song || item.kind == LibraryItemKind.VIDEO
     val notSound = "Photos and other files can't do this."
     val artist = (item.artist ?: item.albumArtist)?.takeIf { it.isNotBlank() }
-    return buildList {
+    val all = buildList {
         add(ItemAction("play", if (item.kind == LibraryItemKind.IMAGE) "View" else "Play", Icons.Outlined.PlayArrow) { vm.play(one, 0) })
         if (vm.isVideoSong(item)) add(ItemAction("watch", app.keepfin.core.spaces.Songs.WATCH, Icons.Outlined.Videocam) { vm.watchVideoSong(item) })
         else if (item.kind == LibraryItemKind.VIDEO) add(ItemAction("audio", "Play as audio", Icons.Outlined.Headphones) { vm.playAudio(one) })
@@ -135,7 +135,14 @@ fun itemActions(ui: LibraryUi, item: LibraryItem, from: OwnCollection? = null): 
         add(ItemAction("share", "Share", Icons.Outlined.Share) { ExternalOpen.share(ui.context, item)?.let(vm::say) })
         add(ItemAction("delete", "Delete file…", Icons.Outlined.DeleteOutline, danger = true) { ui.sheet(LibrarySheet.Delete(listOf(item.id), item.title)) })
     }
+    if (!app.keepfin.isDeviceItem(item.id)) return all
+    // music already on the phone stays where it is: no moving, copying, renaming or tag editing; it can be taken out of Keepfin
+    val kept = all.filter { it.name !in deviceHides }
+    val remove = ItemAction("removefromkeepfin", "Remove from Keepfin", Icons.Outlined.PlaylistRemove) { vm.libraryActions.hideDevice(listOf(item.id)) }
+    return kept.take(kept.size - 1) + remove + kept.last()
 }
+
+private val deviceHides = setOf("getmusicvideo", "findlyrics", "move", "copy", "edit", "rename", "match", "watchmusicvideo", "removemusicvideo")
 
 /** The bottom sheet every ⋯ and long-press opens: the item's art and title on top, then [itemActions]. */
 @OptIn(ExperimentalMaterial3Api::class)

@@ -104,6 +104,7 @@ internal fun Space.countLabel(count: Int): String = when (kind) {
 
 /** What a space card says under its name: "240 songs", "Smart · 58 songs" and, when a followed collection found news, "3 new · 31 songs". */
 internal fun spaceLine(space: Space, count: Int, news: Int, smart: Counts? = null): String {
+    if (space.device) return "Only on this phone"
     val base = if (space.smart) "Smart · " + RuleText.countLabel(smart ?: Counts()) else space.countLabel(count)
     return if (news > 0) "$news new · $base" else base
 }
@@ -121,14 +122,15 @@ fun SpacesGrid(ui: LibraryUi, spaces: List<Space>) {
     val more = remember(spaces) { SpaceLogic.moreSpaces(spaces) }
     val counts by rememberSpaceCounts(ui.browse)
     val smartCounts by rememberSmartCounts(ui, shown)
-    val cells = remember(shown, more) { shown.map<Space, Any> { it } + listOfNotNull(if (more > 0) more else null) }
+    val finding = (ui.vm.lib.deviceMusic.collectAsStateWithLifecycle().value as? app.keepfin.DeviceMusicState.Scanning)?.found
+    val cells =remember(shown, more) { shown.map<Space, Any> { it } + listOfNotNull(if (more > 0) more else null) }
     Column(Modifier.fillMaxWidth().padding(horizontal = 16.dp).testTag(UiTags.LIB_SPACES_GRID), verticalArrangement = Arrangement.spacedBy(10.dp)) {
         cells.chunked(2).forEach { pair ->
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                 pair.forEach { cell ->
                     if (cell is Space) {
                         HubCard(
-                            cell, spaceLine(cell, counts[cell.id]?.total ?: 0, HubLogic.newInSpace(snapshot.collections, cell.id), smartCounts[cell.id]), ui,
+                            cell, if (cell.device && finding != null) "Finding your music… $finding songs" else spaceLine(cell, counts[cell.id]?.total ?: 0, HubLogic.newInSpace(snapshot.collections, cell.id), smartCounts[cell.id]), ui,
                             Modifier.weight(1f),
                         )
                     } else AllSpacesCard(cell as Int, ui, Modifier.weight(1f))
@@ -171,7 +173,7 @@ private fun HubCard(space: Space, line: String, ui: LibraryUi, modifier: Modifie
                 Text(line, fontSize = 12.sp, lineHeight = 16.sp, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1, overflow = TextOverflow.Ellipsis)
             }
         }
-        DropdownMenu(menu, { menu = false }) {
+        DropdownMenu(menu && !space.device, { menu = false }) {
             DropdownMenuItem(
                 text = { Text("Edit") }, leadingIcon = { Icon(Icons.Outlined.Edit, contentDescription = null) },
                 onClick = { menu = false; ui.sheet(LibrarySheet.EditSpace(space)) }, modifier = Modifier.testTag(UiTags.LIB_SPACE_MENU_EDIT),
@@ -190,6 +192,7 @@ private fun HubCard(space: Space, line: String, ui: LibraryUi, modifier: Modifie
 }
 
 private fun spaceActions(ui: LibraryUi, space: Space) = buildList {
+    if (space.device) return@buildList
     add(CustomAccessibilityAction("Edit space") { ui.sheet(LibrarySheet.EditSpace(space)); true })
     add(CustomAccessibilityAction(if (space.smart) "Edit rules" else "Add to this space") { ui.addTo(space); true })
     if (!space.kept) add(CustomAccessibilityAction("Remove space") { ui.sheet(LibrarySheet.RemoveSpace(space)); true })

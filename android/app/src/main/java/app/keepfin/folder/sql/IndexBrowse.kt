@@ -98,7 +98,7 @@ private const val C_TRACK = 12; private const val C_DISC = 13; private const val
 private const val C_GENRE = 17; private const val C_DURATION = 18; private const val C_DURS = 19; private const val C_WIDTH = 20; private const val C_HEIGHT = 21
 private const val C_GAIN = 22; private const val C_ADDED = 23; private const val C_PLAYED = 24; private const val C_PLAYS = 25; private const val C_POSITION = 26
 private const val C_WATCHED = 27; private const val C_FAV = 28; private const val C_LYRICS = 29; private const val C_SRCURL = 30; private const val C_SRCID = 31
-private const val C_TAGS = 32; private const val C_UTAGS = 33; private const val C_PLACE = 34; private const val C_SIZE = 36; private const val C_CONTENT = 37; private const val C_MUSICVIDEO = 38
+private const val C_TAGS = 32; private const val C_UTAGS = 33; private const val C_PLACE = 34; private const val C_DIR = 35; private const val C_SIZE = 36; private const val C_CONTENT = 37; private const val C_MUSICVIDEO = 38
 
 /** The columns an order sorts by, ending with the id; every column is NOT NULL. */
 private fun orderColumns(order: ItemOrder): List<String> = when (order) {
@@ -146,6 +146,9 @@ class IndexBrowse(private val reader: IndexReader, private val env: BrowseEnv, p
         if (place == null) {
             // not on this phone: a paired device that holds the content can play it (net PeerDataSource)
             uri = ""; folder = ""
+        } else if (place.startsWith("device:")) {
+            // music already on the phone: the address is the content uri, the folder is the one MediaStore reports
+            uri = env.uriFor(place); folder = r[C_DIR].str().orEmpty()
         } else if (place.startsWith("linked:")) {
             val v = env.linked(id, place) ?: return null
             uri = v.uri; folder = v.folder; size = v.size; modifiedAt = v.modifiedAt

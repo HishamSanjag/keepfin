@@ -115,7 +115,10 @@ fun LibraryTab(vm: StudioViewModel, ui: LibraryUi, contentPadding: PaddingValues
     val version by ui.browse.changes.collectAsStateWithLifecycle()
     val settings by vm.engine.settings.collectAsStateWithLifecycle()
     // The hub order the user chose (built-ins included), with every space's color, icon and pin filled in.
-    val spaces = remember(settings.library.spaces) { SpaceLogic.withDefaults(settings.library.spaces) }
+    // "This device" is added here, after the saved spaces; it is never part of the settings
+    val onPhone by vm.lib.deviceMusic.collectAsStateWithLifecycle()
+    val showDevice = onPhone is app.keepfin.DeviceMusicState.Ready || onPhone is app.keepfin.DeviceMusicState.Scanning
+    val spaces = remember(settings.library.spaces, showDevice) { SpaceLogic.withDefaults(settings.library.spaces).let { if (showDevice) it + app.keepfin.deviceSpace() else it } }
     val selection = ui.selection
     val route = vm.libraryRoute
     LaunchedEffect(route) { selection.clear() }
@@ -275,7 +278,7 @@ fun SpaceToolbar(
                 }
             } else Spacer(Modifier.weight(1f))
             // The visible way in: "+" opens the library picker (folder space) or the rules (smart space).
-            if (title != null) IconButton(onClick = { ui.addTo(space) }, modifier = Modifier.testTag(UiTags.LIB_SPACE_ADD)) {
+            if (title != null && !space.device) IconButton(onClick = { ui.addTo(space) }, modifier = Modifier.testTag(UiTags.LIB_SPACE_ADD)) {
                 Icon(Icons.Outlined.Add, contentDescription = "Add to ${space.name}")
             }
             IconButton(onClick = { searching = !searching; if (!searching) onQuery("") }, modifier = Modifier.testTag(UiTags.LIB_SEARCH_TOGGLE)) {
@@ -312,7 +315,7 @@ fun SpaceToolbar(
             Box {
                 IconButton(onClick = { overflow = true }, modifier = Modifier.testTag(UiTags.LIB_OVERFLOW)) { Icon(Icons.Outlined.MoreVert, contentDescription = "More") }
                 DropdownMenu(overflow, { overflow = false }) {
-                    DropdownMenuItem(
+                    if (!space.device) DropdownMenuItem(
                         text = { Text(if (space.smart) "Edit rules" else "Add…") }, leadingIcon = { Icon(if (space.smart) Icons.Outlined.AutoAwesome else Icons.Outlined.Add, contentDescription = null) },
                         onClick = { overflow = false; ui.addTo(space) }, modifier = Modifier.testTag(UiTags.LIB_ADD_FILES),
                     )
@@ -321,12 +324,12 @@ fun SpaceToolbar(
                         onClick = { overflow = false; selection.mode = true }, modifier = Modifier.testTag(UiTags.LIB_SELECT),
                     )
                     // the same file more than once in this space
-                    if (!space.smart) DropdownMenuItem(
+                    if (!space.smart && !space.device) DropdownMenuItem(
                         text = { Text("Find duplicates") }, leadingIcon = { Icon(Icons.Outlined.ContentCopy, contentDescription = null) },
                         onClick = { overflow = false; vm.openLibraryDetail(LibraryRoute.Duplicates(space.name, app.keepfin.ItemQuery(spaces = listOf(space.id)))) },
                         modifier = Modifier.testTag(UiTags.LIB_DUPLICATES),
                     )
-                    if (title != null) {
+                    if (title != null && !space.device) {
                         DropdownMenuItem(
                             text = { Text("Edit space") }, leadingIcon = { Icon(Icons.Outlined.Edit, contentDescription = null) },
                             onClick = { overflow = false; ui.sheet(LibrarySheet.EditSpace(space)) }, modifier = Modifier.testTag(UiTags.LIB_SPACE_MENU_EDIT),

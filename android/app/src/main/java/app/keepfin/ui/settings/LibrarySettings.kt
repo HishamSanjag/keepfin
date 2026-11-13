@@ -108,6 +108,7 @@ fun LibraryGroup(vm: StudioViewModel, settings: EngineSettings) {
             "Import tags from sources", library.importTags, { value -> vm.updateSettings { it.copy(library = it.library.copy(importTags = value)) } },
             subtitle = "Take genre, tags and categories from a download's source for the tag filter. Items you already have are not changed.", tag = UiTags.setting("import-tags"),
         )
+        DeviceMusicRows(vm)
         RowSeparator()
         SwitchRow(
             "Show new releases on Home", settings.newReleasesOnHome, { value -> vm.updateSettings { it.copy(newReleasesOnHome = value) } },

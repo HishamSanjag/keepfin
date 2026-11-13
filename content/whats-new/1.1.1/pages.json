@@ -1,0 +1,10 @@
+{
+  "version": "1.1.1",
+  "pages": [
+    {
+      "id": "device",
+      "windows": {"title": "The music already on this PC", "text": "Press Show my music in Library: the songs on this PC appear in a This device space, where they are. Nothing is copied."},
+      "android": {"title": "The music already on this phone", "text": "Press Show my music in Library: the songs on this phone appear in a This device space, where they are. Nothing is copied."}
+    }
+  ]
+}

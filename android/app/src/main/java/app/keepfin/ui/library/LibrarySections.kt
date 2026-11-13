@@ -19,6 +19,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
 import app.keepfin.CollectionKind
+import app.keepfin.DeviceMusicState
 import app.keepfin.LibraryCollection
 import app.keepfin.LibraryItem
 import app.keepfin.LibraryItemKind
@@ -45,6 +46,8 @@ internal class LibraryContent(
     /** The "3 new" on the Collections header. */
     val news: Int,
     val hasMusicSpace: Boolean,
+    /** Where "Music on this phone" stands: its card shows under the spaces until it is on. */
+    val device: DeviceMusicState = DeviceMusicState.Ready(0),
 )
 
 /** One of Library home's sections by its id, in the place the saved layout gives it. A section with nothing to show draws nothing. */
@@ -57,6 +60,7 @@ internal fun LazyListScope.librarySection(c: LibraryContent, pref: SectionPref, 
         "spaces" -> {
             sectionHeader(pref.id, "Spaces", SectionHead({ ui.vm.openLibraryRoot(LibraryRoute.Manage) }, "Edit", UiTags.LIB_SPACES_EDIT), edit)
             item("spaces", contentType = "spaces") { Box(edit.dimmed()) { SpacesGrid(ui, c.spaces) } }
+            if (c.device is DeviceMusicState.Off || c.device is DeviceMusicState.NeedsPermission) item("device-music", contentType = "device-music") { DeviceMusicCard(ui.vm) }
         }
         "playlists" -> if (shelves.playlists.isEmpty() && !c.hasMusicSpace) emptySection(pref.id, "Playlists", edit) else section(
             pref.id, "Playlists", shelves.playlists, CardKind.Square, pref.style, { "pl-" + it.id }, SectionHead({ ui.vm.openLibraryDetail(LibraryRoute.Playlists) }), edit,

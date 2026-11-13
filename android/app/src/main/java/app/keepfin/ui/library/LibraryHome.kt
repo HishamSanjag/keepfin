@@ -66,6 +66,7 @@ fun HomeScreen(ui: LibraryUi, spaces: List<Space>, padding: PaddingValues) {
     val content = LibraryContent(
         ui, spaces, shelves, news = remember(snapshot.collections) { HubLogic.newCount(snapshot.collections) },
         hasMusicSpace = remember(spaces) { spaces.any { it.kind == SpaceKind.MUSIC } },
+        device = ui.vm.lib.deviceMusic.collectAsStateWithLifecycle().value,
     )
     val editor = rememberPageEditor(Page.Library, ui.vm.prefs)
 

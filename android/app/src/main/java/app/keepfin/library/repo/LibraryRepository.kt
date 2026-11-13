@@ -147,7 +147,10 @@ internal class LibraryRepository(
     private val sdk: Int = android.os.Build.VERSION.SDK_INT,
     /** The library as it was last time, before the folder opens ([LocalStart]); null (or a null answer) waits for the folder. */
     private val openLocal: (() -> LocalStart?)? = null,
-) : LibraryApi {
+    /** What "Music on this phone" needs from the platform (MediaStore on a phone); null where the feature does not exist. */
+    device: app.keepfin.devicemusic.DeviceMusicPlatform? = null,
+    private val deviceSide: RepoDevice = RepoDevice(device, deviceDir, log, linked, sdk),
+) : LibraryApi, app.keepfin.DeviceMusicApi by deviceSide {
     /** Device-only addresses of the files of linked spaces (linked.json). */
     private val locators = LinkedStore(File(deviceDir, "linked.json"))
 
@@ -157,7 +160,8 @@ internal class LibraryRepository(
     private val flow = MutableStateFlow(LibrarySnapshot())
     override val library: StateFlow<LibrarySnapshot> = flow.asStateFlow()
     private val holder = BrowseHolder()
-    override val browse: LibraryBrowse = holder
+    override val browse: LibraryBrowse = app.keepfin.devicemusic.DeviceAwareBrowse(holder) { deviceSide.browse }
+    init { deviceSide.attach({ locators.all().values.map { it.uri to it.path } }) { publish(); holder.bump() } }
     private val reports = kotlinx.coroutines.flow.MutableSharedFlow<FollowReport>(extraBufferCapacity = 8)
     override val followReports: SharedFlow<FollowReport> = reports
 
@@ -258,6 +262,7 @@ internal class LibraryRepository(
     /** Opens the store and builds the first snapshot on a background thread; mutations wait for it. */
     fun start() {
         scheduler.execute {
+            deviceSide.start()
             try {
                 follows = collectionsPart.readFollows()
                 downloadsPart.jobItems = downloadsPart.readJobItems().also { downloadsPart.jobOfItem = it.entries.associate { e -> e.value to e.key } }
@@ -342,6 +347,7 @@ internal class LibraryRepository(
     /** Writes everything pending into segments and stops. */
     fun shutdown() {
         unsubscribe?.invoke()
+        deviceSide.shutdown()
         if (ready.isDone && !ready.isCompletedExceptionally) runCatching { ready.get().store.close().get(10, TimeUnit.SECONDS) }
         reader?.close()
         scheduler.shutdown()
@@ -453,7 +459,7 @@ internal class LibraryRepository(
     /** The collections and problems the UI shows; the items are read in pages ([browse]). */
     private fun publish() {
         val s = small
-        val collections = s.collections.map { it.toCollection(follows) }
+        val collections = deviceSide.withSongs(s.collections.map { it.toCollection(follows) })
         val problems = ArrayList<String>()
         val rd = reader
         if (rd != null) {
@@ -639,6 +645,7 @@ internal class LibraryRepository(
 
 
     override fun rescan() {
+        deviceSide.refreshIfStale()
         scheduler.execute {
             try {
                 backend().store.rescan(true).get(60, TimeUnit.SECONDS)
@@ -664,9 +671,10 @@ internal class LibraryRepository(
     override fun bringIn(spaceId: String, move: Boolean, onProgress: (Int, Int, String) -> Unit, cancelled: () -> Boolean): app.keepfin.BringInResult =
         bringInPart.bringIn(spaceId, move, onProgress, cancelled)
 
-    override fun item(id: String): LibraryItem? = index?.item(id)
+    override fun item(id: String): LibraryItem? = browse.item(id)
 
     override fun recordPlayback(id: String, position: Double?, finished: Boolean) {
+        if (deviceSide.recordPlayback(id, position, finished)) return
         // while the library is being combined its writer takes only the combine's batches: the play is kept and written afterwards
         if (app.keepfin.merge.MergeFence.blocksWrites(backend().store.libraryId)) {
             app.keepfin.merge.MergeFence.bufferPlayback(backend().store.libraryId, id, position, finished)
@@ -696,7 +704,7 @@ internal class LibraryRepository(
         updateItems(listOf(id)) { it.copy(plays = plays, lastPlayedAt = last, position = resume, watched = watched) }
     }
 
-    override fun setFavorite(id: String, favorite: Boolean) = updateItems(listOf(id)) { it.copy(favorite = favorite) }
+    override fun setFavorite(id: String, favorite: Boolean) = deviceSide.setFavorite(id, favorite) { updateItems(listOf(id)) { it.copy(favorite = favorite) } }
 
     override fun libraryTag(ids: List<String>, add: List<String>, remove: List<String>) {
         updateItems(ids) { it.copy(userTags = TagLogic.editUserTags(it.userTags, add, remove)) }
@@ -968,7 +976,7 @@ internal class LibraryRepository(
 
     override fun restoreItems(ids: List<String>): RestoreResult = trashPart.restoreItems(ids)
 
-    override fun deleteItems(ids: List<String>): LibraryAccess = trashPart.deleteItems(ids)
+    override fun deleteItems(ids: List<String>): LibraryAccess = deviceSide.deleteItems(ids, trashPart::deleteItems)
 
     private fun removeItems(gone: Set<String>) {
         synchronized(writeLock) {
@@ -1020,6 +1028,7 @@ internal class LibraryRepository(
 
     /** After the system answered a delete question: the linked files that are gone leave the library; the rest stay. */
     override fun confirmationResult(ids: List<String>, granted: Boolean) {
+        deviceSide.confirmed(ids, granted)
         val media = linked
         if (granted && media != null) {
             val gone = readItems(ids).first.filter { i -> isLinkedPlace(i.place) && locators.get(i.id)?.let { media.stat(it.uri) == null } == true }.mapTo(HashSet()) { it.id }
@@ -1091,16 +1100,11 @@ internal class LibraryRepository(
 
     override fun collection(id: String): LibraryCollection? = collectionsPart.collection(id)
 
-    override fun collectionSave(id: String?, name: String, itemIds: List<String>, space: String?): String = collectionsPart.collectionSave(id, name, itemIds, space)
-
-    override fun collectionDelete(id: String) = collectionsPart.collectionDelete(id)
-
-    override fun collectionAdd(id: String, itemIds: List<String>) = collectionsPart.collectionAdd(id, itemIds)
-
-    override fun collectionRemove(id: String, itemIds: List<String>) = collectionsPart.collectionRemove(id, itemIds)
-
-    override fun collectionReorder(id: String, itemIds: List<String>) = collectionsPart.collectionReorder(id, itemIds)
-
+    override fun collectionSave(id: String?, name: String, itemIds: List<String>, space: String?): String = deviceSide.save(id, itemIds) { collectionsPart.collectionSave(id, name, it, space) }
+    override fun collectionDelete(id: String) { collectionsPart.collectionDelete(id); deviceSide.deleted(id) }
+    override fun collectionAdd(id: String, itemIds: List<String>) = deviceSide.added(id, itemIds) { collectionsPart.collectionAdd(id, it) }
+    override fun collectionRemove(id: String, itemIds: List<String>) = deviceSide.removed(id, itemIds) { collectionsPart.collectionRemove(id, it) }
+    override fun collectionReorder(id: String, itemIds: List<String>) = collectionsPart.collectionReorder(id, deviceSide.mine(itemIds))
     override fun collectionOpened(id: String) = collectionsPart.collectionOpened(id)
 
     override fun collectionFollow(id: String, update: FollowUpdate) = collectionsPart.collectionFollow(id, update)

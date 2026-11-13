@@ -15,6 +15,37 @@ data class FollowUpdate(
 /** What [LibraryApi.restoreItems] did: the items that are back, and a sentence for each one that could not come back. */
 data class RestoreResult(val restored: List<String>, val problems: List<String>)
 
+/** Music on this phone (dev-docs/plans/DEVICE-MUSIC.md): the audio files already on the device, listed in place in the This device space. */
+interface DeviceMusicApi {
+
+    /** Off, waiting for the audio permission, reading the phone's music, or listing it. Only this device: nothing of it is synced. */
+    val deviceMusic: StateFlow<DeviceMusicState> get() = NO_DEVICE_MUSIC
+
+    /** The permissions the UI must request before [setDeviceMusic] can read the phone's music (empty when granted or where there is no such feature). */
+    fun deviceMusicPermissions(): List<String> = emptyList()
+
+    /** Turns "Music on this phone" on or off. On without the permission leaves [DeviceMusicState.NeedsPermission]; call again once it is granted. */
+    fun setDeviceMusic(on: Boolean) {}
+
+    /** Folders (as MediaStore names them, `Music/Podcasts/`) the person left out of the phone's music. */
+    fun deviceLeftOut(): List<String> = emptyList()
+
+    /** Replaces the folders left out; the list refreshes by itself. */
+    fun setDeviceLeftOut(folders: List<String>) {}
+
+    /** The folders the phone's music is in (and the ones left out), for the "Folders left out" list. Blocking. */
+    fun deviceFolders(): List<String> = emptyList()
+
+    /** "Remove from Keepfin": hides these device songs (the files stay). Reversible with [unhideDevice]. */
+    fun hideDeviceItems(ids: List<String>) {}
+
+    /** "Show hidden songs again". */
+    fun unhideDevice() {}
+
+    /** How many device songs are hidden. Blocking. */
+    fun hiddenDeviceCount(): Int = 0
+}
+
 /**
  * Library surface used by the Compose UI: spaces, gallery items and playback bookkeeping.
  * Obtain it with `engine.libraryApi` ([EngineApi.libraryApi]). Implemented by the Keepfin folder library; [NoLibrary] stands in before setup.
@@ -24,7 +55,7 @@ data class RestoreResult(val restored: List<String>, val problems: List<String>)
  * Space settings live in [EngineSettings.library]: toggles, routing and the player options change through
  * `EngineApi.updateSettings`; spaces change through [saveSpace] / [deleteSpace], which validate folders.
  */
-interface LibraryApi {
+interface LibraryApi : DeviceMusicApi {
     /** The collections, scan state and problems of the library (small). Items are read through [browse]. */
     val library: StateFlow<LibrarySnapshot>
 

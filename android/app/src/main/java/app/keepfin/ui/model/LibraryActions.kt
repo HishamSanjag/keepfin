@@ -109,12 +109,16 @@ internal class LibraryActions(private val host: LibraryActionsHost) {
      * Moves files to a space. The space each one is in is read before the move runs, never from the screen, so Undo can send every
      * file back where it came from (a system consent may be asked again, as for the move).
      */
-    fun moveItems(ids: List<String>, space: String) {
+    fun moveItems(all: List<String>, space: String) {
+        val ids = all.filter { !app.keepfin.isDeviceItem(it) }
+        // songs already on the phone stay in place (DEVICE-MUSIC M7)
+        val stay = if (ids.size < all.size) "Songs from this phone stay where they are." else ""
+        if (ids.isEmpty()) { host.say(stay); return }
         val name = host.spaceName(space) ?: "that space"
         host.scope.launch {
             val origins = try { withContext(Dispatchers.IO) { host.lib.browse.byIds(ids).associate { it.id to it.space as String? } } } catch (e: CancellationException) { throw e } catch (_: Exception) { emptyMap() }
             val moving = origins.filter { it.value != null && it.value != space }
-            val text = if (ids.size == 1) "Moved to $name" else "Moved ${ids.size} files to $name"
+            val text = (if (ids.size == 1) "Moved to $name" else "Moved ${ids.size} files to $name") + if (stay.isEmpty()) "" else " $stay"
             withAccess("Could not move these files.", ids, false, { if (moving.isEmpty()) host.say(text) else host.say(text, "Undo") { undoMove(moving, space) } }) { move(ids, space) }
         }
     }
@@ -353,6 +357,29 @@ internal class LibraryActions(private val host: LibraryActionsHost) {
             } catch (e: CancellationException) { throw e } catch (e: Exception) { host.say(friendly(e, "Could not change favorites.")) }
         }
     }
+    /** Turns "Music on this phone" on or off (the permission was asked for before). */
+    fun setDeviceMusic(on: Boolean) {
+        host.scope.launch(Dispatchers.IO) { runCatching { host.lib.setDeviceMusic(on) } }
+    }
+
+    fun setDeviceLeftOut(folders: List<String>) {
+        host.scope.launch(Dispatchers.IO) { runCatching { host.lib.setDeviceLeftOut(folders) } }
+    }
+
+    fun unhideDevice() {
+        host.scope.launch(Dispatchers.IO) { runCatching { host.lib.unhideDevice() } }
+    }
+
+    /** "Remove from Keepfin" for music already on the phone: the files stay; Settings › Library shows them again. */
+    fun hideDevice(ids: List<String>) {
+        host.scope.launch {
+            try {
+                withContext(Dispatchers.IO) { host.lib.hideDeviceItems(ids) }
+                host.say(if (ids.size == 1) "Removed from Keepfin. The file stays on your phone." else "Removed ${ids.size} songs from Keepfin. The files stay on your phone.")
+            } catch (e: CancellationException) { throw e } catch (e: Exception) { host.say(friendly(e, "Could not remove it.")) }
+        }
+    }
+
     fun createPlaylist(name: String, ids: List<String>, space: String? = null, onDone: (String) -> Unit = {}) {
         host.scope.launch {
             try {
