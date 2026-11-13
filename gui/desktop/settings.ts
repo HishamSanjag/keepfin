@@ -306,6 +306,7 @@ export function validateSpace(input: unknown): Space {
   const raw = input as Record<string, unknown>
   const id = typeof raw.id === 'string' ? raw.id : ''
   if (!spaceId.test(id)) throw new Error('Invalid space.')
+  if (raw.deviceOnly === true) throw new Error('Music on this PC is shown or hidden in Settings.')
   const name = typeof raw.name === 'string' ? raw.name.replace(/\s+/g, ' ').trim() : ''
   if (!name) throw new Error('Give this space a name.')
   if (name.length > 60) throw new Error('Space names can be up to 60 characters.')

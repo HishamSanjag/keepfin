@@ -78,6 +78,8 @@ function LibraryTab() {
   const spaces = settings.spaces
   const selectedSpace = view.type === 'space' ? spaces.find((space) => space.id === view.id) : undefined
   const selectedFolder = selectedSpace && selectedSpace.type !== 'smart' ? selectedSpace : undefined
+  // files are dropped into a space that holds files, not into Music on this PC
+  const dropFolder = selectedFolder?.deviceOnly ? undefined : selectedFolder
   // A removed space sends the user home instead of leaving a blank pane.
   useEffect(() => {
     if (view.type === 'space' && !selectedSpace) setLibView({type: 'home'})
@@ -90,24 +92,24 @@ function LibraryTab() {
         className={`lib-main${dropping ? ' is-dropping' : ''}`}
         role="region"
         aria-label="Library content"
-        onDragEnter={(event) => selectedFolder && hasFiles(event) && (event.preventDefault(), setDropping(true))}
-        onDragOver={(event) => selectedFolder && hasFiles(event) && (event.preventDefault(), (event.dataTransfer.dropEffect = 'copy'))}
+        onDragEnter={(event) => dropFolder && hasFiles(event) && (event.preventDefault(), setDropping(true))}
+        onDragOver={(event) => dropFolder && hasFiles(event) && (event.preventDefault(), (event.dataTransfer.dropEffect = 'copy'))}
         onDragLeave={(event) => {
           if (!event.currentTarget.contains(event.relatedTarget as Node)) setDropping(false)
         }}
         onDrop={(event) => {
           setDropping(false)
-          if (!selectedFolder || !hasFiles(event)) return
+          if (!dropFolder || !hasFiles(event)) return
           event.preventDefault()
           const paths = pathsOf(event)
-          if (paths.length) openDialog({type: 'import', space: selectedFolder.id, paths})
+          if (paths.length) openDialog({type: 'import', space: dropFolder.id, paths})
           else toast({tone: 'info', message: 'Keepfin couldn’t read the dropped files. Use Add files instead.'})
         }}
       >
-        {dropping && selectedFolder && (
+        {dropping && dropFolder && (
           <div className="drop-hint" aria-hidden="true">
             <Icon name="plus" size={22} />
-            <strong>Drop to add to {selectedFolder.name}</strong>
+            <strong>Drop to add to {dropFolder.name}</strong>
           </div>
         )}
         <OperationBar />

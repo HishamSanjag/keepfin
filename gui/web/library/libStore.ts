@@ -3,7 +3,7 @@
 // a single play count re-render one row, never the gallery.
 import {useSyncExternalStore} from 'react'
 import type {LibraryBatchPush, LibraryDeltaPush} from '../../shared/contracts'
-import {isSongKind, isVideoSongKind, jobFileState, type Collection, type LibraryItem, type LibrarySettings, type LibrarySnapshot, type Space} from '../../shared/library'
+import {deviceSpace, isSongKind, isVideoSongKind, jobFileState, type Collection, type DeviceMusicState, type LibraryItem, type LibrarySettings, type LibrarySnapshot, type Space} from '../../shared/library'
 import {messageOf, native, request} from '../bridge'
 import {applySnapshot, getJob, getMeta, useMeta} from '../store'
 import {toast} from '../toasts'
@@ -229,6 +229,7 @@ export function applyLibraryDelta(delta: LibraryDeltaPush) {
     snapshot.scannedAt = delta.meta.scannedAt
     snapshot.problems = delta.meta.problems || []
     snapshot.operation = delta.meta.operation
+    snapshot.deviceMusic = delta.meta.deviceMusic
   }
   data = {...prev, ...derived, snapshot, bySpace}
   listeners.forEach((listener) => listener())
@@ -267,7 +268,7 @@ export function applyLibraryBatch(batch: LibraryBatchPush) {
   if (batch.index !== assembling.total - 1) return
   const {first, items, seq} = assembling
   assembling = undefined
-  setLibrary({seq, items, collections: first.collections ?? [], scanning: first.meta?.scanning ?? false, scannedAt: first.meta?.scannedAt, problems: first.meta?.problems ?? [], operation: first.meta?.operation})
+  setLibrary({seq, items, collections: first.collections ?? [], scanning: first.meta?.scanning ?? false, scannedAt: first.meta?.scannedAt, problems: first.meta?.problems ?? [], operation: first.meta?.operation, deviceMusic: first.meta?.deviceMusic})
   batchesDone?.()
 }
 
@@ -363,8 +364,22 @@ export function useGoneCount(ids: string[]): number {
 // Settings access
 // ---------------------------------------------------------------------------
 
+// The settings with the device space added while Music on this PC is on. The space is never stored: it comes from the library
+// snapshot, so every screen that lists spaces finds it where it looks.
+let shownFor: {base: LibrarySettings; shown: LibrarySettings} | undefined
+function withDeviceSpace(base: LibrarySettings | undefined, on: boolean): LibrarySettings | undefined {
+  if (!base || !on) return base
+  if (shownFor?.base !== base) shownFor = {base, shown: {...base, spaces: [...base.spaces, deviceSpace()]}}
+  return shownFor.shown
+}
+const deviceOn = () => data.snapshot.deviceMusic?.enabled === true
+
 export function librarySettings(): LibrarySettings | undefined {
-  return getMeta().settings.library
+  return withDeviceSpace(getMeta().settings.library, deviceOn())
+}
+/** Music on this PC: its switch, folders and scan progress. */
+export function useDeviceMusic(): DeviceMusicState | undefined {
+  return useSyncExternalStore(subscribe, () => data.snapshot.deviceMusic)
 }
 /** The library is on, in the desktop app, and the main process knows about it. */
 export function useLibraryEnabled() {
@@ -372,7 +387,8 @@ export function useLibraryEnabled() {
   return !!meta.settings.library?.enabled && meta.platform === 'desktop'
 }
 export function useLibrarySettings(): LibrarySettings | undefined {
-  return useMeta().settings.library
+  const base = useMeta().settings.library
+  return withDeviceSpace(base, useSyncExternalStore(subscribe, deviceOn))
 }
 export function spaceById(id: string | undefined): Space | undefined {
   return librarySettings()?.spaces.find((space) => space.id === id)

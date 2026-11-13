@@ -33,7 +33,7 @@ function MoveDialog({ids: givenIds, mode = 'move', collection}: {ids: string[]; 
   const [busy, setBusy] = useState(false)
   const copying = mode === 'copy'
   const verb = copying ? 'Copy' : 'Move'
-  const spaces = (settings?.spaces || []).filter((space) => space.type !== 'smart' && !(here.size === 1 && here.has(space.id)))
+  const spaces = (settings?.spaces || []).filter((space) => space.type !== 'smart' && !space.deviceOnly && !(here.size === 1 && here.has(space.id)))
   const name = collection ? `“${collection.name}”` : items.length === 1 ? `“${items[0].title}”` : plural(items.length, 'item')
   const operation = lib.snapshot.operation
   return (

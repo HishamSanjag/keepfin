@@ -71,6 +71,12 @@ const paths: Record<string, ReactNode> = {
       <path d="M12 3v1.8m0 14.4V21M3 12h1.8m14.4 0H21M5.6 5.6l1.3 1.3m10.2 10.2 1.3 1.3M5.6 18.4l1.3-1.3M17.1 6.9l1.3-1.3" />
     </>
   ),
+  computer: (
+    <>
+      <rect x="3.5" y="4.5" width="17" height="11" rx="2" />
+      <path d="M9 19.5h6M12 15.5v4" />
+    </>
+  ),
   moon: <path d="M19 14.5A7.5 7.5 0 0 1 9.5 5a7.5 7.5 0 1 0 9.5 9.5Z" />,
   more: (
     <>

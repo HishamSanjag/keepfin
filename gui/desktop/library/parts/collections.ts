@@ -4,6 +4,7 @@ import {
   canonicalSourceUrl,
   defaultFollow,
   followIntervals,
+  isDeviceId,
   isInfiniteSource,
   sourceIdOfCollection,
   type Collection,
@@ -34,7 +35,8 @@ export class LibraryCollections {
 
   private knownIds(input: unknown): string[] {
     if (!Array.isArray(input) || input.length > 20_000) throw new Error('Invalid collection.')
-    return [...new Set(input)].filter((id): id is string => typeof id === 'string' && this.core.entries().has(id))
+    // songs of Music on this PC are kept on this device only (see DeviceMusic), never in a synced collection
+    return [...new Set(input)].filter((id): id is string => typeof id === 'string' && !isDeviceId(id) && this.core.entries().has(id))
   }
 
   private defaultCollectionSpace() {

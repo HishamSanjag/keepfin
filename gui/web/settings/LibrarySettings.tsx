@@ -10,6 +10,7 @@ import {updateSettings, useMeta} from '../store'
 import {Button, Segmented, Select, Switch} from '../ui/controls'
 import {Group, SettingCard} from '../ui/SettingCard'
 import {SpaceMark} from '../library/SpacesHub'
+import {DeviceMusicSettings} from './DeviceMusicSettings'
 import {useSpaceCounts} from '../library/spacesModel'
 
 const kindWord = {music: 'Music', video: 'Videos', mixed: 'Mixed'} as const
@@ -120,6 +121,7 @@ export function LibrarySettings() {
               </Button>
             </div>
           </Group>
+          <DeviceMusicSettings />
           <Group cards title="Tags" description="Genres, tags and categories from the source can be kept on new downloads, so you can filter and build smart spaces by them. Existing items are not changed.">
             <SettingCard
               anchor="tags"

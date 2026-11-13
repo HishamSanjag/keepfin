@@ -22,6 +22,12 @@ export function PasteLinkButton({primary = true}: {primary?: boolean}) {
 
 /** Teaches the next step for a space with nothing in it yet. */
 export function EmptySpace({space}: {space: Space}) {
+  if (space.deviceOnly)
+    return (
+      <EmptyState icon="music" title="No music found yet">
+        Keepfin looks in the folders listed in <strong>Settings › Library & playback › Music on this PC</strong>. Add a folder there, or put songs in one of them.
+      </EmptyState>
+    )
   const custom = !(builtinSpaceIds as readonly string[]).includes(space.id)
   const add = (
     <Button icon="plus" onClick={() => openDialog({type: 'import', space: space.id})}>

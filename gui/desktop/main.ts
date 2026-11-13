@@ -215,6 +215,8 @@ else {
         // Behind the first-start and setup screens the old library.json is only read (by the setup window), never written.
         file: folderBoot && !folderBoot.live ? path.join(userData, 'cache', 'library-gate.json') : path.join(userData, 'library.json'),
         persistence: folderBoot?.persistence,
+        // Music on this PC: the person's Music folder to begin with; files in the Keepfin folder are never listed there.
+        device: {file: path.join(userData, 'device-music.json'), folders: () => [app.getPath('music')], keepfinRoot: () => folderBoot?.root},
         artDir: path.join(userData, 'library-art'),
         ffmpeg: ffmpegPath,
         jobs: () => manager?.completedJobs() ?? [],

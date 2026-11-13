@@ -92,6 +92,14 @@
           "try": "library"
         },
         {
+          "id": "device-music",
+          "title": "Music already on this PC or phone",
+          "summary": "See the music that is already on this device, where it is. Nothing is copied or moved, and it stays on this device only.",
+          "steps": ["Open Library.", "On the Music on this PC card, tap Show my music.", "Open the This device space to play your songs."],
+          "notes": {"desktop": "Windows looks in your Music folder. To add or remove folders, or to bring back songs you removed from Keepfin, open Settings › Library & playback › Music on this PC."},
+          "try": "library"
+        },
+        {
           "id": "edit-spaces",
           "title": "Reorder and pin spaces",
           "summary": "Edit keeps the same grid you see on Library home. Pinned spaces show on home, and the rest are under All spaces.",

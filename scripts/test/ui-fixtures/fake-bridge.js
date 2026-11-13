@@ -803,12 +803,16 @@
       for (let i = 0; i < 10000; i++)
         libItems.push(song(`a-bulk-${i}`, `Bulk song ${String(i).padStart(5, '0')} ${words[i % words.length]}`, artists[i % artists.length], `Album ${Math.floor(i / 12)}`, (i % 12) + 1, {size: 4 * MB, hasArt: i % 3 === 0}))
   }
-  const libSnapshot = () => clone({items: libItems, collections: [...libPlaylists, ...libDownloaded], scanning: false, problems: [], ...(libOperation ? {operation: libOperation} : {})})
+  // Music on this PC (SYNTHETIC): off until the card or Settings switches it on; its three songs then join the library.
+  const libDevice = {enabled: false, folders: ['C:\\Users\\me\\Music'], excluded: [], scanning: false, found: 0, count: 0}
+  const deviceSong = (id, title, artist) => ({id, space: 'device', path: `C:\\Users\\me\\Music\\${title}.mp3`, folder: '', kind: 'audio', title, artist, album: 'On this PC', duration: 200, size: 4 * MB, modifiedAt: now - day, addedAt: now - day, hasArt: false})
+  const libDeviceItems = [deviceSong('dm-pc-1', 'Roadside', 'Kite Radio'), deviceSong('dm-pc-2', 'Slow Harbor', 'Kite Radio'), deviceSong('dm-pc-3', 'Winter Light', 'Ashe')]
+  const libSnapshot = () => clone({items: libDevice.enabled ? [...libItems, ...libDeviceItems] : libItems, collections: [...libPlaylists, ...libDownloaded], scanning: false, problems: [], ...(libScenario === 'off' ? {} : {deviceMusic: libDevice}), ...(libOperation ? {operation: libOperation} : {})})
   // The window gets what changed (a libraryDelta) whenever the order allows it, and the whole library otherwise, exactly as the
   // desktop app does: every scenario here exercises the same push path.
   let libSeq = 0
   let libSent
-  const libMetaOf = (snap) => ({scanning: snap.scanning, scannedAt: snap.scannedAt, problems: snap.problems, operation: snap.operation})
+  const libMetaOf = (snap) => ({scanning: snap.scanning, scannedAt: snap.scannedAt, problems: snap.problems, operation: snap.operation, deviceMusic: snap.deviceMusic})
   const libMark = (snap) => {
     libSent = {
       items: new Map(snap.items.map((entry) => [entry.id, JSON.stringify(entry)])),
@@ -1132,6 +1136,21 @@
         return libState()
       case 'libraryScan':
         return libState()
+      case 'deviceMusicState':
+        return clone(libDevice)
+      case 'deviceMusicEnable':
+        libDevice.enabled = req.enabled === true
+        libDevice.count = libDevice.found = libDevice.enabled ? libDeviceItems.length : 0
+        pushLibrary()
+        return clone(libDevice)
+      case 'deviceMusicFolders':
+        if (req.action === 'remove') libDevice.folders = libDevice.folders.filter((folder) => folder !== req.text)
+        else libDevice.folders.push(req.text || 'C:\\Users\\me\\Other music')
+        pushLibrary()
+        return clone(libDevice)
+      case 'deviceMusicScan':
+      case 'deviceMusicUnhide':
+        return clone(libDevice)
       case 'libraryCancel':
         libOperation = undefined
         pushLibrary()

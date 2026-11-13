@@ -2,15 +2,12 @@
 import {watch as fsWatch, type FSWatcher} from 'node:fs'
 import fs from 'node:fs/promises'
 import path from 'node:path'
-import {mediaKindOf, type Space} from '../../../shared/library.js'
-import {musicVideoNames} from '../tags.js'
+import {type Space} from '../../../shared/library.js'
 import type {LibraryEntry} from '../index.js'
 import type {LibraryCore} from './core.js'
 import {keyOf} from './sanitize.js'
+import {intermediate, transient, walkMedia} from './walk.js'
 
-const MAX_WALK = 100_000
-const intermediate = /\.f\d+(?:-[\w]+)?\.[a-z0-9]+$|\.(?:tagging|temp|cover|kfmove|kfedit)\.[a-z0-9]+$/i
-const transient = /\.(?:part|ytdl|tmp|temp|crdownload|download|kfmove|kfedit)$/i
 
 export class Scanner {
   scanning?: Promise<void>
@@ -40,33 +37,6 @@ export class Scanner {
     this.scanning = run
     this.core.changed(false)
     return run
-  }
-
-  private async walk(space: Space): Promise<string[]> {
-    const found: string[] = []
-    const ignored = (space.ignore ?? []).map((item) => item.toLowerCase())
-    const pending = [space.folder]
-    while (pending.length && found.length < MAX_WALK) {
-      const dir = pending.pop()!
-      let dirents
-      try {
-        dirents = await fs.readdir(dir, {withFileTypes: true})
-      } catch {
-        continue
-      }
-      if (dirents.some((dirent) => dirent.name === '.nomedia')) continue
-      const videos = musicVideoNames(dirents.filter((dirent) => dirent.isFile()).map((dirent) => dirent.name))
-      for (const dirent of dirents) {
-        const full = path.join(dir, dirent.name)
-        if (dirent.isDirectory()) {
-          if (dirent.name.startsWith('.')) continue
-          const relative = path.relative(space.folder, full).split(path.sep).join('/').toLowerCase()
-          if (ignored.some((item) => relative === item || relative.startsWith(item + '/'))) continue
-          pending.push(full)
-        } else if (dirent.isFile() && mediaKindOf(dirent.name) && !intermediate.test(dirent.name) && !videos.has(dirent.name.toLowerCase())) found.push(full)
-      }
-    }
-    return found
   }
 
   /** Brings the index in line with one space's folder: missing/changed managed files, renames, new files. */
@@ -114,7 +84,7 @@ export class Scanner {
     }
     if (!space.scanFolder && !missing.length) return
     const candidates: {path: string; size: number; mtimeMs: number}[] = []
-    for (const file of await this.walk(space)) {
+    for (const file of await walkMedia(space.folder, {ignore: space.ignore})) {
       if (this.core.byPath().has(keyOf(file))) continue
       const stat = await fs.stat(file).catch(() => undefined)
       if (stat?.isFile()) candidates.push({path: file, size: stat.size, mtimeMs: stat.mtimeMs})

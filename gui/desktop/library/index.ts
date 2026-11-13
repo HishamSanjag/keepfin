@@ -22,6 +22,8 @@ import {
   sortBySourceOrder,
   sourceIdFromUrl,
   sourceIdOfCollection,
+  DEVICE_SPACE_ID,
+  isDeviceId,
   type Collection,
   type CollectionFollow,
   type CollectionKind,
@@ -46,6 +48,8 @@ import {matchDamaged} from '../engine/outputs.js'
 import {Slicer} from '../store/slices.js'
 import {LibraryCollections} from './parts/collections.js'
 import type {LibraryCore} from './parts/core.js'
+import {backfillArt} from './parts/artBackfill.js'
+import {DeviceMusic} from './parts/deviceMusic.js'
 import {Enrichment} from './parts/enrichment.js'
 import {Relinker} from './parts/relink.js'
 import {isInside, itemIdFor, keyOf, publicItem, relativeFolder, sanitizeCollection, sanitizeEntry, sanitizePlaylist, titleFromName} from './parts/sanitize.js'
@@ -162,6 +166,8 @@ export type LibraryOptions = {
   watchDelay?: number
   /** fs.watch on space folders (default true). */
   watch?: boolean
+  /** Music on this PC: its cache file (default: device-music.json beside ile), the person's Music folder, and the Keepfin folder's root. */
+  device?: {file?: string; folders?: () => string[]; keepfinRoot?: () => string | undefined}
   /** Background loudness analysis, and in store mode covers for items that have none (default true). */
   analyse?: boolean
 }
@@ -224,6 +230,9 @@ export class LibraryIndex {
   private readonly enrichment: Enrichment
   private readonly scanner: Scanner
   private readonly relinker: Relinker
+  /** Music on this PC. */
+  readonly device: DeviceMusic
+  private readonly core: LibraryCore
 
   constructor(private readonly options: LibraryOptions) {
     this.art = new ArtStore(options.artDir)
@@ -260,6 +269,8 @@ export class LibraryIndex {
       queueLoudness: (id) => this.enrichment.queueLoudness(id),
       relinkEntries: (entries) => this.relinker.relinkEntries(entries),
     }
+    this.core = core
+    this.device = new DeviceMusic(core)
     this.collectionsPart = new LibraryCollections(core)
     this.enrichment = new Enrichment(core)
     this.scanner = new Scanner(core)
@@ -273,6 +284,11 @@ export class LibraryIndex {
   // ------------------------------------------------------------------ lifecycle
 
   async init() {
+    await this.initModel()
+    await this.device.load()
+  }
+
+  private async initModel() {
     if (this.options.persistence) return this.initFromStore(this.options.persistence)
     let data: {items?: unknown; collections?: unknown; playlists?: unknown} = {}
     try {
@@ -378,43 +394,7 @@ export class LibraryIndex {
       // One at a time and in order: a later fetch must never be applied before an earlier one.
       this.remoteChain = this.remoteChain.then(() => this.reproject()).catch((error) => console.error('Could not apply changes from other devices:', error))
     })
-    if (this.options.analyse !== false) setTimeout(() => void this.backfillArt().catch(() => undefined), 5_000).unref?.()
-  }
-
-  /**
-   * Store mode: items without art (downloaded before the move, or added while the library was elsewhere) get it once, one at a
-   * time: the download's thumbnail, the file's own cover, or a frame of the video. Ids tried are remembered, so a file that has no
-   * picture is not opened again on every start.
-   */
-  private async backfillArt() {
-    const triedFile = path.join(path.dirname(this.options.artDir), 'library-art-tried.json')
-    const tried = new Set<string>(await fs.readFile(triedFile, 'utf8').then((text) => JSON.parse(text) as string[], () => []))
-    const wanted = [...this.entries.values()].filter((entry) => entry.kind !== 'image' && !entry.hasArt && !entry.missing && !tried.has(entry.id)).map((entry) => entry.id)
-    if (!wanted.length) return
-    const jobs = this.options.jobs?.() ?? []
-    const byFile = new Map(jobs.filter((job) => job.file).map((job) => [keyOf(job.file!), job]))
-    let unsaved = 0
-    const save = () => fs.writeFile(triedFile, JSON.stringify([...tried])).catch(() => undefined)
-    for (const id of wanted) {
-      if (this.closing) break
-      const entry = this.entries.get(id)
-      if (!entry || entry.hasArt) continue
-      const job = (entry.jobId ? jobs.find((item) => item.id === entry.jobId) : undefined) ?? byFile.get(keyOf(entry.path))
-      if (job && !this.artRequests.has(id)) this.artRequests.set(id, {id: job.id, thumbnail: job.thumbnail, file: entry.path})
-      if (entry.kind === 'audio') {
-        const picture = (await readTags(entry.path, true).catch(() => undefined))?.picture
-        if (picture) entry.hasArt = await this.putArt(id, picture.data, picture.format)
-      }
-      if (!entry.hasArt) await this.enrichment.makePoster(entry, this.options.ffmpeg()).catch(() => undefined)
-      this.artRequests.delete(id)
-      tried.add(id)
-      if (entry.hasArt) this.changed(false, [id], false)
-      if (++unsaved >= 20) {
-        unsaved = 0
-        await save()
-      }
-    }
-    await save()
+    if (this.options.analyse !== false) setTimeout(() => void backfillArt(this.core, this.enrichment).catch(() => undefined), 5_000).unref?.()
   }
 
   /** Saves an item's art and tells the store, so the cover shows wherever the item is listed. */
@@ -551,6 +531,7 @@ export class LibraryIndex {
     this.enrichment.stop()
     this.scanner.stopWatchers()
     this.cancelController?.abort()
+    await this.device.close()
     await this.flush()
   }
 
@@ -572,7 +553,7 @@ export class LibraryIndex {
     while (this.busy() && Date.now() < deadline) await new Promise((resolve) => setTimeout(resolve, 20))
   }
   private busy() {
-    return this.enrichment.working() || !!this.scanner.scanning || this.adopting > 0
+    return this.enrichment.working() || !!this.scanner.scanning || this.adopting > 0 || this.device.working()
   }
 
   // ------------------------------------------------------------------ settings
@@ -628,6 +609,7 @@ export class LibraryIndex {
 
   private visible(entry: LibraryEntry) {
     if (!this.settings?.enabled) return false
+    if (this.device.owns(entry)) return this.device.enabled
     const space = this.space(entry.space)
     return !!space && (entry.managed || !!space.scanFolder)
   }
@@ -637,12 +619,23 @@ export class LibraryIndex {
     for (const entry of this.entries.values()) if (this.visible(entry)) items.push(publicItem(entry))
     return {
       items,
-      collections: [...this.collections.values()].map((collection) => structuredClone(collection)),
+      collections: this.shownCollections(),
       scanning: !!this.scanner.scanning,
       scannedAt: this.scanner.scannedAt,
       problems: [...this.scanner.problems].map(([space, message]) => ({space, message})),
+      deviceMusic: this.device.state(),
       operation: this.operation ? {...this.operation} : undefined,
     }
+  }
+
+  /** An own playlist with this device's songs added (for answers to the window and exports). */
+  withDevice(collection: Collection): Collection {
+    return this.device.overlay(collection)
+  }
+
+  /** The collections as the window sees them: an own playlist also holds this device's songs (kept on this device only). */
+  private shownCollections(): Collection[] {
+    return [...this.collections.values()].map((collection) => structuredClone(this.device.overlay(collection)))
   }
 
   /** Marks the snapshot dirty: one debounced push (≤ 4 Hz) and one debounced save. */
@@ -709,7 +702,7 @@ export class LibraryIndex {
   }
 
   private meta(): LibraryMeta {
-    return {scanning: !!this.scanner.scanning, scannedAt: this.scanner.scannedAt, problems: [...this.scanner.problems].map(([space, message]) => ({space, message})), operation: this.operation ? {...this.operation} : undefined}
+    return {scanning: !!this.scanner.scanning, scannedAt: this.scanner.scannedAt, problems: [...this.scanner.problems].map(([space, message]) => ({space, message})), operation: this.operation ? {...this.operation} : undefined, deviceMusic: this.device.state()}
   }
 
   private visibleCount() {
@@ -751,7 +744,7 @@ export class LibraryIndex {
       this.pushCollections = false
       const changedList: Collection[] = []
       const seen = new Set<string>()
-      for (const collection of this.collections.values()) {
+      for (const collection of this.shownCollections()) {
         seen.add(collection.id)
         const signature = JSON.stringify(collection)
         if (this.sentCollections.get(collection.id) === signature) continue
@@ -780,7 +773,7 @@ export class LibraryIndex {
 
   private noteSent() {
     this.sentCollections.clear()
-    for (const collection of this.collections.values()) this.sentCollections.set(collection.id, JSON.stringify(collection))
+    for (const collection of this.shownCollections()) this.sentCollections.set(collection.id, JSON.stringify(collection))
     this.sentMeta = JSON.stringify(this.meta())
   }
 
@@ -805,7 +798,7 @@ export class LibraryIndex {
       const send = async (last: boolean) => {
         const event: LibraryBatchPush = {type: 'libraryBatch', seq, index, total, items: batch}
         if (index === 0) {
-          event.collections = [...this.collections.values()].map((collection) => structuredClone(collection))
+          event.collections = this.shownCollections()
           event.meta = this.meta()
           this.noteSent()
         }
@@ -839,7 +832,7 @@ export class LibraryIndex {
     this.pushCollections = false
     const seq = ++this.pushSeq
     void this.sendBatches(seq)
-    return {items: [], collections: [], scanning: !!this.scanner.scanning, problems: [], seq, batched: true}
+    return {items: [], collections: [], scanning: !!this.scanner.scanning, problems: [], deviceMusic: this.device.state(), seq, batched: true}
   }
 
   private scheduleSave() {
@@ -858,17 +851,19 @@ export class LibraryIndex {
       const touched = [...this.touched]
       this.touched.clear()
       this.touchedAll = false
+      // Music on this PC stays on this device: the synced store never sees its songs.
+      const synced = () => [...this.entries.values()].filter((entry) => !this.device.owns(entry))
       const job = persistence.save({
-        items: hinted ? [] : [...this.entries.values()],
+        items: hinted ? [] : synced(),
         collections: [...this.collections.values()],
         spaces: this.settings?.spaces,
         routes: this.settings?.routes,
-        touched: hinted ? {ids: touched, entry: (id) => this.entries.get(id), all: () => [...this.entries.values()]} : undefined,
+        touched: hinted ? {ids: touched.filter((id) => !isDeviceId(id)), entry: (id) => (isDeviceId(id) ? undefined : this.entries.get(id)), all: synced} : undefined,
       })
       this.saveChain = job.catch(() => {})
       return job
     }
-    const data = JSON.stringify({version: 2, items: [...this.entries.values()], collections: [...this.collections.values()]})
+    const data = JSON.stringify({version: 2, items: [...this.entries.values()].filter((entry) => !this.device.owns(entry)), collections: [...this.collections.values()]})
     const job = this.saveChain.then(async () => {
       await fs.mkdir(path.dirname(this.options.file), {recursive: true})
       // A name of its own per write: two index instances on one file (tests, a reopened window) never share a temp file.
@@ -1124,6 +1119,7 @@ export class LibraryIndex {
 
   /** Drops entries (and their art) from the library. Files on disk are untouched. */
   drop(ids: string[], options: {forget?: boolean} = {}) {
+    this.device.forget(ids.filter(isDeviceId))
     const paths: string[] = []
     for (const id of ids) {
       const entry = this.entries.get(id)
@@ -1274,7 +1270,8 @@ export class LibraryIndex {
       entry.position = Math.round(at * 10) / 10
       if (entry.kind === 'video' && duration && at / duration >= 0.92) entry.watched = true
     }
-    this.changed(true, [entry.id], false)
+    if (this.device.owns(entry)) this.device.keep(entry)
+    else this.changed(true, [entry.id], false)
   }
   private readonly counted = new Map<string, boolean>()
 
@@ -1286,9 +1283,10 @@ export class LibraryIndex {
       const entry = this.item(id)
       if ((entry.favorite ?? false) === favorite) continue
       entry.favorite = favorite || undefined
+      if (this.device.owns(entry)) this.device.keep(entry)
       touched = true
     }
-    if (touched) this.changed(true, list as string[], false)
+    if (touched) this.changed(true, list.filter((id) => !isDeviceId(id)) as string[], false)
   }
 
   /** Adds and removes the user's own tags on items. Tags are normalised like source tags; an item keeps at most 50. */
@@ -1402,7 +1400,7 @@ export class LibraryIndex {
   }
   /** Path of the art (cover, poster, or the image itself) served at keepfin-media://art/<id>. */
   artPath(id: string): Promise<string | undefined> {
-    return this.enrichment.artPath(id)
+    return isDeviceId(id) ? this.device.artPath(id) : this.enrichment.artPath(id)
   }
   /** Replaces an item's cover (after a tag edit). */
   setArt(id: string, bytes: Uint8Array, mime?: string) {

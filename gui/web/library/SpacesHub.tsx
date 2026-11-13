@@ -22,7 +22,7 @@ export function SpaceMark({space, size = 18}: {space: Pick<Space, 'id' | 'color'
   )
 }
 
-export const countWords = (space: Space, count: number) => (space.type === 'smart' ? plural(count, 'match', 'matches') : plural(count, 'item'))
+export const countWords = (space: Space, count: number) => (space.type === 'smart' ? plural(count, 'match', 'matches') : space.deviceOnly ? `Only on this PC · ${plural(count, 'song')}` : plural(count, 'item'))
 const typeWord = (space: Space) => (space.type === 'smart' ? 'Smart' : 'Folder')
 
 export const openSpace = (space: Space) => setLibView({type: 'space', id: space.id})
@@ -146,7 +146,7 @@ export function SpacesHub() {
             Drag a space, or use the arrows to move it earlier or later. The switch decides what shows here and in the sidebar; dimmed spaces are not pinned
             {pinnedCount > HOME_SPACE_LIMIT ? `; only the first ${HOME_SPACE_LIMIT} pinned spaces fit.` : '.'}
           </p>
-          <EditCards spaces={settings.spaces} counts={counts} />
+          <EditCards spaces={settings.spaces.filter((space) => !space.deviceOnly)} counts={counts} />
         </>
       ) : (
         <ul className="space-cards" aria-label="Pinned spaces">
@@ -235,14 +235,16 @@ export function AllSpaces({embedded = false, only, lead}: {embedded?: boolean; o
                           <span className="muted small">{countWords(space, counts.get(space.id) ?? 0)}</span>
                         </span>
                       </button>
-                      <IconButton
-                        icon="pin"
-                        size="sm"
-                        className={isPinned(space) ? 'pinned' : undefined}
-                        label={isPinned(space) ? `Unpin ${space.name} from home` : `Pin ${space.name} to home`}
-                        aria-pressed={isPinned(space)}
-                        onClick={() => void togglePin(space)}
-                      />
+                      {!space.deviceOnly && (
+                        <IconButton
+                          icon="pin"
+                          size="sm"
+                          className={isPinned(space) ? 'pinned' : undefined}
+                          label={isPinned(space) ? `Unpin ${space.name} from home` : `Pin ${space.name} to home`}
+                          aria-pressed={isPinned(space)}
+                          onClick={() => void togglePin(space)}
+                        />
+                      )}
                     </li>
                   ))}
                 </ul>

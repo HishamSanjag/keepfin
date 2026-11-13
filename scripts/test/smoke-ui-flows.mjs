@@ -24,6 +24,7 @@ import {registerPlayerStylesSuite} from './ui-fixtures/suite-player-styles.mjs'
 import {registerSongVideosSuite} from './ui-fixtures/suite-song-videos.mjs'
 import {registerPreviewSuite} from './ui-fixtures/suite-preview.mjs'
 import {registerHomeFollowSuite} from './ui-fixtures/suite-home-follow.mjs'
+import {registerDeviceMusicSuite} from './ui-fixtures/suite-device-music.mjs'
 import {registerWhatsNewSuite} from './ui-fixtures/suite-whats-new.mjs'
 
 const YT = 'https://www.youtube.com/watch?v=lofoten8k'
@@ -1052,6 +1053,7 @@ await registerPlayerStylesSuite({test, calls})
 await registerSongVideosSuite({test, calls, last, sent, capture})
 await registerPreviewSuite({test, calls, last, sent, field, capture})
 await registerHomeFollowSuite({test, calls, last})
+await registerDeviceMusicSuite({test, calls, last, sent})
 await registerEditModeSuite({test})
 
 await browser.close()

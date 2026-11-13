@@ -10,6 +10,16 @@ A **space** is a home for one kind of thing, such as Music or Videos. Open **Lib
 - **Smart spaces** fill themselves: choose **Smart**, add rules, and watch the live count.
 - **Show one kind at a time:** tap a chip such as Videos. Tap All to see everything again.
 
+## Music on this PC and phone
+
+Keepfin can show the music that is already on your device, where it is. Nothing is copied or moved.
+
+- **Turn it on:** on Windows open **Library** and press **Show my music** on the **Music on this PC** card, or switch it on in **Settings › Library & playback › Music on this PC**. A **This device** space then lists your songs, with **Only on this PC** under its name. On the phone the card says **Music on this phone**.
+- **Which songs:** audio at least 30 seconds long. Ringtones, notifications, alarms and recordings are left out. On Windows Keepfin looks in your Music folder; add or remove folders in the same Settings section.
+- **Stays on this device:** these songs are not saved in your Keepfin folder and do not go to your other devices. Favorites, play counts and playlist entries for them stay on this device too, so a playlist you share shows them only here.
+- **Remove from Keepfin** hides a song and leaves its file where it is. **Show hidden songs again** in Settings brings them back. **Delete file** sends the file to the Recycle Bin after you confirm.
+- **Not here:** moving, renaming or editing the tags of these songs. Keepfin leaves your files as they are.
+
 ## Home: mixes and new releases
 
 - **Made from your listening:** Home builds mixes from your own plays and library: On repeat, Forgotten favourites, Recently added music, Never played, Because you play an artist you play a lot, and a Late-night mix (songs you play after 10 pm). They are made on your device and never leave it. A mix appears once it has five songs. Tap a mix to open it, or **See all**.

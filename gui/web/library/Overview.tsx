@@ -8,6 +8,7 @@ import {navigate} from '../nav'
 import {PageHeader} from '../shell/PageHeader'
 import {PageToolbar} from '../shell/PageToolbar'
 import {Button, InlineAlert} from '../ui/controls'
+import {DeviceMusicCard} from './DeviceMusicCard'
 import {KindPage, type Kind} from './KindPage'
 import {LibraryHome} from './LibraryHome'
 import {libFilters, setLibFilter, setSpacesEditing, useLibFilter, type LibFilter} from './libNav'
@@ -122,6 +123,7 @@ export function Overview() {
       <LibraryHeader edit={edit} />
       <PageToolbar label="Library toolbar" left={<KindChips />} />
       {problems}
+      <DeviceMusicCard />
       <LibraryHome edit={edit} />
       <EditBar edit={edit} />
     </div>

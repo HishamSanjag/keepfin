@@ -11,7 +11,7 @@ export type SpaceNaming = FilenameStyle | 'artist-title'
 /** Eight palette colors; the renderer tunes each for light and dark themes. */
 export type SpaceColor = 'cobalt' | 'violet' | 'teal' | 'olive' | 'amber' | 'rust' | 'berry' | 'slate'
 export const spaceColors: readonly SpaceColor[] = ['cobalt', 'violet', 'teal', 'olive', 'amber', 'rust', 'berry', 'slate']
-export type SpaceIcon = 'music' | 'video' | 'folder' | 'star' | 'heart' | 'mic' | 'book' | 'dumbbell' | 'moon' | 'child'
+export type SpaceIcon = 'music' | 'video' | 'folder' | 'star' | 'heart' | 'mic' | 'book' | 'dumbbell' | 'moon' | 'child' | 'computer'
 export const spaceIcons: readonly SpaceIcon[] = ['music', 'video', 'folder', 'star', 'heart', 'mic', 'book', 'dumbbell', 'moon', 'child']
 
 /** What a smart space gathers: rules over every space's items. */
@@ -45,6 +45,8 @@ export type Space = {
   pinned?: boolean
   /** Smart spaces only. */
   rules?: SmartRules
+  /** The built-in `device` space (music already on this PC): never saved in settings, never synced, no downloads or moves into it. */
+  deviceOnly?: boolean
 }
 
 export type LibrarySettings = {
@@ -113,6 +115,18 @@ export function insertKept<T>(entries: readonly T[], idOf: (entry: T) => string 
   out.splice(videos < 0 ? out.length : videos + 1, 0, ...missing.map((id) => keptSpaceMakers[id]()))
   return out
 }
+
+/** Id of the space that lists the music already on this device. */
+export const DEVICE_SPACE_ID = 'device'
+
+/** The device space: made on the fly when Music on this PC is on, never stored. */
+export const deviceSpace = (): Space => ({id: DEVICE_SPACE_ID, name: 'This device', kind: 'music', folder: '', layout: 'flat', naming: 'title', skipExisting: false, type: 'folder', icon: 'computer', color: 'teal', pinned: true, deviceOnly: true})
+
+/** Songs from Music on this PC have ids that start with this (letters, digits, - and _ only). */
+export const isDeviceId = (id: unknown): id is string => typeof id === 'string' && id.startsWith('dm-')
+
+/** What the Music on this PC scan reports with each snapshot. */
+export type DeviceMusicState = {enabled: boolean; folders: string[]; excluded: string[]; scanning: boolean; found: number; count: number}
 
 export type LibraryItemKind = 'video' | 'audio' | 'image' | 'other'
 
@@ -225,6 +239,8 @@ export type LibrarySnapshot = {
   scanning: boolean
   scannedAt?: number
   problems: {space: string; message: string}[]
+  /** Music on this PC (this device only). */
+  deviceMusic?: DeviceMusicState
   /** A long file operation (move, import, tag edit) in progress; absent when idle. Cancel with libraryCancel. */
   operation?: {kind: 'move' | 'copy' | 'import' | 'edit' | 'delete'; done: number; total: number; current?: string}
 }
@@ -343,7 +359,7 @@ export {defaultSpaceFor, isMusicSource} from './core/spaces.js'
 
 /** Spaces that store files and can receive downloads. Smart spaces are never targets. */
 export function folderSpaces(spaces: readonly Space[]): Space[] {
-  return spaces.filter((space) => space.type !== 'smart')
+  return spaces.filter((space) => space.type !== 'smart' && !space.deviceOnly)
 }
 
 export const builtinTones: Record<string, {color: SpaceColor; icon: SpaceIcon}> = {

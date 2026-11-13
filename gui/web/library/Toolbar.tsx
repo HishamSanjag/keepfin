@@ -6,6 +6,7 @@ import {Menu} from '../ui/Menu'
 import {Icon} from '../ui/Icon'
 import {openDialog} from './dialogState'
 import type {Selection} from './controller'
+import {isDeviceItem} from './deviceMenu'
 import {getLibItem, useLibrary} from './libStore'
 import {playAll} from '../player/play'
 import type {LibraryItem} from '../../shared/library'
@@ -139,6 +140,8 @@ export function SelectionBar({selection, total, onRemoveFromPlaylist, tiles}: {s
   const items = ids.map(getLibItem).filter((item): item is LibraryItem => !!item)
   const songs = items.filter(playableKind)
   const none = ids.length === 0 || working
+  // songs of Music on this PC stay where they are
+  const onDevice = items.some(isDeviceItem)
   const all = units > 0 && count === units
   const toggleAll = () => (all ? (tiles ? tiles.clear() : selection.clear()) : tiles ? tiles.selectAll() : selection.selectAll())
   return (
@@ -158,11 +161,11 @@ export function SelectionBar({selection, total, onRemoveFromPlaylist, tiles}: {s
         <Button size="sm" icon="playlistAdd" disabled={!songs.length || working} onClick={() => openDialog({type: 'playlistAdd', ids: songs.map((item) => item.id)})}>
           Add to playlist
         </Button>
-        <Button size="sm" icon="tag" disabled={!items.length || working} onClick={() => openDialog({type: 'tags', ids: items.map((item) => item.id)})}>
+        <Button size="sm" icon="tag" disabled={!items.length || working || onDevice} onClick={() => openDialog({type: 'tags', ids: items.map((item) => item.id)})}>
           Tags…
         </Button>
         {!tiles?.safe && (
-          <Button size="sm" icon="move" disabled={none} onClick={() => openDialog({type: 'move', ids})}>
+          <Button size="sm" icon="move" disabled={none || onDevice} onClick={() => openDialog({type: 'move', ids})}>
             Move to…
           </Button>
         )}

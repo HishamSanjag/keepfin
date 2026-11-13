@@ -39,6 +39,7 @@ export const iconNames: Record<string, string> = {
   dumbbell: 'Dumbbell',
   moon: 'Moon',
   child: 'Child',
+  computer: 'Computer',
 }
 
 export const isSmart = (space: Pick<Space, 'type'>) => space.type === 'smart'

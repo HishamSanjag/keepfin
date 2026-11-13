@@ -9,6 +9,7 @@ import {findLyricsFromMenu, findLyricsWords} from './findLyrics'
 import {isVideoSong, toggleFavorite} from './libStore'
 import {followMenuItem, getFollowing} from './following'
 import {inProgress, norm, playableKind} from './model'
+import {deviceItemMenu, isDeviceItem} from './deviceMenu'
 
 /** The item context menu. The words and order are the same for one item and for a selection. */
 export function itemMenu(items: LibraryItem[], options: {context?: LibraryItem[]; onRemoveFromPlaylist?: () => void} = {}): MenuItem[] {
@@ -16,6 +17,7 @@ export function itemMenu(items: LibraryItem[], options: {context?: LibraryItem[]
   const ids = items.map((item) => item.id)
   // Items that live on another device: only Play is offered (removing one would remove it from the shared library)
   if (items.every((item) => notOnThisPc(item))) return [{label: 'Play', icon: 'play', onSelect: () => playItem(items[0], options.context || items)}]
+  if (items.some(isDeviceItem)) return deviceItemMenu(items, options)
   if (items.every((item) => item.missing))
     return [{label: 'Remove from library', icon: 'close', onSelect: () => openDialog({type: 'deleteFiles', ids})}]
   const songs = items.filter(playableKind).map((item) => item.id)

@@ -3,7 +3,7 @@
 import fs from 'node:fs/promises'
 import path from 'node:path'
 import type {Request} from '../../shared/contracts.js'
-import {buildM3u8, notOnThisPc, type MusicVideoFound, type UndoResult} from '../../shared/library.js'
+import {buildM3u8, isDeviceId, notOnThisPc, type MusicVideoFound, type UndoResult} from '../../shared/library.js'
 import {lookupMusicVideo} from '../engine/music.js'
 import type {DownloadManager} from '../manager.js'
 import {editInfo, validateInfo, type EditInfo} from './edit.js'
@@ -66,7 +66,11 @@ export const libraryOperations = new Set<string>([
   'collectionAdd', 'collectionRemove', 'collectionReorder', 'collectionFollow', 'collectionCheck', 'collectionReview',
   'collectionOpened', 'followingState', 'followArtist', 'unfollowArtist', 'followingCheck', 'followingSeen', 'keepRelease', 'playlistSave', 'playlistDelete', 'playlistExport', 'libraryUndo', 'libraryEraseTrashed',
   'libraryTrashList', 'libraryTrashRestore', 'libraryTrashErase', 'libraryTrashEmpty',
+  'deviceMusicState', 'deviceMusicEnable', 'deviceMusicFolders', 'deviceMusicScan', 'deviceMusicUnhide', 'libraryHide',
 ])
+
+// Songs from Music on this PC stay where they are: nothing that writes to their files or moves them.
+const touchesFiles = new Set<string>(['libraryMove', 'libraryAddFrom', 'libraryRename', 'libraryEditInfo', 'libraryTag', 'libraryGetMusicVideo', 'libraryFindLyrics'])
 
 const idsOf = (request: Request): unknown[] => (request.ids !== undefined ? (Array.isArray(request.ids) ? request.ids : []) : [request.id])
 
@@ -131,6 +135,7 @@ export async function handleLibraryRequest(request: Request, deps: LibraryDeps):
     keepfinRoot: deps.keepfinRoot,
     history: {fileRefs: (paths) => manager.fileRefs?.(paths) ?? [], restoreFileRefs: (refs) => manager.restoreFileRefs?.(refs)},
   }
+  if (touchesFiles.has(request.op) && idsOf(request).some(isDeviceId)) throw new Error('Songs from Music on this PC stay where they are.')
   switch (request.op) {
     case 'libraryUndo':
       return deps.undo.undo(request.undoId)
@@ -316,6 +321,16 @@ export async function handleLibraryRequest(request: Request, deps: LibraryDeps):
         })
       return null
     }
+    case 'deviceMusicState':
+    case 'deviceMusicScan':
+    case 'deviceMusicUnhide':
+    case 'deviceMusicEnable':
+    case 'deviceMusicFolders':
+      return deviceMusicRequest(request, deps)
+    case 'libraryHide': {
+      const hidden = index.device.hide(idsOf(request).filter(isDeviceId))
+      return {hidden}
+    }
     case 'libraryLyrics':
       return (await index.lyrics(request.id)) ?? null
     case 'libraryFindLyrics':
@@ -360,6 +375,7 @@ export async function handleLibraryRequest(request: Request, deps: LibraryDeps):
       const renaming = input.id ? index.collection(input.id) : undefined
       const oldName = renaming?.name
       const saved = index.saveCollection(input)
+      if (Array.isArray(input.itemIds)) index.device.replacePlaylist(saved.id, input.itemIds.filter(isDeviceId))
       if (!renaming)
         // Undo of "Made the collection": it goes again
         deps.undo.record(request.undoId, async () => {
@@ -371,7 +387,7 @@ export async function handleLibraryRequest(request: Request, deps: LibraryDeps):
           index.saveCollection({id: saved.id, name: oldName})
           return done(1)
         })
-      return saved
+      return index.withDevice(saved)
     }
     case 'collectionDelete':
     case 'playlistDelete': {
@@ -385,6 +401,8 @@ export async function handleLibraryRequest(request: Request, deps: LibraryDeps):
       return null
     }
     case 'collectionAdd': {
+      index.collection(request.id)
+      index.device.addToPlaylist(request.id, request.ids)
       const before = new Set(index.collection(request.id).itemIds)
       const collection = index.addToCollection(request.id, request.ids)
       const added = collection.itemIds.filter((id) => !before.has(id))
@@ -394,12 +412,16 @@ export async function handleLibraryRequest(request: Request, deps: LibraryDeps):
           index.removeFromCollection(request.id, added)
           return done(added.length)
         })
-      return collection
+      return index.withDevice(collection)
     }
     case 'collectionRemove':
-      return index.removeFromCollection(request.id, request.ids)
+      index.collection(request.id)
+      index.device.removeFromPlaylist(request.id, request.ids)
+      return index.withDevice(index.removeFromCollection(request.id, request.ids))
     case 'collectionReorder':
-      return index.reorderCollection(request.id, request.ids)
+      index.collection(request.id)
+      index.device.reorderPlaylist(request.id, request.ids)
+      return index.withDevice(index.reorderCollection(request.id, request.ids))
     case 'collectionFollow':
       return index.setFollow(request.id, request.follow)
     case 'collectionCheck':
@@ -425,7 +447,7 @@ export async function handleLibraryRequest(request: Request, deps: LibraryDeps):
       return null
     case 'collectionExport':
     case 'playlistExport': {
-      const playlist = index.collection(request.id)
+      const playlist = index.withDevice(index.collection(request.id))
       const defaultName = (() => {
         try {
           return validateStem(playlist.name.replace(/[<>:"/\\|?*\x00-\x1f]/g, '_').replace(/[. ]+$/, ''))
@@ -451,4 +473,36 @@ export async function handleLibraryRequest(request: Request, deps: LibraryDeps):
     default:
       throw new Error('Unknown operation.')
   }
+}
+
+/** Music on this PC: its state, the switch, its folders, a rescan and showing hidden songs again. */
+async function deviceMusicRequest(request: Request, deps: LibraryDeps) {
+  const {device} = deps.index
+  switch (request.op) {
+    case 'deviceMusicEnable':
+      if (typeof request.enabled !== 'boolean') throw new Error('Choose whether to show the music on this PC.')
+      await device.setEnabled(request.enabled)
+      break
+    case 'deviceMusicFolders': {
+      if (request.action === 'remove') {
+        if (typeof request.text !== 'string') throw new Error('Choose a folder to remove.')
+        device.removeFolder(request.text)
+        break
+      }
+      if (request.action !== 'add') throw new Error('Choose whether to add or remove a folder.')
+      // no path from the window: the folder comes from the native picker
+      const chosen = request.text ?? (await deps.pickFiles('folder'))?.[0]
+      if (!chosen) break
+      if (!path.isAbsolute(chosen) || !(await fs.stat(chosen).catch(() => undefined))?.isDirectory()) throw new Error('Choose a folder that exists on this PC.')
+      device.addFolder(chosen)
+      break
+    }
+    case 'deviceMusicScan':
+      void device.scan()
+      break
+    case 'deviceMusicUnhide':
+      device.unhide()
+      break
+  }
+  return device.state()
 }

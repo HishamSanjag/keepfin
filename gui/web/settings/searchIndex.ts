@@ -37,6 +37,8 @@ export const settingsIndex: SettingEntry[] = [
   e('library', 'home-releases', 'Show new releases on Home', 'follow following artists new releases card home dismiss hide', 'Library'),
   e('library', 'routes', 'Where downloads go', 'spaces music routing everything else route', 'Where downloads go'),
   e('library', 'spaces', 'Spaces', 'folders smart new space edit remove music videos', 'Spaces'),
+  e('library', 'device-music-switch', 'Show the music on this PC', 'music on this pc this device songs already here nothing copied scan', 'Music on this PC'),
+  e('library', 'device-music-folders', 'Folders it looks in', 'music on this pc add a folder remove hidden songs show again', 'Music on this PC'),
   e('library', 'tags', 'Import tags from sources', 'genres categories tag', 'Tags'),
   e('library', 'normalize', 'Volume normalisation', 'loudness quiet loud replaygain volume level', 'Playback'),
   e('library', 'crossfade', 'Crossfade', 'gapless fade songs overlap', 'Playback'),

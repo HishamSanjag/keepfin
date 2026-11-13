@@ -15,7 +15,7 @@ import {useDevices} from '../settings/devices/useDevices'
 import {useAggregate} from '../store'
 import {useUpdates} from '../updates'
 import {Art} from '../library/Art'
-import {isPinned as isSpaceShown, type Space} from '../../shared/library'
+import {DEVICE_SPACE_ID, isPinned as isSpaceShown, type Space} from '../../shared/library'
 import {ContextMenu, type MenuItem} from '../ui/Menu'
 import {Button, IconButton, Switch} from '../ui/controls'
 import {Icon, Mark} from '../ui/Icon'
@@ -246,7 +246,7 @@ function YourLibrary({editing, openMenu, startEditing}: {editing: boolean; openM
   }, [settings, lib.loaded, lib.playlists, lib.downloaded, lib.byId])
   const spaceOrder = useMemo(() => spaces.map((entry) => entry.key), [spaces])
   const reorderPinned = useReorder(prefs.pinned, (pinned) => updateSidebarPrefs(() => ({pinned})))
-  const reorderSpaces = useReorder(spaceOrder, (keys) => void libraryAct('spaceReorder', undefined, {ids: keys.map((key) => key.slice('space:'.length))}))
+  const reorderSpaces = useReorder(spaceOrder, (keys) => void libraryAct('spaceReorder', undefined, {ids: keys.map((key) => key.slice('space:'.length)).filter((id) => id !== DEVICE_SPACE_ID)}))
   if (!settings) return null
 
   const byKey = new Map([...spaces, ...playlists].map((entry) => [entry.key, entry]))
@@ -256,13 +256,15 @@ function YourLibrary({editing, openMenu, startEditing}: {editing: boolean; openM
   const shownSpaces = spaces.filter((entry) => notPinned(entry) && (editing || !isHidden(entry)))
   const shownPlaylists = playlists.filter((entry) => notPinned(entry) && (editing || !isHidden(entry)))
 
+  // Music on this PC is shown or hidden in Settings, not here
+  const fixed = (entry: Entry) => !!entry.space?.deviceOnly
   const hide = (entry: Entry) => (entry.space ? void toggleSpaceShown(entry.space) : toggleHidden(entry.key))
   const hideLabel = (entry: Entry) => (isHidden(entry) ? `Show ${entry.name}` : `Hide ${entry.name}`)
   const menuFor = (entry: Entry): MenuItem[] => [
     {label: prefs.pinned.includes(entry.key) ? 'Unpin from top' : 'Pin to top', icon: 'pin', onSelect: () => togglePinned(entry.key)},
     ...(prefs.pinned.includes(entry.key)
       ? []
-      : [{label: entry.space ? 'Hide from sidebar and Home' : 'Hide from sidebar', icon: 'eyeOff', disabled: !!entry.space && !native, onSelect: () => hide(entry)}]),
+      : [{label: entry.space ? 'Hide from sidebar and Home' : 'Hide from sidebar', icon: 'eyeOff', disabled: (!!entry.space && !native) || fixed(entry), onSelect: () => hide(entry)}]),
     'separator',
     {label: 'Edit sidebar', icon: 'edit', onSelect: startEditing},
   ]
@@ -300,7 +302,7 @@ function YourLibrary({editing, openMenu, startEditing}: {editing: boolean; openM
           aria-pressed={isPinnedTop}
           onClick={() => togglePinned(entry.key)}
         />
-        {!isPinnedTop && <IconButton icon={isHidden(entry) ? 'eyeOff' : 'eye'} size="sm" label={hideLabel(entry)} disabled={!!entry.space && !native} onClick={() => hide(entry)} />}
+        {!isPinnedTop && <IconButton icon={isHidden(entry) ? 'eyeOff' : 'eye'} size="sm" label={hideLabel(entry)} disabled={(!!entry.space && !native) || fixed(entry)} onClick={() => hide(entry)} />}
       </EditRow>
     )
   }

@@ -19,6 +19,7 @@ import {setLibView, useLibView, type SpaceDetail} from './libNav'
 import {openDialog} from './dialogState'
 import {FilesView, type KindFilter} from './FilesView'
 import {isSong, libraryAct, libraryRequest, loadLibrary, useLibrary} from './libStore'
+import {deviceCaption, findingMusic} from './deviceText'
 import {
   collectionViews,
   groupAlbums,
@@ -160,9 +161,14 @@ export function SpaceView({space}: {space: Space}) {
           <span className="caption-mark">
             <SpaceMark space={space} size={11} />
           </span>
-          <span title={space.folder}>
-            {plural(all.length, 'item')} · {space.folder}
+          <span title={space.deviceOnly ? undefined : space.folder}>
+            {plural(all.length, 'item')} · {space.deviceOnly ? deviceCaption : space.folder}
           </span>
+          {lib.snapshot.deviceMusic?.scanning && space.deviceOnly && (
+            <span className="scan-note" role="status">
+              <Icon name="refresh" size={12} className="spin" /> {findingMusic(lib.snapshot.deviceMusic.found)}
+            </span>
+          )}
           {lib.snapshot.scanning && (
             <span className="scan-note" role="status">
               <Icon name="refresh" size={12} className="spin" /> Scanning…
@@ -183,9 +189,13 @@ export function SpaceView({space}: {space: Space}) {
             items={[
               {label: 'Add to queue', icon: 'queue', disabled: !playable.length, onSelect: () => addToQueue(playable.map((item) => item.id))},
               'separator',
-              {label: 'Edit space…', icon: 'edit', onSelect: () => openDialog({type: 'space', space})},
-              {label: 'Rescan folder', icon: 'refresh', onSelect: () => void libraryAct('libraryScan', undefined, {space: space.id})},
-              ...(isKeptSpace(space.id) ? [] : (['separator', {label: 'Remove space…', icon: 'trash', tone: 'danger', onSelect: () => openDialog({type: 'removeSpace', space})}] as const)),
+              ...(space.deviceOnly
+                ? ([{label: 'Look for new music', icon: 'refresh', onSelect: () => void libraryAct('deviceMusicScan')}] as const)
+                : ([
+                    {label: 'Edit space…', icon: 'edit', onSelect: () => openDialog({type: 'space', space})},
+                    {label: 'Rescan folder', icon: 'refresh', onSelect: () => void libraryAct('libraryScan', undefined, {space: space.id})},
+                  ] as const)),
+              ...(isKeptSpace(space.id) || space.deviceOnly ? [] : (['separator', {label: 'Remove space…', icon: 'trash', tone: 'danger', onSelect: () => openDialog({type: 'removeSpace', space})}] as const)),
             ]}
           />
         </>
@@ -299,7 +309,7 @@ export function SpaceView({space}: {space: Space}) {
               view={tab !== 'songs' ? {value: view, onChange: setView} : undefined}
               density={{value: density, onChange: setDensity}}
               selection={{selecting, setSelecting}}
-              addTo={space.id}
+              addTo={space.deviceOnly ? undefined : space.id}
             />
           )}
           {!inDetail && tab !== 'collections' && <TagFilter scope={all} state={tagState} onChange={setTagState} result={filtered} spaceId={space.id} />}
@@ -365,7 +375,7 @@ export function SpaceView({space}: {space: Space}) {
         view={{value: view, onChange: setView}}
         density={{value: density, onChange: setDensity}}
         selection={{selecting, setSelecting}}
-        addTo={space.id}
+        addTo={space.deviceOnly ? undefined : space.id}
       />
       <TagFilter scope={all} state={tagState} onChange={setTagState} result={filtered} spaceId={space.id} />
       <div className="space-body">

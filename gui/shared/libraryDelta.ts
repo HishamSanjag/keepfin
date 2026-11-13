@@ -29,6 +29,7 @@ export function applyLibraryDelta(snapshot: LibrarySnapshot, delta: Omit<Library
     next.scannedAt = delta.meta.scannedAt
     next.problems = delta.meta.problems
     next.operation = delta.meta.operation
+    next.deviceMusic = delta.meta.deviceMusic
   }
   return next
 }
@@ -44,5 +45,6 @@ export function snapshotFromBatches(batches: readonly LibraryBatchPush[]): Libra
     scannedAt: first.meta?.scannedAt,
     problems: first.meta?.problems ?? [],
     operation: first.meta?.operation,
+    deviceMusic: first.meta?.deviceMusic,
   }
 }

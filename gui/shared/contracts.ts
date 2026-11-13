@@ -525,6 +525,13 @@ export type Operation =
   | 'libraryDrag'
   | 'libraryPlayback'
   | 'libraryFavorite'
+  /** Music on this PC: its state (a DeviceMusicState), the switch (`enabled`), its folders (`action` + `text`), a rescan, showing hidden songs again, and hiding songs (`libraryHide`, `ids`). */
+  | 'deviceMusicState'
+  | 'deviceMusicEnable'
+  | 'deviceMusicFolders'
+  | 'deviceMusicScan'
+  | 'deviceMusicUnhide'
+  | 'libraryHide'
   | 'libraryLyrics'
   /** Find lyrics for the song `id` that has none: the answer is `{outcome: 'found' | 'none' | 'busy', message?}`. */
   | 'libraryFindLyrics'
@@ -781,6 +788,10 @@ export type Request = {
   finished?: boolean
   /** libraryFavorite. */
   favorite?: boolean
+  /** deviceMusicEnable. */
+  enabled?: boolean
+  /** deviceMusicFolders: add (`text` is the folder; without it main opens the folder picker) or remove (`text` is a listed folder). */
+  action?: 'add' | 'remove'
   /** libraryRename / librarySearchLyrics. */
   text?: string
   /** libraryGetMusicVideo, and enqueue (an audio download of a song): the video id the find step offered. */
@@ -801,7 +812,7 @@ export type Request = {
   info?: {title?: string; artist?: string; album?: string; albumArtist?: string; track?: number; disc?: number; year?: number; genre?: string; cover?: string}
 }
 
-export type LibraryMeta = {scanning: boolean; scannedAt?: number; problems: LibrarySnapshot['problems']; operation?: LibrarySnapshot['operation']}
+export type LibraryMeta = {scanning: boolean; scannedAt?: number; problems: LibrarySnapshot['problems']; operation?: LibrarySnapshot['operation']; deviceMusic?: LibrarySnapshot['deviceMusic']}
 
 export type LibraryDeltaPush = {
   type: 'libraryDelta'
